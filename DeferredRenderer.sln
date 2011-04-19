@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeferredRenderer", "DeferredRenderer\DeferredRenderer\DeferredRenderer.csproj", "{AB9DB418-33FD-44A2-9C0B-28F4C831E8CA}"
+EndProject
+Project("{96E2B04D-8817-42C6-938A-82C39BA4D311}") = "DeferredRendererContent", "DeferredRenderer\DeferredRendererContent\DeferredRendererContent.contentproj", "{4F0B7C88-E181-4156-93D1-441E9AE27617}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContentExtensions", "ContentExtensions\ContentExtensions.csproj", "{1393FF2A-958E-44BF-B2B5-6718B82F9051}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AB9DB418-33FD-44A2-9C0B-28F4C831E8CA}.Debug|x86.ActiveCfg = Debug|x86
+		{AB9DB418-33FD-44A2-9C0B-28F4C831E8CA}.Debug|x86.Build.0 = Debug|x86
+		{AB9DB418-33FD-44A2-9C0B-28F4C831E8CA}.Release|x86.ActiveCfg = Release|x86
+		{AB9DB418-33FD-44A2-9C0B-28F4C831E8CA}.Release|x86.Build.0 = Release|x86
+		{4F0B7C88-E181-4156-93D1-441E9AE27617}.Debug|x86.ActiveCfg = Debug|x86
+		{4F0B7C88-E181-4156-93D1-441E9AE27617}.Release|x86.ActiveCfg = Release|x86
+		{1393FF2A-958E-44BF-B2B5-6718B82F9051}.Debug|x86.ActiveCfg = Debug|x86
+		{1393FF2A-958E-44BF-B2B5-6718B82F9051}.Debug|x86.Build.0 = Debug|x86
+		{1393FF2A-958E-44BF-B2B5-6718B82F9051}.Release|x86.ActiveCfg = Debug|x86
+		{1393FF2A-958E-44BF-B2B5-6718B82F9051}.Release|x86.Build.0 = Debug|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
