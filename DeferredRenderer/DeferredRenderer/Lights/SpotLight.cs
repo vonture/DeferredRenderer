@@ -12,23 +12,17 @@ namespace DeferredRenderer
     public class SpotLight : PointLight
     {
         protected float _innerCone;
-        /// <summary>
-        /// Gets or sets the width of the inner cone, in radians
-        /// </summary>
         public float InnerCone
         {
             get { return _innerCone; }
-            set { _innerCone = value; }
+            set { _innerCone = Math.Max(value, 0.0f); }
         }
 
         protected float _outerCone;
-        /// <summary>
-        /// Gets or sets the width of the outer cone, in radians
-        /// </summary>
         public float OuterCone
         {
             get { return _outerCone; }
-            set { _outerCone = value; }
+            set { _outerCone = Math.Max(value, 0.0f); }
         }
 
         private Vector3 _direction;
@@ -48,8 +42,9 @@ namespace DeferredRenderer
             }
         }
 
-        public SpotLight(Vector3 c, Vector3 pos, Vector3 dir, float range, float innerCone, float outerCone)
-            : base(c, pos, range)
+        public SpotLight(Vector3 color, float intensity, Vector3 pos, Vector3 dir, float range,
+            float innerCone, float outerCone)
+            : base(color, intensity, pos, range)
         {
             Direction = dir;
             _innerCone = innerCone;

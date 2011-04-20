@@ -57,6 +57,7 @@ float3 CameraPosition;
 float3 LightDirection;
 
 float3 LightColor;
+float LightIntensity;
 
 float2 ScreenSpaceOffset;
 
@@ -117,7 +118,7 @@ float4 PS_DirectionLight(PS_In_DirectionLight input) : COLOR0
 	float fDiffuseTerm = saturate(dot(N, L));
 	float fSpecularTerm = fSpecularIntensity * pow(saturate(dot(R, L)), fSpecularPower);
 	
-    return float4(fDiffuseTerm * LightColor, fSpecularTerm);
+    return LightIntensity * float4(fDiffuseTerm * LightColor, fSpecularTerm);
 }
 
 technique DirectionLight

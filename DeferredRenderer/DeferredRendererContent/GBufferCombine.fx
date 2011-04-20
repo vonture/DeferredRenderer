@@ -120,6 +120,7 @@ float4 PS_Combine(PS_In_Combine input) : COLOR0
 
     return float4(vFinalColour, 1.0f);
 	//return float4(vLightColor, 1.0f);
+	//return float4(vColor.rgb, 1.0f);
 	//return float4(vNormals.a, vNormals.a, vNormals.a, 1.0f);
 	//return float4(fSpecular, fSpecular, fSpecular, 1.0f);
 	//return float4(fDepth, fDepth, fDepth, 1.0f);

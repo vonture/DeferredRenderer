@@ -117,11 +117,14 @@
     <Compile Include="IDrawable.cs" />
     <Compile Include="IHasContent.cs" />
     <Compile Include="IUpdateable.cs" />
+    <Compile Include="LightBuffer.cs" />
+    <Compile Include="LightRenderer.cs" />
     <Compile Include="Lights\DirectionLight.cs" />
     <Compile Include="Lights\Light.cs" />
     <Compile Include="Lights\PointLight.cs" />
     <Compile Include="Lights\SpotLight.cs" />
     <Compile Include="ModelInstance.cs" />
+    <Compile Include="PointLightRenderer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Game1.cs" />
@@ -130,7 +133,6 @@
     <Compile Include="Quads\Quad.cs" />
     <Compile Include="Renderer.cs" />
     <Compile Include="GBuffer.cs" />
-    <Compile Include="ShadowRenderer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DeferredRendererContent\DeferredRendererContent.contentproj">

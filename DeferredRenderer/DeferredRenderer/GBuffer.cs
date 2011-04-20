@@ -70,11 +70,31 @@ namespace DeferredRenderer
             _fsQuad.UnloadContent(gd, cm);
         }
 
+        /// <summary>
+        /// Sets the render targets ont he graphics card.
+        /// </summary>
+        /// <param name="gd"></param>
         public void Set(GraphicsDevice gd)
         {
             gd.SetRenderTargets(_renderTargets[0], _renderTargets[1], _renderTargets[2], _renderTargets[3]);
         }
 
+        /// <summary>
+        /// Assigns the render targets to the specified shader under the parameters RT0-RTX.
+        /// </summary>
+        /// <param name="effect">Effect to apply to.</param>
+        public void SetEffectParameters(Effect effect)
+        {
+            effect.Parameters["RT0"].SetValue(_renderTargets[0]);
+            effect.Parameters["RT1"].SetValue(_renderTargets[1]);
+            effect.Parameters["RT2"].SetValue(_renderTargets[2]);
+            effect.Parameters["RT3"].SetValue(_renderTargets[3]);
+        }
+
+        /// <summary>
+        /// Clears all of the rendertargets to their default values.  Assumes the render targets
+        /// are already set.
+        /// </summary>
         public void Clear(GraphicsDevice gd)
         {
             for (int i = 0; i < _clearEffect.CurrentTechnique.Passes.Count; i++)

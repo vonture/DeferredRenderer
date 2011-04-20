@@ -15,12 +15,20 @@ namespace DeferredRenderer
         public Vector3 Color
         {
             get { return _color; }
-            set { _color = value; }
+            set { _color = Vector3.Clamp(value, Vector3.Zero, Vector3.One); }
         }
 
-        public Light(Vector3 col)
+        private float _intensity;
+        public float Intensity
         {
-            _color = col;
+            get { return _intensity; }
+            set { _intensity = Math.Max(value, 0.0f); }
+        }
+
+        public Light(Vector3 color, float intensity)
+        {
+            Color = color;
+            Intensity = intensity;
         }
     }
 }

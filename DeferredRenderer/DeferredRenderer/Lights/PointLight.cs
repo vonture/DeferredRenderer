@@ -24,8 +24,8 @@ namespace DeferredRenderer
             set { _position = value; }
         }
 
-        public PointLight(Vector3 c, Vector3 pos, float range)
-            : base(c)
+        public PointLight(Vector3 color, float intensity, Vector3 pos, float range)
+            : base(color, intensity)
         {
             Position = pos;
             Range = range;

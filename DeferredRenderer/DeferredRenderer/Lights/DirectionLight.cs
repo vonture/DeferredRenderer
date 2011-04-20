@@ -28,8 +28,8 @@ namespace DeferredRenderer
             }
         }
 
-        public DirectionLight(Vector3 c, Vector3 dir)
-            : base(c)
+        public DirectionLight(Vector3 color, float intensity, Vector3 dir)
+            : base(color, intensity)
         {
             Direction = dir;
         }

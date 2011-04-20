@@ -50,10 +50,10 @@ namespace DeferredRenderer
             _camera = new FirstPersonCamera(0.1f, 1500f, 1f, GraphicsDevice.Viewport.AspectRatio);
             _camera.Position = new Vector3(0.0f, 100.0f, 400.0f);
 
-            _dLight1 = new DirectionLight(new Vector3(1, 1, 0.3f), new Vector3(0.5f, 0.5f, 0.5f));
-            _dLight2 = new DirectionLight(new Vector3(1, 1f, 1f), new Vector3(-0.5f, 0.5f, 0.1f));
-            _pLight1 = new PointLight(Vector3.UnitX, new Vector3(-150f, 110f, -150), 350f);
-            _pLight2 = new PointLight(Vector3.UnitY, new Vector3(0f, 150f, 150f), 300f);           
+            _dLight1 = new DirectionLight(new Vector3(1, 1, 0.3f), 1.0f, new Vector3(0.5f, 0.5f, 0.5f));
+            _dLight2 = new DirectionLight(new Vector3(1, 1f, 1f), 1.0f, new Vector3(-0.5f, 0.5f, 0.1f));
+            _pLight1 = new PointLight(Vector3.UnitX, 1.0f, new Vector3(-150f, 110f, -150), 350f);
+            _pLight2 = new PointLight(Vector3.UnitY, 1.0f, new Vector3(0f, 150f, 150f), 300f);           
 
             _treeModel = new ModelInstance("tree1");
             _treeModel.Position = new Vector3(0.0f, 100.0f, 0.0f);
@@ -96,7 +96,7 @@ namespace DeferredRenderer
 
         protected override void Draw(GameTime gameTime)
         {
-            _renderer.Begin(_camera, _dLight1);
+            _renderer.Begin(_camera);
 
             _renderer.DrawModel(_treeModel);
             _renderer.DrawModel(_boxModel);
@@ -105,6 +105,7 @@ namespace DeferredRenderer
             _renderer.DrawLight(_pLight1);
             _renderer.DrawLight(_pLight2);
 
+            _renderer.DrawLight(_dLight1);
             _renderer.DrawLight(_dLight2);
 
             _renderer.End();
