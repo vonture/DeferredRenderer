@@ -23,7 +23,7 @@ namespace DeferredRenderer
         public void LoadContent(GraphicsDevice gd, ContentManager cm)
         {
             _lightRT = new RenderTarget2D(gd, gd.Viewport.Width, gd.Viewport.Height, false,
-                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.DiscardContents);
+                SurfaceFormat.HdrBlendable, DepthFormat.None, 0, RenderTargetUsage.DiscardContents);
         }
 
         public void UnloadContent(GraphicsDevice gd, ContentManager cm)
@@ -56,7 +56,7 @@ namespace DeferredRenderer
         /// </summary>
         public void Clear(GraphicsDevice gd)
         {
-            gd.Clear(Color.Transparent);
+            gd.Clear(Color.Black);
         }
     }
 }

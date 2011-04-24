@@ -11,7 +11,7 @@ namespace DeferredRenderer
         where T : Light
     {
         private const int SHADOWMAP_SIZE_MIN = 2;
-        private const int SHADOWMAP_SIZE_MAX = 1024;
+        private const int SHADOWMAP_SIZE_MAX = 4096;
 
         private int _shadowMapSize;
         public int ShadowMapSize
@@ -19,10 +19,15 @@ namespace DeferredRenderer
             get { return _shadowMapSize; }
             set
             {
-                if (value < SHADOWMAP_SIZE_MIN || value > SHADOWMAP_SIZE_MAX || (value & (value - 1)) != 0)
+                if (value < SHADOWMAP_SIZE_MIN || value > SHADOWMAP_SIZE_MAX)
                 {
                     throw new ArgumentException("Shadow map size must be between " + SHADOWMAP_SIZE_MIN +
-                        " and " + SHADOWMAP_SIZE_MAX + " and be a power of 2.");
+                        " and " + SHADOWMAP_SIZE_MAX + ".");
+                }
+
+                if ((value & (value - 1)) != 0)
+                {
+                    throw new ArgumentException("Shadow map size must be a power of 2.");
                 }
 
                 if (_shadowMapSize != value)
@@ -36,7 +41,7 @@ namespace DeferredRenderer
         }
 
         private const int CASCADE_COUNT_MIN = 1;
-        private const int CASCADE_COUNT_MAX = 8;
+        private const int CASCADE_COUNT_MAX = 9;
 
         private int _cascadeCount;
         public int CascadeCount
@@ -50,6 +55,11 @@ namespace DeferredRenderer
                         " and " + CASCADE_COUNT_MAX + ".");
                 }
 
+                if ((float)Math.Sqrt(value) % 1 != 0)
+                {
+                    throw new ArgumentException("Cascade count must be a perfect square.");
+                }
+
                 if (_cascadeCount != value)
                 {
                     _cascadeCount = value;
@@ -59,11 +69,32 @@ namespace DeferredRenderer
                 }
             }
         }
-        
-        private RenderTarget2D _depthRT;
-        protected RenderTarget2D DepthRenderTarget
+
+        private const int DEPTHRT_COUNT_MIN = 1;
+        private const int DEPTHRT_COUNT_MAX = 8;
+
+        private List<RenderTarget2D> _depthRTs;
+
+        private int _depthRTCount;
+        public int ShadowRTCount
         {
-            get { return _depthRT; }
+            get
+            {
+                return _depthRTCount;
+            }
+            set
+            {
+                if (value < DEPTHRT_COUNT_MIN || value > DEPTHRT_COUNT_MAX)
+                {
+                    throw new ArgumentException("Shadow RT count must be between " + DEPTHRT_COUNT_MIN +
+                        " and " + DEPTHRT_COUNT_MAX + ".");
+                }
+
+                if (_depthRTCount != value)
+                {
+                    buildDepthRT(_gd);
+                }
+            }
         }
 
         private Effect _depthEffect;
@@ -110,10 +141,13 @@ namespace DeferredRenderer
 
             _lightDepthStencilState = DepthStencilState.None;
 
+            _depthRTs = new List<RenderTarget2D>();
+
             _halfPixelOffset = Vector2.Zero;
 
             _shadowMapSize = SHADOWMAP_SIZE_MAX;
-            _cascadeCount = (CASCADE_COUNT_MIN + CASCADE_COUNT_MAX) / 2;
+            _cascadeCount = 9;
+            _depthRTCount = (DEPTHRT_COUNT_MIN + DEPTHRT_COUNT_MAX) / 2;
         }
 
         public virtual void LoadContent(GraphicsDevice gd, ContentManager cm) 
@@ -136,14 +170,25 @@ namespace DeferredRenderer
 
         private void destroyDeptyRT()
         {
-            _depthRT.Dispose();
-            _depthRT = null;
+            for (int i = 0; i < _depthRTs.Count; i++)
+            {
+                _depthRTs[i].Dispose();
+            }
+            _depthRTs.Clear();
         }
 
         private void buildDepthRT(GraphicsDevice gd)
         {
-            _depthRT = new RenderTarget2D(gd, _shadowMapSize * _cascadeCount, _shadowMapSize, false,
-                SurfaceFormat.Vector2, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.DiscardContents);
+            for (int i = 0; i < _depthRTCount; i++)
+            {
+                _depthRTs.Add(new RenderTarget2D(gd, _shadowMapSize, _shadowMapSize, false,
+                    SurfaceFormat.Vector2, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.DiscardContents));
+            }
+        }
+
+        protected RenderTarget2D GetDepthRT(int idx)
+        {
+            return _depthRTs[idx];
         }
         
         protected virtual void OnShadowParameterChange() { }

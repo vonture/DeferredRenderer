@@ -36,7 +36,8 @@ namespace DeferredRenderer
             base.UnloadContent(gd, cm);
         }
 
-        public override void RenderUnshadowed(IList<DirectionLight> lights, Camera camera, GBuffer gBuffer)
+        public override void RenderUnshadowed(IList<DirectionLight> lights, Camera camera,
+            GBuffer gBuffer)
         {
             if (lights.Count == 0)
             {
@@ -49,7 +50,10 @@ namespace DeferredRenderer
             GraphicsDevice.BlendState = LightBlendState;
             GraphicsDevice.DepthStencilState = LightDepthStencilState;
 
-            gBuffer.SetEffectParameters(_directionLightEffect);
+            _directionLightEffect.CurrentTechnique = 
+                _directionLightEffect.Techniques["DirectionLightUnshadowed"];
+
+            gBuffer.SetEffectParameters(_directionLightEffect);           
 
             Matrix invViewProj = Matrix.Invert(camera.View * camera.Projection);
             _directionLightEffect.Parameters["InverseViewProjection"].SetValue(invViewProj);
@@ -74,59 +78,153 @@ namespace DeferredRenderer
             GraphicsDevice.DepthStencilState = prevStencil;
         }
 
-        public override void RenderShadowed(IList<DirectionLight> lights, IList<ModelInstance> models, Camera camera, GBuffer gbuffer)
+        public override void RenderShadowed(IList<DirectionLight> lights, IList<ModelInstance> models,
+            Camera camera, GBuffer gBuffer)
         {
             if (lights.Count == 0)
             {
                 return;
             }
+            
+            BlendState prevBlend = GraphicsDevice.BlendState;
+            DepthStencilState prevStencil = GraphicsDevice.DepthStencilState;
 
-            // TODO
-            RenderUnshadowed(lights, camera, gbuffer);
+            RenderTargetBinding[] rtBinds = GraphicsDevice.GetRenderTargets();
+
+            Vector2[][] clipPlanes;
+            Matrix[][] lightViewProjs;
+            renderShadows(lights, models, camera, out clipPlanes, out lightViewProjs);
+
+            GraphicsDevice.SetRenderTargets(rtBinds);
+            GraphicsDevice.Clear(Color.Transparent);
+
+            GraphicsDevice.BlendState = LightBlendState;
+            GraphicsDevice.DepthStencilState = LightDepthStencilState;
+
+            _directionLightEffect.CurrentTechnique =
+                _directionLightEffect.Techniques["DirectionLightShadowed"];
+
+            gBuffer.SetEffectParameters(_directionLightEffect);
+
+            Matrix invViewProj = Matrix.Invert(camera.View * camera.Projection);
+            _directionLightEffect.Parameters["InverseViewProjection"].SetValue(invViewProj);
+            _directionLightEffect.Parameters["CameraPosition"].SetValue(camera.Position);
+            _directionLightEffect.Parameters["ScreenSpaceOffset"].SetValue(HalfPixelOffset);
+
+            _directionLightEffect.Parameters["NearClip"].SetValue(camera.NearClip);
+            _directionLightEffect.Parameters["FarClip"].SetValue(camera.FarClip);
+
+            _directionLightEffect.Parameters["SqrtCascadeCount"].SetValue((int)Math.Sqrt(CascadeCount));
+            
+            for (int i = 0; i < lights.Count && i < ShadowRTCount; i++)
+            { 
+                _directionLightEffect.Parameters["LightViewProjection"].SetValue(lightViewProjs[i]);
+                _directionLightEffect.Parameters["ClipPlanes"].SetValue(clipPlanes[i]);
+
+                _directionLightEffect.Parameters["LightDirection"].SetValue(lights[i].Direction);
+                _directionLightEffect.Parameters["LightColor"].SetValue(lights[i].Color);
+                _directionLightEffect.Parameters["LightIntensity"].SetValue(lights[i].Intensity);
+
+                _directionLightEffect.Parameters["ShadowMap"].SetValue(GetDepthRT(i));
+                _directionLightEffect.Parameters["ShadowMapSize"].SetValue(ShadowMapSize);
+
+                for (int j = 0; j < _directionLightEffect.CurrentTechnique.Passes.Count; j++)
+                {
+                    _directionLightEffect.CurrentTechnique.Passes[j].Apply();
+
+                    _fsQuad.Draw(GraphicsDevice);
+                }
+            }
+
+            GraphicsDevice.BlendState = prevBlend;
+            GraphicsDevice.DepthStencilState = prevStencil;
         }
 
-        private void renderShadowDepth(DirectionLight light, IList<ModelInstance> models, Camera camera)
+        private void renderShadows(IList<DirectionLight> lights, IList<ModelInstance> models,
+            Camera camera, out Vector2[][] clipPlanes, out Matrix[][] lightViewProjs)
+        {
+            clipPlanes = new Vector2[Math.Max(lights.Count, ShadowRTCount)][];
+            lightViewProjs = new Matrix[Math.Max(lights.Count, ShadowRTCount)][];
+
+            BlendState prevBlend = GraphicsDevice.BlendState;
+            DepthStencilState prevStencil = GraphicsDevice.DepthStencilState;
+
+            GraphicsDevice.BlendState = BlendState.Opaque;
+            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+
+            for (int i = 0; i < lights.Count && i < ShadowRTCount; i++)
+            {
+                renderShadowDepth(lights[i], models, camera, GetDepthRT(i),
+                    out clipPlanes[i], out lightViewProjs[i]);
+            }
+
+            GraphicsDevice.BlendState = prevBlend;
+            GraphicsDevice.DepthStencilState = prevStencil;
+        }
+
+        private void renderShadowDepth(DirectionLight light, IList<ModelInstance> models, Camera camera,
+            RenderTarget2D depthRT, out Vector2[] clipPlanes, out Matrix[] lightViewProjs)
         {
             float near = camera.NearClip;
             float far = camera.FarClip;
 
-            float[] splitDepths = new float[CascadeCount + 1];
+            float[] splitDepths = getSplitDepths(camera.NearClip, camera.FarClip);
 
-            splitDepths[0] = near;
-            splitDepths[CascadeCount] = far;
-            float fCascadeCount = CascadeCount;
-            const float splitConstant = 0.95f;
-            for (int i = 1; i < splitDepths.Length - 1; i++)
-            {
-                splitDepths[i] = splitConstant * near * (float)Math.Pow(far / near, i / fCascadeCount) +
-                    (1.0f - splitConstant) * ((near + (i / fCascadeCount)) * (far - near));
-            }
+            GraphicsDevice.SetRenderTarget(depthRT);
+            GraphicsDevice.Clear(Color.Black);
 
-            GraphicsDevice.SetRenderTarget(null);
-            GraphicsDevice.Clear(ClearOptions.Target, Color.White, 1.0f, 0);
-            GraphicsDevice.Clear(ClearOptions.DepthBuffer, Color.Black, 1.0f, 0);
+            clipPlanes = new Vector2[CascadeCount];
+            lightViewProjs = new Matrix[CascadeCount];
 
             for (int i = 0; i < CascadeCount; i++)
             {
                 float minZ = splitDepths[i];
                 float maxZ = splitDepths[i + 1];
-
+                
                 Matrix lightView, lightProj;
                 createLightViewProjectionMatrix(light, camera, minZ, maxZ, out lightView, out lightProj);
 
                 renderShadowMap(models, i, lightView, lightProj);
+
+                clipPlanes[i] = new Vector2(minZ, maxZ);
+                lightViewProjs[i] = lightView * lightProj;
             }
         }
+
+        private float[] getSplitDepths(float near, float far)
+        {
+            float[] splitDepths = new float[CascadeCount + 1];
+
+            splitDepths[0] = near;
+            splitDepths[CascadeCount] = far;
+            float fCascadeCount = CascadeCount;
+            for (int i = 1; i < splitDepths.Length - 1; i++)
+            {
+                //float perc = i / fCascadeCount;
+                //float percSq = perc * perc;
+                //splitDepths[i] = near + ((far - near) * percSq);
+
+                const float splitConstant = 0.95f;
+                splitDepths[i] = splitConstant * near * (float)Math.Pow(far / near, i / fCascadeCount) +
+                    (1.0f - splitConstant) * ((near + (i / fCascadeCount)) * (far - near));
+            }
+
+            return splitDepths;
+        }
+
         private void renderShadowMap(IList<ModelInstance> models, int splitIdx, Matrix lightView, Matrix lightProj)
         {
+            int numRows = (int)Math.Sqrt(CascadeCount);
+            int cascadeSize = ShadowMapSize / numRows;
+
             // Set the viewport for the current split            
             Viewport splitViewport = new Viewport();
             splitViewport.MinDepth = 0;
             splitViewport.MaxDepth = 1;
-            splitViewport.Width = ShadowMapSize;
-            splitViewport.Height = ShadowMapSize;
-            splitViewport.X = splitIdx * ShadowMapSize;
-            splitViewport.Y = 0;
+            splitViewport.Width = cascadeSize;
+            splitViewport.Height = cascadeSize;
+            splitViewport.X = (splitIdx % numRows) * cascadeSize;
+            splitViewport.Y = (splitIdx / numRows) * cascadeSize;
 
             GraphicsDevice.Viewport = splitViewport;
 

@@ -39,16 +39,16 @@ namespace DeferredRenderer
         {
             Point size = new Point(gd.Viewport.Width, gd.Viewport.Height);
 
-            _renderTargets[0] = new RenderTarget2D(gd, size.X, size.Y, false, SurfaceFormat.Color,
+            _renderTargets[0] = new RenderTarget2D(gd, size.X, size.Y, false, SurfaceFormat.Vector4,
                 DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.DiscardContents);
 
-            _renderTargets[1] = new RenderTarget2D(gd, size.X, size.Y, false, SurfaceFormat.Color,
+            _renderTargets[1] = new RenderTarget2D(gd, size.X, size.Y, false, SurfaceFormat.Vector4,
                 DepthFormat.None, 0, RenderTargetUsage.DiscardContents);
 
-            _renderTargets[2] = new RenderTarget2D(gd, size.X, size.Y, false, SurfaceFormat.Color,
+            _renderTargets[2] = new RenderTarget2D(gd, size.X, size.Y, false, SurfaceFormat.Vector4,
                 DepthFormat.None, 0, RenderTargetUsage.DiscardContents);
 
-            _renderTargets[3] = new RenderTarget2D(gd, size.X, size.Y, false, SurfaceFormat.Single,
+            _renderTargets[3] = new RenderTarget2D(gd, size.X, size.Y, false, SurfaceFormat.Vector4,
                 DepthFormat.None, 0, RenderTargetUsage.DiscardContents);
 
             _clearEffect = cm.Load<Effect>("GBufferClear");

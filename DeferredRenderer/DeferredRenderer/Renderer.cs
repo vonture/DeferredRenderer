@@ -200,8 +200,11 @@ namespace DeferredRenderer
             _lightBuffer.Set(_gd);
             _lightBuffer.Clear(_gd);
 
-            _directionLightRenderer.RenderUnshadowed(_directionLights, _camera, _gBuffer);
-            _pointLightRenderer.RenderUnshadowed(_pointLights, _camera, _gBuffer);
+            _directionLightRenderer.RenderShadowed(_directionLights, _models, _camera, _gBuffer);
+            //_pointLightRenderer.RenderShadowed(_pointLights, _models, _camera, _gBuffer);
+
+            //_directionLightRenderer.RenderUnshadowed(_directionLights, _camera, _gBuffer);
+            //_pointLightRenderer.RenderUnshadowed(_pointLights, _camera, _gBuffer);
 
             // Combine everything
             _gd.SetRenderTarget(null);

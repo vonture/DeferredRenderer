@@ -104,7 +104,7 @@ float4 PS_Combine(PS_In_Combine input) : COLOR0
 	float4 vTrans = tex2D(RT2Sampler, input.vTexCoord);
 
 	// Depth
-	float fDepth = tex2D(RT3Sampler, input.vTexCoord).r;
+	//float fDepth = tex2D(RT3Sampler, input.vTexCoord).r;
 
 	// Light colour and specular
 	float4 vLighting = tex2D(LightMapSampler, input.vTexCoord);
@@ -115,11 +115,11 @@ float4 PS_Combine(PS_In_Combine input) : COLOR0
 	float fSpecular = vLighting.a;
 
 	float3 vFinalColour = fAmbient * vDiffuse +
-						  vLightColor * vDiffuse +
+						  vLightColor * vDiffuse;
 						  vLightColor * fSpecular;
 
-    return float4(vFinalColour, 1.0f);
-	//return float4(vLightColor, 1.0f);
+    //return float4(vFinalColour, 1.0f);
+	return float4(vLightColor, 1.0f);
 	//return float4(vColor.rgb, 1.0f);
 	//return float4(vNormals.a, vNormals.a, vNormals.a, 1.0f);
 	//return float4(fSpecular, fSpecular, fSpecular, 1.0f);

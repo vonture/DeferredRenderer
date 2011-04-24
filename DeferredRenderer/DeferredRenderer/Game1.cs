@@ -21,7 +21,7 @@ namespace DeferredRenderer
         private FirstPersonCamera _camera;
         
         private ModelInstance _treeModel;
-        private ModelInstance _boxModel;
+        private List<ModelInstance> _boxModels;
         private ModelInstance _lizardModel;
 
         private DirectionLight _dLight1;
@@ -47,22 +47,34 @@ namespace DeferredRenderer
         {
             _renderer = new Renderer(GraphicsDevice);
 
-            _camera = new FirstPersonCamera(0.1f, 1500f, 1f, GraphicsDevice.Viewport.AspectRatio);
+            _camera = new FirstPersonCamera(0.1f, 3000f, 1f, GraphicsDevice.Viewport.AspectRatio);
             _camera.Position = new Vector3(0.0f, 100.0f, 400.0f);
 
-            _dLight1 = new DirectionLight(new Vector3(1, 1, 0.3f), 1.0f, new Vector3(0.5f, 0.5f, 0.5f));
+            _dLight1 = new DirectionLight(new Vector3(1, 1, 1f), 1.0f, new Vector3(0.5f, 0.5f, 0.5f));
             _dLight2 = new DirectionLight(new Vector3(1, 1f, 1f), 1.0f, new Vector3(-0.5f, 0.5f, 0.1f));
             _pLight1 = new PointLight(Vector3.UnitX, 1.0f, new Vector3(-150f, 110f, -150), 350f);
             _pLight2 = new PointLight(Vector3.UnitY, 1.0f, new Vector3(0f, 150f, 150f), 300f);           
 
             _treeModel = new ModelInstance("tree1");
             _treeModel.Position = new Vector3(0.0f, 100.0f, 0.0f);
-            
-            _boxModel = new ModelInstance("clothbox1");
+
+            _boxModels = new List<ModelInstance>();
+            for (float x = -10; x <= 10; x += 1.5f)
+            {
+                for (float z = -10; z <= 10; z += 1.5f)
+                {
+                    float y = (float)Math.Sin(x / 2.0f) * (float)Math.Cos(z / 2.0f) * 200.0f;
+
+                    ModelInstance instance = new ModelInstance("clothbox1");
+                    instance.Position = new Vector3(x * 100.0f, y, z * 100.0f);
+
+                    _boxModels.Add(instance);
+                }
+            }
 
             _lizardModel = new ModelInstance("lizard");
             _lizardModel.Scale = new Vector3(5f);
-            _lizardModel.Position = new Vector3(100f, 0f, 100f);
+            _lizardModel.Position = new Vector3(-200f, 200f, 300f);
 
             base.Initialize();
         }
@@ -71,9 +83,12 @@ namespace DeferredRenderer
         {
             _renderer.LoadContent(GraphicsDevice, Content);
 
-            _treeModel.LoadContent(GraphicsDevice, Content);
-            _boxModel.LoadContent(GraphicsDevice, Content);
+            _treeModel.LoadContent(GraphicsDevice, Content);            
             _lizardModel.LoadContent(GraphicsDevice, Content);
+            for (int i = 0; i < _boxModels.Count; i++)
+            {
+                _boxModels[i].LoadContent(GraphicsDevice, Content);
+            }
         }
 
         protected override void UnloadContent()
@@ -81,8 +96,11 @@ namespace DeferredRenderer
             _renderer.UnloadContent(GraphicsDevice, Content);
 
             _treeModel.UnloadContent(GraphicsDevice, Content);
-            _boxModel.UnloadContent(GraphicsDevice, Content);
             _lizardModel.UnloadContent(GraphicsDevice, Content);
+            for (int i = 0; i < _boxModels.Count; i++)
+            {
+                _boxModels[i].UnloadContent(GraphicsDevice, Content);
+            }
         }
 
         protected override void Update(GameTime gameTime)
@@ -99,11 +117,16 @@ namespace DeferredRenderer
             _renderer.Begin(_camera);
 
             _renderer.DrawModel(_treeModel);
-            _renderer.DrawModel(_boxModel);
+
+            for (int i = 0; i < _boxModels.Count; i++)
+            {
+                _renderer.DrawModel(_boxModels[i]);
+            }
+
             _renderer.DrawModel(_lizardModel);
 
-            _renderer.DrawLight(_pLight1);
-            _renderer.DrawLight(_pLight2);
+            //_renderer.DrawLight(_pLight1);
+            //_renderer.DrawLight(_pLight2);
 
             _renderer.DrawLight(_dLight1);
             _renderer.DrawLight(_dLight2);
