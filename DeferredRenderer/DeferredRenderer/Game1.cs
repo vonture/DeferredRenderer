@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
@@ -29,6 +28,22 @@ namespace DeferredRenderer
         private PointLight _pLight1;
         private PointLight _pLight2;
 
+        private Keys[] _rtKeys = new Keys[] 
+        {
+            Keys.D1,
+            Keys.D2,
+            Keys.D3,
+            Keys.D4,
+            Keys.D5,
+            Keys.D6,
+            Keys.D7,
+            Keys.D8,
+            Keys.D9,
+            Keys.D0,
+        };
+
+        float _time;
+
         public Game1()
         {
             IsFixedTimeStep = false;
@@ -51,12 +66,13 @@ namespace DeferredRenderer
             _camera.Position = new Vector3(0.0f, 100.0f, 400.0f);
 
             _dLight1 = new DirectionLight(new Vector3(1, 1, 1f), 1.0f, new Vector3(0.5f, 0.5f, 0.5f));
-            _dLight2 = new DirectionLight(new Vector3(1, 1f, 1f), 1.0f, new Vector3(-0.5f, 0.5f, 0.1f));
+            _dLight2 = new DirectionLight(new Vector3(0.5f, 1f, 0.5f), 1.0f, new Vector3(-0.5f, 0.5f, 0.1f));
             _pLight1 = new PointLight(Vector3.UnitX, 1.0f, new Vector3(-150f, 110f, -150), 350f);
             _pLight2 = new PointLight(Vector3.UnitY, 1.0f, new Vector3(0f, 150f, 150f), 300f);           
 
             _treeModel = new ModelInstance("tree1");
             _treeModel.Position = new Vector3(0.0f, 100.0f, 0.0f);
+            _treeModel.Scale = new Vector3(100f);
 
             _boxModels = new List<ModelInstance>();
             for (float x = -10; x <= 10; x += 1.5f)
@@ -67,6 +83,7 @@ namespace DeferredRenderer
 
                     ModelInstance instance = new ModelInstance("clothbox1");
                     instance.Position = new Vector3(x * 100.0f, y, z * 100.0f);
+                    instance.Scale = new Vector3(100f);
 
                     _boxModels.Add(instance);
                 }
@@ -108,6 +125,24 @@ namespace DeferredRenderer
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             _camera.Update(dt);
+            _time += dt * 0.5f;
+
+            for (int i = 0; i < _boxModels.Count; i++)
+            {
+                float y = (float)Math.Sin(_boxModels[i].Position.X + _time) *
+                    (float)Math.Cos(_boxModels[i].Position.Z + _time) * 100f;
+
+                _boxModels[i].Position = new Vector3(_boxModels[i].Position.X, y, _boxModels[i].Position.Z);
+            }
+
+            KeyboardState kb = Keyboard.GetState();
+            for (int i = 0; i < _rtKeys.Length; i++)
+            {
+                if (kb.IsKeyDown(_rtKeys[i]))
+                {
+                    _renderer.DisplayChannels = (GBufferCombineChannels)i;
+                }
+            }
 
             base.Update(gameTime);
         }
@@ -125,11 +160,11 @@ namespace DeferredRenderer
 
             _renderer.DrawModel(_lizardModel);
 
-            //_renderer.DrawLight(_pLight1);
-            //_renderer.DrawLight(_pLight2);
+            _renderer.DrawLight(_pLight1, false);
+            _renderer.DrawLight(_pLight2, false);
 
-            _renderer.DrawLight(_dLight1);
-            _renderer.DrawLight(_dLight2);
+            _renderer.DrawLight(_dLight1, false);
+            _renderer.DrawLight(_dLight2, true);
 
             _renderer.End();
 

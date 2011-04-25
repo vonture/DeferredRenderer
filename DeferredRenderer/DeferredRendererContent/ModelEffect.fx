@@ -141,7 +141,7 @@ PS_Out_Model PS_Model(PS_In_Model input)
 
 	output.RT0 = float4(vDiffuse.rgb, fSpecularIntensity);
 	output.RT1 = float4(0.5f * (vNormal.xyz + 1.0f), fSpecularPower);
-	output.RT2 = float4(0.0f, 0.0f, 0.0f, fAmbientTerm);
+	output.RT2 = float4(0.0f, fAmbientTerm, 0.0f, 0.0f);
 	output.RT3 = float4(fDepth, 1.0f, 1.0f, 1.0f);	
 
 	return output;

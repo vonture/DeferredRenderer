@@ -54,7 +54,6 @@
       <Processor>CustomEffectModelProcessor</Processor>
       <ProcessorParameters_Effect>ModelEffect.fx</ProcessorParameters_Effect>
       <ProcessorParameters_GenerateTangentFrames>True</ProcessorParameters_GenerateTangentFrames>
-      <ProcessorParameters_Scale>100</ProcessorParameters_Scale>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -64,7 +63,6 @@
       <Processor>CustomEffectModelProcessor</Processor>
       <ProcessorParameters_Effect>ModelEffect.fx</ProcessorParameters_Effect>
       <ProcessorParameters_GenerateTangentFrames>True</ProcessorParameters_GenerateTangentFrames>
-      <ProcessorParameters_Scale>100</ProcessorParameters_Scale>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -123,6 +121,13 @@
       <Processor>CustomEffectModelProcessor</Processor>
       <ProcessorParameters_Effect>ModelEffect.fx</ProcessorParameters_Effect>
       <ProcessorParameters_GenerateTangentFrames>True</ProcessorParameters_GenerateTangentFrames>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DebugFont.spritefont">
+      <Name>DebugFont</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>FontDescriptionProcessor</Processor>
     </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\$(XnaFrameworkVersion)\Microsoft.Xna.GameStudio.ContentPipeline.targets" />

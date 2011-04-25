@@ -36,22 +36,16 @@ namespace DeferredRenderer
             base.UnloadContent(gd, cm);
         }
 
-        public override void RenderUnshadowed(IList<PointLight> lights, Camera camera, GBuffer gBuffer)
+        protected override void renderShadowMaps(IList<ModelInstance> models, Camera camera,
+            BoundingBox sceneBounds)
         {
-            if (lights.Count == 0)
-            {
-                return;
-            }
-
-            BlendState prevBlend = GraphicsDevice.BlendState;
-            DepthStencilState prevStencil = GraphicsDevice.DepthStencilState;
+        }
+        
+        protected override void renderLights(Camera camera, GBuffer gBuffer)
+        {
             RasterizerState prevRaster = GraphicsDevice.RasterizerState;
 
-            GraphicsDevice.BlendState = LightBlendState;
-            GraphicsDevice.DepthStencilState = LightDepthStencilState;
-
-            gBuffer.SetEffectParameters(_pointLightEffect);
-
+            // prep effect parameters
             Matrix invViewProj = Matrix.Invert(camera.View * camera.Projection);
             _pointLightEffect.Parameters["InverseViewProjection"].SetValue(invViewProj);
             _pointLightEffect.Parameters["View"].SetValue(camera.View);
@@ -59,20 +53,31 @@ namespace DeferredRenderer
             _pointLightEffect.Parameters["CameraPosition"].SetValue(camera.Position);
             _pointLightEffect.Parameters["ScreenSpaceOffset"].SetValue(HalfPixelOffset);
 
-            for (int i = 0; i < lights.Count; i++)
+            gBuffer.SetEffectParameters(_pointLightEffect);
+            
+            // render unshadowed
+            for (int i = 0; i < Count(false); i++)
             {
-                _pointLightEffect.Parameters["LightPosition"].SetValue(lights[i].Position);
-                _pointLightEffect.Parameters["LightColor"].SetValue(lights[i].Color);
-                _pointLightEffect.Parameters["LightRadius"].SetValue(lights[i].Range);
-                _pointLightEffect.Parameters["LightIntensity"].SetValue(lights[i].Intensity);
+                PointLight light = GetLight(i, false);
 
-                _lightModel.Position = lights[i].Position;
-                _lightModel.Scale = new Vector3(lights[i].Range);
-                Matrix world = _lightModel.GetWorldMatrix();
+                _lightModel.Position = light.Position;
+                _lightModel.Scale = new Vector3(light.Range);
+                Matrix world = _lightModel.World;
 
+                ContainmentType containType = camera.BoundingFrustum.Contains(_lightModel.BoundingBox);
+                if (containType == ContainmentType.Disjoint)
+                {
+                    continue;
+                }
+
+                _pointLightEffect.Parameters["LightPosition"].SetValue(light.Position);
+                _pointLightEffect.Parameters["LightColor"].SetValue(light.Color);
+                _pointLightEffect.Parameters["LightRadius"].SetValue(light.Range);
+                _pointLightEffect.Parameters["LightIntensity"].SetValue(light.Intensity);
+                
                 // Depending on if the camera is inside or outside of the light, flip cull direction
-                float cameraToCenterSq = Vector3.DistanceSquared(camera.Position, lights[i].Position);
-                GraphicsDevice.RasterizerState = (cameraToCenterSq < lights[i].Range * lights[i].Range) ?
+                float cameraToCenterSq = Vector3.DistanceSquared(camera.Position, light.Position);
+                GraphicsDevice.RasterizerState = (cameraToCenterSq < light.Range * light.Range) ?
                         RasterizerState.CullClockwise : RasterizerState.CullCounterClockwise;
 
                 for (int j = 0; j < _lightModel.Model.Meshes.Count; j++)
@@ -99,22 +104,59 @@ namespace DeferredRenderer
                     }
                 }
             }
-            
-            GraphicsDevice.BlendState = prevBlend;
-            GraphicsDevice.DepthStencilState = prevStencil;
-            GraphicsDevice.RasterizerState = prevRaster;
-        }
 
-        public override void RenderShadowed(IList<PointLight> lights, IList<ModelInstance> models,
-            Camera camera, GBuffer gbuffer)
-        {
-            if (lights.Count == 0)
+            // render shadowed (same as unshadowed right now)
+            for (int i = 0; i < Count(true); i++)
             {
-                return;
+                PointLight light = GetLight(i, false);
+
+                _lightModel.Position = light.Position;
+                _lightModel.Scale = new Vector3(light.Range);
+                Matrix world = _lightModel.World;
+
+                ContainmentType containType = camera.BoundingFrustum.Contains(_lightModel.BoundingBox);
+                if (containType == ContainmentType.Disjoint)
+                {
+                    continue;
+                }
+
+                _pointLightEffect.Parameters["LightPosition"].SetValue(light.Position);
+                _pointLightEffect.Parameters["LightColor"].SetValue(light.Color);
+                _pointLightEffect.Parameters["LightRadius"].SetValue(light.Range);
+                _pointLightEffect.Parameters["LightIntensity"].SetValue(light.Intensity);
+
+                // Depending on if the camera is inside or outside of the light, flip cull direction
+                float cameraToCenterSq = Vector3.DistanceSquared(camera.Position, light.Position);
+                GraphicsDevice.RasterizerState = (cameraToCenterSq < light.Range * light.Range) ?
+                        RasterizerState.CullClockwise : RasterizerState.CullCounterClockwise;
+
+                for (int j = 0; j < _lightModel.Model.Meshes.Count; j++)
+                {
+                    ModelMesh mesh = _lightModel.Model.Meshes[j];
+
+                    for (int k = 0; k < mesh.MeshParts.Count; k++)
+                    {
+                        ModelMeshPart part = mesh.MeshParts[k];
+                        GraphicsDevice.SetVertexBuffer(part.VertexBuffer);
+                        GraphicsDevice.Indices = part.IndexBuffer;
+
+                        Matrix boneMatrix = _lightModel.GetBoneMatrix(mesh.ParentBone.Index);
+                        _pointLightEffect.Parameters["World"].SetValue(boneMatrix * world);
+
+                        for (int m = 0; m < _pointLightEffect.CurrentTechnique.Passes.Count; m++)
+                        {
+                            _pointLightEffect.CurrentTechnique.Passes[m].Apply();
+
+                            GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+                                part.VertexOffset, 0, part.NumVertices, part.StartIndex,
+                                part.PrimitiveCount);
+                        }
+                    }
+                }
             }
 
-            // TODO
-            RenderUnshadowed(lights, camera, gbuffer);
+
+            GraphicsDevice.RasterizerState = prevRaster;
         }
     }
 }

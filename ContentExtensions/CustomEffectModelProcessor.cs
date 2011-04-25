@@ -43,8 +43,8 @@ namespace ContentExtensions
             ret.Tag = tag;
 
             return ret;
-        }        
-                
+        }
+
         protected override MaterialContent ConvertMaterial(MaterialContent input, ContentProcessorContext context)
         {
             OpaqueDataDictionary processorParameters = new OpaqueDataDictionary();

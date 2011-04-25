@@ -12,10 +12,15 @@ namespace DeferredRenderer
         private Effect _directionLightEffect;
         private FullScreenQuad _fsQuad;
 
+        private Vector2[][] _clipPlanes;
+        private Matrix[][] _lightViewProjs; 
+
         public DirectionLightRenderer(GraphicsDevice gd) 
             : base(gd)
         {
             _fsQuad = new FullScreenQuad();
+            _clipPlanes = new Vector2[0][];
+            _lightViewProjs = new Matrix[0][];
         }
 
         public override void LoadContent(GraphicsDevice gd, ContentManager cm) 
@@ -36,35 +41,53 @@ namespace DeferredRenderer
             base.UnloadContent(gd, cm);
         }
 
-        public override void RenderUnshadowed(IList<DirectionLight> lights, Camera camera,
-            GBuffer gBuffer)
+        protected override void renderShadowMaps(IList<ModelInstance> models, Camera camera,
+            BoundingBox sceneBounds)
         {
-            if (lights.Count == 0)
+            int numLights = Count(true);
+            if (_clipPlanes.Length != numLights && _lightViewProjs.Length != numLights)
             {
-                return;
+                _clipPlanes = new Vector2[numLights][];
+                _lightViewProjs = new Matrix[numLights][];
             }
 
             BlendState prevBlend = GraphicsDevice.BlendState;
             DepthStencilState prevStencil = GraphicsDevice.DepthStencilState;
 
-            GraphicsDevice.BlendState = LightBlendState;
-            GraphicsDevice.DepthStencilState = LightDepthStencilState;
+            GraphicsDevice.BlendState = BlendState.Opaque;
+            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
-            _directionLightEffect.CurrentTechnique = 
-                _directionLightEffect.Techniques["DirectionLightUnshadowed"];
+            for (int i = 0; i < numLights; i++)
+            {
+                renderShadowDepth(GetLight(i, true), models, camera, GetDepthRT(i),
+                    out _clipPlanes[i], out _lightViewProjs[i]);
+            }
 
-            gBuffer.SetEffectParameters(_directionLightEffect);           
+            GraphicsDevice.BlendState = prevBlend;
+            GraphicsDevice.DepthStencilState = prevStencil;
+        }
 
+        protected override void renderLights(Camera camera, GBuffer gBuffer)
+        {
+            // preparation...
             Matrix invViewProj = Matrix.Invert(camera.View * camera.Projection);
             _directionLightEffect.Parameters["InverseViewProjection"].SetValue(invViewProj);
             _directionLightEffect.Parameters["CameraPosition"].SetValue(camera.Position);
             _directionLightEffect.Parameters["ScreenSpaceOffset"].SetValue(HalfPixelOffset);
+            
+            gBuffer.SetEffectParameters(_directionLightEffect);
 
-            for (int i = 0; i < lights.Count; i++)
+            // Render the unshadowed first
+            _directionLightEffect.CurrentTechnique =
+                _directionLightEffect.Techniques["DirectionLightUnshadowed"];
+
+            for (int i = 0; i < Count(false); i++)
             {
-                _directionLightEffect.Parameters["LightDirection"].SetValue(lights[i].Direction);
-                _directionLightEffect.Parameters["LightColor"].SetValue(lights[i].Color);
-                _directionLightEffect.Parameters["LightIntensity"].SetValue(lights[i].Intensity);
+                DirectionLight light = GetLight(i, false);
+
+                _directionLightEffect.Parameters["LightDirection"].SetValue(light.Direction);
+                _directionLightEffect.Parameters["LightColor"].SetValue(light.Color);
+                _directionLightEffect.Parameters["LightIntensity"].SetValue(light.Intensity);
 
                 for (int j = 0; j < _directionLightEffect.CurrentTechnique.Passes.Count; j++)
                 {
@@ -74,56 +97,25 @@ namespace DeferredRenderer
                 }
             }
 
-            GraphicsDevice.BlendState = prevBlend;
-            GraphicsDevice.DepthStencilState = prevStencil;
-        }
-
-        public override void RenderShadowed(IList<DirectionLight> lights, IList<ModelInstance> models,
-            Camera camera, GBuffer gBuffer)
-        {
-            if (lights.Count == 0)
-            {
-                return;
-            }
-            
-            BlendState prevBlend = GraphicsDevice.BlendState;
-            DepthStencilState prevStencil = GraphicsDevice.DepthStencilState;
-
-            RenderTargetBinding[] rtBinds = GraphicsDevice.GetRenderTargets();
-
-            Vector2[][] clipPlanes;
-            Matrix[][] lightViewProjs;
-            renderShadows(lights, models, camera, out clipPlanes, out lightViewProjs);
-
-            GraphicsDevice.SetRenderTargets(rtBinds);
-            GraphicsDevice.Clear(Color.Transparent);
-
-            GraphicsDevice.BlendState = LightBlendState;
-            GraphicsDevice.DepthStencilState = LightDepthStencilState;
-
+            // Render shadowed lights
             _directionLightEffect.CurrentTechnique =
                 _directionLightEffect.Techniques["DirectionLightShadowed"];
-
-            gBuffer.SetEffectParameters(_directionLightEffect);
-
-            Matrix invViewProj = Matrix.Invert(camera.View * camera.Projection);
-            _directionLightEffect.Parameters["InverseViewProjection"].SetValue(invViewProj);
-            _directionLightEffect.Parameters["CameraPosition"].SetValue(camera.Position);
-            _directionLightEffect.Parameters["ScreenSpaceOffset"].SetValue(HalfPixelOffset);
 
             _directionLightEffect.Parameters["NearClip"].SetValue(camera.NearClip);
             _directionLightEffect.Parameters["FarClip"].SetValue(camera.FarClip);
 
             _directionLightEffect.Parameters["SqrtCascadeCount"].SetValue((int)Math.Sqrt(CascadeCount));
-            
-            for (int i = 0; i < lights.Count && i < ShadowRTCount; i++)
-            { 
-                _directionLightEffect.Parameters["LightViewProjection"].SetValue(lightViewProjs[i]);
-                _directionLightEffect.Parameters["ClipPlanes"].SetValue(clipPlanes[i]);
 
-                _directionLightEffect.Parameters["LightDirection"].SetValue(lights[i].Direction);
-                _directionLightEffect.Parameters["LightColor"].SetValue(lights[i].Color);
-                _directionLightEffect.Parameters["LightIntensity"].SetValue(lights[i].Intensity);
+            for (int i = 0; i < Count(true); i++)
+            {
+                DirectionLight light = GetLight(i, true);
+
+                _directionLightEffect.Parameters["LightViewProjection"].SetValue(_lightViewProjs[i]);
+                _directionLightEffect.Parameters["ClipPlanes"].SetValue(_clipPlanes[i]);
+
+                _directionLightEffect.Parameters["LightDirection"].SetValue(light.Direction);
+                _directionLightEffect.Parameters["LightColor"].SetValue(light.Color);
+                _directionLightEffect.Parameters["LightIntensity"].SetValue(light.Intensity);
 
                 _directionLightEffect.Parameters["ShadowMap"].SetValue(GetDepthRT(i));
                 _directionLightEffect.Parameters["ShadowMapSize"].SetValue(ShadowMapSize);
@@ -135,31 +127,6 @@ namespace DeferredRenderer
                     _fsQuad.Draw(GraphicsDevice);
                 }
             }
-
-            GraphicsDevice.BlendState = prevBlend;
-            GraphicsDevice.DepthStencilState = prevStencil;
-        }
-
-        private void renderShadows(IList<DirectionLight> lights, IList<ModelInstance> models,
-            Camera camera, out Vector2[][] clipPlanes, out Matrix[][] lightViewProjs)
-        {
-            clipPlanes = new Vector2[Math.Max(lights.Count, ShadowRTCount)][];
-            lightViewProjs = new Matrix[Math.Max(lights.Count, ShadowRTCount)][];
-
-            BlendState prevBlend = GraphicsDevice.BlendState;
-            DepthStencilState prevStencil = GraphicsDevice.DepthStencilState;
-
-            GraphicsDevice.BlendState = BlendState.Opaque;
-            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-
-            for (int i = 0; i < lights.Count && i < ShadowRTCount; i++)
-            {
-                renderShadowDepth(lights[i], models, camera, GetDepthRT(i),
-                    out clipPlanes[i], out lightViewProjs[i]);
-            }
-
-            GraphicsDevice.BlendState = prevBlend;
-            GraphicsDevice.DepthStencilState = prevStencil;
         }
 
         private void renderShadowDepth(DirectionLight light, IList<ModelInstance> models, Camera camera,
@@ -234,7 +201,7 @@ namespace DeferredRenderer
             for (int i = 0; i < models.Count; i++)
             {
                 Model model = models[i].Model;
-                Matrix world = models[i].GetWorldMatrix();
+                Matrix world = models[i].World;
 
                 for (int j = 0; j < model.Meshes.Count; j++)
                 {

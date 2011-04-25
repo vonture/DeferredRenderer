@@ -32,7 +32,7 @@ PS_Out_Clear PS_Clear()
     output.RT0 = float4(0.0f, 0.0f, 0.0f, 0.0f);
 	output.RT1 = float4(0.5f, 0.5f, 0.5f, 0.0f);
 	output.RT2 = float4(0.0f, 0.0f, 0.0f, 0.0f);
-	output.RT3 = float4(1.0f, 0.0f, 0.0f, 0.0f);
+	output.RT3 = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
     return output;
 }

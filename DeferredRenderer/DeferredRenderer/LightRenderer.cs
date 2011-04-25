@@ -127,6 +127,10 @@ namespace DeferredRenderer
             get { return _gd; }
         }
 
+        private List<T> _unshadowed;
+        private List<T> _shadowed;
+        private bool _shadowsValid;
+
         public LightRenderer(GraphicsDevice gd)
         {
             _gd = gd;
@@ -148,6 +152,10 @@ namespace DeferredRenderer
             _shadowMapSize = SHADOWMAP_SIZE_MAX;
             _cascadeCount = 9;
             _depthRTCount = (DEPTHRT_COUNT_MIN + DEPTHRT_COUNT_MAX) / 2;
+
+            _unshadowed = new List<T>();
+            _shadowed = new List<T>();
+            _shadowsValid = true;
         }
 
         public virtual void LoadContent(GraphicsDevice gd, ContentManager cm) 
@@ -190,24 +198,92 @@ namespace DeferredRenderer
         {
             return _depthRTs[idx];
         }
-        
+
+        public T GetLight(int idx, bool shadowed)
+        {
+            return shadowed ? _shadowed[idx] : _unshadowed[idx];
+        }
+
+        public int Count(bool shadowed)
+        {
+            return shadowed ? _shadowed.Count : _unshadowed.Count;
+        }
+
+        public void Clear()
+        {
+            _unshadowed.Clear();
+            _shadowed.Clear();
+            _shadowsValid = true;
+        }
+
+        public void Add(T light, bool shadowed)
+        {
+            if (shadowed && _shadowed.Count < ShadowRTCount)
+            {
+                _shadowed.Add(light);
+                _shadowsValid = false;
+            }
+            else
+            {
+                _unshadowed.Add(light);
+            }
+        }
+
         protected virtual void OnShadowParameterChange() { }
 
         /// <summary>
-        /// Render unshadowed lights.  Assumes that the light render target is already set.
+        /// Prepares all of the shadow maps with the current lights.
         /// </summary>
-        /// <param name="lights">Lights to render</param>
-        /// <param name="camera">Main view camera.</param>
-        /// <param name="gbuffer">Gbuffer to pull material information from.</param>
-        public abstract void RenderUnshadowed(IList<T> lights, Camera camera, GBuffer gbuffer);
+        /// <param name="models"></param>
+        /// <param name="camera"></param>
+        /// <param name="sceneBounds"></param>
+        public void RenderShadowMaps(IList<ModelInstance> models, Camera camera,
+            BoundingBox sceneBounds)
+        {
+            if (_shadowsValid)
+            {
+                return;
+            }
+
+            renderShadowMaps(models, camera, sceneBounds);
+
+            _shadowsValid = true;
+        }
+
+        protected abstract void renderShadowMaps(IList<ModelInstance> models, Camera camera,
+            BoundingBox sceneBounds);        
 
         /// <summary>
-        /// Render shadowed lights.  Assumes that the light render target is already set.
+        /// Render all the lights.
         /// </summary>
         /// <param name="lights">Lights to render</param>
         /// <param name="camera">Main view camera.</param>
         /// <param name="gbuffer">Gbuffer to pull material information from.</param>
-        public abstract void RenderShadowed(IList<T> lights, IList<ModelInstance> models, Camera camera,
-            GBuffer gbuffer);
+        public void RenderLights(Camera camera, GBuffer gbuffer)
+        {
+            if (!_shadowsValid)
+            {
+                throw new ArgumentException("RenderShadowMaps must be called before RenderLights if " +
+                    "there are shadowed lights in the scene.");
+            }
+
+            if (_shadowed.Count == 0 && _unshadowed.Count == 0)
+            {
+                return;
+            }
+
+            BlendState prevBlend = GraphicsDevice.BlendState;
+            DepthStencilState prevStencil = GraphicsDevice.DepthStencilState;
+
+            GraphicsDevice.BlendState = LightBlendState;
+            GraphicsDevice.DepthStencilState = LightDepthStencilState;
+
+            renderLights(camera, gbuffer);
+
+            GraphicsDevice.BlendState = prevBlend;
+            GraphicsDevice.DepthStencilState = prevStencil;
+        }
+
+        protected abstract void renderLights(Camera camera, GBuffer gbuffer);
     }
 }

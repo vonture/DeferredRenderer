@@ -8,19 +8,26 @@ using System.Diagnostics;
 
 namespace DeferredRenderer
 {
-    public enum RenderTargetType
+    public enum GBufferCombineChannels
     {
         Final,
-        RT0,
-        RT1,
-        RT2,
-        RT3,
-        LightDepth,
+        DiffuseColor,
+        SpecularIntensity,
+        Normals,
+        SpecularPower,
+        AmbientOcclusion,
+        Translucency,
+        Depth,
+        LightColor,
+        LightSpecular,
     }
 
     public class Renderer : IHasContent
     {
         private GraphicsDevice _gd;
+
+        private SpriteBatch _sb;
+        private SpriteFont _debugFont;
 
         /// <summary>
         /// RT0 =       Diffuse.r           | Diffuse.g         | Diffuse.b     | Specular Intensity
@@ -35,11 +42,11 @@ namespace DeferredRenderer
 
         private Camera _camera;
 
-        private RenderTargetType _displayRT;
-        public RenderTargetType DisplayRenderTarget
+        private GBufferCombineChannels _displayChannels;
+        public GBufferCombineChannels DisplayChannels
         {
-            get { return _displayRT; }
-            set { _displayRT = value; }
+            get { return _displayChannels; }
+            set { _displayChannels = value; }
         }
 
         private PointLightRenderer _pointLightRenderer;
@@ -52,9 +59,7 @@ namespace DeferredRenderer
         private Effect _combineEffect;
                 
         private List<ModelInstance> _models;
-
-        private List<PointLight> _pointLights;
-        private List<DirectionLight> _directionLights;
+        private List<string> _debugStrings;
 
         private Vector2 _halfPixelOffset;
 
@@ -66,8 +71,7 @@ namespace DeferredRenderer
             _fsQuad = new FullScreenQuad();
 
             _models = new List<ModelInstance>();
-            _pointLights = new List<PointLight>();
-            _directionLights = new List<DirectionLight>();
+            _debugStrings = new List<string>();
 
             _pointLightRenderer = new PointLightRenderer(gd);
             _directionLightRenderer = new DirectionLightRenderer(gd);
@@ -77,6 +81,10 @@ namespace DeferredRenderer
 
         public void LoadContent(GraphicsDevice gd, ContentManager cm)
         {
+            _sb = new SpriteBatch(gd);
+
+            _debugFont = cm.Load<SpriteFont>("DebugFont");
+
             _gBuffer.LoadContent(gd, cm);
             _lightBuffer.LoadContent(gd, cm);
 
@@ -92,6 +100,11 @@ namespace DeferredRenderer
 
         public void UnloadContent(GraphicsDevice gd, ContentManager cm)
         {
+            _sb.Dispose();
+            _sb = null;
+
+            _debugFont = null;
+
             _gBuffer.UnloadContent(gd, cm);
             _lightBuffer.UnloadContent(gd, cm);
 
@@ -116,24 +129,29 @@ namespace DeferredRenderer
             _models.Add(model);
         }
 
-        public void DrawLight(PointLight plight)
+        public void DrawLight(PointLight plight, bool shadowed)
         {
             if (!_begun)
             {
                 throw new InvalidOperationException("Not begun.");
             }
 
-            _pointLights.Add(plight);
+            _pointLightRenderer.Add(plight, shadowed);
         }
 
-        public void DrawLight(DirectionLight dlight)
+        public void DrawLight(DirectionLight dlight, bool shadowed)
         {
             if (!_begun)
             {
                 throw new InvalidOperationException("Not begun.");
             }
 
-            _directionLights.Add(dlight);
+            _directionLightRenderer.Add(dlight, shadowed);
+        }
+
+        public void DrawDebugString(string text)
+        {
+            _debugStrings.Add(text);
         }
 
         public void Begin(Camera cam)
@@ -147,8 +165,9 @@ namespace DeferredRenderer
             _camera = cam;
 
             _models.Clear();
-            _pointLights.Clear();
-            _directionLights.Clear();
+            _debugStrings.Clear();
+            _directionLightRenderer.Clear();
+            _pointLightRenderer.Clear();            
         }
 
         public void End()
@@ -158,16 +177,40 @@ namespace DeferredRenderer
                 throw new InvalidOperationException("Not begun.");
             }
             _begun = false;
+            
+            // calculate the scene bounding box
+            BoundingBox sceneBB = (_models.Count > 0) ? _models[0].BoundingBox : new BoundingBox();
+            for (int i = 1; i < _models.Count; i++)
+            {
+                sceneBB = BoundingBox.CreateMerged(sceneBB, _models[i].BoundingBox);
+            }
+
+            //DrawDebugString("Scene bounds: " + sceneBB + ".");
+            
+            // Render the shadow maps to the appropriate depth buffers
+            _directionLightRenderer.RenderShadowMaps(_models, _camera, new BoundingBox());
+            _pointLightRenderer.RenderShadowMaps(_models, _camera, new BoundingBox());            
 
             // Set and clear the g-buffer for a new set of draw calls
             _gBuffer.Set(_gd);
             _gBuffer.Clear(_gd);
 
             // Render all the models
+            int modelsDrawn = 0;
+            int numTriangles = 0;
+            BoundingFrustum cameraFrust = _camera.BoundingFrustum;
             for (int i = 0; i < _models.Count; i++)
             {
                 Model model = _models[i].Model;
-                Matrix world = _models[i].GetWorldMatrix();
+                Matrix world = _models[i].World;
+                BoundingBox bb = _models[i].BoundingBox;
+
+                ContainmentType containType = cameraFrust.Contains(bb);
+                if (containType == ContainmentType.Disjoint)
+                {
+                    continue;
+                }
+                modelsDrawn++;
 
                 for (int j = 0; j < model.Meshes.Count; j++)
                 {
@@ -178,6 +221,8 @@ namespace DeferredRenderer
                         ModelMeshPart part = mesh.MeshParts[k];
                         _gd.SetVertexBuffer(part.VertexBuffer);
                         _gd.Indices = part.IndexBuffer;
+
+                        numTriangles += part.PrimitiveCount;
 
                         Effect effect = part.Effect;
                         effect.Parameters["World"].SetValue(_models[i].GetBoneMatrix(mesh.ParentBone.Index) * world);
@@ -195,16 +240,20 @@ namespace DeferredRenderer
                     }
                 }
             }
+
+            DrawDebugString("Models: " + _models.Count + " ("  + modelsDrawn + " drawn, " + numTriangles + " triangles)");
             
             // Render lights
             _lightBuffer.Set(_gd);
             _lightBuffer.Clear(_gd);
 
-            _directionLightRenderer.RenderShadowed(_directionLights, _models, _camera, _gBuffer);
-            //_pointLightRenderer.RenderShadowed(_pointLights, _models, _camera, _gBuffer);
+            _directionLightRenderer.RenderLights(_camera, _gBuffer);
+            DrawDebugString("Directional lights: " + (_directionLightRenderer.Count(false) + _directionLightRenderer.Count(true)) +
+                " (" + _directionLightRenderer.Count(true) + " shadowed)");
 
-            //_directionLightRenderer.RenderUnshadowed(_directionLights, _camera, _gBuffer);
-            //_pointLightRenderer.RenderUnshadowed(_pointLights, _camera, _gBuffer);
+            _pointLightRenderer.RenderLights(_camera, _gBuffer);
+            DrawDebugString("Point lights: " + (_pointLightRenderer.Count(false) + _pointLightRenderer.Count(true)) +
+                " (" + _pointLightRenderer.Count(true) + " shadowed)");
 
             // Combine everything
             _gd.SetRenderTarget(null);
@@ -213,12 +262,35 @@ namespace DeferredRenderer
             _gBuffer.SetEffectParameters(_combineEffect);
             _lightBuffer.SetEffectParameters(_combineEffect);
 
+            _combineEffect.CurrentTechnique = _combineEffect.Techniques[_displayChannels.ToString()];
             _combineEffect.Parameters["ScreenSpaceOffset"].SetValue(_halfPixelOffset);
             for (int i = 0; i < _combineEffect.CurrentTechnique.Passes.Count; i++)
             {
                 _combineEffect.CurrentTechnique.Passes[i].Apply();
 
                 _fsQuad.Draw(_gd);
+            }
+
+            DrawDebugString("Channels shown: " + _displayChannels);
+
+            if (_debugStrings.Count > 0)
+            {
+                int screenWidth = _gd.Viewport.Width;
+
+                _sb.Begin();
+                for (int i = 0; i < _debugStrings.Count; i++)
+                {
+                    string text = _debugStrings[i];
+                    Vector2 textSize = _debugFont.MeasureString(text);
+
+                    Vector2 pos = new Vector2(screenWidth - (int)textSize.X - 2, i * _debugFont.LineSpacing);
+                    _sb.DrawString(_debugFont, text, pos, Color.White);
+                }
+                _sb.End();
+
+                _gd.BlendState = BlendState.Opaque;
+                _gd.RasterizerState = RasterizerState.CullCounterClockwise;
+                _gd.DepthStencilState = DepthStencilState.Default;
             }
         }
     }

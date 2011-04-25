@@ -56,7 +56,7 @@ namespace DeferredRenderer
         /// </summary>
         public void Clear(GraphicsDevice gd)
         {
-            gd.Clear(Color.Black);
+            gd.Clear(Color.Transparent);
         }
     }
 }
