@@ -7,54 +7,58 @@ using Microsoft.Xna.Framework;
 
 namespace DeferredRenderer
 {
-    class LightBuffer : IHasContent
+    public class LightBuffer : DeferredBuffer
     {
         // LightRT =   Light.r  | Light.g   | Light.b   | Specular Highlight
         private RenderTarget2D _lightRT;
-        public RenderTarget2D RenderTarget
+        public override RenderTarget2D this[int index]
         {
-            get { return _lightRT; }
+            get
+            {
+                if (index != 0)
+                {
+                    throw new ArgumentException("Index out of range.");
+                }
+
+                return _lightRT;
+            }
+        }
+        public override int Count
+        {
+            get { return 1; }
         }
 
         public LightBuffer()
         {
         }
 
-        public void LoadContent(GraphicsDevice gd, ContentManager cm)
+        public override void LoadContent(GraphicsDevice gd, ContentManager cm)
         {
             _lightRT = new RenderTarget2D(gd, gd.Viewport.Width, gd.Viewport.Height, false,
                 SurfaceFormat.HdrBlendable, DepthFormat.None, 0, RenderTargetUsage.DiscardContents);
+
+            base.LoadContent(gd, cm);
         }
 
-        public void UnloadContent(GraphicsDevice gd, ContentManager cm)
+        public override void UnloadContent(GraphicsDevice gd, ContentManager cm)
         {
             _lightRT.Dispose();
             _lightRT = null;
+
+            base.UnloadContent(gd, cm);
         }
 
-        /// <summary>
-        /// Sets the render targets ont he graphics card.
-        /// </summary>
-        /// <param name="gd"></param>
-        public void Set(GraphicsDevice gd)
+        public override void Set(GraphicsDevice gd)
         {
             gd.SetRenderTarget(_lightRT);
         }
 
-        /// <summary>
-        /// Assigns the render targets to the specified shader under the parameters RT0-RTX.
-        /// </summary>
-        /// <param name="effect">Effect to apply to.</param>
-        public void SetEffectParameters(Effect effect)
+        public override void SetEffectParameters(Effect effect)
         {
             effect.Parameters["LightMap"].SetValue(_lightRT);
         }
 
-        /// <summary>
-        /// Clears all of the rendertargets to their default values.  Assumes the render targets
-        /// are already set.
-        /// </summary>
-        public void Clear(GraphicsDevice gd)
+        public override void Clear(GraphicsDevice gd)
         {
             gd.Clear(Color.Transparent);
         }

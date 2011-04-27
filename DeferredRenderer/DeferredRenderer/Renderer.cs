@@ -56,9 +56,13 @@ namespace DeferredRenderer
         
         private FullScreenQuad _fsQuad;
 
-        private Effect _combineEffect;
-                
-        private List<ModelInstance> _models;
+        private RenderTarget2D _ppRT1;
+        private RenderTarget2D _ppRT2;
+
+        private CombinePostProcess _combinePP;
+        private List<PostProcess> _postProcesses;
+
+        private List<ModelInstance> _models;        
         private List<string> _debugStrings;
 
         private Vector2 _halfPixelOffset;
@@ -71,7 +75,10 @@ namespace DeferredRenderer
             _fsQuad = new FullScreenQuad();
 
             _models = new List<ModelInstance>();
+            _postProcesses = new List<PostProcess>();
             _debugStrings = new List<string>();
+            
+            _combinePP = new CombinePostProcess();
 
             _pointLightRenderer = new PointLightRenderer(gd);
             _directionLightRenderer = new DirectionLightRenderer(gd);
@@ -88,14 +95,19 @@ namespace DeferredRenderer
             _gBuffer.LoadContent(gd, cm);
             _lightBuffer.LoadContent(gd, cm);
 
+            _combinePP.LoadContent(gd, cm);
+
+            _ppRT1 = new RenderTarget2D(_gd, _gd.Viewport.Width, _gd.Viewport.Height, false,
+                SurfaceFormat.HalfVector4, DepthFormat.None);
+            _ppRT2 = new RenderTarget2D(_gd, _gd.Viewport.Width, _gd.Viewport.Height, false,
+                SurfaceFormat.HalfVector4, DepthFormat.None);
+
             _pointLightRenderer.LoadContent(gd, cm);
             _directionLightRenderer.LoadContent(gd, cm);
 
             _fsQuad.LoadContent(gd, cm);
 
             _halfPixelOffset = new Vector2(0.5f / gd.Viewport.Width, 0.5f / gd.Viewport.Height);
-
-            _combineEffect = cm.Load<Effect>("GBufferCombine");
         }
 
         public void UnloadContent(GraphicsDevice gd, ContentManager cm)
@@ -108,15 +120,14 @@ namespace DeferredRenderer
             _gBuffer.UnloadContent(gd, cm);
             _lightBuffer.UnloadContent(gd, cm);
 
+            _combinePP.UnloadContent(gd, cm);
+
             _pointLightRenderer.UnloadContent(gd, cm);
             _directionLightRenderer.UnloadContent(gd, cm);
                         
             _fsQuad.UnloadContent(gd, cm);
 
             _halfPixelOffset = Vector2.Zero;
-
-            _combineEffect.Dispose();
-            _combineEffect = null;
         }
 
         public void DrawModel(ModelInstance model)
@@ -149,6 +160,16 @@ namespace DeferredRenderer
             _directionLightRenderer.Add(dlight, shadowed);
         }
 
+        public void AddPostProcess(PostProcess pp)
+        {
+            if (!_begun)
+            {
+                throw new InvalidOperationException("Not begun.");
+            }
+
+            _postProcesses.Add(pp);
+        }
+
         public void DrawDebugString(string text)
         {
             _debugStrings.Add(text);
@@ -166,8 +187,9 @@ namespace DeferredRenderer
 
             _models.Clear();
             _debugStrings.Clear();
+            _postProcesses.Clear();
             _directionLightRenderer.Clear();
-            _pointLightRenderer.Clear();            
+            _pointLightRenderer.Clear();
         }
 
         public void End()
@@ -255,23 +277,32 @@ namespace DeferredRenderer
             DrawDebugString("Point lights: " + (_pointLightRenderer.Count(false) + _pointLightRenderer.Count(true)) +
                 " (" + _pointLightRenderer.Count(true) + " shadowed)");
 
+
             // Combine everything
-            _gd.SetRenderTarget(null);
-            _gd.Clear(Color.Black);
-
-            _gBuffer.SetEffectParameters(_combineEffect);
-            _lightBuffer.SetEffectParameters(_combineEffect);
-
-            _combineEffect.CurrentTechnique = _combineEffect.Techniques[_displayChannels.ToString()];
-            _combineEffect.Parameters["ScreenSpaceOffset"].SetValue(_halfPixelOffset);
-            for (int i = 0; i < _combineEffect.CurrentTechnique.Passes.Count; i++)
+            if (_displayChannels != GBufferCombineChannels.Final)
             {
-                _combineEffect.CurrentTechnique.Passes[i].Apply();
-
-                _fsQuad.Draw(_gd);
+                _postProcesses.Clear();
             }
 
-            DrawDebugString("Channels shown: " + _displayChannels);
+            _combinePP.DisplayChannels = _displayChannels;
+            RenderTarget2D destTarget = (_postProcesses.Count > 0) ? _ppRT1 : null;
+            _combinePP.Render(_gd, null, destTarget, _gBuffer, _lightBuffer);
+
+            // Render post processes
+            for (int i = 0; i < _postProcesses.Count; i++)
+            {
+                RenderTarget2D src =  (i % 2 == 0) ? _ppRT1 : _ppRT2;
+                RenderTarget2D dest = (i % 2 != 0) ? _ppRT1 : _ppRT2;
+
+                if (i == _postProcesses.Count - 1)
+                {
+                    dest = null;
+                }
+
+                _postProcesses[i].Render(_gd, src, dest, _gBuffer, _lightBuffer);
+            }
+
+            DrawDebugString("Post processes: " + _postProcesses.Count);
 
             if (_debugStrings.Count > 0)
             {

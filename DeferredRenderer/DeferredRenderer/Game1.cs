@@ -28,6 +28,8 @@ namespace DeferredRenderer
         private PointLight _pLight1;
         private PointLight _pLight2;
 
+        private HDRPostProcess _hdr;
+
         private Keys[] _rtKeys = new Keys[] 
         {
             Keys.D1,
@@ -51,8 +53,8 @@ namespace DeferredRenderer
             _graphics = new GraphicsDeviceManager(this);
             _graphics.IsFullScreen = false;
             _graphics.SynchronizeWithVerticalRetrace = false;
-            _graphics.PreferredBackBufferWidth = 1280;
-            _graphics.PreferredBackBufferHeight = 720;
+            _graphics.PreferredBackBufferWidth = 1360;
+            _graphics.PreferredBackBufferHeight = 768;
             _graphics.PreferMultiSampling = false;
 
             Content.RootDirectory = "Content";
@@ -66,9 +68,9 @@ namespace DeferredRenderer
             _camera.Position = new Vector3(0.0f, 100.0f, 400.0f);
 
             _dLight1 = new DirectionLight(new Vector3(1, 1, 1f), 1.0f, new Vector3(0.5f, 0.5f, 0.5f));
-            _dLight2 = new DirectionLight(new Vector3(0.5f, 1f, 0.5f), 1.0f, new Vector3(-0.5f, 0.5f, 0.1f));
-            _pLight1 = new PointLight(Vector3.UnitX, 1.0f, new Vector3(-150f, 110f, -150), 350f);
-            _pLight2 = new PointLight(Vector3.UnitY, 1.0f, new Vector3(0f, 150f, 150f), 300f);           
+            _dLight2 = new DirectionLight(new Vector3(0.5f, 1f, 0.5f), 3.0f, new Vector3(-0.5f, 0.5f, 0.1f));
+            _pLight1 = new PointLight(new Vector3(1.0f, 0.5f, 0.5f), 10.0f, new Vector3(-150f, 110f, -150), 800f);
+            _pLight2 = new PointLight(new Vector3(0.5f, 1.5f, 0.5f), 5.0f, new Vector3(0f, 150f, 150f), 300f);           
 
             _treeModel = new ModelInstance("tree1");
             _treeModel.Position = new Vector3(0.0f, 100.0f, 0.0f);
@@ -93,6 +95,8 @@ namespace DeferredRenderer
             _lizardModel.Scale = new Vector3(5f);
             _lizardModel.Position = new Vector3(-200f, 200f, 300f);
 
+            _hdr = new HDRPostProcess();
+
             base.Initialize();
         }
 
@@ -106,6 +110,10 @@ namespace DeferredRenderer
             {
                 _boxModels[i].LoadContent(GraphicsDevice, Content);
             }
+
+            _hdr.LoadContent(GraphicsDevice, Content);
+
+            base.LoadContent();
         }
 
         protected override void UnloadContent()
@@ -118,6 +126,10 @@ namespace DeferredRenderer
             {
                 _boxModels[i].UnloadContent(GraphicsDevice, Content);
             }
+
+            _hdr.UnloadContent(GraphicsDevice, Content);
+
+            base.UnloadContent();
         }
 
         protected override void Update(GameTime gameTime)
@@ -132,7 +144,7 @@ namespace DeferredRenderer
                 float y = (float)Math.Sin(_boxModels[i].Position.X + _time) *
                     (float)Math.Cos(_boxModels[i].Position.Z + _time) * 100f;
 
-                _boxModels[i].Position = new Vector3(_boxModels[i].Position.X, y, _boxModels[i].Position.Z);
+                //_boxModels[i].Position = new Vector3(_boxModels[i].Position.X, y, _boxModels[i].Position.Z);
             }
 
             KeyboardState kb = Keyboard.GetState();
@@ -151,7 +163,7 @@ namespace DeferredRenderer
         {
             _renderer.Begin(_camera);
 
-            _renderer.DrawModel(_treeModel);
+            //_renderer.DrawModel(_treeModel);
 
             for (int i = 0; i < _boxModels.Count; i++)
             {
@@ -165,6 +177,8 @@ namespace DeferredRenderer
 
             _renderer.DrawLight(_dLight1, false);
             _renderer.DrawLight(_dLight2, true);
+
+            _renderer.AddPostProcess(_hdr);
 
             _renderer.End();
 

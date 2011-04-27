@@ -112,8 +112,8 @@ float4 PS_Combine(PS_In_Combine input) : COLOR0
 	float fSpecular = vLighting.a;
 
 	float3 vFinalColour = fAmbient * vDiffuse +
-						  vLightColor * vDiffuse +
-						  vLightColor * fSpecular;
+						  vLightColor * vDiffuse;
+						  //vLightColor * fSpecular;
 
     return float4(vFinalColour, 1.0f);
 }

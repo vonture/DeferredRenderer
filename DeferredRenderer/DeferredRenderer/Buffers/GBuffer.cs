@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 
 namespace DeferredRenderer
 {
-    public class GBuffer : IHasContent
+    public class GBuffer : DeferredBuffer
     {
         /// <summary>
         /// RT0 =       Diffuse.r           | Diffuse.g         | Diffuse.b     | Specular Intensity
@@ -17,11 +17,19 @@ namespace DeferredRenderer
         /// </summary>
         private RenderTarget2D[] _renderTargets;
 
-        public RenderTarget2D this[int index]
+        public override RenderTarget2D this[int index]
         {
-            get { return _renderTargets[index]; }
+            get
+            {
+                if (index < 0 || index >= _renderTargets.Length)
+                {
+                    throw new ArgumentException("Index out of range.");
+                }
+
+                return _renderTargets[index]; 
+            }
         }
-        public int Count
+        public override int Count
         {
             get { return _renderTargets.Length; }
         }
@@ -35,7 +43,7 @@ namespace DeferredRenderer
             _fsQuad = new FullScreenQuad();
         }
 
-        public void LoadContent(GraphicsDevice gd, ContentManager cm)
+        public override void LoadContent(GraphicsDevice gd, ContentManager cm)
         {
             Point size = new Point(gd.Viewport.Width, gd.Viewport.Height);
 
@@ -56,7 +64,7 @@ namespace DeferredRenderer
             _fsQuad.LoadContent(gd, cm);
         }
 
-        public void UnloadContent(GraphicsDevice gd, ContentManager cm)
+        public override void UnloadContent(GraphicsDevice gd, ContentManager cm)
         {
             for (int i = 0; i < _renderTargets.Length; i++)
             {
@@ -74,7 +82,7 @@ namespace DeferredRenderer
         /// Sets the render targets ont he graphics card.
         /// </summary>
         /// <param name="gd"></param>
-        public void Set(GraphicsDevice gd)
+        public override void Set(GraphicsDevice gd)
         {
             gd.SetRenderTargets(_renderTargets[0], _renderTargets[1], _renderTargets[2], _renderTargets[3]);
         }
@@ -83,7 +91,7 @@ namespace DeferredRenderer
         /// Assigns the render targets to the specified shader under the parameters RT0-RTX.
         /// </summary>
         /// <param name="effect">Effect to apply to.</param>
-        public void SetEffectParameters(Effect effect)
+        public override void SetEffectParameters(Effect effect)
         {
             effect.Parameters["RT0"].SetValue(_renderTargets[0]);
             effect.Parameters["RT1"].SetValue(_renderTargets[1]);
@@ -95,7 +103,7 @@ namespace DeferredRenderer
         /// Clears all of the rendertargets to their default values.  Assumes the render targets
         /// are already set.
         /// </summary>
-        public void Clear(GraphicsDevice gd)
+        public override void Clear(GraphicsDevice gd)
         {
             for (int i = 0; i < _clearEffect.CurrentTechnique.Passes.Count; i++)
             {
