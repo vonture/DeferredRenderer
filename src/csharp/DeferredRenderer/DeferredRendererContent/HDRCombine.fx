@@ -112,6 +112,39 @@ float4 PS_HDRCombine( in float2 vTexCoord : TEXCOORD0 ) : COLOR0
     return float4(final * toneScalar, 1.0f);
 }
 
+/*
+float4 PS_Tonemap( in float2 vTexCoord : TEXCOORD0 ) : COLOR0
+{
+	float3 vSceneColor = tex2D(SceneSampler, vTexCoord).rgb;
+
+	float xWeight = frac( vTexCoord.x / InverseBrightPassSize.x ) - 0.5f;
+    float xDir = xWeight;
+    xWeight = abs( xWeight );
+    xDir /= xWeight;
+    xDir *= InverseBrightPassSize.x;
+
+    float yWeight = frac( vTexCoord.y / InverseBrightPassSize.y ) - 0.5f;
+    float yDir = yWeight;
+    yWeight = abs( yWeight );
+    yDir /= yWeight;
+    yDir *= InverseBrightPassSize.y;
+
+    // sample the blur texture for the 4 relevant pixels, weighted accordingly
+    float3 vBlur = ((1.0f - xWeight) * (1.0f - yWeight))    * tex2D(BrightPassSampler, vTexCoord).rgb;        
+    vBlur +=       (xWeight * (1.0f - yWeight))             * tex2D(BrightPassSampler, vTexCoord + float2(xDir, 0.0f)).rgb;
+    vBlur +=       (yWeight * (1.0f - xWeight))             * tex2D(BrightPassSampler, vTexCoord + float2(0.0f, yDir)).rgb;
+    vBlur +=       (xWeight * yWeight)                      * tex2D(BrightPassSampler, vTexCoord + float2(xDir, yDir)).rgb;
+
+	vSceneColor += vBlur;
+	
+	float lum_temp = (TonemapScale / (AverageLogLuminance + 0.001)) * AverageLuminance;
+	float ld = lum_temp / (lum_temp + 1);
+	float3 finalColor = (lightTransport / lum) * ld;
+
+	return float4(finalColor, 1.0f);
+}
+*/
+
 technique HDRCombine
 {
     pass Pass1

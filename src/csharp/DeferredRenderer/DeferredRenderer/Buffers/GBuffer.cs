@@ -105,12 +105,7 @@ namespace DeferredRenderer
         /// </summary>
         public override void Clear(GraphicsDevice gd)
         {
-            for (int i = 0; i < _clearEffect.CurrentTechnique.Passes.Count; i++)
-            {
-                _clearEffect.CurrentTechnique.Passes[i].Apply();
-
-                _fsQuad.Draw(gd);
-            }
+            _fsQuad.Draw(gd, _clearEffect);
         }
     }
 }

@@ -59,12 +59,8 @@ namespace DeferredRenderer
 
             _combineEffect.CurrentTechnique = _combineEffect.Techniques[_displayChannels.ToString()];
             _combineEffect.Parameters["ScreenSpaceOffset"].SetValue(_halfPixel);
-            for (int i = 0; i < _combineEffect.CurrentTechnique.Passes.Count; i++)
-            {
-                _combineEffect.CurrentTechnique.Passes[i].Apply();
 
-                _fsQuad.Draw(gd);
-            }
+            _fsQuad.Draw(gd, _combineEffect);
         }
     }
 }

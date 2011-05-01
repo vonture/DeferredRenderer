@@ -88,13 +88,8 @@ namespace DeferredRenderer
                 _directionLightEffect.Parameters["LightDirection"].SetValue(light.Direction);
                 _directionLightEffect.Parameters["LightColor"].SetValue(light.Color);
                 _directionLightEffect.Parameters["LightIntensity"].SetValue(light.Intensity);
-
-                for (int j = 0; j < _directionLightEffect.CurrentTechnique.Passes.Count; j++)
-                {
-                    _directionLightEffect.CurrentTechnique.Passes[j].Apply();
-
-                    _fsQuad.Draw(GraphicsDevice);
-                }
+                
+                _fsQuad.Draw(GraphicsDevice, _directionLightEffect);
             }
 
             // Render shadowed lights
@@ -120,12 +115,7 @@ namespace DeferredRenderer
                 _directionLightEffect.Parameters["ShadowMap"].SetValue(GetDepthRT(i));
                 _directionLightEffect.Parameters["ShadowMapSize"].SetValue(ShadowMapSize);
 
-                for (int j = 0; j < _directionLightEffect.CurrentTechnique.Passes.Count; j++)
-                {
-                    _directionLightEffect.CurrentTechnique.Passes[j].Apply();
-
-                    _fsQuad.Draw(GraphicsDevice);
-                }
+                _fsQuad.Draw(GraphicsDevice, _directionLightEffect);
             }
         }
 

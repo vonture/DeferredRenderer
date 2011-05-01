@@ -163,12 +163,7 @@ namespace DeferredRenderer
             _combineEffect.Parameters["GaussianScalar"].SetValue(GaussianMultiplier);
             _combineEffect.Parameters["TargetSize"].SetValue(new Vector2(gd.Viewport.Width, gd.Viewport.Height));
 
-            for (int i = 0; i < _combineEffect.CurrentTechnique.Passes.Count; i++)
-            {
-                _combineEffect.CurrentTechnique.Passes[i].Apply();
-
-                _fsQuad.Draw(gd);
-            }
+            _fsQuad.Draw(gd, _combineEffect);
         }
 
         private void brightPass(GraphicsDevice gd, RenderTarget2D source)
@@ -198,12 +193,8 @@ namespace DeferredRenderer
             _brightPassEffect.Parameters["LuminanceOffsets"].SetValue(brightPassOffsets);
             _brightPassEffect.Parameters["SceneSize"].SetValue(new Vector2(source.Width, source.Height));
             _brightPassEffect.Parameters["TargetSize"].SetValue(new Vector2(_brightPassRT.Width, _brightPassRT.Height));
-            for (int i = 0; i < _brightPassEffect.CurrentTechnique.Passes.Count; i++)
-            {
-                _brightPassEffect.CurrentTechnique.Passes[i].Apply();
 
-                _fsQuad.Draw(gd);
-            }
+            _fsQuad.Draw(gd, _brightPassEffect);
             
             // Down sample the bright pass
             Vector2[] dsOffsets = new Vector2[5];
@@ -220,12 +211,7 @@ namespace DeferredRenderer
             _downSampleEffect.Parameters["SceneTexture"].SetValue(_brightPassRT);
             _downSampleEffect.Parameters["SceneSize"].SetValue(new Vector2(_brightPassRT.Width, _brightPassRT.Height));
             _downSampleEffect.Parameters["TargetSize"].SetValue(new Vector2(_blurredBrightPassRT1.Width, _blurredBrightPassRT1.Height));
-            for (int i = 0; i < _downSampleEffect.CurrentTechnique.Passes.Count; i++)
-            {
-                _downSampleEffect.CurrentTechnique.Passes[i].Apply();
-
-                _fsQuad.Draw(gd);
-            }
+            _fsQuad.Draw(gd, _downSampleEffect);
             
             // Blur horizontally
             Vector2[] horizontalOffsets = new Vector2[9];
@@ -256,12 +242,7 @@ namespace DeferredRenderer
             _blurEffect.Parameters["Weights"].SetValue(weights);
             _blurEffect.Parameters["SceneSize"].SetValue(new Vector2(_blurredBrightPassRT1.Width, _blurredBrightPassRT1.Height));
             _blurEffect.Parameters["TargetSize"].SetValue(new Vector2(_blurredBrightPassRT2.Width, _blurredBrightPassRT2.Height));
-            for (int i = 0; i < _blurEffect.CurrentTechnique.Passes.Count; i++)
-            {
-                _blurEffect.CurrentTechnique.Passes[i].Apply();
-
-                _fsQuad.Draw(gd);
-            }
+            _fsQuad.Draw(gd, _blurEffect);
 
             // Blur vertically
             gd.SetRenderTarget(_blurredBrightPassRT1);
@@ -272,12 +253,7 @@ namespace DeferredRenderer
             _blurEffect.Parameters["Weights"].SetValue(weights);
             _blurEffect.Parameters["SceneSize"].SetValue(new Vector2(_blurredBrightPassRT2.Width, _blurredBrightPassRT2.Height));
             _blurEffect.Parameters["TargetSize"].SetValue(new Vector2(_blurredBrightPassRT1.Width, _blurredBrightPassRT1.Height));
-            for (int i = 0; i < _blurEffect.CurrentTechnique.Passes.Count; i++)
-            {
-                _blurEffect.CurrentTechnique.Passes[i].Apply();
-
-                _fsQuad.Draw(gd);
-            }            
+            _fsQuad.Draw(gd, _blurEffect);          
         }
 
         float computeGaussianValue(float x, float mean, float std_deviation)
@@ -322,12 +298,7 @@ namespace DeferredRenderer
             _luminanceEffect.Parameters["DownSampleOffsets"].SetValue(dsOffsets);
             _luminanceEffect.Parameters["SceneSize"].SetValue(srcSize);
             _luminanceEffect.Parameters["TargetSize"].SetValue(dstSize);
-            for (int i = 0; i < _luminanceEffect.CurrentTechnique.Passes.Count; i++)
-            {
-                _luminanceEffect.CurrentTechnique.Passes[i].Apply();
-
-                _fsQuad.Draw(gd);
-            }
+            _fsQuad.Draw(gd, _luminanceEffect);
 
             // Downscale to the 1x1 texture
             for (int i = 1; i < _luminanceRTs.Length; i++)
@@ -355,12 +326,7 @@ namespace DeferredRenderer
                 _luminanceEffect.Parameters["DownSampleOffsets"].SetValue(dsOffsets);
                 _luminanceEffect.Parameters["SceneSize"].SetValue(srcSize);
                 _luminanceEffect.Parameters["TargetSize"].SetValue(dstSize);
-                for (int j = 0; j < _luminanceEffect.CurrentTechnique.Passes.Count; j++)
-                {
-                    _luminanceEffect.CurrentTechnique.Passes[j].Apply();
-
-                    _fsQuad.Draw(gd);
-                }
+                _fsQuad.Draw(gd, _luminanceEffect);
             }
         }
     }

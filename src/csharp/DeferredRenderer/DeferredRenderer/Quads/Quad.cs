@@ -48,11 +48,15 @@ namespace DeferredRenderer
         /// <summary>
         /// Draws the full screen quad
         /// </summary>
-        /// <param name="graphicsDevice">The GraphicsDevice to use for rendering</param>
-        public void Draw(GraphicsDevice graphicsDevice)
+        /// <param name="gd">The GraphicsDevice to use for rendering</param>
+        public void Draw(GraphicsDevice gd, Effect effect)
         {
-            graphicsDevice.SetVertexBuffer(_vertexBuffer);
-            graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+            gd.SetVertexBuffer(_vertexBuffer);
+            for (int i = 0; i < effect.CurrentTechnique.Passes.Count; i++)
+            {
+                effect.CurrentTechnique.Passes[i].Apply();
+                gd.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+            }
         }
     }
 }

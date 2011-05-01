@@ -68,28 +68,46 @@ namespace DeferredRenderer
             _camera.Position = new Vector3(0.0f, 100.0f, 400.0f);
 
             _dLight1 = new DirectionLight(new Vector3(1, 1, 1f), 1.0f, new Vector3(0.5f, 0.5f, 0.5f));
-            _dLight2 = new DirectionLight(new Vector3(0.5f, 1f, 0.5f), 3.0f, new Vector3(-0.5f, 0.5f, 0.1f));
-            _pLight1 = new PointLight(new Vector3(1.0f, 0.5f, 0.5f), 10.0f, new Vector3(-150f, 110f, -150), 800f);
-            _pLight2 = new PointLight(new Vector3(0.5f, 1.5f, 0.5f), 5.0f, new Vector3(0f, 150f, 150f), 300f);           
+            _dLight2 = new DirectionLight(new Vector3(0.8f, 1f, 0.8f), 1.0f, new Vector3(-0.5f, 0.5f, 0.1f));
+            _pLight1 = new PointLight(new Vector3(1.0f, 0.5f, 0.5f), 1.0f, new Vector3(0, 200, 0), 500f);
+            _pLight2 = new PointLight(new Vector3(0.5f, 1.5f, 0.5f), 2.0f, new Vector3(0f, 150f, 150f), 300f);           
 
             _treeModel = new ModelInstance("tree1");
             _treeModel.Position = new Vector3(0.0f, 100.0f, 0.0f);
             _treeModel.Scale = new Vector3(100f);
 
             _boxModels = new List<ModelInstance>();
-            for (float x = -10; x <= 10; x += 1.5f)
-            {
-                for (float z = -10; z <= 10; z += 1.5f)
-                {
-                    float y = (float)Math.Sin(x / 2.0f) * (float)Math.Cos(z / 2.0f) * 200.0f;
 
-                    ModelInstance instance = new ModelInstance("clothbox1");
-                    instance.Position = new Vector3(x * 100.0f, y, z * 100.0f);
-                    instance.Scale = new Vector3(100f);
+            // Floor box
+            ModelInstance floor = new ModelInstance("clothbox1");
+            floor.Scale = new Vector3(2000f, 100f, 2000f);
+            floor.Position = new Vector3(0f, 0f, 0f);
+            _boxModels.Add(floor);
 
-                    _boxModels.Add(instance);
-                }
-            }
+            ModelInstance leftWall = new ModelInstance("clothbox1");
+            leftWall.Scale = new Vector3(50f, 200f, 400f);
+            leftWall.Position = new Vector3(200f, 150f, 0);
+            _boxModels.Add(leftWall);
+
+            ModelInstance rightWall = new ModelInstance("clothbox1");
+            rightWall.Scale = new Vector3(50f, 200f, 400f);
+            rightWall.Position = new Vector3(-200f, 150f, 0);
+            _boxModels.Add(rightWall);
+
+            ModelInstance topWall = new ModelInstance("clothbox1");
+            topWall.Scale = new Vector3(400f, 200f, 50);
+            topWall.Position = new Vector3(0, 150f, -200f);
+            _boxModels.Add(topWall);
+
+            ModelInstance bottomWall = new ModelInstance("clothbox1");
+            bottomWall.Scale = new Vector3(400f, 200f, 50);
+            bottomWall.Position = new Vector3(0, 150f, 200f);
+            _boxModels.Add(bottomWall);
+
+            ModelInstance roof = new ModelInstance("clothbox1");
+            roof.Scale = new Vector3(400f, 50f, 400);
+            roof.Position = new Vector3(0, 250f, 0f);
+            _boxModels.Add(roof);
 
             _lizardModel = new ModelInstance("lizard");
             _lizardModel.Scale = new Vector3(5f);
@@ -139,14 +157,6 @@ namespace DeferredRenderer
             _camera.Update(dt);
             _time += dt * 0.5f;
 
-            for (int i = 0; i < _boxModels.Count; i++)
-            {
-                float y = (float)Math.Sin(_boxModels[i].Position.X + _time) *
-                    (float)Math.Cos(_boxModels[i].Position.Z + _time) * 100f;
-
-                //_boxModels[i].Position = new Vector3(_boxModels[i].Position.X, y, _boxModels[i].Position.Z);
-            }
-
             KeyboardState kb = Keyboard.GetState();
             for (int i = 0; i < _rtKeys.Length; i++)
             {
@@ -173,9 +183,9 @@ namespace DeferredRenderer
             _renderer.DrawModel(_lizardModel);
 
             _renderer.DrawLight(_pLight1, false);
-            _renderer.DrawLight(_pLight2, false);
+            //_renderer.DrawLight(_pLight2, false);
 
-            _renderer.DrawLight(_dLight1, false);
+            //_renderer.DrawLight(_dLight1, false);
             _renderer.DrawLight(_dLight2, true);
 
             _renderer.AddPostProcess(_hdr);
