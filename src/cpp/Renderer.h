@@ -3,15 +3,29 @@
 #include "Light.h"
 #include "Camera.h"
 #include "PostProcess.h"
+#include "CombinePostProcess.h"
 #include "ModelInstance.h"
+#include "GBuffer.h"
+#include "LightBuffer.h"
+#include "IHasContent.h"
+#include "ModelRenderer.h"
+#include <vector>
+
+using namespace std;
 
 class Renderer : public IHasContent
 {
 private:
-
+	bool _begun;
+	GBuffer _gBuffer;
+	LightBuffer _lightBuffer;
+	vector<ModelInstance*> _models;
+	vector<WCHAR*> _debugText;
+	ModelRenderer _modelRenderer;
+	CombinePostProcess _combinePP;
 
 public:
-	Renderer(ID3D11Device* device);
+	Renderer();
 	~Renderer();
 
 	void AddModel(ModelInstance* model);
@@ -19,14 +33,13 @@ public:
 	void AddPostProcess(PostProcess* postProcess);
 	void AddDebugText(WCHAR* text);
 
-	void Begin(Camera* camera);
-	void End();
+	HRESULT Begin();
+	HRESULT End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext, Camera* camera);
 
-	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc,
-                                     void* pUserContext);	
-	void OnD3D11DestroyDevice(void* pUserContext);
+	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
+	void OnD3D11DestroyDevice();
 
 	HRESULT OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
-                            const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc, void* pUserContext);
-	void OnD3D11ReleasingSwapChain(void* pUserContext);
+                            const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
+	void OnD3D11ReleasingSwapChain();
 };

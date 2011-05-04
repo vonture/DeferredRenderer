@@ -14,7 +14,7 @@
 #include "SDKmisc.h"
 #include "SDKmesh.h"
 #include "resource.h"
-#include "ModelInstance.h"
+#include "Game.h"
 
 //#define DEBUG_VS   // Uncomment this line to debug D3D9 vertex shaders 
 //#define DEBUG_PS   // Uncomment this line to debug D3D9 pixel shaders 
@@ -22,7 +22,7 @@
 //--------------------------------------------------------------------------------------
 // Global variables
 //--------------------------------------------------------------------------------------
-CModelViewerCamera          g_Camera;               // A model viewing camera
+//CModelViewerCamera          g_Camera;               // A model viewing camera
 CDXUTDialogResourceManager  g_DialogResourceManager; // manager for shared resources of dialogs
 CD3DSettingsDlg             g_SettingsDlg;          // Device settings dialog
 CDXUTTextHelper*            g_pTxtHelper = NULL;
@@ -30,11 +30,13 @@ CDXUTDialog                 g_HUD;                  // dialog for standard contr
 CDXUTDialog                 g_SampleUI;             // dialog for sample specific controls
 
 // Direct3D 11 resources
-ModelInstance*				g_pPowerPlantModel = NULL;
 ID3D11VertexShader*         g_pVertexShader11 = NULL;
 ID3D11PixelShader*          g_pPixelShader11 = NULL;
 ID3D11InputLayout*          g_pLayout11 = NULL;
 ID3D11SamplerState*         g_pSamLinear = NULL;
+
+// Renderer
+Game*						g_pGame = NULL;
 
 //--------------------------------------------------------------------------------------
 // Constant buffers
@@ -102,7 +104,7 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 #if defined(DEBUG) | defined(_DEBUG)
     _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 #endif
-	
+		
     // DXUT will create and use the best device (either D3D9 or D3D11) 
     // that is available on the system depending on which D3D callbacks are set below
 
@@ -122,11 +124,11 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
     InitApp();
     DXUTInit( true, true, NULL ); // Parse the command line, show msgboxes on error, no extra command line params
     DXUTSetCursorSettings( true, true );
-    DXUTCreateWindow( L"deferred-renderer" );
+    DXUTCreateWindow(L"deferred-renderer");
 
     // Only require 10-level hardware, change to D3D_FEATURE_LEVEL_11_0 to require 11-class hardware
     // Switch to D3D_FEATURE_LEVEL_9_x for 10level9 hardware
-    DXUTCreateDevice( D3D_FEATURE_LEVEL_11_0, true, 1360, 768 );
+    DXUTCreateDevice( D3D_FEATURE_LEVEL_11_0, true, 800, 600);
 
     DXUTMainLoop(); // Enter into the DXUT render loop
 
@@ -138,12 +140,12 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 // Initialize the app 
 //--------------------------------------------------------------------------------------
 void InitApp()
-{
+{	
+	g_pGame = new Game();
+
     g_SettingsDlg.Init( &g_DialogResourceManager );
     g_HUD.Init( &g_DialogResourceManager );
     g_SampleUI.Init( &g_DialogResourceManager );
-
-	g_pPowerPlantModel = new ModelInstance(L"\\models\\powerplant\\powerplant.sdkmesh");
 
     g_HUD.SetCallback( OnGUIEvent );
     int iY = 30;
@@ -188,15 +190,14 @@ HRESULT CALLBACK OnD3D11CreateDevice( ID3D11Device* pd3dDevice, const DXGI_SURFA
                                      void* pUserContext )
 {
     HRESULT hr;
+	
+	V_RETURN(g_pGame->OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
     ID3D11DeviceContext* pd3dImmediateContext = DXUTGetD3D11DeviceContext();
     V_RETURN( g_DialogResourceManager.OnD3D11CreateDevice( pd3dDevice, pd3dImmediateContext ) );
     V_RETURN( g_SettingsDlg.OnD3D11CreateDevice( pd3dDevice ) );
     g_pTxtHelper = new CDXUTTextHelper( pd3dDevice, pd3dImmediateContext, &g_DialogResourceManager, 15 );
-
-	// Load the model
-	V_RETURN(g_pPowerPlantModel->OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc, pUserContext));
-
+	
     // Read the HLSL file
     WCHAR str[MAX_PATH];
     V_RETURN( DXUTFindDXSDKMediaFileCch( str, MAX_PATH, L"SimpleSample.hlsl" ) );
@@ -271,14 +272,7 @@ HRESULT CALLBACK OnD3D11CreateDevice( ID3D11Device* pd3dDevice, const DXGI_SURFA
     cbDesc.ByteWidth = sizeof( CB_VS_PER_FRAME );
     V_RETURN( pd3dDevice->CreateBuffer( &cbDesc, NULL, &g_pcbVSPerFrame11 ) );
     DXUT_SetDebugName( g_pcbVSPerFrame11, "CB_VS_PER_FRAME" );
-
-    // Create other render resources here
-
-    // Setup the camera's view parameters
-    D3DXVECTOR3 vecEye( 0.0f, 0.0f, -5.0f );
-    D3DXVECTOR3 vecAt ( 0.0f, 0.0f, -0.0f );
-    g_Camera.SetViewParams( &vecEye, &vecAt );
-
+	
     return S_OK;
 }
 
@@ -291,16 +285,10 @@ HRESULT CALLBACK OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapCha
 {
     HRESULT hr;
 
-	V_RETURN(g_pPowerPlantModel->OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc, pUserContext));
-
+	V_RETURN(g_pGame->OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	
     V_RETURN( g_DialogResourceManager.OnD3D11ResizedSwapChain( pd3dDevice, pBackBufferSurfaceDesc ) );
     V_RETURN( g_SettingsDlg.OnD3D11ResizedSwapChain( pd3dDevice, pBackBufferSurfaceDesc ) );
-
-    // Setup the camera's projection parameters
-    float fAspectRatio = pBackBufferSurfaceDesc->Width / ( FLOAT )pBackBufferSurfaceDesc->Height;
-    g_Camera.SetProjParams( D3DX_PI / 4, fAspectRatio, 0.1f, 1000.0f );
-    g_Camera.SetWindow( pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height );
-    g_Camera.SetButtonMasks( MOUSE_LEFT_BUTTON, MOUSE_WHEEL, MOUSE_MIDDLE_BUTTON );
 
     g_HUD.SetLocation( pBackBufferSurfaceDesc->Width - 170, 0 );
     g_HUD.SetSize( 170, 170 );
@@ -317,6 +305,9 @@ HRESULT CALLBACK OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapCha
 void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext, double fTime,
                                  float fElapsedTime, void* pUserContext )
 {
+	g_pGame->OnD3D11FrameRender(pd3dDevice, pd3dImmediateContext);
+
+	/*
     // If the settings dialog is being shown, then render it instead of rendering the app's scene
     if( g_SettingsDlg.IsActive() )
     {
@@ -332,10 +323,11 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
     ID3D11DepthStencilView* pDSV = DXUTGetD3D11DepthStencilView();
     pd3dImmediateContext->ClearDepthStencilView( pDSV, D3D11_CLEAR_DEPTH, 1.0, 0 );
 
+	
     // Get the projection & view matrix from the camera class
-    D3DXMATRIX mWorld = *g_Camera.GetWorldMatrix();
-    D3DXMATRIX mView = *g_Camera.GetViewMatrix();
-    D3DXMATRIX mProj = *g_Camera.GetProjMatrix();
+    D3DXMATRIX mWorld = *g_Camera.GetWorld();
+    D3DXMATRIX mView = *g_Camera.GetView();
+    D3DXMATRIX mProj = *g_Camera.GetProjection();
     D3DXMATRIX mWorldViewProjection = mWorld * mView * mProj;
 
     // Set the constant buffers
@@ -379,6 +371,7 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
         OutputDebugString( L"\n" );
         dwTimefirst = GetTickCount();
     }
+	*/
 }
 
 
@@ -387,7 +380,7 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
 //--------------------------------------------------------------------------------------
 void CALLBACK OnD3D11ReleasingSwapChain( void* pUserContext )
 {
-	g_pPowerPlantModel->OnD3D11ReleasingSwapChain(pUserContext);
+	g_pGame->OnD3D11ReleasingSwapChain();
     g_DialogResourceManager.OnD3D11ReleasingSwapChain();
 }
 
@@ -397,7 +390,7 @@ void CALLBACK OnD3D11ReleasingSwapChain( void* pUserContext )
 //--------------------------------------------------------------------------------------
 void CALLBACK OnD3D11DestroyDevice( void* pUserContext )
 {
-	g_pPowerPlantModel->OnD3D11DestroyDevice(pUserContext);
+	g_pGame->OnD3D11DestroyDevice();
 
     g_DialogResourceManager.OnD3D11DestroyDevice();
     g_SettingsDlg.OnD3D11DestroyDevice();
@@ -473,8 +466,7 @@ bool CALLBACK ModifyDeviceSettings( DXUTDeviceSettings* pDeviceSettings, void* p
 //--------------------------------------------------------------------------------------
 void CALLBACK OnFrameMove( double fTime, float fElapsedTime, void* pUserContext )
 {
-    // Update the camera's position based on user input 
-    g_Camera.FrameMove( fElapsedTime );
+	g_pGame->OnFrameMove(fTime, fElapsedTime);
 }
 
 
@@ -503,10 +495,7 @@ LRESULT CALLBACK MsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bo
     *pbNoFurtherProcessing = g_SampleUI.MsgProc( hWnd, uMsg, wParam, lParam );
     if( *pbNoFurtherProcessing )
         return 0;
-
-    // Pass all remaining windows messages to camera so it can respond to user input
-    g_Camera.HandleMessages( hWnd, uMsg, wParam, lParam );
-
+	
     return 0;
 }
 
@@ -516,6 +505,7 @@ LRESULT CALLBACK MsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bo
 //--------------------------------------------------------------------------------------
 void CALLBACK OnKeyboard( UINT nChar, bool bKeyDown, bool bAltDown, void* pUserContext )
 {
+	g_pGame->OnKeyboard(nChar, bKeyDown, bAltDown);
 }
 
 

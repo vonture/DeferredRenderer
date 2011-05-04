@@ -7,20 +7,29 @@ class Camera
 {
 private:
 	bool _dirty;
-	float _near, _far;
+	float _nearClip, _farClip;
 	D3DXMATRIX _world, _view, _proj;
 
 	void updateValues()
     {
 		D3DXMatrixInverse(&_view, NULL, &_world);
-		BuildProjection(&_proj, _near, _far);
+		BuildProjection(&_proj, _nearClip, _farClip);
+
+		_dirty = false;
     }
 
 protected:
 	virtual void BuildProjection(D3DXMATRIX* outProj, float nearClip, float farClip) = 0;
 
 public:
-	Camera(float near, float far) : _near(near), _far(far), _dirty(true)
+	Camera() 
+		: _nearClip(0.1f), _farClip(1000.0f), _dirty(true)
+	{
+		D3DXMatrixIdentity(&_world);
+	}
+
+	Camera(float nearClip, float farClip) 
+		: _nearClip(nearClip), _farClip(farClip), _dirty(true)
 	{
 		D3DXMatrixIdentity(&_world);
 	}
@@ -57,6 +66,26 @@ public:
 		D3DXQUATERNION quat;
 		D3DXQuaternionRotationMatrix(&quat, &_world);
 		return quat;
+	}
+
+	void SetNearClip(float nearClip)
+	{
+		_nearClip = nearClip;
+	}
+
+	float GetNearClip() const
+	{
+		return _nearClip;
+	}
+
+	void SetFarClip(float farClip)
+	{
+		_farClip = farClip;
+	}
+
+	float GetFarClip() const
+	{
+		return _farClip;
 	}
 
 	const D3DXMATRIX* GetView()
@@ -103,6 +132,11 @@ protected:
 	}
 
 public:
+	PerspectiveCamera() 
+		: Camera(), _fov(1.0f), _aspect(1.0f)
+	{
+	}
+
 	PerspectiveCamera(float nearClip, float farClip, float fov, float aspect) 
 		: Camera(nearClip, farClip), _fov(fov), _aspect(aspect)
 	{
@@ -133,8 +167,13 @@ private:
 	D3DXVECTOR2 _rotation;
 
 public:
+	FirstPersonCamera()
+		: PerspectiveCamera(), _rotation(0.0f, 0.0f)
+	{
+	}
+
 	FirstPersonCamera(float nearClip, float farClip, float fov, float aspect)
-		: PerspectiveCamera(nearClip, farClip, fov, aspect)
+		: PerspectiveCamera(nearClip, farClip, fov, aspect), _rotation(0.0f, 0.0f)
 	{
 	}
 
@@ -146,16 +185,11 @@ public:
 	void SetRotation(const D3DXVECTOR2& rotation)
 	{		
 		_rotation.x = rotation.x;
-		_rotation.y = max(-M_PI_2, min(M_PI_2, rotation.y));
-
-		D3DXVECTOR3 pos = GetPosition();
-		
-		D3DXMATRIX rot, translate, world;
-		D3DXMatrixRotationYawPitchRoll(&rot, _rotation.x, _rotation.y, 0.0f);
-		D3DXMatrixTranslation(&translate, pos.x, pos.y, pos.z);
-		D3DXMatrixMultiply(&world, &rot, &translate);
-
-		SetWorld(world);
+		_rotation.y = max(-D3DX_PI / 2.0f, min(D3DX_PI / 2.0f, rotation.y));
+				
+		D3DXQUATERNION rotQuat;
+		D3DXQuaternionRotationYawPitchRoll(&rotQuat, _rotation.x, _rotation.y, 0.0f);
+		SetOrientation(rotQuat);
 	}
 };
 
@@ -171,6 +205,11 @@ protected:
 	}
 
 public:
+	OrthographicCamera()
+		: Camera(), _size(100.0f, 100.0f)
+	{
+	}
+
 	OrthographicCamera(float nearClip, float farClip, const D3DXVECTOR2& size)
 		: Camera(nearClip, farClip), _size(size)
 	{
@@ -191,4 +230,4 @@ public:
 		D3DXVECTOR2 minSize = D3DXVECTOR2(0.0f, 0.0f);
 		D3DXVec2Maximize(&_size, &size, &minSize);
 	}
-}
+};

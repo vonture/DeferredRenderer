@@ -56,26 +56,24 @@ void ModelInstance::buildBoundingBox()
 	_bb.SetMax(max);
 }
 
-HRESULT ModelInstance::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc,
-                                     void* pUserContext)
+HRESULT ModelInstance::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 	V_RETURN(_mesh.Create(pd3dDevice, _path));
-
 	return S_OK;
 }
 
-void ModelInstance::OnD3D11DestroyDevice(void* pUserContext)
+void ModelInstance::OnD3D11DestroyDevice()
 {
 	_mesh.Destroy();
 }
 
 HRESULT ModelInstance::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
-                        const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc, void* pUserContext)
+                        const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	return S_OK;
 }
 
-void ModelInstance::OnD3D11ReleasingSwapChain(void* pUserContext)
+void ModelInstance::OnD3D11ReleasingSwapChain()
 {
 }

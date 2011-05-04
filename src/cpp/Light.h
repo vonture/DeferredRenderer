@@ -63,6 +63,13 @@ private:
 	D3DXVECTOR3 _position;
 	float _radius;
 
+public:
+	PointLight(const D3DXCOLOR& color, float intensity, const D3DXVECTOR3& position, float radius)
+		: Light(color, intensity), _position(position), _radius(radius)
+	{
+		_radius = max(_radius, 0.0f);
+	}
+
 	const D3DXVECTOR3* GetPosition()
 	{
 		return &_position;

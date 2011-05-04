@@ -82,16 +82,15 @@ public:
 		return &_bb;
 	}
 
-	const CDXUTSDKMesh* GetMesh()
+	CDXUTSDKMesh* GetMesh()
 	{
 		return &_mesh;
 	}
 
-	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc,
-                                     void* pUserContext);	
-	void OnD3D11DestroyDevice(void* pUserContext);
+	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
+	void OnD3D11DestroyDevice();
 
 	HRESULT OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
-                            const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc, void* pUserContext);
-	void OnD3D11ReleasingSwapChain(void* pUserContext);
+                            const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
+	void OnD3D11ReleasingSwapChain();
 };

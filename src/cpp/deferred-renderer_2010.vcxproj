@@ -378,9 +378,22 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CombinePostProcess.cpp" />
+    <ClCompile Include="FullscreenQuad.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="GBuffer.cpp" />
+    <ClCompile Include="LightBuffer.cpp" />
     <ClCompile Include="ModelInstance.cpp" />
+    <ClCompile Include="ModelRenderer.cpp" />
+    <ClCompile Include="Quad.cpp" />
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="ShaderLoader.cpp" />
+    <ClInclude Include="CombinePostProcess.h" />
+    <ClInclude Include="FullscreenQuad.h" />
+    <ClInclude Include="ShaderLoader.h" />
     <None Include="DXUT\Optional\directx.ico" />
     <ClInclude Include="BoundingObjects.h" />
+    <ClInclude Include="DeferredBuffer.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="DXUT\Core\DXUT.h" />
     <ClInclude Include="DXUT\Core\DXUTDevice11.h" />
@@ -409,15 +422,24 @@
     <ClCompile Include="deferred-renderer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="GBufferCombine.hlsl" />
+    <None Include="ModelRender.hlsl" />
+    <None Include="QuadVS.hlsl" />
     <None Include="SimpleSample.hlsl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="GBuffer.h" />
     <ClInclude Include="IDrawable.h" />
     <ClInclude Include="IHasContent.h" />
     <ClInclude Include="IUpdateable.h" />
     <ClInclude Include="Light.h" />
+    <ClInclude Include="LightBuffer.h" />
+    <ClInclude Include="LightRenderer.h" />
     <ClInclude Include="ModelInstance.h" />
+    <ClInclude Include="ModelRenderer.h" />
     <ClInclude Include="PostProcess.h" />
+    <ClInclude Include="Quad.h" />
     <ClInclude Include="Renderer.h" />
     <CLInclude Include="resource.h" />
     <ResourceCompile Include="SimpleSample.rc" />

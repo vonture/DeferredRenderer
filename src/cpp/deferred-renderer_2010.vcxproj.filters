@@ -27,6 +27,12 @@
     <Filter Include="Buffers">
       <UniqueIdentifier>{7c64a593-d07d-43bc-9fc8-0eb1cb05e6e6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Models">
+      <UniqueIdentifier>{217f9938-c221-4dee-80c6-37c0037ebe1e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Quads">
+      <UniqueIdentifier>{be4f8f37-2e28-4b18-9117-eb8b5598ebcb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="DXUT\Optional\directx.ico">
@@ -92,10 +98,42 @@
     <ClCompile Include="DXUT\Optional\SDKmisc.cpp">
       <Filter>DXUT</Filter>
     </ClCompile>
+    <None Include="ModelRender.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="QuadVS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="GBufferCombine.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="deferred-renderer.cpp" />
-    <ClCompile Include="ModelInstance.cpp" />
+    <ClCompile Include="ModelInstance.cpp">
+      <Filter>Models</Filter>
+    </ClCompile>
+    <ClCompile Include="GBuffer.cpp">
+      <Filter>Buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="LightBuffer.cpp">
+      <Filter>Buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelRenderer.cpp">
+      <Filter>Models</Filter>
+    </ClCompile>
+    <ClCompile Include="Quad.cpp">
+      <Filter>Quads</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderLoader.cpp" />
+    <ClCompile Include="FullscreenQuad.cpp">
+      <Filter>Quads</Filter>
+    </ClCompile>
+    <ClCompile Include="CombinePostProcess.cpp">
+      <Filter>Post Process</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleSample.hlsl">
@@ -123,11 +161,39 @@
       <Filter>Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="Renderer.h" />
-    <ClInclude Include="ModelInstance.h" />
     <ClInclude Include="Light.h">
       <Filter>Lights</Filter>
     </ClInclude>
     <ClInclude Include="PostProcess.h">
+      <Filter>Post Process</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelInstance.h">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="DeferredBuffer.h">
+      <Filter>Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="GBuffer.h">
+      <Filter>Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="LightRenderer.h">
+      <Filter>Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="LightBuffer.h">
+      <Filter>Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelRenderer.h">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Quad.h">
+      <Filter>Quads</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderLoader.h" />
+    <ClInclude Include="FullscreenQuad.h">
+      <Filter>Quads</Filter>
+    </ClInclude>
+    <ClInclude Include="CombinePostProcess.h">
       <Filter>Post Process</Filter>
     </ClInclude>
   </ItemGroup>
