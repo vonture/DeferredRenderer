@@ -33,6 +33,9 @@
     <Filter Include="Quads">
       <UniqueIdentifier>{be4f8f37-2e28-4b18-9117-eb8b5598ebcb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Input">
+      <UniqueIdentifier>{b8843b02-6f5a-4d22-a73a-f73f3f78ae62}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="DXUT\Optional\directx.ico">
@@ -134,6 +137,12 @@
     <ClCompile Include="CombinePostProcess.cpp">
       <Filter>Post Process</Filter>
     </ClCompile>
+    <ClCompile Include="KeyboardState.cpp">
+      <Filter>Input</Filter>
+    </ClCompile>
+    <ClCompile Include="MouseState.cpp">
+      <Filter>Input</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleSample.hlsl">
@@ -195,6 +204,15 @@
     </ClInclude>
     <ClInclude Include="CombinePostProcess.h">
       <Filter>Post Process</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardState.h">
+      <Filter>Input</Filter>
+    </ClInclude>
+    <ClInclude Include="MouseState.h">
+      <Filter>Input</Filter>
+    </ClInclude>
+    <ClInclude Include="ButtonState.h">
+      <Filter>Input</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

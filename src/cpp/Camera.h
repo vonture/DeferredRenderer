@@ -48,6 +48,37 @@ public:
 		return D3DXVECTOR3(_world._41, _world._42, _world._43); 
 	}
 
+	D3DXVECTOR3 GetForward() const
+	{
+		return D3DXVECTOR3(_world._31, _world._32, _world._33);
+	}
+
+	D3DXVECTOR3 GetBackward() const
+	{
+
+		return D3DXVECTOR3(-_world._31, -_world._32, -_world._33);
+	}	
+
+	D3DXVECTOR3 GetRight() const
+	{
+		return D3DXVECTOR3(_world._11, _world._12, _world._13);
+	}
+
+	D3DXVECTOR3 GetLeft() const
+	{
+		return D3DXVECTOR3(-_world._11, -_world._12, -_world._13);
+	}
+
+	D3DXVECTOR3 GetUp() const
+	{
+		return D3DXVECTOR3(_world._21, _world._22, _world._23);
+	}
+
+	D3DXVECTOR3 GetDown() const
+	{
+		return D3DXVECTOR3(-_world._21, -_world._22, -_world._23);
+	}
+
 	void SetOrientation(const D3DXQUATERNION& orientation)
 	{
 		D3DXMATRIX newWorld;
@@ -177,9 +208,9 @@ public:
 	{
 	}
 
-	const D3DXVECTOR2* GetRotation()
+	const D3DXVECTOR2 GetRotation()
 	{
-		return &_rotation;
+		return _rotation;
 	}
 
 	void SetRotation(const D3DXVECTOR2& rotation)

@@ -5,6 +5,8 @@
 #include "IHasContent.h"
 #include "Renderer.h"
 #include "Camera.h"
+#include "KeyboardState.h"
+#include "MouseState.h"
 
 class Game : public IUpdateable, public IHasContent
 {

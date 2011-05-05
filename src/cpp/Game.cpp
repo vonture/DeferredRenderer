@@ -2,12 +2,11 @@
 #include "Game.h"
 
 Game::Game()
-	: _renderer(), _camera(0.1f, 100.0f, 1.0f, 1.0f), _powerPlant(L"\\models\\powerplant\\powerplant.sdkmesh"),
+	: _renderer(), _camera(0.1f, 50.0f, 1.0f, 1.0f), _powerPlant(L"\\models\\powerplant\\powerplant.sdkmesh"),
 	 _tankScene(L"\\models\\tankscene\\tankscene.sdkmesh")
 {
 	_camera.SetPosition(D3DXVECTOR3(-5.0f, 5.0f, -5.0f));
 	_camera.SetRotation(D3DXVECTOR2(D3DX_PI / 4.0f, D3DX_PI / 8.0f));
-	//_tankScene.SetScale(D3DXVECTOR3(100.0f, 100.0f, 100.0f));
 }
 
 Game::~Game()
@@ -20,6 +19,46 @@ void Game::OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown)
 
 void Game::OnFrameMove(double totalTime, float dt)
 {
+	KeyboardState kb = KeyboardState::GetState();
+	MouseState mouse = MouseState::GetState();
+
+	if (mouse.IsButtonDown(LeftButton))
+	{
+		const float mouseRotateSpeed = 0.002f;
+		D3DXVECTOR2 mouseRotate = D3DXVECTOR2(mouse.GetDX() * mouseRotateSpeed, mouse.GetDY() * mouseRotateSpeed);
+		D3DXVECTOR2 curRotate = _camera.GetRotation();
+				
+		_camera.SetRotation(curRotate + mouseRotate);
+
+		// Set the mouse back one frame 
+		MouseState::SetCursorPosition(mouse.GetX() - mouse.GetDX(), mouse.GetY() - mouse.GetDY());
+
+		D3DXVECTOR2	moveDir = D3DXVECTOR2(0.0f, 0.0f);
+		if (kb.IsKeyDown(W) || kb.IsKeyDown(Up))
+		{
+			moveDir.y++;
+		}
+		if (kb.IsKeyDown(S) || kb.IsKeyDown(Down))
+		{
+			moveDir.y--;
+		}
+		if (kb.IsKeyDown(A) || kb.IsKeyDown(Left))
+		{
+			moveDir.x--;
+		}
+		if (kb.IsKeyDown(D) || kb.IsKeyDown(Right))
+		{
+			moveDir.x++;
+		}
+
+		D3DXVECTOR3 curPosition = _camera.GetPosition();
+		
+		const float cameraMoveSpeed = 5.0f;
+		D3DXVECTOR3 cameraMove = ((moveDir.y * _camera.GetForward()) + (moveDir.x * _camera.GetRight())) * 
+			(cameraMoveSpeed * dt);
+
+		_camera.SetPosition(curPosition + cameraMove);
+	}
 }
 
 void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext)
