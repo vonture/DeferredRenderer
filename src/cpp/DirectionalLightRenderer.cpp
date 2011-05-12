@@ -13,6 +13,101 @@ HRESULT DirectionalLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImme
 	return S_OK;
 }
 
+HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContext, DirectionalLight* dlight,
+	UINT shadowMapIdx, std::vector<ModelInstance*> models, Camera* camera, BoundingBox* sceneBounds,
+	OrthographicCamera** outLightCameras)
+{
+	float splitDepths[NUM_CASCADES + 1];
+	calcSplitDepths(splitDepths, camera->GetNearClip(), camera->GetFarClip());
+
+	for (UINT i = 0; i < NUM_CASCADES; i++)
+	{
+		calcLightCamera(dlight, camera, splitDepths[i], splitDepths[i + 1], outLightCameras[i]);
+
+		// Set up the render targets for the shadow map and clear them
+		pd3dImmediateContext->OMSetRenderTargets(1, &_shadowMapRTVs[shadowMapIdx], _shadowMapDSView);
+				
+		float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+		pd3dImmediateContext->ClearRenderTargetView(_shadowMapRTVs[shadowMapIdx], clearColor);
+		pd3dImmediateContext->ClearDepthStencilView(_shadowMapDSView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+		// Render the depth of all the models in the scene
+		_modelRenderer.RenderDepth(pd3dImmediateContext, models, outLightCameras[i]);
+	}
+
+	return S_OK;
+}
+
+void DirectionalLightRenderer::calcSplitDepths(float* outSplits, float nearClip, float farClip)
+{
+	outSplits[0] = nearClip;
+	outSplits[NUM_CASCADES] = farClip;
+	const float splitConstant = 0.95f;
+	float fNumCascades = (float)NUM_CASCADES;
+
+	for (UINT i = 1; i < NUM_CASCADES; i++)
+	{
+		outSplits[i] = splitConstant * nearClip * powf(farClip / nearClip, i / fNumCascades) +
+			(1.0f - splitConstant) * ((nearClip + (i / fNumCascades)) * (farClip - nearClip));
+	}
+}
+
+void DirectionalLightRenderer::calcLightCamera(DirectionalLight* dlight, Camera* mainCamera, float minZ,
+	float maxZ, OrthographicCamera* outCamera)
+{
+	// create a matrix with that will rotate in points the direction of the light
+	D3DXVECTOR3 zero = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	D3DXVECTOR3 up = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+	D3DXVECTOR3 lightDir = *dlight->GetDirection();
+	D3DXVECTOR3 invLightDir = -lightDir;
+
+	D3DXMATRIX lightRot;
+	D3DXMatrixLookAtLH(&lightRot, &zero, &invLightDir, &up);
+
+	// Get the corners of the frustum
+	D3DXMATRIX clippedProj;
+	mainCamera->BuildProjection(&clippedProj, minZ, maxZ);
+
+	D3DXMATRIX clippedViewProj;
+	D3DXMatrixMultiply(&clippedViewProj, mainCamera->GetView(), &clippedProj);
+
+	BoundingFrustum clippedFrust = BoundingFrustum(clippedViewProj);
+
+	D3DXVECTOR3 frustCorners[8];
+	clippedFrust.GetCorners(frustCorners);
+
+	// Transform the positions of the corners into the direction of the light
+	D3DXVec3TransformCoordArray(frustCorners, sizeof(D3DXVECTOR3), frustCorners, sizeof(D3DXVECTOR3), 
+		&lightRot, 8);
+
+	// Find the smallest box around the points
+	BoundingBox lightBox;
+	BoundingBox::CreateFromPoints(&lightBox, frustCorners, 8);
+
+	// Find the position of the light in light space
+	D3DXVECTOR3 boxSize = *lightBox.GetMin() - *lightBox.GetMax();
+
+	D3DXVECTOR3 lightPos = D3DXVECTOR3(boxSize.x * 0.5f, boxSize.y * 0.5f, lightBox.GetMin()->z);
+	
+	// Find the light position in world space
+	D3DXMATRIX invLightRot;
+	D3DXMatrixInverse(&invLightRot, NULL, &lightRot);
+
+	D3DXVECTOR3 lightPosWS;
+	D3DXVec3TransformCoord(&lightPosWS, &lightPos, &invLightRot);
+
+	// Fill in the camera parameters
+	D3DXQUATERNION lightDirQuat = D3DXQUATERNION(lightDir.x, lightDir.y, lightDir.z, 1.0f);
+
+	outCamera->SetPosition(lightPos);
+	outCamera->SetOrientation(lightDirQuat);
+	outCamera->SetSize(D3DXVECTOR2(boxSize.x, boxSize.y));
+
+	// TODO: Calculate this properly based off of the scene bounds
+	outCamera->SetNearClip(-boxSize.z * 1.5f);
+	outCamera->SetFarClip(boxSize.z * 1.5f);
+}
+
 HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
 	GBuffer* gBuffer)
 {	
@@ -186,9 +281,10 @@ HRESULT DirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, 
 
 	V_RETURN(pd3dDevice->CreateDepthStencilView(_shadowMapDSTexture, &shadowMapDSVDesc, &_shadowMapDSView));
 
-	// Load the fullscreen quad
+	// Load the other IHasContents
 	V_RETURN(_fsQuad.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	
+	V_RETURN(_modelRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));	
+
 	return S_OK;
 }
 
@@ -212,6 +308,7 @@ void DirectionalLightRenderer::OnD3D11DestroyDevice()
 	SAFE_RELEASE(_shadowMapDSView);
 	
 	_fsQuad.OnD3D11DestroyDevice();
+	_modelRenderer.OnD3D11DestroyDevice();
 }
 
 HRESULT DirectionalLightRenderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
@@ -220,7 +317,9 @@ HRESULT DirectionalLightRenderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDev
 	HRESULT hr;
 
 	V_RETURN(LightRenderer::OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+
 	V_RETURN(_fsQuad.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_modelRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
@@ -229,4 +328,5 @@ void DirectionalLightRenderer::OnD3D11ReleasingSwapChain()
 {
 	LightRenderer::OnD3D11ReleasingSwapChain();
 	_fsQuad.OnD3D11ReleasingSwapChain();
+	_modelRenderer.OnD3D11ReleasingSwapChain();
 }

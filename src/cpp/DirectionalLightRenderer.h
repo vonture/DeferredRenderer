@@ -4,6 +4,7 @@
 #include "Light.h"
 #include "FullscreenQuad.h"
 #include "DeviceStates.h"
+#include "ModelRenderer.h"
 
 struct CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES
 {
@@ -27,6 +28,8 @@ private:
 	ID3D11Buffer* _lightPropertiesBuffer;
 	FullscreenQuad _fsQuad;
 
+	ModelRenderer _modelRenderer;
+
 	static const UINT NUM_SHADOW_MAPS = 3;
 	static const UINT NUM_CASCADES = 4;
 	static const UINT SHADOW_MAP_SIZE = 4096;
@@ -36,6 +39,12 @@ private:
 	ID3D11Texture2D* _shadowMapDSTexture;
 	ID3D11DepthStencilView* _shadowMapDSView;
 
+	HRESULT renderDepth(ID3D11DeviceContext* pd3dImmediateContext, DirectionalLight* dlight,
+		UINT shadowMapIdx, std::vector<ModelInstance*> models, Camera* camera,
+		BoundingBox* sceneBounds, OrthographicCamera** outLightCameras);	
+	void calcLightCamera(DirectionalLight* dlight, Camera* mainCamera, float minZ, float maxZ, 
+		OrthographicCamera* outCamera);
+	void calcSplitDepths(float* outSplits, float nearClip, float farClip);
 public:
 	DirectionalLightRenderer();
 

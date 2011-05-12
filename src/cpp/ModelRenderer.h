@@ -19,9 +19,14 @@ struct CB_MODEL_PROPERTIES
 class ModelRenderer : public IHasContent
 {
 private:
-	ID3D11VertexShader* _vertexShader;
-	ID3D11PixelShader* _pixelShader;
-	ID3D11InputLayout* _inputLayout;
+	ID3D11VertexShader* _meshVertexShader;
+	ID3D11PixelShader* _meshPixelShader;
+	ID3D11InputLayout* _meshInputLayout;
+
+	ID3D11VertexShader* _depthVertexShader;
+	ID3D11PixelShader* _depthPixelShader;
+	ID3D11InputLayout* _depthInputLayout;
+
 	ID3D11Buffer* _constantBuffer;
 
 	DepthStencilStates _dsStates;
@@ -34,6 +39,7 @@ public:
 	~ModelRenderer();
 
 	HRESULT RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vector<ModelInstance*> instances, Camera* camera);
+	HRESULT RenderDepth(ID3D11DeviceContext* pd3dDeviceContext, vector<ModelInstance*> instances, Camera* camera);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
 	void OnD3D11DestroyDevice();

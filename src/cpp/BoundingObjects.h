@@ -4,9 +4,12 @@
 
 class BoundingFrustum
 {
+	friend class Intersection;
+
 private:
 	D3DXPLANE _planes[6];
 	D3DXVECTOR3 _corners[8];
+	D3DXVECTOR3 _mid;
 
 	void updateValues(const D3DXMATRIX& matrix)
 	{
@@ -51,35 +54,28 @@ private:
 			D3DXPlaneNormalize(&_planes[i], &_planes[i]);
 		}
 
-		// Generate Points
+		// Generate corners
 		D3DXMATRIX viewProjInv;
 		D3DXMatrixInverse(&viewProjInv, NULL, &matrix);
 		
-		D3DXVECTOR3 pt;
+		const D3DXVECTOR3 cornersViewSpace[8] = 
+		{
+			D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+			D3DXVECTOR3(1.0f, 0.0f, 0.0f), 
+			D3DXVECTOR3(1.0f, 1.0f, 0.0f),
+			D3DXVECTOR3(0.0f, 1.0f, 0.0f),
+			D3DXVECTOR3(0.0f, 0.0f, 1.0f),
+			D3DXVECTOR3(1.0f, 0.0f, 1.0f),
+			D3DXVECTOR3(1.0f, 1.0f, 1.0f),
+			D3DXVECTOR3(0.0f, 1.0f, 1.0f),
+		};
 
-		pt = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-		D3DXVec3TransformCoord(&_corners[0], &pt, &viewProjInv);
+		D3DXVec3TransformCoordArray(_corners, sizeof(D3DXVECTOR3), cornersViewSpace,
+			sizeof(D3DXVECTOR3), &viewProjInv, 8);
 
-		pt = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
-		D3DXVec3TransformCoord(&_corners[0], &pt, &viewProjInv);
-
-		pt = D3DXVECTOR3(1.0f, 1.0f, 0.0f);
-		D3DXVec3TransformCoord(&_corners[0], &pt, &viewProjInv);
-
-		pt = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
-		D3DXVec3TransformCoord(&_corners[0], &pt, &viewProjInv);
-
-		pt = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
-		D3DXVec3TransformCoord(&_corners[0], &pt, &viewProjInv);
-
-		pt = D3DXVECTOR3(1.0f, 0.0f, 1.0f);
-		D3DXVec3TransformCoord(&_corners[0], &pt, &viewProjInv);
-
-		pt = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
-		D3DXVec3TransformCoord(&_corners[0], &pt, &viewProjInv);
-
-		pt = D3DXVECTOR3(0.0f, 1.0f,1.0f);
-		D3DXVec3TransformCoord(&_corners[0], &pt, &viewProjInv);
+		// Calculate the mid point
+		D3DXVECTOR3 mid = D3DXVECTOR3(0.5f, 0.5f, 0.5f);
+		D3DXVec3TransformCoord(&_mid, &mid, &viewProjInv);
 	}
 
 public:
@@ -109,6 +105,8 @@ public:
 
 class BoundingSphere
 {
+	friend class Intersection;
+
 private:
 	D3DXVECTOR3 _position;
 	float _radius;
@@ -145,6 +143,8 @@ public:
 
 class BoundingBox
 {
+	friend class Intersection;
+
 private:
 	D3DXVECTOR3 _min;
 	D3DXVECTOR3 _max;
@@ -215,15 +215,50 @@ public:
 		D3DXVECTOR3 corners[8];
 		inBB->GetCorners(&corners[0]);
 
-		D3DXVec3TransformCoordArray(&corners[0], sizeof(D3DXVECTOR3), &corners[0],
+		D3DXVec3TransformCoordArray(corners, sizeof(D3DXVECTOR3), corners,
 			sizeof(D3DXVECTOR3), transform, 8);
 
-		CreateFromPoints(outBB, &corners[0], 8);
+		CreateFromPoints(outBB, corners, 8);
 	}
 
 	static void Combine(BoundingBox* outBB, BoundingBox* inBBFirst, BoundingBox* inBBSecond)
 	{
 		D3DXVec3Minimize(&outBB->_min, &inBBFirst->_min, &inBBSecond->_min);
 		D3DXVec3Maximize(&outBB->_max, &inBBFirst->_max, &inBBSecond->_max);
+	}
+};
+
+class Intersection
+{
+public:
+	static bool Contains(const BoundingFrustum* frust, const BoundingSphere* sphere)
+	{
+		for (UINT i = 0; i < 6; i++)
+		{
+			if (D3DXPlaneDotCoord(&frust->_planes[i], &sphere->_position) + sphere->_radius < 0)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	static bool Contains(const BoundingFrustum* frust, const BoundingBox* box)
+	{
+		// not a perfect intersection test but much faster than checking each corner and plane
+
+		D3DXVECTOR3 bbMid = (box->_min + box->_max) * 0.5f;
+		D3DXVECTOR3 bbHalfSize = (box->_min - box->_max) * 0.5f;
+		float bbRadius = D3DXVec3Length(&bbHalfSize);		
+
+		for (UINT i = 0; i < 6; i++)
+		{
+			if (D3DXPlaneDotCoord(&frust->_planes[i], &bbMid) + bbRadius < 0)
+			{
+				return false;
+			}
+		}
+
+		return true;
 	}
 };
