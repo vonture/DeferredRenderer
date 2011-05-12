@@ -2,7 +2,7 @@
 #include "CombinePostProcess.h"
 
 CombinePostProcess::CombinePostProcess()
-	: _pixelShader(NULL), _sampler(NULL)
+	: _pixelShader(NULL)
 {
 }
 
@@ -20,7 +20,7 @@ HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID
 	
 	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, dstDSV);
 
-	const float rtClear[] = { 0.2f, 0.2f, 0.2f, 0.0f };
+	const float rtClear[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	pd3dImmediateContext->ClearRenderTargetView(dstRTV, rtClear);
 	pd3dImmediateContext->ClearDepthStencilView(dstDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
@@ -28,7 +28,13 @@ HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID
 	V_RETURN(gBuffer->PSSetShaderResources(pd3dImmediateContext, 0));
 	V_RETURN(lightBuffer->PSSetShaderResources(pd3dImmediateContext, 4));
 
-	pd3dImmediateContext->PSSetSamplers(0, 1, &_sampler);
+	ID3D11SamplerState* sampler = GetSamplerStates()->GetLinear();
+	pd3dImmediateContext->PSSetSamplers(0, 1, &sampler);
+
+	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthDisabled(), 0);
+
+	float blendFactor[4] = {1, 1, 1, 1};
+	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
 	
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _pixelShader));
 
@@ -41,34 +47,14 @@ HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID
 HRESULT CombinePostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
+
+	V_RETURN(PostProcess::OnD3D11CreateDevice(pd3dDevice,pBackBufferSurfaceDesc));
+
 	ID3DBlob* pBlob = NULL;
 
 	V_RETURN(CompileShaderFromFile( L"GBufferCombine.hlsl", "PS_Combine", "ps_4_0", &pBlob ) );   
     V_RETURN(pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_pixelShader));
 	SAFE_RELEASE(pBlob);
-
-	/*D3D11_SAMPLER_DESC samplerDesc = 
-    {
-        D3D11_FILTER_MIN_MAG_MIP_LINEAR,// D3D11_FILTER Filter;
-        D3D11_TEXTURE_ADDRESS_BORDER, //D3D11_TEXTURE_ADDRESS_MODE AddressU;
-        D3D11_TEXTURE_ADDRESS_BORDER, //D3D11_TEXTURE_ADDRESS_MODE AddressV;
-        D3D11_TEXTURE_ADDRESS_BORDER, //D3D11_TEXTURE_ADDRESS_MODE AddressW;
-        0,//FLOAT MipLODBias;
-        1,//UINT MaxAnisotropy;
-        D3D11_COMPARISON_LESS , //D3D11_COMPARISON_FUNC ComparisonFunc;
-        0.0,0.0,0.0,0.0,//FLOAT BorderColor[ 4 ];
-        0,//FLOAT MinLOD;
-        0//FLOAT MaxLOD;   
-    };*/
-
-	D3D11_SAMPLER_DESC samplerDesc;
-    ZeroMemory(&samplerDesc, sizeof(samplerDesc));
-    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-    samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-
-	V_RETURN(pd3dDevice->CreateSamplerState(&samplerDesc, &_sampler));
 
 	V_RETURN(_fsQuad.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
@@ -77,8 +63,9 @@ HRESULT CombinePostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const 
 
 void CombinePostProcess::OnD3D11DestroyDevice()
 {
+	PostProcess::OnD3D11DestroyDevice();
+
 	SAFE_RELEASE(_pixelShader);
-	SAFE_RELEASE(_sampler);
 
 	_fsQuad.OnD3D11DestroyDevice();
 }
@@ -88,6 +75,7 @@ HRESULT CombinePostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, I
 {
 	HRESULT hr;
 
+	V_RETURN(PostProcess::OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_fsQuad.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	
 	return S_OK;
@@ -95,5 +83,7 @@ HRESULT CombinePostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, I
 
 void CombinePostProcess::OnD3D11ReleasingSwapChain()
 {
+	PostProcess::OnD3D11ReleasingSwapChain();
+
 	_fsQuad.OnD3D11ReleasingSwapChain();
 }

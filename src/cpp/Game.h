@@ -16,6 +16,9 @@ private:
 
 	ModelInstance _powerPlant;
 	ModelInstance _tankScene;
+	DirectionalLight _dLight1;
+	DirectionalLight _dLight2;
+
 public:
 	Game();
 	~Game();

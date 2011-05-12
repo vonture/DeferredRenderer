@@ -101,13 +101,16 @@
     <ClCompile Include="DXUT\Optional\SDKmisc.cpp">
       <Filter>DXUT</Filter>
     </ClCompile>
-    <None Include="ModelRender.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="QuadVS.hlsl">
       <Filter>Shaders</Filter>
     </None>
     <None Include="GBufferCombine.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="DirectionalLight.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Mesh.hlsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
@@ -142,6 +145,13 @@
     </ClCompile>
     <ClCompile Include="MouseState.cpp">
       <Filter>Input</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectionalLightRenderer.cpp">
+      <Filter>Lights</Filter>
+    </ClCompile>
+    <ClCompile Include="DeviceStates.cpp" />
+    <ClCompile Include="PostProcess.cpp">
+      <Filter>Post Process</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -214,6 +224,10 @@
     <ClInclude Include="ButtonState.h">
       <Filter>Input</Filter>
     </ClInclude>
+    <ClInclude Include="DirectionalLightRenderer.h">
+      <Filter>Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceStates.h" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

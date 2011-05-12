@@ -10,39 +10,26 @@ ModelRenderer::~ModelRenderer()
 {
 }
 
-HRESULT ModelRenderer::RenderModel(ID3D11DeviceContext* pd3dDeviceContext,ModelInstance* instance, Camera* camera)
-{
-	vector<ModelInstance*> v;
-	v.push_back(instance);
-
-	return RenderModels(pd3dDeviceContext, v, camera);
-}
-
 HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vector<ModelInstance*> instances, Camera* camera)
 {
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;	
-
-	D3D11_VIEWPORT vp;
-    vp.Width = (FLOAT)DXUTGetDXGIBackBufferSurfaceDesc()->Width;
-    vp.Height = (FLOAT)DXUTGetDXGIBackBufferSurfaceDesc()->Height;
-    vp.MinDepth = 0;
-    vp.MaxDepth = 1;
-    vp.TopLeftX = 0;
-    vp.TopLeftY = 0;
-
+	
 	D3DXMATRIX view = *camera->GetView();
-	//D3DXMatrixTranspose(&view, );
-
 	D3DXMATRIX projection = *camera->GetProjection();
-	//D3DXMatrixTranspose(&projection, );
 
 	pd3dDeviceContext->GSSetShader(NULL, NULL, 0);
 	pd3dDeviceContext->VSSetShader(_vertexShader, NULL, 0);
 	pd3dDeviceContext->PSSetShader(_pixelShader, NULL, 0);	
+
 	pd3dDeviceContext->IASetInputLayout(_inputLayout);
-	pd3dDeviceContext->PSSetSamplers(0, 1, &_sampler);
-	pd3dDeviceContext->RSSetViewports(1, &vp);
+	pd3dDeviceContext->OMSetDepthStencilState(_dsStates.GetDepthWriteEnabled(), 0);
+
+	float blendFactor[4] = {1, 1, 1, 1};
+	pd3dDeviceContext->OMSetBlendState(_blendStates.GetAlphaBlend(), blendFactor, 0xFFFFFFFF);
+
+	ID3D11SamplerState* sampler = _samplerStates.GetLinear();
+	pd3dDeviceContext->PSSetSamplers(0, 1, &sampler);
 
 	for (vector<ModelInstance*>::iterator i = instances.begin(); i != instances.end(); i++)
 	{
@@ -72,11 +59,11 @@ HRESULT ModelRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_
 	HRESULT hr;
 	ID3DBlob* pBlob = NULL;
 
-	V_RETURN( CompileShaderFromFile( L"ModelRender.hlsl", "PS_Model", "ps_4_0", &pBlob ) );   
+	V_RETURN( CompileShaderFromFile( L"Mesh.hlsl", "PS_Model", "ps_4_0", &pBlob ) );   
     V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_pixelShader));
 	SAFE_RELEASE(pBlob);	
 
-	V_RETURN( CompileShaderFromFile( L"ModelRender.hlsl", "VS_Model", "vs_4_0", &pBlob ) );   
+	V_RETURN( CompileShaderFromFile( L"Mesh.hlsl", "VS_Model", "vs_4_0", &pBlob ) );   
     V_RETURN( pd3dDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_vertexShader));
 	
 	const D3D11_INPUT_ELEMENT_DESC layout_mesh[] =
@@ -101,22 +88,11 @@ HRESULT ModelRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_
 	};
 
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_constantBuffer));
-
-	D3D11_SAMPLER_DESC samplerDesc = 
-    {
-        D3D11_FILTER_MIN_MAG_MIP_LINEAR,// D3D11_FILTER Filter;
-        D3D11_TEXTURE_ADDRESS_BORDER, //D3D11_TEXTURE_ADDRESS_MODE AddressU;
-        D3D11_TEXTURE_ADDRESS_BORDER, //D3D11_TEXTURE_ADDRESS_MODE AddressV;
-        D3D11_TEXTURE_ADDRESS_BORDER, //D3D11_TEXTURE_ADDRESS_MODE AddressW;
-        0,//FLOAT MipLODBias;
-        1,//UINT MaxAnisotropy;
-        D3D11_COMPARISON_LESS , //D3D11_COMPARISON_FUNC ComparisonFunc;
-        0.0,0.0,0.0,0.0,//FLOAT BorderColor[ 4 ];
-        0,//FLOAT MinLOD;
-        0//FLOAT MaxLOD;   
-    };
-
-	V_RETURN(pd3dDevice->CreateSamplerState(&samplerDesc, &_sampler));
+	
+	V_RETURN(_dsStates.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_samplerStates.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_blendStates.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_rasterStates.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
@@ -127,15 +103,30 @@ void ModelRenderer::OnD3D11DestroyDevice()
 	SAFE_RELEASE(_pixelShader);
 	SAFE_RELEASE(_inputLayout);
 	SAFE_RELEASE(_constantBuffer);
-	SAFE_RELEASE(_sampler);
+
+	_dsStates.OnD3D11DestroyDevice();
+	_samplerStates.OnD3D11DestroyDevice();
+	_blendStates.OnD3D11DestroyDevice();
+	_rasterStates.OnD3D11DestroyDevice();
 }
 
 HRESULT ModelRenderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
                         const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
+	HRESULT hr;
+
+	V_RETURN(_dsStates.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_samplerStates.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_blendStates.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_rasterStates.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+
 	return S_OK;
 }
 
 void ModelRenderer::OnD3D11ReleasingSwapChain()
 {
+	_dsStates.OnD3D11ReleasingSwapChain();
+	_samplerStates.OnD3D11ReleasingSwapChain();
+	_blendStates.OnD3D11ReleasingSwapChain();
+	_rasterStates.OnD3D11ReleasingSwapChain();
 }

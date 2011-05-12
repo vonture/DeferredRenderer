@@ -3,7 +3,9 @@
 
 Game::Game()
 	: _renderer(), _camera(0.1f, 50.0f, 1.0f, 1.0f), _powerPlant(L"\\models\\powerplant\\powerplant.sdkmesh"),
-	 _tankScene(L"\\models\\tankscene\\tankscene.sdkmesh")
+	 _tankScene(L"\\models\\tankscene\\tankscene.sdkmesh"),
+	 _dLight1(D3DXCOLOR(1.0f, 0.4f, 0.2f, 1.0f), 1.0f, D3DXVECTOR3(-0.5f, 0.5f, -0.5f)),
+	 _dLight2(D3DXCOLOR(0.6f, 1.0f, 0.3f, 1.0f), 1.0f, D3DXVECTOR3(0.5f, 0.5f, -0.5f))
 {
 	_camera.SetPosition(D3DXVECTOR3(-5.0f, 5.0f, -5.0f));
 	_camera.SetRotation(D3DXVECTOR2(D3DX_PI / 4.0f, D3DX_PI / 8.0f));
@@ -21,7 +23,7 @@ void Game::OnFrameMove(double totalTime, float dt)
 {
 	KeyboardState kb = KeyboardState::GetState();
 	MouseState mouse = MouseState::GetState();
-
+	
 	if (mouse.IsButtonDown(LeftButton))
 	{
 		const float mouseRotateSpeed = 0.002f;
@@ -69,6 +71,8 @@ void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3
 
 	//_renderer.AddModel(&_powerPlant);
 	_renderer.AddModel(&_tankScene);
+	_renderer.AddLight(&_dLight1, false);
+	_renderer.AddLight(&_dLight2, false);
 
 	V(_renderer.End(pd3dDevice, pd3dImmediateContext, &_camera));
 }
@@ -96,7 +100,7 @@ HRESULT Game::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain*
 {
 	HRESULT hr;
 
-	float fAspectRatio = pBackBufferSurfaceDesc->Width / ( FLOAT )pBackBufferSurfaceDesc->Height;
+	float fAspectRatio = pBackBufferSurfaceDesc->Width / (float)pBackBufferSurfaceDesc->Height;
 	_camera.SetAspectRatio(fAspectRatio);
 
 	V_RETURN(_renderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));

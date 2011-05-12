@@ -379,6 +379,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CombinePostProcess.cpp" />
+    <ClCompile Include="DeviceStates.cpp" />
+    <ClCompile Include="DirectionalLightRenderer.cpp" />
     <ClCompile Include="FullscreenQuad.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GBuffer.cpp" />
@@ -387,15 +389,19 @@
     <ClCompile Include="ModelInstance.cpp" />
     <ClCompile Include="ModelRenderer.cpp" />
     <ClCompile Include="MouseState.cpp" />
+    <ClCompile Include="PostProcess.cpp" />
     <ClCompile Include="Quad.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="ShaderLoader.cpp" />
     <ClInclude Include="ButtonState.h" />
     <ClInclude Include="CombinePostProcess.h" />
+    <ClInclude Include="DeviceStates.h" />
+    <ClInclude Include="DirectionalLightRenderer.h" />
     <ClInclude Include="FullscreenQuad.h" />
     <ClInclude Include="KeyboardState.h" />
     <ClInclude Include="MouseState.h" />
     <ClInclude Include="ShaderLoader.h" />
+    <None Include="DirectionalLight.hlsl" />
     <None Include="DXUT\Optional\directx.ico" />
     <ClInclude Include="BoundingObjects.h" />
     <ClInclude Include="DeferredBuffer.h" />
@@ -428,7 +434,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="GBufferCombine.hlsl" />
-    <None Include="ModelRender.hlsl" />
+    <None Include="Mesh.hlsl" />
     <None Include="QuadVS.hlsl" />
     <None Include="SimpleSample.hlsl" />
   </ItemGroup>

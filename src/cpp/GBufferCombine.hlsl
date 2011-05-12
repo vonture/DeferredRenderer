@@ -19,6 +19,15 @@ float4 PS_Combine(PS_In_Combine input) : SV_TARGET0
 	float4 rt1Sample = RT1.Sample(LinearSampler, input.vTexCoord);
 	float4 rt2Sample = RT2.Sample(LinearSampler, input.vTexCoord);
 	float4 rt3Sample = RT3.Sample(LinearSampler, input.vTexCoord);
+	float4 lightSample = LightMap.Sample(LinearSampler, input.vTexCoord);
 
-	return float4(0.5f * (rt1Sample.xyz + 1.0f), 1.0f);
+	float3 vDiffuse = rt0Sample.rgb;
+	float fAmbient = rt2Sample.g;
+	float3 vLightColor = lightSample.rgb;
+	float fSpecular = lightSample.a;
+
+	float3 vFinalColour = vLightColor * vDiffuse;
+
+	//return float4(lightSample.rgb, 1.0f);
+	return float4(vFinalColour, 1.0f);
 }

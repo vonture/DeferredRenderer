@@ -9,6 +9,7 @@
 #include "LightBuffer.h"
 #include "IHasContent.h"
 #include "ModelRenderer.h"
+#include "DirectionalLightRenderer.h"
 #include <vector>
 
 using namespace std;
@@ -23,13 +24,15 @@ private:
 	vector<WCHAR*> _debugText;
 	ModelRenderer _modelRenderer;
 	CombinePostProcess _combinePP;
+	DirectionalLightRenderer _directionalLightRenderer;
 
 public:
 	Renderer();
 	~Renderer();
 
 	void AddModel(ModelInstance* model);
-	void AddLight(Light* light, bool shadowed);
+	void AddLight(DirectionalLight* light, bool shadowed);
+	void AddLight(PointLight* light, bool shadowed);
 	void AddPostProcess(PostProcess* postProcess);
 	void AddDebugText(WCHAR* text);
 

@@ -18,9 +18,6 @@ private:
 		_dirty = false;
     }
 
-protected:
-	virtual void BuildProjection(D3DXMATRIX* outProj, float nearClip, float farClip) = 0;
-
 public:
 	Camera() 
 		: _nearClip(0.1f), _farClip(1000.0f), _dirty(true)
@@ -33,6 +30,8 @@ public:
 	{
 		D3DXMatrixIdentity(&_world);
 	}
+
+	virtual void BuildProjection(D3DXMATRIX* outProj, float nearClip, float farClip) = 0;
 
 	void SetPosition(const D3DXVECTOR3& pos)
 	{

@@ -8,7 +8,6 @@ class CombinePostProcess : public PostProcess
 {
 private:
 	ID3D11PixelShader* _pixelShader;
-	ID3D11SamplerState* _sampler;
 	FullscreenQuad _fsQuad;
 
 public:

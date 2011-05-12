@@ -4,6 +4,7 @@
 #include "SDKmesh.h"
 #include "IHasContent.h"
 #include "BoundingObjects.h"
+#include <map>
 
 class ModelInstance : public IHasContent
 {
@@ -11,7 +12,8 @@ private:
 	const WCHAR* _path;
 	CDXUTSDKMesh _mesh;
 	
-	BoundingBox _bb;
+	BoundingBox _modelBB;
+	BoundingBox _worldBB;
 
 	D3DXMATRIX _world;
 	D3DXVECTOR3 _position;
@@ -20,7 +22,6 @@ private:
 
 	bool _dirty;
 	void clean();
-	void buildBoundingBox();
 
 public:
 	ModelInstance(const WCHAR* path);
@@ -79,7 +80,7 @@ public:
 			clean();
 		}
 
-		return &_bb;
+		return &_worldBB;
 	}
 
 	CDXUTSDKMesh* GetMesh()

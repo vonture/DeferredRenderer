@@ -177,4 +177,53 @@ public:
 	{
 		_max = max;
 	}
+
+	void GetCorners(D3DXVECTOR3* outCorners)
+	{
+		outCorners[0] = D3DXVECTOR3(_min.x, _min.y, _min.z);
+		outCorners[1] = D3DXVECTOR3(_min.x, _min.y, _max.z);
+		outCorners[2] = D3DXVECTOR3(_min.x, _max.y, _min.z);
+		outCorners[3] = D3DXVECTOR3(_min.x, _max.y, _max.z);
+		outCorners[4] = D3DXVECTOR3(_max.x, _min.y, _min.z);
+		outCorners[5] = D3DXVECTOR3(_max.x, _min.y, _max.z);
+		outCorners[6] = D3DXVECTOR3(_max.x, _max.y, _min.z);
+		outCorners[7] = D3DXVECTOR3(_max.x, _max.y, _max.z);
+	}
+
+	static void CreateFromPoints(BoundingBox* outBB, const D3DXVECTOR3* pts, int ptCount)
+	{
+		if (ptCount	> 0)
+		{
+			outBB->_min = D3DXVECTOR3(FLT_MAX, FLT_MAX, FLT_MAX);
+			outBB->_max = D3DXVECTOR3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+
+			for (int i = 0; i < ptCount; i++)
+			{
+				D3DXVec3Minimize(&outBB->_min, &outBB->_min, &pts[i]);
+				D3DXVec3Maximize(&outBB->_max, &outBB->_max, &pts[i]);
+			}
+		}
+		else
+		{
+			outBB->_min = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+			outBB->_max = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+		}
+	}
+
+	static void Transform(BoundingBox* outBB, BoundingBox* inBB, const D3DXMATRIX* transform)
+	{
+		D3DXVECTOR3 corners[8];
+		inBB->GetCorners(&corners[0]);
+
+		D3DXVec3TransformCoordArray(&corners[0], sizeof(D3DXVECTOR3), &corners[0],
+			sizeof(D3DXVECTOR3), transform, 8);
+
+		CreateFromPoints(outBB, &corners[0], 8);
+	}
+
+	static void Combine(BoundingBox* outBB, BoundingBox* inBBFirst, BoundingBox* inBBSecond)
+	{
+		D3DXVec3Minimize(&outBB->_min, &inBBFirst->_min, &inBBSecond->_min);
+		D3DXVec3Maximize(&outBB->_max, &inBBFirst->_max, &inBBSecond->_max);
+	}
 };
