@@ -1,4 +1,3 @@
-#include "DXUT.h"
 #include "Quad.h"
 
 Quad::Quad() : _vertexShader(NULL), _inputLayout(NULL), _vertexBuffer(NULL)
@@ -11,22 +10,6 @@ Quad::~Quad()
 
 HRESULT Quad::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11PixelShader* pixelShader)
 {
-	/*
-	// Save the old viewport
-    D3D11_VIEWPORT vpOld[D3D11_VIEWPORT_AND_SCISSORRECT_MAX_INDEX];
-    UINT nViewPorts = 1;
-    //pd3dImmediateContext->RSGetViewports( &nViewPorts, vpOld );
-
-    // Setup the viewport to match the backbuffer
-    D3D11_VIEWPORT vp;
-    vp.Width = (float)width;
-    vp.Height = (float)height;
-    vp.MinDepth = 0.0f;
-    vp.MaxDepth = 1.0f;
-    vp.TopLeftX = 0;
-    vp.TopLeftY = 0;
-    pd3dImmediateContext->RSSetViewports( 1, &vp );
-	*/
     UINT strides = sizeof(QUAD_VERTEX);
     UINT offsets = 0;
     ID3D11Buffer* pBuffers[1] = { _vertexBuffer };
@@ -38,9 +21,6 @@ HRESULT Quad::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11PixelShade
     pd3dImmediateContext->VSSetShader( _vertexShader, NULL, 0 );
     pd3dImmediateContext->PSSetShader( pixelShader, NULL, 0 );
     pd3dImmediateContext->Draw( 4, 0 );
-
-    // Restore the Old viewport
-    //pd3dImmediateContext->RSSetViewports( nViewPorts, vpOld );
 
 	return S_OK;
 }

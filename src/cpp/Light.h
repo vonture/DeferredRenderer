@@ -1,24 +1,24 @@
 #pragma once
 
-#include "DXUT.h"
+#include "Defines.h"
 
 class Light
 {
 private:
-	D3DXCOLOR _color;
+	XMVECTOR _color;
 	float _intensity;
 
 public:
-	Light(const D3DXCOLOR& color, float intensity) : _color(color), _intensity(max(intensity, 0.0f))
+	Light(const XMVECTOR& color, float intensity) : _color(color), _intensity(max(intensity, 0.0f))
 	{
 	}
 
-	const D3DXCOLOR* GetColor()
+	const XMVECTOR* GetColor()
 	{
 		return &_color;
 	}
 	
-	void SetColor(const D3DXCOLOR& color)
+	void SetColor(const XMVECTOR& color)
 	{
 		_color = color;
 	}
@@ -37,45 +37,45 @@ public:
 class DirectionalLight : public Light
 {
 private:
-	D3DXVECTOR3 _direction;
+	XMVECTOR _direction;
 
 public:
-	DirectionalLight(const D3DXCOLOR& color, float intensity, const D3DXVECTOR3& direction)
+	DirectionalLight(const XMVECTOR& color, float intensity, const XMVECTOR& direction)
 		: Light(color, intensity), _direction(direction)
 	{
-		D3DXVec3Normalize(&_direction, &_direction);
+		_direction = XMVector3Normalize(direction);
 	}
 
-	const D3DXVECTOR3* GetDirection()
+	const XMVECTOR* GetDirection()
 	{
 		return &_direction;
 	}
 
-	void SetDirection(const D3DXVECTOR3& direction)
+	void SetDirection(const XMVECTOR& direction)
 	{
-		D3DXVec3Normalize(&_direction, &direction);
+		_direction = XMVector3Normalize(direction);
 	}
 };
 
 class PointLight : public Light
 {
 private:
-	D3DXVECTOR3 _position;
+	XMVECTOR _position;
 	float _radius;
 
 public:
-	PointLight(const D3DXCOLOR& color, float intensity, const D3DXVECTOR3& position, float radius)
+	PointLight(const XMVECTOR& color, float intensity, const XMVECTOR& position, float radius)
 		: Light(color, intensity), _position(position), _radius(radius)
 	{
 		_radius = max(_radius, 0.0f);
 	}
 
-	const D3DXVECTOR3* GetPosition()
+	const XMVECTOR* GetPosition()
 	{
 		return &_position;
 	}
 
-	void SetPosition(const D3DXVECTOR3& position)
+	void SetPosition(const XMVECTOR& position)
 	{
 		_position = position;
 	}

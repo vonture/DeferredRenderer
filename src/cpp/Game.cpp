@@ -1,14 +1,14 @@
-#include "DXUT.h"
 #include "Game.h"
 
 Game::Game()
 	: _renderer(), _camera(0.1f, 50.0f, 1.0f, 1.0f), _powerPlant(L"\\models\\powerplant\\powerplant.sdkmesh"),
 	 _tankScene(L"\\models\\tankscene\\tankscene.sdkmesh"),
-	 _dLight1(D3DXCOLOR(1.0f, 0.4f, 0.2f, 1.0f), 1.0f, D3DXVECTOR3(-0.5f, 0.5f, -0.5f)),
-	 _dLight2(D3DXCOLOR(0.6f, 1.0f, 0.3f, 1.0f), 1.0f, D3DXVECTOR3(0.5f, 0.5f, -0.5f))
+	 _dLight1(XMVectorSet(1.0f, 0.4f, 0.2f, 1.0f), 1.0f, XMVectorSet(-0.5f, 0.5f, -0.5f, 1.0f)),
+	 _dLight2(XMVectorSet(0.6f, 1.0f, 0.3f, 1.0f), 1.0f, XMVectorSet(0.5f, 0.5f, -0.5f, 1.0f))
 {
-	_camera.SetPosition(D3DXVECTOR3(-5.0f, 5.0f, -5.0f));
-	_camera.SetRotation(D3DXVECTOR2(D3DX_PI / 4.0f, D3DX_PI / 8.0f));
+	_camera.SetPosition(XMVectorSet(-5.0f, 5.0f, -5.0f, 1.0f));
+	_camera.SetXRotation(PiOver4);
+	_camera.SetYRotation(PiOver8);
 }
 
 Game::~Game()
@@ -27,15 +27,13 @@ void Game::OnFrameMove(double totalTime, float dt)
 	if (mouse.IsButtonDown(LeftButton))
 	{
 		const float mouseRotateSpeed = 0.002f;
-		D3DXVECTOR2 mouseRotate = D3DXVECTOR2(mouse.GetDX() * mouseRotateSpeed, mouse.GetDY() * mouseRotateSpeed);
-		D3DXVECTOR2 curRotate = _camera.GetRotation();
-				
-		_camera.SetRotation(curRotate + mouseRotate);
+		_camera.SetXRotation(_camera.GetXRotation() + (mouse.GetDX() * mouseRotateSpeed));
+		_camera.SetYRotation(_camera.GetYRotation() + (mouse.GetDY() * mouseRotateSpeed));
 
 		// Set the mouse back one frame 
 		MouseState::SetCursorPosition(mouse.GetX() - mouse.GetDX(), mouse.GetY() - mouse.GetDY());
 
-		D3DXVECTOR2	moveDir = D3DXVECTOR2(0.0f, 0.0f);
+		XMFLOAT2 moveDir = XMFLOAT2(0.0f, 0.0f);
 		if (kb.IsKeyDown(W) || kb.IsKeyDown(Up))
 		{
 			moveDir.y++;
@@ -52,14 +50,12 @@ void Game::OnFrameMove(double totalTime, float dt)
 		{
 			moveDir.x++;
 		}
-
-		D3DXVECTOR3 curPosition = _camera.GetPosition();
-		
+				
 		const float cameraMoveSpeed = 5.0f;
-		D3DXVECTOR3 cameraMove = ((moveDir.y * _camera.GetForward()) + (moveDir.x * _camera.GetRight())) * 
+		XMVECTOR cameraMove = ((moveDir.y * _camera.GetForward()) + (moveDir.x * _camera.GetRight())) * 
 			(cameraMoveSpeed * dt);
 
-		_camera.SetPosition(curPosition + cameraMove);
+		_camera.SetPosition(XMVectorAdd(_camera.GetPosition(), cameraMove));
 	}
 }
 
@@ -71,8 +67,8 @@ void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3
 
 	//_renderer.AddModel(&_powerPlant);
 	_renderer.AddModel(&_tankScene);
-	_renderer.AddLight(&_dLight1, false);
-	_renderer.AddLight(&_dLight2, false);
+	_renderer.AddLight(&_dLight1, true);
+	//_renderer.AddLight(&_dLight2, false);
 
 	V(_renderer.End(pd3dDevice, pd3dImmediateContext, &_camera));
 }

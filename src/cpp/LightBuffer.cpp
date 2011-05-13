@@ -1,4 +1,3 @@
-#include "DXUT.h"
 #include "LightBuffer.h"
 
 HRESULT LightBuffer::GSSetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx)

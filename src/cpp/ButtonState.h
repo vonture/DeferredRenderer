@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Defines.h"
+
 struct ButtonState
 {
 	bool Pressed;

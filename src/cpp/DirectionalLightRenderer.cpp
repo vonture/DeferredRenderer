@@ -1,111 +1,178 @@
-#include "DXUT.h"
 #include "DirectionalLightRenderer.h"
+
+const float DirectionalLightRenderer::CASCADE_SPLITS[NUM_CASCADES] = { 0.125f, 0.25f, 0.5f, 1.0f };
+const float DirectionalLightRenderer::BACKUP = 20.0f;
+const float DirectionalLightRenderer::BIAS = 0.005f;
 
 DirectionalLightRenderer::DirectionalLightRenderer()
 	: _unshadowedPS(NULL), _shadowedPS(NULL), _cameraPropertiesBuffer(NULL),
-	  _lightPropertiesBuffer(NULL)
+	  _lightPropertiesBuffer(NULL), _shadowPropertiesBuffer(NULL)
 {
 }
 
-HRESULT DirectionalLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*> models,
-		Camera* camera, BoundingBox* sceneBounds)
+HRESULT DirectionalLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, 
+	std::vector<ModelInstance*>* models, Camera* camera, BoundingBox* sceneBounds)
 {
+	// Save the old viewport
+	D3D11_VIEWPORT vpOld[D3D11_VIEWPORT_AND_SCISSORRECT_MAX_INDEX];
+    UINT nViewPorts = 1;
+    pd3dImmediateContext->RSGetViewports(&nViewPorts, vpOld);
+
+	// Iterate over the lights and render the shadow maps
+	for (UINT i = 0; i < GetCount(true) && i < NUM_SHADOW_MAPS; i++)
+	{
+		renderDepth(pd3dImmediateContext, GetLight(i, true), i, models, camera, sceneBounds);
+	}
+
+	// Re-apply the old viewport
+	pd3dImmediateContext->RSSetViewports(nViewPorts, vpOld);
+	
 	return S_OK;
 }
 
 HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContext, DirectionalLight* dlight,
-	UINT shadowMapIdx, std::vector<ModelInstance*> models, Camera* camera, BoundingBox* sceneBounds,
-	OrthographicCamera** outLightCameras)
+	UINT shadowMapIdx, std::vector<ModelInstance*>* models, Camera* camera, BoundingBox* sceneBounds)
 {
-	float splitDepths[NUM_CASCADES + 1];
-	calcSplitDepths(splitDepths, camera->GetNearClip(), camera->GetFarClip());
+	// Set up the render targets for the shadow map and clear them
+	pd3dImmediateContext->OMSetRenderTargets(1, &_shadowMapRTVs[shadowMapIdx], _shadowMapDSView);
+
+	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	pd3dImmediateContext->ClearRenderTargetView(_shadowMapRTVs[shadowMapIdx], clearColor);
+	pd3dImmediateContext->ClearDepthStencilView(_shadowMapDSView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+	// Cascade offsets
+    const XMFLOAT2 offsets[4] = {
+        XMFLOAT2(0.0f, 0.0f),
+        XMFLOAT2(0.5f, 0.0f),
+        XMFLOAT2(0.5f, 0.5f),
+        XMFLOAT2(0.0f, 0.5f)
+    };
 
 	for (UINT i = 0; i < NUM_CASCADES; i++)
 	{
-		calcLightCamera(dlight, camera, splitDepths[i], splitDepths[i + 1], outLightCameras[i]);
+		// Create the viewport
+		int numRows = (int)sqrtf((float)NUM_CASCADES);
+        float cascadeSize =  (float)SHADOW_MAP_SIZE / numRows;
 
-		// Set up the render targets for the shadow map and clear them
-		pd3dImmediateContext->OMSetRenderTargets(1, &_shadowMapRTVs[shadowMapIdx], _shadowMapDSView);
-				
-		float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-		pd3dImmediateContext->ClearRenderTargetView(_shadowMapRTVs[shadowMapIdx], clearColor);
-		pd3dImmediateContext->ClearDepthStencilView(_shadowMapDSView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+		D3D11_VIEWPORT vp;
+		vp.MinDepth = 0.0f;
+		vp.MaxDepth = 1.0f;
+		vp.Width = cascadeSize;
+		vp.Height = cascadeSize;
+		vp.TopLeftX = offsets[i].x * cascadeSize * 2.0f;
+        vp.TopLeftY = offsets[i].y * cascadeSize * 2.0f;
+
+		pd3dImmediateContext->RSSetViewports(1, &vp);
+
+		// calc the split depths
+		float prevSplitDist = i == 0 ? 0.0f : CASCADE_SPLITS[i - 1];
+        float splitDist = CASCADE_SPLITS[i];
+
+		// Create the inverse view matrix and create a frustum
+		XMVECTOR det;
+		XMMATRIX invViewProj = XMMatrixInverse(&det, *camera->GetViewProjection());
+		BoundingFrustum lightFrust = BoundingFrustum(invViewProj);
+	
+		XMVECTOR frustCorners[8];
+		lightFrust.GetCorners(frustCorners);
+
+		// Scale by the shadow view distance
+        for(UINT j = 0; j < 4; j++)
+        {
+            XMVECTOR cornerRay = XMVectorSubtract(frustCorners[j + 4], frustCorners[j]);
+            XMVECTOR nearCornerRay = XMVectorScale(cornerRay, prevSplitDist);
+            XMVECTOR farCornerRay = XMVectorScale(cornerRay, splitDist);
+            frustCorners[j + 4] = XMVectorAdd(frustCorners[j], farCornerRay);
+            frustCorners[j] = XMVectorAdd(frustCorners[j], nearCornerRay);
+        }
+
+		// Calculate the centroid of the view frustum
+		XMVECTOR sphereCenterVec = XMVectorZero();
+        for(UINT j = 0; j < 8; j++)
+		{
+            sphereCenterVec = XMVectorAdd(sphereCenterVec, frustCorners[j]);
+		}
+        sphereCenterVec = XMVectorScale(sphereCenterVec, 1.0f / 8.0f);
+
+		// Calculate the radius of a bounding sphere
+        XMVECTOR sphereRadiusVec = XMVectorZero();
+        for(UINT j = 0; j < 8; j++)
+        {
+            XMVECTOR dist = XMVector3Length(XMVectorSubtract(frustCorners[j], sphereCenterVec));
+            sphereRadiusVec = XMVectorMax(sphereRadiusVec, dist);
+        }
+
+		sphereRadiusVec = XMVectorRound(sphereRadiusVec);
+        const float sphereRadius = XMVectorGetX(sphereRadiusVec);
+        const float backupDist = sphereRadius + camera->GetNearClip() + BACKUP;
+
+		// Get position of the shadow camera
+        XMVECTOR shadowCameraPosVec = sphereCenterVec;
+        XMVECTOR backupDirVec = *dlight->GetDirection();
+        backupDirVec = XMVectorScale(backupDirVec, backupDist);
+        shadowCameraPosVec = XMVectorAdd(shadowCameraPosVec, backupDirVec);
+
+		XMFLOAT3 sphereCenter, shadowCameraPos;
+        XMStoreFloat3(&sphereCenter, sphereCenterVec);
+        XMStoreFloat3(&shadowCameraPos, shadowCameraPosVec);
+        XMFLOAT3 up(0.0f, 1.0f, 0.0f);
+
+		// Set the camera perameters
+		OrthographicCamera shadowCamera;
+		shadowCamera.SetNearClip(camera->GetNearClip());
+		shadowCamera.SetFarClip(backupDist + sphereRadius);
+		shadowCamera.SetMinX(-sphereRadius);
+		shadowCamera.SetMinY(-sphereRadius);
+		shadowCamera.SetMaxX(sphereRadius);
+		shadowCamera.SetMaxY(sphereRadius);
+		shadowCamera.SetLookAt(shadowCameraPos, sphereCenter, up);
+
+		// Create the rounding matrix, by projecting the world-space origin and determining
+        // the fractional offset in texel space
+        XMMATRIX shadowMatrix = *shadowCamera.GetViewProjection();
+        XMVECTOR shadowOrigin = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+        shadowOrigin = XMVector4Transform(shadowOrigin, shadowMatrix);
+        shadowOrigin = XMVectorScale(shadowOrigin, cascadeSize / 2.0f);
+
+        XMVECTOR roundedOrigin = XMVectorRound(shadowOrigin);
+        XMVECTOR roundOffset = XMVectorSubtract(roundedOrigin, shadowOrigin);
+        roundOffset = XMVectorScale(roundOffset, 2.0f / cascadeSize);
+        roundOffset = XMVectorSetZ(roundOffset, 0.0f);
+        roundOffset = XMVectorSetW(roundOffset, 0.0f);
+		
+        XMMATRIX shadowProj = *shadowCamera.GetProjection();
+        shadowProj.r[3] = XMVectorAdd(shadowProj.r[3], roundOffset);
+        shadowCamera.SetProjection(shadowProj);
+        shadowMatrix = *shadowCamera.GetViewProjection();
 
 		// Render the depth of all the models in the scene
-		_modelRenderer.RenderDepth(pd3dImmediateContext, models, outLightCameras[i]);
+		_modelRenderer.RenderDepth(pd3dImmediateContext, models, &shadowCamera);
+		
+		// Apply the scale/offset/bias matrix, which transforms from [-1,1]
+        // post-projection space to [0,1] UV spac
+        XMMATRIX texScaleBias;
+        texScaleBias.r[0] = XMVectorSet(0.5f,  0.0f, 0.0f, 0.0f);
+        texScaleBias.r[1] = XMVectorSet(0.0f, -0.5f, 0.0f, 0.0f);
+        texScaleBias.r[2] = XMVectorSet(0.0f,  0.0f, 1.0f, 0.0f);
+        texScaleBias.r[3] = XMVectorSet(0.5f,  0.5f, -BIAS, 1.0f);
+        shadowMatrix = XMMatrixMultiply(shadowMatrix, texScaleBias);
+
+		// Apply the cascade offset/scale matrix, which applies the offset and scale needed to
+        // convert the UV coordinate into the proper coordinate for the cascade being sampled in
+        // the atlas.
+        XMFLOAT4 offset = XMFLOAT4(offsets[i].x, offsets[i].y, 0.0f, 1.0);
+        XMMATRIX cascadeOffsetMatrix = XMMatrixScaling(0.5f, 0.5f, 1.0f);
+        cascadeOffsetMatrix.r[3] = XMLoadFloat4(&offset);
+        shadowMatrix = XMMatrixMultiply(shadowMatrix, cascadeOffsetMatrix);
+		
+		// Store the shadow matrix and split depth
+        _shadowMatricies[shadowMapIdx][i] = shadowMatrix;
+
+		const float clipDist = camera->GetFarClip() - camera->GetNearClip();
+		_cascadeSplits[shadowMapIdx][i] = camera->GetNearClip() + (splitDist * clipDist);
 	}
 
 	return S_OK;
-}
-
-void DirectionalLightRenderer::calcSplitDepths(float* outSplits, float nearClip, float farClip)
-{
-	outSplits[0] = nearClip;
-	outSplits[NUM_CASCADES] = farClip;
-	const float splitConstant = 0.95f;
-	float fNumCascades = (float)NUM_CASCADES;
-
-	for (UINT i = 1; i < NUM_CASCADES; i++)
-	{
-		outSplits[i] = splitConstant * nearClip * powf(farClip / nearClip, i / fNumCascades) +
-			(1.0f - splitConstant) * ((nearClip + (i / fNumCascades)) * (farClip - nearClip));
-	}
-}
-
-void DirectionalLightRenderer::calcLightCamera(DirectionalLight* dlight, Camera* mainCamera, float minZ,
-	float maxZ, OrthographicCamera* outCamera)
-{
-	// create a matrix with that will rotate in points the direction of the light
-	D3DXVECTOR3 zero = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-	D3DXVECTOR3 up = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
-	D3DXVECTOR3 lightDir = *dlight->GetDirection();
-	D3DXVECTOR3 invLightDir = -lightDir;
-
-	D3DXMATRIX lightRot;
-	D3DXMatrixLookAtLH(&lightRot, &zero, &invLightDir, &up);
-
-	// Get the corners of the frustum
-	D3DXMATRIX clippedProj;
-	mainCamera->BuildProjection(&clippedProj, minZ, maxZ);
-
-	D3DXMATRIX clippedViewProj;
-	D3DXMatrixMultiply(&clippedViewProj, mainCamera->GetView(), &clippedProj);
-
-	BoundingFrustum clippedFrust = BoundingFrustum(clippedViewProj);
-
-	D3DXVECTOR3 frustCorners[8];
-	clippedFrust.GetCorners(frustCorners);
-
-	// Transform the positions of the corners into the direction of the light
-	D3DXVec3TransformCoordArray(frustCorners, sizeof(D3DXVECTOR3), frustCorners, sizeof(D3DXVECTOR3), 
-		&lightRot, 8);
-
-	// Find the smallest box around the points
-	BoundingBox lightBox;
-	BoundingBox::CreateFromPoints(&lightBox, frustCorners, 8);
-
-	// Find the position of the light in light space
-	D3DXVECTOR3 boxSize = *lightBox.GetMin() - *lightBox.GetMax();
-
-	D3DXVECTOR3 lightPos = D3DXVECTOR3(boxSize.x * 0.5f, boxSize.y * 0.5f, lightBox.GetMin()->z);
-	
-	// Find the light position in world space
-	D3DXMATRIX invLightRot;
-	D3DXMatrixInverse(&invLightRot, NULL, &lightRot);
-
-	D3DXVECTOR3 lightPosWS;
-	D3DXVec3TransformCoord(&lightPosWS, &lightPos, &invLightRot);
-
-	// Fill in the camera parameters
-	D3DXQUATERNION lightDirQuat = D3DXQUATERNION(lightDir.x, lightDir.y, lightDir.z, 1.0f);
-
-	outCamera->SetPosition(lightPos);
-	outCamera->SetOrientation(lightDirQuat);
-	outCamera->SetSize(D3DXVECTOR2(boxSize.x, boxSize.y));
-
-	// TODO: Calculate this properly based off of the scene bounds
-	outCamera->SetNearClip(-boxSize.z * 1.5f);
-	outCamera->SetFarClip(boxSize.z * 1.5f);
 }
 
 HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
@@ -115,16 +182,17 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	
 	// prepare the camera properties buffer
-	D3DXMATRIX cameraInvViewProj = (*camera->GetView()) * (*camera->GetProjection());
-	D3DXMatrixInverse(&cameraInvViewProj, NULL, &cameraInvViewProj);
-	D3DXMatrixTranspose(&cameraInvViewProj, &cameraInvViewProj);
+	XMVECTOR det;
+	XMMATRIX cameraInvViewProj = XMMatrixInverse(&det, *camera->GetViewProjection());
+	XMVECTOR cameraPos = camera->GetPosition();
 
-	D3DXVECTOR3 cameraPos = camera->GetPosition();
-
-	pd3dImmediateContext->PSSetShader(_unshadowedPS, NULL, 0);
-
-	ID3D11SamplerState* sampler = GetSamplerStates()->GetLinear();
-	pd3dImmediateContext->PSSetSamplers(0, 1, &sampler);
+	// Set the global properties for all directional lights
+	ID3D11SamplerState* samplers[2] =
+	{
+		GetSamplerStates()->GetLinear(),
+		GetSamplerStates()->GetShadowMap(),
+	};
+	pd3dImmediateContext->PSSetSamplers(0, 2, samplers);
 	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthDisabled(), 0);
 
 	float blendFactor[4] = {1, 1, 1, 1};
@@ -132,24 +200,31 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 
 	V_RETURN(gBuffer->PSSetShaderResources(pd3dImmediateContext, 0));
 
+	// map the camera properties
 	V_RETURN(pd3dImmediateContext->Map(_cameraPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 	CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES* cameraProperties = (CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES*)mappedResource.pData;
-	cameraProperties->InverseViewProjection = cameraInvViewProj;
-	cameraProperties->CameraPosition = D3DXVECTOR4(cameraPos, 1.0f);
+	
+	cameraProperties->InverseViewProjection = XMMatrixTranspose(cameraInvViewProj);
+	XMStoreFloat4(&cameraProperties->CameraPosition, cameraPos);
+
 	pd3dImmediateContext->Unmap(_cameraPropertiesBuffer, 0);
 
 	pd3dImmediateContext->PSSetConstantBuffers(0, 1, &_cameraPropertiesBuffer);
 
+	// Begin rendering unshadowed lights
 	int numUnshadowed = GetCount(false);
 	for (int i = 0; i < numUnshadowed; i++)
 	{
 		DirectionalLight* light = GetLight(i, false);
 
 		V_RETURN(pd3dImmediateContext->Map(_lightPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
-		CB_DIRECTIONALLIGHT_PROPERTIES* lightProperties = (CB_DIRECTIONALLIGHT_PROPERTIES*)mappedResource.pData;
-		lightProperties->LightColor = *light->GetColor();
-		lightProperties->LightDirection = *light->GetDirection();
+		CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES* lightProperties = 
+			(CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
+
+		XMStoreFloat4(&lightProperties->LightColor, *light->GetColor());
+		XMStoreFloat3(&lightProperties->LightDirection, *light->GetDirection());
 		lightProperties->LightIntensity = light->GetItensity();
+
 		pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
 
 		pd3dImmediateContext->PSSetConstantBuffers(1, 1, &_lightPropertiesBuffer);
@@ -157,6 +232,60 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 		_fsQuad.Render(pd3dImmediateContext, _unshadowedPS);
 	}
 	
+	// begin rendering shadowed lights
+	int numShadowed = GetCount(true);
+	for (int i = 0; i < numShadowed; i++)
+	{
+		DirectionalLight* light = GetLight(i, true);
+
+		// Prepare the light properties
+		V_RETURN(pd3dImmediateContext->Map(_lightPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+		CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES* lightProperties = 
+			(CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
+
+		XMStoreFloat4(&lightProperties->LightColor, *light->GetColor());
+		XMStoreFloat3(&lightProperties->LightDirection, *light->GetDirection());
+		lightProperties->LightIntensity = light->GetItensity();
+
+		pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
+		
+		// Prepare the shadow properties
+		V_RETURN(pd3dImmediateContext->Map(_shadowPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+		CB_DIRECTIONALLIGHT_SHADOW_PROPERTIES* shadowProperties = 
+			(CB_DIRECTIONALLIGHT_SHADOW_PROPERTIES*)mappedResource.pData;
+
+		for (UINT j = 0; j < NUM_CASCADES; j++)
+		{
+			shadowProperties->CascadeSplits[j] = _cascadeSplits[i][j];
+			shadowProperties->ShadowMatricies[j] = XMMatrixTranspose(_shadowMatricies[i][j]);
+		}
+		shadowProperties->CameraClips = XMFLOAT4(camera->GetNearClip(), camera->GetFarClip(), 0.0f, 0.0f);
+
+		pd3dImmediateContext->Unmap(_shadowPropertiesBuffer, 0);
+
+		// Set both constant buffers back to the shader at once
+		ID3D11Buffer* constantBuffers[2] = 
+		{
+			_lightPropertiesBuffer,
+			_shadowPropertiesBuffer
+		};
+		pd3dImmediateContext->PSSetConstantBuffers(1, 2, constantBuffers);
+
+		// Set the shadow map SRV
+		pd3dImmediateContext->PSSetShaderResources(5, 1, &_shadowMapSRVs[i]);
+
+		// Finally, render the quad
+		_fsQuad.Render(pd3dImmediateContext, _shadowedPS);
+	}
+
+	// Unset the shadow map SRV
+	ID3D11ShaderResourceView* nullSRV[1] = 
+	{
+		NULL,
+	};
+	pd3dImmediateContext->PSSetShaderResources(5, 1, nullSRV);
+
+
 	return S_OK;
 }
 
@@ -193,7 +322,7 @@ HRESULT DirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, 
 
 	D3D11_BUFFER_DESC lightPropertiesBufferDesc =
 	{
-		sizeof(CB_DIRECTIONALLIGHT_PROPERTIES), //UINT ByteWidth;
+		sizeof(CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES), //UINT ByteWidth;
 		D3D11_USAGE_DYNAMIC, //D3D11_USAGE Usage;
 		D3D11_BIND_CONSTANT_BUFFER, //UINT BindFlags;
 		D3D11_CPU_ACCESS_WRITE, //UINT CPUAccessFlags;
@@ -202,6 +331,18 @@ HRESULT DirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, 
 	};
 
 	V_RETURN(pd3dDevice->CreateBuffer(&lightPropertiesBufferDesc, NULL, &_lightPropertiesBuffer));
+
+	D3D11_BUFFER_DESC shadowPropertiesBufferDesc =
+	{
+		sizeof(CB_DIRECTIONALLIGHT_SHADOW_PROPERTIES), //UINT ByteWidth;
+		D3D11_USAGE_DYNAMIC, //D3D11_USAGE Usage;
+		D3D11_BIND_CONSTANT_BUFFER, //UINT BindFlags;
+		D3D11_CPU_ACCESS_WRITE, //UINT CPUAccessFlags;
+		0, //UINT MiscFlags;
+		0, //UINT StructureByteStride;
+	};
+
+	V_RETURN(pd3dDevice->CreateBuffer(&shadowPropertiesBufferDesc, NULL, &_shadowPropertiesBuffer));
 
 	// Create the shadow textures
 	D3D11_TEXTURE2D_DESC shadowMapTextureDesc = 
@@ -296,6 +437,7 @@ void DirectionalLightRenderer::OnD3D11DestroyDevice()
 	SAFE_RELEASE(_shadowedPS);
 	SAFE_RELEASE(_lightPropertiesBuffer);
 	SAFE_RELEASE(_cameraPropertiesBuffer);
+	SAFE_RELEASE(_shadowPropertiesBuffer);
 
 	for (UINT i = 0; i < NUM_SHADOW_MAPS; i++)
 	{

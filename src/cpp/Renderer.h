@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Defines.h"
 #include "Light.h"
 #include "Camera.h"
 #include "PostProcess.h"

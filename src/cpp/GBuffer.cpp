@@ -1,4 +1,3 @@
-#include "DXUT.h"
 #include "GBuffer.h"
 
 HRESULT GBuffer::GSSetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx)

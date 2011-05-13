@@ -139,7 +139,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;DEBUG;PROFILE;_WINDOWS;D3DXFX_LARGEADDRESS_HANDLE;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>DXUT.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
@@ -395,12 +395,14 @@
     <ClCompile Include="ShaderLoader.cpp" />
     <ClInclude Include="ButtonState.h" />
     <ClInclude Include="CombinePostProcess.h" />
+    <ClInclude Include="Defines.h" />
     <ClInclude Include="DeviceStates.h" />
     <ClInclude Include="DirectionalLightRenderer.h" />
     <ClInclude Include="FullscreenQuad.h" />
     <ClInclude Include="KeyboardState.h" />
     <ClInclude Include="MouseState.h" />
     <ClInclude Include="ShaderLoader.h" />
+    <ClInclude Include="Utility.h" />
     <None Include="DirectionalLight.hlsl" />
     <None Include="DXUT\Optional\directx.ico" />
     <ClInclude Include="BoundingObjects.h" />

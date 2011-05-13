@@ -1,4 +1,3 @@
-#include "DXUT.h"
 #include "ModelRenderer.h"
 
 ModelRenderer::ModelRenderer()
@@ -11,13 +10,12 @@ ModelRenderer::~ModelRenderer()
 {
 }
 
-HRESULT ModelRenderer::RenderDepth(ID3D11DeviceContext* pd3dDeviceContext, vector<ModelInstance*> instances, Camera* camera)
+HRESULT ModelRenderer::RenderDepth(ID3D11DeviceContext* pd3dDeviceContext, vector<ModelInstance*>* instances, Camera* camera)
 {
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;	
 	
-	D3DXMATRIX viewProj;
-	D3DXMatrixMultiply(&viewProj, camera->GetView(), camera->GetProjection());
+	XMMATRIX viewProj = *camera->GetViewProjection();
 
 	BoundingFrustum cameraFrust = BoundingFrustum(viewProj);
 
@@ -31,7 +29,7 @@ HRESULT ModelRenderer::RenderDepth(ID3D11DeviceContext* pd3dDeviceContext, vecto
 	float blendFactor[4] = {1, 1, 1, 1};
 	pd3dDeviceContext->OMSetBlendState(_blendStates.GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
 	
-	for (vector<ModelInstance*>::iterator i = instances.begin(); i != instances.end(); i++)
+	for (vector<ModelInstance*>::iterator i = instances->begin(); i != instances->end(); i++)
 	{
 		// Skip this model if it's bounding box is not in the frustum
 		if (!Intersection::Contains(&cameraFrust, (*i)->GetBounds()))
@@ -39,18 +37,13 @@ HRESULT ModelRenderer::RenderDepth(ID3D11DeviceContext* pd3dDeviceContext, vecto
 			continue;
 		}
 
-		D3DXMATRIX world = *(*i)->GetWorld();
-
-		D3DXMATRIX wvp;
-		D3DXMatrixMultiply(&wvp, &world, &viewProj);
-
-		D3DXMatrixTranspose(&world, &world);
-		D3DXMatrixTranspose(&wvp, &wvp);
-
+		XMMATRIX world = *(*i)->GetWorld();
+		XMMATRIX wvp = XMMatrixMultiply(world, viewProj);
+		
 		V(pd3dDeviceContext->Map(_constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 		CB_MODEL_PROPERTIES* modelProperties = (CB_MODEL_PROPERTIES*)mappedResource.pData;
-		modelProperties->World = world;
-		modelProperties->WorldViewProjection = wvp;
+		modelProperties->World = XMMatrixTranspose(world);
+		modelProperties->WorldViewProjection = XMMatrixTranspose(wvp);
 		pd3dDeviceContext->Unmap(_constantBuffer, 0);
 
 		pd3dDeviceContext->VSSetConstantBuffers(0, 1, &_constantBuffer);
@@ -62,13 +55,12 @@ HRESULT ModelRenderer::RenderDepth(ID3D11DeviceContext* pd3dDeviceContext, vecto
 	return S_OK;
 }
 
-HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vector<ModelInstance*> instances, Camera* camera)
+HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vector<ModelInstance*>* instances, Camera* camera)
 {
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;	
 
-	D3DXMATRIX viewProj;
-	D3DXMatrixMultiply(&viewProj, camera->GetView(), camera->GetProjection());
+	XMMATRIX viewProj = *camera->GetViewProjection();
 
 	BoundingFrustum cameraFrust = BoundingFrustum(viewProj);
 
@@ -85,7 +77,7 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 	ID3D11SamplerState* sampler = _samplerStates.GetLinear();
 	pd3dDeviceContext->PSSetSamplers(0, 1, &sampler);
 
-	for (vector<ModelInstance*>::iterator i = instances.begin(); i != instances.end(); i++)
+	for (vector<ModelInstance*>::iterator i = instances->begin(); i != instances->end(); i++)
 	{
 		// Skip this model if it's bounding box is not in the frustum
 		if (!Intersection::Contains(&cameraFrust, (*i)->GetBounds()))
@@ -93,18 +85,13 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 			continue;
 		}
 
-		D3DXMATRIX world = *(*i)->GetWorld();
-
-		D3DXMATRIX wvp;
-		D3DXMatrixMultiply(&wvp, &world, &viewProj);
-
-		D3DXMatrixTranspose(&world, &world);
-		D3DXMatrixTranspose(&wvp, &wvp);
+		XMMATRIX world = *(*i)->GetWorld();
+		XMMATRIX wvp = XMMatrixMultiply(world, viewProj);
 
 		V(pd3dDeviceContext->Map(_constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 		CB_MODEL_PROPERTIES* modelProperties = (CB_MODEL_PROPERTIES*)mappedResource.pData;
-		modelProperties->World = world;
-		modelProperties->WorldViewProjection = wvp;
+		modelProperties->World = XMMatrixTranspose(world);
+		modelProperties->WorldViewProjection = XMMatrixTranspose(wvp);
 		pd3dDeviceContext->Unmap(_constantBuffer, 0);
 
 		pd3dDeviceContext->VSSetConstantBuffers(0, 1, &_constantBuffer);

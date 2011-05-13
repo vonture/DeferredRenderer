@@ -1,4 +1,3 @@
-#include "DXUT.h"
 #include "MouseState.h"
 
 MouseState MouseState::_prevState;

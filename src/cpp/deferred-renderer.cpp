@@ -6,7 +6,7 @@
 //
 // Copyright (c) Microsoft Corporation. All rights reserved.
 //--------------------------------------------------------------------------------------
-#include "DXUT.h"
+#include "Defines.h"
 #include "DXUTgui.h"
 #include "DXUTmisc.h"
 #include "DXUTSettingsDlg.h"

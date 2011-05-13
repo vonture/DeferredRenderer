@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DXUT.h"
+#include "Defines.h"
 #include "IHasContent.h"
 #include "GBuffer.h"
 #include "LightBuffer.h"

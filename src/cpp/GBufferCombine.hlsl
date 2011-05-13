@@ -28,6 +28,7 @@ float4 PS_Combine(PS_In_Combine input) : SV_TARGET0
 
 	float3 vFinalColour = vLightColor * vDiffuse;
 
-	//return float4(lightSample.rgb, 1.0f);
-	return float4(vFinalColour, 1.0f);
+	//return float4(vDiffuse, 1.0f);
+	return float4(lightSample.rgb, 1.0f);
+	//return float4(vFinalColour, 1.0f);
 }

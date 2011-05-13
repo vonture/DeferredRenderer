@@ -1,4 +1,3 @@
-#include "DXUT.h"
 #include "CombinePostProcess.h"
 
 CombinePostProcess::CombinePostProcess()

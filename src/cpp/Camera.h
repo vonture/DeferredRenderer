@@ -1,101 +1,123 @@
 #pragma once
 
-#include "DXUT.h"
+#include "Defines.h"
 #include "BoundingObjects.h"
 
 class Camera
 {
 private:
-	bool _dirty;
-	float _nearClip, _farClip;
-	D3DXMATRIX _world, _view, _proj;
+	XMMATRIX _world;
+	XMMATRIX _view;
+	XMMATRIX _proj;
+	XMMATRIX _viewProj;
+	float _nearClip;
+	float _farClip;
 
-	void updateValues()
+	void worldMatrixChanged()
     {
-		D3DXMatrixInverse(&_view, NULL, &_world);
-		BuildProjection(&_proj, _nearClip, _farClip);
-
-		_dirty = false;
+		XMVECTOR det;
+		_view = XMMatrixInverse(&det, _world);
+		_viewProj = XMMatrixMultiply(_view, _proj);
     }
+
+protected:
+	void UpdateProjection()
+	{
+		_proj = BuildProjection(_nearClip, _farClip);
+		_viewProj = XMMatrixMultiply(_view, _proj);
+	}
 
 public:
 	Camera() 
-		: _nearClip(0.1f), _farClip(1000.0f), _dirty(true)
+		: _nearClip(0.1f), _farClip(1000.0f)
 	{
-		D3DXMatrixIdentity(&_world);
+		_world = XMMatrixIdentity();
+		worldMatrixChanged();
 	}
 
 	Camera(float nearClip, float farClip) 
-		: _nearClip(nearClip), _farClip(farClip), _dirty(true)
+		: _nearClip(nearClip), _farClip(farClip)
 	{
-		D3DXMatrixIdentity(&_world);
+		_world = XMMatrixIdentity();
+		worldMatrixChanged();
 	}
 
-	virtual void BuildProjection(D3DXMATRIX* outProj, float nearClip, float farClip) = 0;
+	virtual XMMATRIX BuildProjection(float nearClip, float farClip) = 0;
 
-	void SetPosition(const D3DXVECTOR3& pos)
+	void SetLookAt(const XMFLOAT3 &eye, const XMFLOAT3 &lookAt, const XMFLOAT3 &up)
 	{
-		_world._41 = pos.x;
-		_world._42 = pos.y;
-		_world._43 = pos.z;
-
-		_dirty = true;
+		XMVECTOR det;
+		_view = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&lookAt), XMLoadFloat3(&up));
+		_world = XMMatrixInverse(&det, _view);
+		_viewProj = XMMatrixMultiply(_view, _proj);
 	}
 
-	D3DXVECTOR3 GetPosition() const
+	void SetPosition(const XMVECTOR& pos)
+	{
+		_world._41 = XMVectorGetX(pos);
+		_world._42 = XMVectorGetY(pos);
+		_world._43 = XMVectorGetZ(pos);
+
+		worldMatrixChanged();
+	}
+
+	XMVECTOR GetPosition() const
 	{ 
-		return D3DXVECTOR3(_world._41, _world._42, _world._43); 
+		XMFLOAT3 pos = XMFLOAT3(_world._41, _world._42, _world._43);
+		return XMLoadFloat3(&pos);
 	}
 
-	D3DXVECTOR3 GetForward() const
+	XMVECTOR GetForward() const
 	{
-		return D3DXVECTOR3(_world._31, _world._32, _world._33);
+		XMFLOAT3 forward = XMFLOAT3(_world._31, _world._32, _world._33);
+		return XMLoadFloat3(&forward);
 	}
 
-	D3DXVECTOR3 GetBackward() const
+	XMVECTOR GetBackward() const
 	{
-
-		return D3DXVECTOR3(-_world._31, -_world._32, -_world._33);
+		XMFLOAT3 backward = XMFLOAT3(-_world._31, -_world._32, -_world._33);
+		return XMLoadFloat3(&backward);
 	}	
 
-	D3DXVECTOR3 GetRight() const
+	XMVECTOR GetRight() const
 	{
-		return D3DXVECTOR3(_world._11, _world._12, _world._13);
+		XMFLOAT3 right = XMFLOAT3(_world._11, _world._12, _world._13);
+		return XMLoadFloat3(&right);
 	}
 
-	D3DXVECTOR3 GetLeft() const
+	XMVECTOR GetLeft() const
 	{
-		return D3DXVECTOR3(-_world._11, -_world._12, -_world._13);
+		XMFLOAT3 left = XMFLOAT3(-_world._11, -_world._12, -_world._13);
+		return XMLoadFloat3(&left);
 	}
 
-	D3DXVECTOR3 GetUp() const
+	XMVECTOR GetUp() const
 	{
-		return D3DXVECTOR3(_world._21, _world._22, _world._23);
+		XMFLOAT3 up = XMFLOAT3(_world._21, _world._22, _world._23);
+		return XMLoadFloat3(&up);
 	}
 
-	D3DXVECTOR3 GetDown() const
+	XMVECTOR GetDown() const
 	{
-		return D3DXVECTOR3(-_world._21, -_world._22, -_world._23);
+		XMFLOAT3 down = XMFLOAT3(-_world._21, -_world._22, -_world._23);
+		return XMLoadFloat3(&down);
 	}
 
-	void SetOrientation(const D3DXQUATERNION& orientation)
+	void SetOrientation(const XMVECTOR& newOrientation)
 	{
-		D3DXMATRIX newWorld;
-		D3DXMatrixRotationQuaternion(&newWorld, &orientation);
+		XMMATRIX newWorld = XMMatrixRotationQuaternion(newOrientation);
 
 		newWorld._41 = _world._41;
 		newWorld._42 = _world._42;
 		newWorld._43 = _world._43;
 		_world = newWorld;
 
-		_dirty = true;
+		worldMatrixChanged();
 	}
 
-	D3DXQUATERNION GetOrientation() const
+	XMVECTOR GetOrientation() const
 	{ 
-		D3DXQUATERNION quat;
-		D3DXQuaternionRotationMatrix(&quat, &_world);
-		return quat;
+		return XMQuaternionRotationMatrix(_world);
 	}
 
 	void SetNearClip(float nearClip)
@@ -118,34 +140,36 @@ public:
 		return _farClip;
 	}
 
-	const D3DXMATRIX* GetView()
+	const XMMATRIX* GetView()
 	{ 
-		if (_dirty)
-		{
-			updateValues();
-		}
-
 		return &_view;
 	}
 
-	const D3DXMATRIX* GetProjection()
+	const XMMATRIX* GetProjection()
 	{ 
-		if (_dirty)
-		{
-			updateValues();
-		}
-
 		return &_proj; 
 	}
 
-	const D3DXMATRIX* GetWorld() 
+	void SetProjection(const XMMATRIX& proj)
+	{
+		_proj = proj;
+		_viewProj = XMMatrixMultiply(_view, _proj);
+	}
+
+	const XMMATRIX* GetViewProjection()
+	{ 
+		return &_viewProj; 
+	}
+
+	const XMMATRIX* GetWorld() 
 	{ 
 		return &_world;
 	}
 
-	void SetWorld(const D3DMATRIX& world)
+	void SetWorld(const XMMATRIX& world)
 	{
 		_world = world;
+		worldMatrixChanged();
 	}
 };
 
@@ -156,108 +180,141 @@ private:
 	float _aspect;
 
 protected:
-	void BuildProjection(D3DXMATRIX* outProj, float nearClip, float farClip)
+	XMMATRIX BuildProjection(float nearClip, float farClip)
 	{
-		D3DXMatrixPerspectiveFovLH(outProj, _fov, _aspect, nearClip, farClip);
+		return XMMatrixPerspectiveFovLH(_fov, _aspect, nearClip, farClip);
 	}
 
 public:
 	PerspectiveCamera() 
 		: Camera(), _fov(1.0f), _aspect(1.0f)
 	{
+		UpdateProjection();
 	}
 
 	PerspectiveCamera(float nearClip, float farClip, float fov, float aspect) 
 		: Camera(nearClip, farClip), _fov(fov), _aspect(aspect)
 	{
+		UpdateProjection();
 	}
 
 	float GetFieldOfView()
 	{
 		return _fov;
 	}
+
 	void SetFieldOfView(float fov)
 	{
 		_fov = fov;
+		UpdateProjection();
 	}
 
 	float GetAspectRatio()
 	{
 		return _aspect;
 	}
+
 	void SetAspectRatio(float aspect)
 	{
 		_aspect = aspect;
+		UpdateProjection();
 	}
 };
 
 class FirstPersonCamera : public PerspectiveCamera
 {
 private:
-	D3DXVECTOR2 _rotation;
+	float _xRot, _yRot;
 
 public:
 	FirstPersonCamera()
-		: PerspectiveCamera(), _rotation(0.0f, 0.0f)
+		: PerspectiveCamera(), _xRot(0.0f), _yRot(0.0f)
 	{
+		UpdateProjection();
 	}
 
 	FirstPersonCamera(float nearClip, float farClip, float fov, float aspect)
-		: PerspectiveCamera(nearClip, farClip, fov, aspect), _rotation(0.0f, 0.0f)
+		: PerspectiveCamera(nearClip, farClip, fov, aspect), _xRot(0.0f), _yRot(0.0f)
 	{
+		UpdateProjection();
 	}
 
-	const D3DXVECTOR2 GetRotation()
+	float GetXRotation()
 	{
-		return _rotation;
+		return _xRot;
 	}
 
-	void SetRotation(const D3DXVECTOR2& rotation)
-	{		
-		_rotation.x = rotation.x;
-		_rotation.y = max(-D3DX_PI / 2.0f, min(D3DX_PI / 2.0f, rotation.y));
-				
-		D3DXQUATERNION rotQuat;
-		D3DXQuaternionRotationYawPitchRoll(&rotQuat, _rotation.x, _rotation.y, 0.0f);
-		SetOrientation(rotQuat);
+	float GetYRotation()
+	{
+		return _yRot;
+	}
+
+	void SetXRotation(float xRot)
+	{
+		_xRot = XMScalarModAngle(xRot);
+		SetOrientation(XMQuaternionRotationRollPitchYaw(_xRot, _yRot, 0.0f));
+	}
+
+	void SetYRotation(float yRot)
+	{
+		_yRot = clampf(yRot, -PiOver2, PiOver2);
+		SetOrientation(XMQuaternionRotationRollPitchYaw(_yRot, _xRot, 0.0f));
 	}
 };
 
 class OrthographicCamera : public Camera
 {
 private:
-	D3DXVECTOR2 _size;
+	float _xMin;
+    float _xMax;
+    float _yMin;
+    float _yMax;
 
 protected:
-	void BuildProjection(D3DXMATRIX* outProj, float nearClip, float farClip)
+	XMMATRIX BuildProjection(float nearClip, float farClip)
 	{
-		D3DXMatrixOrthoLH(outProj, _size.x, _size.y, nearClip, farClip);
+		return XMMatrixOrthographicOffCenterLH(_xMin, _xMax, _yMin, _yMax, nearClip, farClip);
 	}
 
 public:
 	OrthographicCamera()
-		: Camera(), _size(100.0f, 100.0f)
+		: Camera(), _xMin(0.0f), _yMin(0.0f), _xMax(1.0f), _yMax(1.0f)
 	{
+		UpdateProjection();
 	}
 
-	OrthographicCamera(float nearClip, float farClip, const D3DXVECTOR2& size)
-		: Camera(nearClip, farClip), _size(size)
+	OrthographicCamera(float nearClip, float farClip, float minX, float minY, float maxX, float maxY)
+		: Camera(nearClip, farClip), _xMin(minX), _yMin(minY), _xMax(maxX), _yMax(maxY)
 	{
+		UpdateProjection();
 	}
 
-	OrthographicCamera(float nearClip, float farClip, float width, float height)
-		: Camera(nearClip, farClip), _size(width, height)
+    float GetMinX() const { return _xMin; };
+    float GetMinY() const { return _yMin; };
+    float GetMaxX() const { return _xMax; };
+    float GetMaxY() const { return _yMax; };
+
+    void SetMinX(float minX)
 	{
+		_xMin = minX;
+		UpdateProjection();
 	}
 
-	const D3DXVECTOR2* GetSize()
+    void SetMinY(float minY)
 	{
-		return &_size;
+		_yMin = minY;
+		UpdateProjection();
 	}
 
-	void SetSize(const D3DXVECTOR2& size)
-	{		
-		D3DXVECTOR2 minSize = D3DXVECTOR2(0.0f, 0.0f);
-		D3DXVec2Maximize(&_size, &size, &minSize);
+    void SetMaxX(float maxX)
+	{
+		_xMax = maxX;
+		UpdateProjection();
+	}
+
+    void SetMaxY(float maxY)
+	{
+		_yMax = maxY;
+		UpdateProjection();
 	}
 };

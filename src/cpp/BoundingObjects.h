@@ -1,105 +1,68 @@
 #pragma once
 
-#include "DXUT.h"
+#include "Defines.h"
 
 class BoundingFrustum
 {
 	friend class Intersection;
 
 private:
-	D3DXPLANE _planes[6];
-	D3DXVECTOR3 _corners[8];
-	D3DXVECTOR3 _mid;
+	XMVECTOR _planes[6];
+	XMVECTOR _corners[8];
+	XMVECTOR _mid;
 
-	void updateValues(const D3DXMATRIX& matrix)
+	void updateValues(const XMMATRIX& matrix)
 	{
-		_planes[0].a = matrix._14 + matrix._11;
-		_planes[0].b = matrix._24 + matrix._21;
-		_planes[0].c = matrix._34 + matrix._31;
-		_planes[0].d = matrix._44 + matrix._41;
- 
-		// Right plane
-		_planes[1].a = matrix._14 - matrix._11;
-		_planes[1].b = matrix._24 - matrix._21;
-		_planes[1].c = matrix._34 - matrix._31;
-		_planes[1].d = matrix._44 - matrix._41;
- 
-		// Top plane
-		_planes[2].a = matrix._14 - matrix._12;
-		_planes[2].b = matrix._24 - matrix._22;
-		_planes[2].c = matrix._34 - matrix._32;
-		_planes[2].d = matrix._44 - matrix._42;
- 
-		// Bottom plane
-		_planes[3].a = matrix._14 + matrix._12;
-		_planes[3].b = matrix._24 + matrix._22;
-		_planes[3].c = matrix._34 + matrix._32;
-		_planes[3].d = matrix._44 + matrix._42;
- 
-		// Near plane
-		_planes[4].a = matrix._13;
-		_planes[4].b = matrix._23;
-		_planes[4].c = matrix._33;
-		_planes[4].d = matrix._43;
- 
-		// Far plane
-		_planes[5].a = matrix._14 - matrix._13;
-		_planes[5].b = matrix._24 - matrix._23;
-		_planes[5].c = matrix._34 - matrix._33;
-		_planes[5].d = matrix._44 - matrix._43;
- 
-		// Normalize planes
-		for (int i = 0; i < 6; i++)
-		{
-			D3DXPlaneNormalize(&_planes[i], &_planes[i]);
-		}
-
-		// Generate corners
-		D3DXMATRIX viewProjInv;
-		D3DXMatrixInverse(&viewProjInv, NULL, &matrix);
-		
-		const D3DXVECTOR3 cornersViewSpace[8] = 
-		{
-			D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-			D3DXVECTOR3(1.0f, 0.0f, 0.0f), 
-			D3DXVECTOR3(1.0f, 1.0f, 0.0f),
-			D3DXVECTOR3(0.0f, 1.0f, 0.0f),
-			D3DXVECTOR3(0.0f, 0.0f, 1.0f),
-			D3DXVECTOR3(1.0f, 0.0f, 1.0f),
-			D3DXVECTOR3(1.0f, 1.0f, 1.0f),
-			D3DXVECTOR3(0.0f, 1.0f, 1.0f),
+		XMVECTOR corners[8] =
+		{                                               //                         7--------6
+			XMVectorSet( 1.0f, -1.0f, 0.0f, 1.0f),      //                        /|       /|
+			XMVectorSet(-1.0f, -1.0f, 0.0f, 1.0f),      //     Y ^               / |      / |
+			XMVectorSet( 1.0f,  1.0f, 0.0f, 1.0f),      //     | _              3--------2  |
+			XMVectorSet(-1.0f,  1.0f, 0.0f, 1.0f),      //     | /' Z           |  |     |  |
+			XMVectorSet( 1.0f, -1.0f, 1.0f, 1.0f),      //     |/               |  5-----|--4
+			XMVectorSet(-1.0f, -1.0f, 1.0f, 1.0f),      //     + ---> X         | /      | /
+			XMVectorSet( 1.0f,  1.0f, 1.0f, 1.0f),      //                      |/       |/
+			XMVectorSet(-1.0f,  1.0f, 1.0f, 1.0f),      //                      1--------0
 		};
 
-		D3DXVec3TransformCoordArray(_corners, sizeof(D3DXVECTOR3), cornersViewSpace,
-			sizeof(D3DXVECTOR3), &viewProjInv, 8);
+		for(UINT i = 0; i < 8; ++i)
+		{
+			_corners[i] = XMVector3TransformCoord(corners[i], matrix);
+		}
+
+		_planes[0] = XMPlaneFromPoints(_corners[0], _corners[4], _corners[2]);
+		_planes[1] = XMPlaneFromPoints(_corners[1], _corners[3], _corners[5]);
+		_planes[2] = XMPlaneFromPoints(_corners[3], _corners[2], _corners[7]);
+		_planes[3] = XMPlaneFromPoints(_corners[1], _corners[5], _corners[0]);
+		_planes[4] = XMPlaneFromPoints(_corners[5], _corners[7], _corners[4]);
+		_planes[5] = XMPlaneFromPoints(_corners[1], _corners[0], _corners[3]);
 
 		// Calculate the mid point
-		D3DXVECTOR3 mid = D3DXVECTOR3(0.5f, 0.5f, 0.5f);
-		D3DXVec3TransformCoord(&_mid, &mid, &viewProjInv);
+		_mid = XMVector3TransformCoord(XMVectorSet(0.5f, 0.5f, 0.5f, 1.0f), matrix);
 	}
 
 public:
 	BoundingFrustum()
 	{
-		D3DXMATRIX identity;
-		D3DXMatrixIdentity(&identity);
-
-		updateValues(identity);
+		updateValues(XMMatrixIdentity());
 	}
 
-	BoundingFrustum(const D3DXMATRIX& matrix)
+	BoundingFrustum(const XMMATRIX& matrix)
 	{
 		updateValues(matrix);
 	}
 
-	void SetMatrix(const D3DXMATRIX& matrix)
+	void SetMatrix(const XMMATRIX& matrix)
 	{
 		updateValues(matrix);
 	}
 
-	void GetCorners(const D3DXVECTOR3* outCorners)
+	void GetCorners(XMVECTOR* outCorners) const
 	{
-		outCorners = _corners;
+		for (int i = 0; i < 8; i++)
+		{
+			outCorners[i] = _corners[i];
+		}
 	}
 };
 
@@ -108,29 +71,30 @@ class BoundingSphere
 	friend class Intersection;
 
 private:
-	D3DXVECTOR3 _position;
+	XMVECTOR _position;
 	float _radius;
 
 public:
-	BoundingSphere() : _position(0.0f, 0.0f, 0.0f), _radius(0.0f)
+	BoundingSphere() : _radius(0.0f)
+	{
+		_position = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+	}
+
+	BoundingSphere(const XMVECTOR& pos, float rad) : _position(pos), _radius(rad)
 	{
 	}
 
-	BoundingSphere(const D3DXVECTOR3& pos, float rad) : _position(pos), _radius(rad)
-	{
-	}
-
-	const D3DXVECTOR3* GetPosition()
+	const XMVECTOR* GetPosition() const
 	{
 		return &_position;
 	}
 
-	void SetPosition(const D3DXVECTOR3& pos)
+	void SetPosition(const XMVECTOR& pos)
 	{
 		_position = pos;
 	}
 
-	float GetRadius()
+	float GetRadius() const
 	{
 		return _radius;
 	}
@@ -146,85 +110,89 @@ class BoundingBox
 	friend class Intersection;
 
 private:
-	D3DXVECTOR3 _min;
-	D3DXVECTOR3 _max;
+	XMVECTOR _min;
+	XMVECTOR _max;
 
 public:
-	BoundingBox() : _min(0.0f, 0.0f, 0.0f), _max(0.0f, 0.0f, 0.0f)
+	BoundingBox()
+	{
+		_min = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+		_max = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+	}
+
+	BoundingBox(const XMVECTOR& min, const XMVECTOR& max) : _min(min), _max(max)
 	{
 	}
 
-	BoundingBox(const D3DXVECTOR3& min, const D3DXVECTOR3& max) : _min(min), _max(max)
-	{
-	}
-
-	const D3DXVECTOR3* GetMin()
+	const XMVECTOR* GetMin() const
 	{
 		return &_min;
 	}
 
-	void SetMin(const D3DXVECTOR3& min)
+	void SetMin(const XMVECTOR& min)
 	{
 		_min = min;
 	}
 
-	const D3DXVECTOR3* GetMax()
+	const XMVECTOR* GetMax() const
 	{
 		return &_max;
 	}
 
-	void SetMax(const D3DXVECTOR3& max)
+	void SetMax(const XMVECTOR& max)
 	{
 		_max = max;
 	}
 
-	void GetCorners(D3DXVECTOR3* outCorners)
+	void GetCorners(XMVECTOR* outCorners) const
 	{
-		outCorners[0] = D3DXVECTOR3(_min.x, _min.y, _min.z);
-		outCorners[1] = D3DXVECTOR3(_min.x, _min.y, _max.z);
-		outCorners[2] = D3DXVECTOR3(_min.x, _max.y, _min.z);
-		outCorners[3] = D3DXVECTOR3(_min.x, _max.y, _max.z);
-		outCorners[4] = D3DXVECTOR3(_max.x, _min.y, _min.z);
-		outCorners[5] = D3DXVECTOR3(_max.x, _min.y, _max.z);
-		outCorners[6] = D3DXVECTOR3(_max.x, _max.y, _min.z);
-		outCorners[7] = D3DXVECTOR3(_max.x, _max.y, _max.z);
+		outCorners[0] = XMVectorSet(XMVectorGetX(_min), XMVectorGetY(_min), XMVectorGetZ(_min), 1.0f);
+		outCorners[1] = XMVectorSet(XMVectorGetX(_min), XMVectorGetY(_min), XMVectorGetZ(_max), 1.0f);
+		outCorners[2] = XMVectorSet(XMVectorGetX(_min), XMVectorGetY(_max), XMVectorGetZ(_min), 1.0f);
+		outCorners[3] = XMVectorSet(XMVectorGetX(_min), XMVectorGetY(_max), XMVectorGetZ(_max), 1.0f);
+		outCorners[4] = XMVectorSet(XMVectorGetX(_max), XMVectorGetY(_min), XMVectorGetZ(_min), 1.0f);
+		outCorners[5] = XMVectorSet(XMVectorGetX(_max), XMVectorGetY(_min), XMVectorGetZ(_max), 1.0f);
+		outCorners[6] = XMVectorSet(XMVectorGetX(_max), XMVectorGetY(_max), XMVectorGetZ(_min), 1.0f);
+		outCorners[7] = XMVectorSet(XMVectorGetX(_max), XMVectorGetY(_max), XMVectorGetZ(_max), 1.0f);
 	}
 
-	static void CreateFromPoints(BoundingBox* outBB, const D3DXVECTOR3* pts, int ptCount)
+	static void CreateFromPoints(BoundingBox* outBB, const XMVECTOR* pts, int ptCount)
 	{
 		if (ptCount	> 0)
 		{
-			outBB->_min = D3DXVECTOR3(FLT_MAX, FLT_MAX, FLT_MAX);
-			outBB->_max = D3DXVECTOR3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+			outBB->_min = XMVectorSet(FLT_MAX, FLT_MAX, FLT_MAX, 1.0f);
+			outBB->_max = XMVectorSet(-FLT_MAX, -FLT_MAX, -FLT_MAX, 1.0f);
 
 			for (int i = 0; i < ptCount; i++)
 			{
-				D3DXVec3Minimize(&outBB->_min, &outBB->_min, &pts[i]);
-				D3DXVec3Maximize(&outBB->_max, &outBB->_max, &pts[i]);
+				outBB->_min = XMVectorMin(outBB->_min, pts[i]);
+				outBB->_max = XMVectorMin(outBB->_max, pts[i]);
 			}
 		}
 		else
 		{
-			outBB->_min = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-			outBB->_max = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+			outBB->_min = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+			outBB->_max = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
 		}
 	}
 
-	static void Transform(BoundingBox* outBB, BoundingBox* inBB, const D3DXMATRIX* transform)
+	static void Transform(BoundingBox* outBB, const BoundingBox* inBB, const XMMATRIX* transform)
 	{
-		D3DXVECTOR3 corners[8];
+		XMVECTOR corners[8];
 		inBB->GetCorners(&corners[0]);
 
-		D3DXVec3TransformCoordArray(corners, sizeof(D3DXVECTOR3), corners,
-			sizeof(D3DXVECTOR3), transform, 8);
+		for(int i = 0; i < 8; i++)
+		{
+			corners[i] = XMVector3TransformCoord(corners[i], *transform);
+		}
 
 		CreateFromPoints(outBB, corners, 8);
 	}
 
-	static void Combine(BoundingBox* outBB, BoundingBox* inBBFirst, BoundingBox* inBBSecond)
+	static void Combine(BoundingBox* outBB, const BoundingBox* inBBFirst, const BoundingBox* inBBSecond)
 	{
-		D3DXVec3Minimize(&outBB->_min, &inBBFirst->_min, &inBBSecond->_min);
-		D3DXVec3Maximize(&outBB->_max, &inBBFirst->_max, &inBBSecond->_max);
+		outBB->_min = XMVectorMin(inBBFirst->_min, inBBSecond->_min);
+		outBB->_min = XMVectorMin(inBBFirst->_max, inBBSecond->_max);
 	}
 };
 
@@ -235,7 +203,7 @@ public:
 	{
 		for (UINT i = 0; i < 6; i++)
 		{
-			if (D3DXPlaneDotCoord(&frust->_planes[i], &sphere->_position) + sphere->_radius < 0)
+			if (XMVectorGetX(XMPlaneDotCoord(frust->_planes[i], sphere->_position)) + sphere->_radius < 0)
 			{
 				return false;
 			}
@@ -245,6 +213,8 @@ public:
 
 	static bool Contains(const BoundingFrustum* frust, const BoundingBox* box)
 	{
+		return true;
+		/*
 		// not a perfect intersection test but much faster than checking each corner and plane
 
 		D3DXVECTOR3 bbMid = (box->_min + box->_max) * 0.5f;
@@ -260,5 +230,6 @@ public:
 		}
 
 		return true;
+		*/
 	}
 };

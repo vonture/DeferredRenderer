@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Defines.h"
 #include "Light.h"
 #include "ModelInstance.h"
 #include "BoundingObjects.h"
@@ -37,10 +38,12 @@ protected:
 		return &_rasterStates;
 	}
 
+	virtual UINT GetMaxShadowedLights() = 0;
+
 public:
 	void Add(T* light, bool shadowed) 
 	{
-		if (shadowed)
+		if (shadowed && _shadowed.size() <= GetMaxShadowedLights())
 		{
 			_shadowed.push_back(light);
 		}
@@ -50,7 +53,7 @@ public:
 		}
 	}
 
-	int GetCount(bool shadowed)
+	UINT GetCount(bool shadowed)
 	{
 		return shadowed ? _shadowed.size() : _unshadowed.size();
 	}
@@ -66,7 +69,7 @@ public:
 		_unshadowed.clear();
 	}
 	
-	virtual HRESULT RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*> models,
+	virtual HRESULT RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*>* models,
 		Camera* camera, BoundingBox* sceneBounds) = 0;
 	virtual HRESULT RenderLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
 		GBuffer* gBuffer) = 0;

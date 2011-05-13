@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DXUT.h"
+#include "Defines.h"
 #include "SDKmesh.h"
 #include "IHasContent.h"
 #include "BoundingObjects.h"
@@ -15,10 +15,10 @@ private:
 	BoundingBox _modelBB;
 	BoundingBox _worldBB;
 
-	D3DXMATRIX _world;
-	D3DXVECTOR3 _position;
-	D3DXVECTOR3 _scale;
-	D3DXQUATERNION _orientation;
+	XMMATRIX _world;
+	XMVECTOR _position;
+	XMVECTOR _scale;
+	XMVECTOR _orientation;
 
 	bool _dirty;
 	void clean();
@@ -27,43 +27,43 @@ public:
 	ModelInstance(const WCHAR* path);
 	~ModelInstance();
 
-	void SetPosition(const D3DXVECTOR3& pos)
+	void SetPosition(const XMVECTOR& pos)
 	{
 		_position = pos;
 
 		_dirty = true;
 	}
 
-	const D3DXVECTOR3* GetScale() const
+	const XMVECTOR* GetScale() const
 	{ 
 		return &_scale; 
 	}
 
-	void SetScale(const D3DXVECTOR3& scale)
+	void SetScale(const XMVECTOR& scale)
 	{
 		_scale = scale;
 
 		_dirty = true;
 	}
 
-	const D3DXVECTOR3* GetPosition() const
+	const XMVECTOR* GetPosition() const
 	{ 
 		return &_position; 
 	}
 
-	void SetOrientation(const D3DXQUATERNION& orientation)
+	void SetOrientation(const XMVECTOR& orientation)
 	{
 		_orientation = orientation;
 
 		_dirty = true;
 	}
 
-	const D3DXQUATERNION* GetOrientation() const
+	const XMVECTOR* GetOrientation() const
 	{ 		
 		return &_orientation;
 	}
 
-	const D3DXMATRIX* GetWorld() 
+	const XMMATRIX* GetWorld() 
 	{ 
 		if (_dirty)
 		{

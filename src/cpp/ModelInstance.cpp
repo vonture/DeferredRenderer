@@ -1,10 +1,11 @@
-#include "DXUT.h"
 #include "ModelInstance.h"
 
 ModelInstance::ModelInstance(const WCHAR* path) 
-	: _path(path), _position(0.0f, 0.0f, 0.0f), _scale(1.0f, 1.0f, 1.0f), _orientation(0.0f, 0.0f, 0.0f, 1.0f),
-	  _dirty(true)
+	: _path(path), _dirty(true)
 {
+	_position = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+	_scale = XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f);
+	_orientation = XMQuaternionIdentity();
 }
 
 ModelInstance::~ModelInstance()
@@ -14,15 +15,12 @@ ModelInstance::~ModelInstance()
 
 void ModelInstance::clean()
 {
-	D3DXMATRIX translate, scale, rotate;
+	XMMATRIX translate = XMMatrixTranslation(XMVectorGetX(_position), XMVectorGetY(_position), XMVectorGetZ(_position));
+	XMMATRIX rotate = XMMatrixRotationQuaternion(_orientation);
+	XMMATRIX scale = XMMatrixScalingFromVector(_scale);
+
+	_world = XMMatrixMultiply(rotate, XMMatrixMultiply(scale, translate));
 	
-	D3DXMatrixTranslation(&translate, _position.x, _position.y, _position.z);
-	D3DXMatrixScaling(&scale, _scale.x, _scale.y, _scale.z);
-	D3DXMatrixRotationQuaternion(&rotate, &_orientation);
-
-	D3DXMatrixMultiply(&_world, &rotate, &scale);
-	D3DXMatrixMultiply(&_world, &_world, &translate);
-
 	BoundingBox::Transform(&_worldBB, &_modelBB, &_world);
 
 	_dirty = false;
@@ -34,8 +32,8 @@ HRESULT ModelInstance::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_
 	V_RETURN(_mesh.Create(pd3dDevice, _path));
 
 	// Build the model space bb
-	D3DXVECTOR3 max = D3DXVECTOR3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
-	D3DXVECTOR3 min = D3DXVECTOR3(FLT_MAX, FLT_MAX, FLT_MAX);
+	XMVECTOR max = XMVectorSet(-FLT_MAX, -FLT_MAX, -FLT_MAX, 1.0f);
+	XMVECTOR min = XMVectorSet(FLT_MAX, FLT_MAX, FLT_MAX, 1.0f);
 
 	// Combine all of the mesh's min and maxes
 	for (UINT i = 0; i < _mesh.GetNumMeshes(); i++)
@@ -43,8 +41,8 @@ HRESULT ModelInstance::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_
 		D3DXVECTOR3 meshMin = _mesh.GetMeshBBoxCenter(i) - _mesh.GetMeshBBoxExtents(i);
 		D3DXVECTOR3 meshMax = _mesh.GetMeshBBoxCenter(i) + _mesh.GetMeshBBoxExtents(i);;
 
-		D3DXVec3Minimize(&min, &min, &meshMin);
-		D3DXVec3Maximize(&max, &max, &meshMin);
+		min = XMVectorMin(min, XMVectorSet(meshMin.x, meshMin.y, meshMin.z, 1.0f));
+		max = XMVectorMax(max, XMVectorSet(meshMax.x, meshMax.y, meshMax.z, 1.0f));
 	}
 
 	_modelBB = BoundingBox(min, max);

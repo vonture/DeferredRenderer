@@ -1,4 +1,3 @@
-#include "DXUT.h"
 #include "DeviceStates.h"
 
 HRESULT BlendStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)

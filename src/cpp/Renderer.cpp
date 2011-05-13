@@ -1,4 +1,3 @@
-#include "DXUT.h"
 #include "Renderer.h"
 
 Renderer::Renderer() : _begun(false)
@@ -64,14 +63,31 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
     ID3D11DepthStencilView* pOrigDSV = NULL;
     pd3dImmediateContext->OMGetRenderTargets( 1, &pOrigRTV, &pOrigDSV );
 
-	// render the shadow maps
+	// Calculate the scene bounds
+	bool first = true;
+	BoundingBox sceneBounds;
+	for (vector<ModelInstance*>::iterator i = _models.begin(); i != _models.end(); i++)
+	{
+		const BoundingBox* modelBB = (*i)->GetBounds();
+		if (first)
+		{
+			sceneBounds = *modelBB;
+			first = false;
+		}
+		else
+		{
+			BoundingBox::Combine(&sceneBounds, &sceneBounds, modelBB);
+		}
+	}
 
+	// render the shadow maps
+	_directionalLightRenderer.RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds);
 
 	// Render the scene to the gbuffer
 	_gBuffer.SetRenderTargets(pd3dImmediateContext);
 	_gBuffer.Clear(pd3dImmediateContext);
 
-	_modelRenderer.RenderModels(pd3dImmediateContext, _models, camera);
+	_modelRenderer.RenderModels(pd3dImmediateContext, &_models, camera);
 
 	_gBuffer.UnsetRenderTargets(pd3dImmediateContext);
 

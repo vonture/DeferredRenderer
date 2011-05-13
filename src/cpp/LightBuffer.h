@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DXUT.h"
+#include "Defines.h"
 #include "DeferredBuffer.h"
 
 class LightBuffer : public DeferredBuffer

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DXUT.h"
+#include "Defines.h"
 #include "IHasContent.h"
 #include "ModelInstance.h"
 #include "Camera.h"
@@ -12,8 +12,8 @@ using namespace std;
 
 struct CB_MODEL_PROPERTIES
 {
-	D3DXMATRIX World;
-	D3DXMATRIX WorldViewProjection;
+	XMMATRIX World;
+	XMMATRIX WorldViewProjection;
 };
 
 class ModelRenderer : public IHasContent
@@ -38,8 +38,8 @@ public:
 	ModelRenderer();
 	~ModelRenderer();
 
-	HRESULT RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vector<ModelInstance*> instances, Camera* camera);
-	HRESULT RenderDepth(ID3D11DeviceContext* pd3dDeviceContext, vector<ModelInstance*> instances, Camera* camera);
+	HRESULT RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vector<ModelInstance*>* instances, Camera* camera);
+	HRESULT RenderDepth(ID3D11DeviceContext* pd3dDeviceContext, vector<ModelInstance*>* instances, Camera* camera);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
 	void OnD3D11DestroyDevice();

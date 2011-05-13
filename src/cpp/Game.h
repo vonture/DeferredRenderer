@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DXUT.h"
+#include "Defines.h"
 #include "IUpdateable.h"
 #include "IHasContent.h"
 #include "Renderer.h"
