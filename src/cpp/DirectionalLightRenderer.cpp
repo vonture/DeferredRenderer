@@ -2,12 +2,19 @@
 
 const float DirectionalLightRenderer::CASCADE_SPLITS[NUM_CASCADES] = { 0.125f, 0.25f, 0.5f, 1.0f };
 const float DirectionalLightRenderer::BACKUP = 20.0f;
-const float DirectionalLightRenderer::BIAS = 0.005f;
+const float DirectionalLightRenderer::BIAS = 0.002f;
 
 DirectionalLightRenderer::DirectionalLightRenderer()
 	: _unshadowedPS(NULL), _shadowedPS(NULL), _cameraPropertiesBuffer(NULL),
-	  _lightPropertiesBuffer(NULL), _shadowPropertiesBuffer(NULL)
+	  _lightPropertiesBuffer(NULL), _shadowPropertiesBuffer(NULL),  _shadowMapDSTexture(NULL),
+	  _shadowMapDSView(NULL)
 {
+	for (int i = 0; i < NUM_SHADOW_MAPS; i++)
+	{
+		_shadowMapTextures[i] = NULL;
+		_shadowMapRTVs[i] = NULL;
+		_shadowMapSRVs[i] = NULL;
+	}
 }
 
 HRESULT DirectionalLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, 
@@ -259,7 +266,8 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 			shadowProperties->CascadeSplits[j] = _cascadeSplits[i][j];
 			shadowProperties->ShadowMatricies[j] = XMMatrixTranspose(_shadowMatricies[i][j]);
 		}
-		shadowProperties->CameraClips = XMFLOAT4(camera->GetNearClip(), camera->GetFarClip(), 0.0f, 0.0f);
+		shadowProperties->CameraClips = XMFLOAT2(camera->GetNearClip(), camera->GetFarClip());
+		shadowProperties->ShadowMapSize = XMFLOAT2(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
 
 		pd3dImmediateContext->Unmap(_shadowPropertiesBuffer, 0);
 
@@ -284,7 +292,6 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 		NULL,
 	};
 	pd3dImmediateContext->PSSetShaderResources(5, 1, nullSRV);
-
 
 	return S_OK;
 }

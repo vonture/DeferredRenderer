@@ -16,9 +16,8 @@ private:
 
 	ModelInstance _powerPlant;
 	ModelInstance _tankScene;
-	DirectionalLight _dLight1;
-	DirectionalLight _dLight2;
-
+	std::vector<DirectionalLight> _directionalLights;
+	std::vector<PointLight> _pointLights;
 public:
 	Game();
 	~Game();

@@ -9,8 +9,9 @@ SamplerState LinearSampler : register(s0);
 
 struct PS_In_Combine
 {
-    float4 vPosition : SV_POSITION;              
-    float2 vTexCoord : TEXCOORD0;
+    float4 vPosition	: SV_POSITION;
+    float2 vTexCoord	: TEXCOORD0;
+	float2 vPosition2	: TEXCOORD1;
 };
 
 float4 PS_Combine(PS_In_Combine input) : SV_TARGET0
@@ -29,6 +30,6 @@ float4 PS_Combine(PS_In_Combine input) : SV_TARGET0
 	float3 vFinalColour = vLightColor * vDiffuse;
 
 	//return float4(vDiffuse, 1.0f);
-	return float4(lightSample.rgb, 1.0f);
-	//return float4(vFinalColour, 1.0f);
+	//return float4(lightSample.rgb, 1.0f);
+	return float4(vFinalColour, 1.0f);
 }

@@ -2,13 +2,18 @@
 
 Game::Game()
 	: _renderer(), _camera(0.1f, 50.0f, 1.0f, 1.0f), _powerPlant(L"\\models\\powerplant\\powerplant.sdkmesh"),
-	 _tankScene(L"\\models\\tankscene\\tankscene.sdkmesh"),
-	 _dLight1(XMVectorSet(1.0f, 0.4f, 0.2f, 1.0f), 1.0f, XMVectorSet(-0.5f, 0.5f, -0.5f, 1.0f)),
-	 _dLight2(XMVectorSet(0.6f, 1.0f, 0.3f, 1.0f), 1.0f, XMVectorSet(0.5f, 0.5f, -0.5f, 1.0f))
+	 _tankScene(L"\\models\\tankscene\\tankscene.sdkmesh")
 {
 	_camera.SetPosition(XMVectorSet(-5.0f, 5.0f, -5.0f, 1.0f));
 	_camera.SetXRotation(PiOver4);
 	_camera.SetYRotation(PiOver8);
+
+	_directionalLights.push_back(
+		DirectionalLight(XMVectorSet(1.0f, 0.4f, 0.2f, 1.0f), 0.4f, XMVectorSet(-0.2f, 0.5f, -0.2f, 1.0f)));
+	_directionalLights.push_back(
+		DirectionalLight(XMVectorSet(0.6f, 1.0f, 0.3f, 1.0f), 0.3f, XMVectorSet(0.5f, 0.5f, -0.5f, 1.0f)));
+	_directionalLights.push_back(
+		DirectionalLight(XMVectorSet(1.0f, 1.0f, 0.3f, 1.0f), 2.0f, XMVectorSet(0.8f, 0.9, 0.8f, 1.0f)));
 }
 
 Game::~Game()
@@ -67,8 +72,12 @@ void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3
 
 	//_renderer.AddModel(&_powerPlant);
 	_renderer.AddModel(&_tankScene);
-	_renderer.AddLight(&_dLight1, true);
-	//_renderer.AddLight(&_dLight2, false);
+
+	for (vector<DirectionalLight>::iterator i = _directionalLights.begin(); i != _directionalLights.end(); i++)
+	{
+		DirectionalLight* light = &(*i);
+		_renderer.AddLight(light, true);
+	}
 
 	V(_renderer.End(pd3dDevice, pd3dImmediateContext, &_camera));
 }
@@ -98,7 +107,7 @@ HRESULT Game::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain*
 
 	float fAspectRatio = pBackBufferSurfaceDesc->Width / (float)pBackBufferSurfaceDesc->Height;
 	_camera.SetAspectRatio(fAspectRatio);
-
+	
 	V_RETURN(_renderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	//V_RETURN(_powerPlant.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_tankScene.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));

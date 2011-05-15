@@ -22,7 +22,8 @@ struct CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES
 
 struct CB_DIRECTIONALLIGHT_SHADOW_PROPERTIES
 {
-	XMFLOAT4 CameraClips;
+	XMFLOAT2 CameraClips;
+	XMFLOAT2 ShadowMapSize;
 	float CascadeSplits[4];
 	XMMATRIX ShadowMatricies[4];
 };

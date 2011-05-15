@@ -13,7 +13,8 @@ cbuffer cbLightProperties : register(b1)
 
 cbuffer cbShadowProperties : register(b2)
 {
-	float4 CameraClips;
+	float2 CameraClips;
+	float2 ShadowMapSize;
 	float4 CascadeSplits;
 	float4x4 ShadowMatrices[4];	
 }
@@ -27,13 +28,14 @@ Texture2D RT3 : register(t3);
 
 Texture2D ShadowMap : register(t5);
 
-SamplerState LinearSampler				: register(s0);
-SamplerComparisonState ShadowSampler	: register(s1);
+SamplerState LinearSampler	: register(s0);
+SamplerState ShadowSampler	: register(s1);
 
 struct PS_In_DirectionalLight
 {
-    float4 vPosition : SV_POSITION;              
-    float2 vTexCoord : TEXCOORD0;
+    float4 vPosition	: SV_POSITION;
+    float2 vTexCoord	: TEXCOORD0;
+	float2 vPosition2	: TEXCOORD1;
 };
 
 float4 GetPositionWS(float2 vPositionCS, float fDepth)
@@ -73,17 +75,68 @@ float4 PS_DirectionalLightUnshadowed(PS_In_DirectionalLight input) : SV_TARGET0
 	return PS_DirectionalLightCommon(input, vPositionWS);
 };
 
+float SampleShadowCascade(in float4 positionWS, in uint cascadeIdx)
+{
+	float4 shadowPosition = mul(positionWS, ShadowMatrices[cascadeIdx]);
+	float2 shadowTexCoord = shadowPosition.xy / shadowPosition.w;
+	float shadowDepth = shadowPosition.z / shadowPosition.w;
+
+	// Edge tap smoothing
+	const int Radius = 2;
+	const int NumSamples = (Radius * 2 + 1) * (Radius * 2 + 1);
+
+	float2 fracs = frac(shadowTexCoord.xy * ShadowMapSize);
+	float leftEdge = 1.0f - fracs.x;
+	float rightEdge = fracs.x;
+	float topEdge = 1.0f - fracs.y;
+	float bottomEdge = fracs.y;
+
+	float shadowVisibility = 0.0f;
+
+	[unroll(NumSamples)]
+	for (int y = -Radius; y <= Radius; y++)
+	{
+		[unroll(NumSamples)]
+		for (int x = -Radius; x <= Radius; x++)
+		{
+			float2 offset = float2(x, y) * (1.0f / ShadowMapSize);
+			float2 sampleCoord = shadowTexCoord + offset;
+			float sample = ShadowMap.Sample(ShadowSampler, sampleCoord).x > shadowDepth;
+
+			float xWeight = 1;
+			float yWeight = 1;
+
+			if(x == -Radius)
+				xWeight = leftEdge;
+			else if(x == Radius)
+				xWeight = rightEdge;
+
+			if(y == -Radius)
+				yWeight = topEdge;
+			else if(y == Radius)
+				yWeight = bottomEdge;
+
+			shadowVisibility += sample * xWeight * yWeight;
+		}
+	}
+
+	shadowVisibility  /= NumSamples;
+	shadowVisibility *= 1.5f;
+
+	return shadowVisibility;
+}
+
 float4 PS_DirectionalLightShadowed(PS_In_DirectionalLight input) : SV_TARGET0
 {
 	float fDepth = RT3.Sample(LinearSampler, input.vTexCoord).r;
-	float4 vPositionWS = GetPositionWS(input.vPosition.xy, fDepth);
+	float4 vPositionWS = GetPositionWS(input.vPosition2, fDepth);
 	
 	float fPercFar = CameraClips.y / (CameraClips.y - CameraClips.x);
 	float fSceneZ = ( -CameraClips.x * fPercFar ) / ( fDepth - fPercFar);	
 
 	uint iCascadeIdx = 0;
 	[unroll]
-	for (uint i = 0; i < SqrtCascadeCount * SqrtCascadeCount; i++)
+	for (uint i = 0; i < (SqrtCascadeCount * SqrtCascadeCount) - 1; i++)
 	{
 		[flatten]
 		if(fSceneZ > CascadeSplits[i])
@@ -92,22 +145,7 @@ float4 PS_DirectionalLightShadowed(PS_In_DirectionalLight input) : SV_TARGET0
 		}
 	}
 
-	float4x4 mShadowMatrix = ShadowMatrices[iCascadeIdx];
-
-	float4 vLightPosition = mul(vPositionWS, mShadowMatrix);
+	float shadowVisibility = SampleShadowCascade(vPositionWS, iCascadeIdx);
 	
-	float fLightDepth = vLightPosition.z / vLightPosition.w;
-	float2 vShadowTexCoord = vLightPosition.xy / vLightPosition.w;
-
-	//float shadowSample = ShadowMap.SampleCmp(ShadowSampler, vShadowTexCoord, fLightDepth).x;
-	float shadowSample = ShadowMap.Sample(LinearSampler, vShadowTexCoord).x;
-	
-	//return float4((input.vPosition.xyz + 1.0f) * 0.5f, 1.0f);
-	//return float4(fDepth,fDepth,fDepth, 1.0f);
-	//return float4(iCascadeIdx / 4.0f, 0.0f, 0.0f, 1.0f);
-	return float4(shadowSample, 0.0f, 0.0f, 1.0f);
-	//return float4(ShadowMap.Sample(LinearSampler, input.vTexCoord).rrr, 1.0f);
-	//return float4(vShadowTexCoord ,0.0f, 1.0f);
-	//return float4(fLightDepth, fLightDepth,fLightDepth, 1.0f);
-	//return shadowSample * PS_DirectionalLightCommon(input, vPositionWS);
+	return shadowVisibility * PS_DirectionalLightCommon(input, vPositionWS);
 };
