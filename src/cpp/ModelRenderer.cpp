@@ -76,7 +76,7 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 
 	ID3D11SamplerState* sampler = _samplerStates.GetLinear();
 	pd3dDeviceContext->PSSetSamplers(0, 1, &sampler);
-
+	
 	for (vector<ModelInstance*>::iterator i = instances->begin(); i != instances->end(); i++)
 	{
 		// Skip this model if it's bounding box is not in the frustum
@@ -108,11 +108,11 @@ HRESULT ModelRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_
 	HRESULT hr;
 	ID3DBlob* pBlob = NULL;
 
-	V_RETURN( CompileShaderFromFile( L"Mesh.hlsl", "PS_Model", "ps_4_0", &pBlob ) );   
+	V_RETURN( CompileShaderFromFile( L"Mesh.hlsl", "PS_Mesh", "ps_4_0", NULL, &pBlob ) );   
     V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_meshPixelShader));
 	SAFE_RELEASE(pBlob);	
 
-	V_RETURN( CompileShaderFromFile( L"Mesh.hlsl", "VS_Model", "vs_4_0", &pBlob ) );   
+	V_RETURN( CompileShaderFromFile( L"Mesh.hlsl", "VS_Mesh", "vs_4_0", NULL, &pBlob ) );   
     V_RETURN( pd3dDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_meshVertexShader));
 	
 	const D3D11_INPUT_ELEMENT_DESC layout_mesh[] =
@@ -126,11 +126,11 @@ HRESULT ModelRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_
 		pBlob->GetBufferSize(), &_meshInputLayout));
 	SAFE_RELEASE(pBlob);
 
-	V_RETURN( CompileShaderFromFile( L"Mesh.hlsl", "PS_ModelDepth", "ps_4_0", &pBlob ) );   
+	V_RETURN( CompileShaderFromFile( L"Depth.hlsl", "PS_Depth", "ps_4_0", NULL, &pBlob ) );   
 	V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_depthPixelShader));
 	SAFE_RELEASE(pBlob);	
 
-	V_RETURN( CompileShaderFromFile( L"Mesh.hlsl", "VS_ModelDepth", "vs_4_0", &pBlob ) );   
+	V_RETURN( CompileShaderFromFile( L"Depth.hlsl", "VS_Depth", "vs_4_0", NULL, &pBlob ) );   
 	V_RETURN( pd3dDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_depthVertexShader));
 
 	const D3D11_INPUT_ELEMENT_DESC layout_depth[] =

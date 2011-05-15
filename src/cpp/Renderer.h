@@ -10,6 +10,7 @@
 #include "LightBuffer.h"
 #include "IHasContent.h"
 #include "ModelRenderer.h"
+#include "PointLightRenderer.h"
 #include "DirectionalLightRenderer.h"
 #include <vector>
 
@@ -25,6 +26,8 @@ private:
 	vector<WCHAR*> _debugText;
 	ModelRenderer _modelRenderer;
 	CombinePostProcess _combinePP;
+
+	PointLightRenderer _pointLightRenderer;
 	DirectionalLightRenderer _directionalLightRenderer;
 
 public:

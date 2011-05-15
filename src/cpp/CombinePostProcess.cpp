@@ -51,7 +51,7 @@ HRESULT CombinePostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const 
 
 	ID3DBlob* pBlob = NULL;
 
-	V_RETURN(CompileShaderFromFile( L"GBufferCombine.hlsl", "PS_Combine", "ps_4_0", &pBlob ) );   
+	V_RETURN(CompileShaderFromFile( L"GBufferCombine.hlsl", "PS_Combine", "ps_4_0", NULL, &pBlob ) );   
     V_RETURN(pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_pixelShader));
 	SAFE_RELEASE(pBlob);
 

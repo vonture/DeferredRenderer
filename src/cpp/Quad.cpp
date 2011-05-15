@@ -52,7 +52,7 @@ HRESULT Quad::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_D
 	// Create the vertex shader
 	ID3DBlob* pBlob = NULL;
 
-	V_RETURN(CompileShaderFromFile(L"QuadVS.hlsl", "VS_Quad", "vs_4_0", &pBlob));
+	V_RETURN(CompileShaderFromFile(L"QuadVS.hlsl", "VS_Quad", "vs_4_0", NULL, &pBlob));
     V_RETURN(pd3dDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(),
 		NULL, &_vertexShader));
 

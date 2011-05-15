@@ -1,6 +1,7 @@
 #include "ShaderLoader.h"
 
-HRESULT CompileShaderFromFile( WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut )
+HRESULT CompileShaderFromFile(WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel,
+	D3D_SHADER_MACRO* defines, ID3DBlob** ppBlobOut)
 {
     HRESULT hr = S_OK;
 
@@ -18,7 +19,7 @@ HRESULT CompileShaderFromFile( WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR sz
 #endif
 
     ID3DBlob* pErrorBlob;
-    hr = D3DX11CompileFromFile( str, NULL, NULL, szEntryPoint, szShaderModel, 
+    hr = D3DX11CompileFromFile(str, defines, NULL, szEntryPoint, szShaderModel, 
         dwShaderFlags, 0, NULL, ppBlobOut, &pErrorBlob, NULL );
     if( FAILED(hr) )
     {

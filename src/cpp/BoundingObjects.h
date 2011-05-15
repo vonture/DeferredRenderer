@@ -213,23 +213,19 @@ public:
 
 	static bool Contains(const BoundingFrustum* frust, const BoundingBox* box)
 	{
-		return true;
-		/*
 		// not a perfect intersection test but much faster than checking each corner and plane
 
-		D3DXVECTOR3 bbMid = (box->_min + box->_max) * 0.5f;
-		D3DXVECTOR3 bbHalfSize = (box->_min - box->_max) * 0.5f;
-		float bbRadius = D3DXVec3Length(&bbHalfSize);		
+		XMVECTOR bbMid = (box->_min + box->_max) * 0.5f;
+		XMVECTOR bbHalfSize = (box->_min - box->_max) * 0.5f;
+		float bbRadius = XMVectorGetX(XMVector3Length(bbHalfSize));
 
 		for (UINT i = 0; i < 6; i++)
 		{
-			if (D3DXPlaneDotCoord(&frust->_planes[i], &bbMid) + bbRadius < 0)
+			if (XMVectorGetX(XMPlaneDotCoord(frust->_planes[i], bbMid)) + bbRadius < 0)
 			{
 				return false;
 			}
 		}
-
 		return true;
-		*/
 	}
 };

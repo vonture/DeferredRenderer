@@ -197,7 +197,7 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 	ID3D11SamplerState* samplers[2] =
 	{
 		GetSamplerStates()->GetLinear(),
-		GetSamplerStates()->GetShadowMap(),
+		GetSamplerStates()->GetPoint(),
 	};
 	pd3dImmediateContext->PSSetSamplers(0, 2, samplers);
 	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthDisabled(), 0);
@@ -267,7 +267,7 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 			shadowProperties->ShadowMatricies[j] = XMMatrixTranspose(_shadowMatricies[i][j]);
 		}
 		shadowProperties->CameraClips = XMFLOAT2(camera->GetNearClip(), camera->GetFarClip());
-		shadowProperties->ShadowMapSize = XMFLOAT2(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
+		shadowProperties->ShadowMapSize = XMFLOAT2((float)SHADOW_MAP_SIZE, (float)SHADOW_MAP_SIZE);
 
 		pd3dImmediateContext->Unmap(_shadowPropertiesBuffer, 0);
 
@@ -306,18 +306,18 @@ HRESULT DirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, 
 	// Compile both shaders from file
 	ID3DBlob* pBlob = NULL;
 	
-	V_RETURN(CompileShaderFromFile( L"DirectionalLight.hlsl", "PS_DirectionalLightUnshadowed", "ps_4_0", &pBlob ) );   
+	V_RETURN(CompileShaderFromFile( L"DirectionalLight.hlsl", "PS_DirectionalLightUnshadowed", "ps_4_0", NULL, &pBlob ) );   
 	V_RETURN(pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_unshadowedPS));
 	SAFE_RELEASE(pBlob);
 
-	V_RETURN(CompileShaderFromFile( L"DirectionalLight.hlsl", "PS_DirectionalLightShadowed", "ps_4_0", &pBlob ) );   
+	V_RETURN(CompileShaderFromFile( L"DirectionalLight.hlsl", "PS_DirectionalLightShadowed", "ps_4_0", NULL, &pBlob ) );   
 	V_RETURN(pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_shadowedPS));
 	SAFE_RELEASE(pBlob);
 	
 	// Create the buffers
-	D3D11_BUFFER_DESC cameraPropertiesBufferDesc =
+	D3D11_BUFFER_DESC bufferDesc =
 	{
-		sizeof(CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES), //UINT ByteWidth;
+		0, //UINT ByteWidth;
 		D3D11_USAGE_DYNAMIC, //D3D11_USAGE Usage;
 		D3D11_BIND_CONSTANT_BUFFER, //UINT BindFlags;
 		D3D11_CPU_ACCESS_WRITE, //UINT CPUAccessFlags;
@@ -325,31 +325,14 @@ HRESULT DirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, 
 		0, //UINT StructureByteStride;
 	};
 
-	V_RETURN(pd3dDevice->CreateBuffer(&cameraPropertiesBufferDesc, NULL, &_cameraPropertiesBuffer));
+	bufferDesc.ByteWidth = sizeof(CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES);
+	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_cameraPropertiesBuffer));
+	
+	bufferDesc.ByteWidth = sizeof(CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES);
+	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_lightPropertiesBuffer));
 
-	D3D11_BUFFER_DESC lightPropertiesBufferDesc =
-	{
-		sizeof(CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES), //UINT ByteWidth;
-		D3D11_USAGE_DYNAMIC, //D3D11_USAGE Usage;
-		D3D11_BIND_CONSTANT_BUFFER, //UINT BindFlags;
-		D3D11_CPU_ACCESS_WRITE, //UINT CPUAccessFlags;
-		0, //UINT MiscFlags;
-		0, //UINT StructureByteStride;
-	};
-
-	V_RETURN(pd3dDevice->CreateBuffer(&lightPropertiesBufferDesc, NULL, &_lightPropertiesBuffer));
-
-	D3D11_BUFFER_DESC shadowPropertiesBufferDesc =
-	{
-		sizeof(CB_DIRECTIONALLIGHT_SHADOW_PROPERTIES), //UINT ByteWidth;
-		D3D11_USAGE_DYNAMIC, //D3D11_USAGE Usage;
-		D3D11_BIND_CONSTANT_BUFFER, //UINT BindFlags;
-		D3D11_CPU_ACCESS_WRITE, //UINT CPUAccessFlags;
-		0, //UINT MiscFlags;
-		0, //UINT StructureByteStride;
-	};
-
-	V_RETURN(pd3dDevice->CreateBuffer(&shadowPropertiesBufferDesc, NULL, &_shadowPropertiesBuffer));
+	bufferDesc.ByteWidth = sizeof(CB_DIRECTIONALLIGHT_SHADOW_PROPERTIES);
+	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_shadowPropertiesBuffer));
 
 	// Create the shadow textures
 	D3D11_TEXTURE2D_DESC shadowMapTextureDesc = 

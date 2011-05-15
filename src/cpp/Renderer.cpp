@@ -23,6 +23,7 @@ void Renderer::AddLight(DirectionalLight* light, bool shadowed)
 
 void Renderer::AddLight(PointLight* light, bool shadowed)
 {
+	_pointLightRenderer.Add(light, shadowed);
 }
 
 void Renderer::AddPostProcess(PostProcess* postProcess)
@@ -47,6 +48,7 @@ HRESULT Renderer::Begin()
 
 	_models.clear();
 	_directionalLightRenderer.Clear();
+	_pointLightRenderer.Clear();
 
 	return S_OK;
 }
@@ -58,6 +60,8 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 		return E_FAIL;
 	}
 	_begun = false;
+	
+	HRESULT hr;
 
 	ID3D11RenderTargetView* pOrigRTV = NULL;
     ID3D11DepthStencilView* pOrigDSV = NULL;
@@ -81,26 +85,28 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 	}
 
 	// render the shadow maps
-	_directionalLightRenderer.RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds);
+	V_RETURN(_directionalLightRenderer.RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
+	V_RETURN(_pointLightRenderer.RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
 
 	// Render the scene to the gbuffer
-	_gBuffer.SetRenderTargets(pd3dImmediateContext);
-	_gBuffer.Clear(pd3dImmediateContext);
+	V_RETURN(_gBuffer.SetRenderTargets(pd3dImmediateContext));
+	V_RETURN(_gBuffer.Clear(pd3dImmediateContext));
 
-	_modelRenderer.RenderModels(pd3dImmediateContext, &_models, camera);
+	V_RETURN(_modelRenderer.RenderModels(pd3dImmediateContext, &_models, camera));
 
-	_gBuffer.UnsetRenderTargets(pd3dImmediateContext);
+	V_RETURN(_gBuffer.UnsetRenderTargets(pd3dImmediateContext));
 
 	// render the lights
-	_lightBuffer.SetRenderTargets(pd3dImmediateContext);
-	_lightBuffer.Clear(pd3dImmediateContext);
+	V_RETURN(_lightBuffer.SetRenderTargets(pd3dImmediateContext));
+	V_RETURN(_lightBuffer.Clear(pd3dImmediateContext));
 
-	_directionalLightRenderer.RenderLights(pd3dImmediateContext, camera, &_gBuffer);
+	V_RETURN(_directionalLightRenderer.RenderLights(pd3dImmediateContext, camera, &_gBuffer));
+	V_RETURN(_pointLightRenderer.RenderLights(pd3dImmediateContext, camera, &_gBuffer));
 
-	_lightBuffer.UnsetRenderTargets(pd3dImmediateContext);
+	V_RETURN(_lightBuffer.UnsetRenderTargets(pd3dImmediateContext));
 
 	// render the post processes
-	_combinePP.Render(pd3dImmediateContext, NULL, pOrigRTV, pOrigDSV, &_gBuffer, &_lightBuffer);
+	V_RETURN(_combinePP.Render(pd3dImmediateContext, NULL, pOrigRTV, pOrigDSV, &_gBuffer, &_lightBuffer));
 	
 	SAFE_RELEASE( pOrigRTV );
     SAFE_RELEASE( pOrigDSV );
