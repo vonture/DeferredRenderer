@@ -123,6 +123,7 @@ HRESULT Renderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFA
 	V_RETURN(_modelRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_combinePP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_directionalLightRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_pointLightRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
@@ -134,6 +135,7 @@ void Renderer::OnD3D11DestroyDevice()
 	_modelRenderer.OnD3D11DestroyDevice();
 	_combinePP.OnD3D11DestroyDevice();
 	_directionalLightRenderer.OnD3D11DestroyDevice();
+	_pointLightRenderer.OnD3D11DestroyDevice();
 }
 
 HRESULT Renderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
@@ -146,6 +148,7 @@ HRESULT Renderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapCh
 	V_RETURN(_modelRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_combinePP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_directionalLightRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_pointLightRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
@@ -157,4 +160,5 @@ void Renderer::OnD3D11ReleasingSwapChain()
 	_modelRenderer.OnD3D11ReleasingSwapChain();
 	_combinePP.OnD3D11ReleasingSwapChain();
 	_directionalLightRenderer.OnD3D11ReleasingSwapChain();
+	_pointLightRenderer.OnD3D11ReleasingSwapChain();
 }

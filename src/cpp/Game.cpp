@@ -8,12 +8,15 @@ Game::Game()
 	_camera.SetXRotation(PiOver4);
 	_camera.SetYRotation(PiOver8);
 
-	_directionalLights.push_back(
-		DirectionalLight(XMVectorSet(1.0f, 0.4f, 0.2f, 1.0f), 0.4f, XMVectorSet(-0.2f, 0.5f, -0.2f, 1.0f)));
-	_directionalLights.push_back(
-		DirectionalLight(XMVectorSet(0.6f, 1.0f, 0.3f, 1.0f), 0.3f, XMVectorSet(0.5f, 0.5f, -0.5f, 1.0f)));
-	_directionalLights.push_back(
-		DirectionalLight(XMVectorSet(1.0f, 1.0f, 0.3f, 1.0f), 2.0f, XMVectorSet(0.8f, 0.9, 0.8f, 1.0f)));
+	//_directionalLights.push_back(
+	//	DirectionalLight(XMVectorSet(1.0f, 0.4f, 0.2f, 1.0f), 0.4f, XMVectorSet(-0.2f, 0.5f, -0.2f, 1.0f)));
+	//_directionalLights.push_back(
+	//	DirectionalLight(XMVectorSet(0.6f, 1.0f, 0.3f, 1.0f), 0.3f, XMVectorSet(0.5f, 0.5f, -0.5f, 1.0f)));
+	//_directionalLights.push_back(
+	//	DirectionalLight(XMVectorSet(1.0f, 1.0f, 0.3f, 1.0f), 2.0f, XMVectorSet(0.8f, 0.9, 0.8f, 1.0f)));
+
+	_pointLights.push_back(
+		PointLight(XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, XMVectorSet(0.0f, 4.0f, 0.0f, 1.0f), 15.0f));
 }
 
 Game::~Game()
@@ -77,6 +80,12 @@ void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3
 	{
 		DirectionalLight* light = &(*i);
 		_renderer.AddLight(light, true);
+	}
+
+	for (vector<PointLight>::iterator i = _pointLights.begin(); i != _pointLights.end(); i++)
+	{
+		PointLight* light = &(*i);
+		_renderer.AddLight(light, false);
 	}
 
 	V(_renderer.End(pd3dDevice, pd3dImmediateContext, &_camera));

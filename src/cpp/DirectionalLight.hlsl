@@ -53,7 +53,7 @@ float4 PS_DirectionalLightCommon(PS_In_DirectionalLight input, float4 vPositionW
     float4 vNormalData = RT1.Sample(LinearSampler, input.vTexCoord);
     
 	float fSpecularIntensity = vColorData.a;
-	float fSpecularPower = vNormalData.a * 255.0f;	
+	float fSpecularPower = vNormalData.a;	
 		    
 	float3 N = vNormalData.xyz;
     float3 L = normalize(LightDirection);

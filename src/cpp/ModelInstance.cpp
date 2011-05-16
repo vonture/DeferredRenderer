@@ -19,7 +19,7 @@ void ModelInstance::clean()
 	XMMATRIX rotate = XMMatrixRotationQuaternion(_orientation);
 	XMMATRIX scale = XMMatrixScalingFromVector(_scale);
 
-	_world = XMMatrixMultiply(rotate, XMMatrixMultiply(scale, translate));
+	_world = XMMatrixMultiply(scale, XMMatrixMultiply(rotate, translate));
 	
 	BoundingBox::Transform(&_worldBB, &_modelBB, &_world);
 

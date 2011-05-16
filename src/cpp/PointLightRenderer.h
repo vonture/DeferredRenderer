@@ -13,9 +13,10 @@ struct CB_POINTLIGHT_MODEL_PROPERTIES
 
 struct CB_POINTLIGHT_LIGHT_PROPERTIES
 {
-	XMFLOAT3 LightDirection;
+	XMFLOAT3 LightPosition;
+	float LightRadius;
+	XMFLOAT3 LightColor;
 	float LightIntensity;
-	XMFLOAT4 LightColor;
 };
 
 struct CB_POINTLIGHT_CAMERA_PROPERTIES

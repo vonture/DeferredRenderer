@@ -166,7 +166,7 @@ public:
 			for (int i = 0; i < ptCount; i++)
 			{
 				outBB->_min = XMVectorMin(outBB->_min, pts[i]);
-				outBB->_max = XMVectorMin(outBB->_max, pts[i]);
+				outBB->_max = XMVectorMax(outBB->_max, pts[i]);
 			}
 		}
 		else
@@ -227,5 +227,12 @@ public:
 			}
 		}
 		return true;
+	}
+
+	static bool Contains(const BoundingSphere* sphere, const XMVECTOR* pt)
+	{
+		XMVECTOR radiusVec = XMVectorSubtract(sphere->_position, *pt);
+		
+		return XMVectorGetX(XMVector3LengthSq(radiusVec)) < (sphere->_radius * sphere->_radius);
 	}
 };

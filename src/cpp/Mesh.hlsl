@@ -49,9 +49,12 @@ PS_Out_Mesh PS_Mesh(VS_Out_Mesh input)
 	//float3 vNormal = NormalMap.Sample(LinearSampler, input.vTexCoord);
 	float3 vNormal = normalize(input.vNormalWS);
 
+    // RT0 =       Diffuse.r           | Diffuse.g         | Diffuse.b     | Specular Intensity
+    // RT1 =       Normal.x            | Normal.y          | Normal.z      | Specular Power
+    // RT2 =                           | Ambient Occlusion | Translucency  | Material ID
 	output.RT0 = float4(vDiffuse.rgb, 1.0f);
 	output.RT1 = float4(vNormal, 1.0f);
-	output.RT2 = float4(0.0f, 1.0f, 0.0f, 0.0f);
+	output.RT2 = float4(0.0f, 0.15f, 0.0f, 0.0f);
 
 	return output;
 }

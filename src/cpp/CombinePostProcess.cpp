@@ -19,15 +19,15 @@ HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID
 	
 	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, dstDSV);
 
-	const float rtClear[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-	pd3dImmediateContext->ClearRenderTargetView(dstRTV, rtClear);
-	pd3dImmediateContext->ClearDepthStencilView(dstDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	//const float rtClear[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	//pd3dImmediateContext->ClearRenderTargetView(dstRTV, rtClear);
+	//pd3dImmediateContext->ClearDepthStencilView(dstDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	//pd3dImmediateContext->PSSetShader(_pixelShader, NULL, 0);
 	V_RETURN(gBuffer->PSSetShaderResources(pd3dImmediateContext, 0));
 	V_RETURN(lightBuffer->PSSetShaderResources(pd3dImmediateContext, 4));
 
-	ID3D11SamplerState* sampler = GetSamplerStates()->GetLinear();
+	ID3D11SamplerState* sampler = GetSamplerStates()->GetPoint();
 	pd3dImmediateContext->PSSetSamplers(0, 1, &sampler);
 
 	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthDisabled(), 0);
