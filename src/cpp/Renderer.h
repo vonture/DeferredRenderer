@@ -23,9 +23,14 @@ private:
 	GBuffer _gBuffer;
 	LightBuffer _lightBuffer;
 	vector<ModelInstance*> _models;
+	vector<PostProcess*> _postProcesses;
 	vector<WCHAR*> _debugText;
 	ModelRenderer _modelRenderer;
 	CombinePostProcess _combinePP;
+	
+	ID3D11Texture2D* _ppTextures[2];
+	ID3D11ShaderResourceView* _ppShaderResourceViews[2];
+	ID3D11RenderTargetView* _ppRenderTargetViews[2];
 
 	PointLightRenderer _pointLightRenderer;
 	DirectionalLightRenderer _directionalLightRenderer;

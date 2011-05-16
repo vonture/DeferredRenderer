@@ -28,6 +28,7 @@ void Renderer::AddLight(PointLight* light, bool shadowed)
 
 void Renderer::AddPostProcess(PostProcess* postProcess)
 {
+	_postProcesses.push_back(postProcess);
 }
 
 void Renderer::AddDebugText(WCHAR* text)
@@ -46,9 +47,12 @@ HRESULT Renderer::Begin()
 	}
 	_begun = true;
 
-	_models.clear();
+	_models.clear();	
 	_directionalLightRenderer.Clear();
 	_pointLightRenderer.Clear();
+
+	_postProcesses.clear();
+	_postProcesses.push_back(&_combinePP);
 
 	return S_OK;
 }
@@ -68,19 +72,13 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
     pd3dImmediateContext->OMGetRenderTargets( 1, &pOrigRTV, &pOrigDSV );
 
 	// Calculate the scene bounds
-	bool first = true;
 	BoundingBox sceneBounds;
-	for (vector<ModelInstance*>::iterator i = _models.begin(); i != _models.end(); i++)
+	if (_models.size() > 0)
 	{
-		const BoundingBox* modelBB = (*i)->GetBounds();
-		if (first)
+		BoundingBox sceneBounds= *_models[0]->GetBounds();
+		for (UINT i = 0; i < _models.size(); i++)
 		{
-			sceneBounds = *modelBB;
-			first = false;
-		}
-		else
-		{
-			BoundingBox::Combine(&sceneBounds, &sceneBounds, modelBB);
+			BoundingBox::Combine(&sceneBounds, &sceneBounds, _models[i]->GetBounds());
 		}
 	}
 
@@ -105,9 +103,32 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 
 	V_RETURN(_lightBuffer.UnsetRenderTargets(pd3dImmediateContext));
 
-	// render the post processes
-	V_RETURN(_combinePP.Render(pd3dImmediateContext, NULL, pOrigRTV, pOrigDSV, &_gBuffer, &_lightBuffer));
-	
+	// render the post processes	
+	for (int i = 0; i < _postProcesses.size(); i++)
+	{
+		// calculate source resource view
+		ID3D11ShaderResourceView* srcSRV = (i % 2 != 0) ? _ppShaderResourceViews[0] : _ppShaderResourceViews[1];
+
+		// Calculate destination render target
+		ID3D11RenderTargetView* dstRTV = (i % 2 == 0) ? _ppRenderTargetViews[0] : _ppRenderTargetViews[1];
+		ID3D11DepthStencilView* dstDSV = NULL;
+
+		if (i == 0)
+		{
+			// First pass, no source texture
+			srcSRV = NULL;
+		}
+		if (i == _postProcesses.size() - 1)
+		{
+			// Last pass, render to the original rtv and dsv
+			dstRTV = pOrigRTV;
+			dstDSV = pOrigDSV;
+		}
+
+		// Render the post process
+		V_RETURN(_postProcesses[i]->Render(pd3dImmediateContext, srcSRV, dstRTV, dstDSV, &_gBuffer, &_lightBuffer));
+	}
+
 	SAFE_RELEASE( pOrigRTV );
     SAFE_RELEASE( pOrigDSV );
 		
@@ -118,6 +139,51 @@ HRESULT Renderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFA
 {
 	HRESULT hr;
 
+	// Create the pp textures
+	D3D11_TEXTURE2D_DESC ppTextureDesc = 
+    {
+        pBackBufferSurfaceDesc->Width,//UINT Width;
+        pBackBufferSurfaceDesc->Height,//UINT Height;
+        1,//UINT MipLevels;
+        1,//UINT ArraySize;
+        DXGI_FORMAT_R32G32B32A32_FLOAT,//DXGI_FORMAT Format;
+        1,//DXGI_SAMPLE_DESC SampleDesc;
+        0,
+        D3D11_USAGE_DEFAULT,//D3D11_USAGE Usage;
+        D3D11_BIND_RENDER_TARGET|D3D11_BIND_SHADER_RESOURCE,//UINT BindFlags;
+        0,//UINT CPUAccessFlags;
+        0//UINT MiscFlags;    
+    };
+
+	V_RETURN(pd3dDevice->CreateTexture2D(&ppTextureDesc, NULL, &_ppTextures[0]));
+	V_RETURN(pd3dDevice->CreateTexture2D(&ppTextureDesc, NULL, &_ppTextures[1]));
+
+	// Create the shader resource views
+	D3D11_SHADER_RESOURCE_VIEW_DESC ppSRVDesc = 
+    {
+        DXGI_FORMAT_R32G32B32A32_FLOAT,
+        D3D11_SRV_DIMENSION_TEXTURE2D,
+        0,
+        0
+    };
+	ppSRVDesc.Texture2D.MipLevels = 1;
+
+	V_RETURN(pd3dDevice->CreateShaderResourceView(_ppTextures[0], &ppSRVDesc, &_ppShaderResourceViews[0]));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(_ppTextures[1], &ppSRVDesc, &_ppShaderResourceViews[1]));
+
+	// create the render target views
+	D3D11_RENDER_TARGET_VIEW_DESC ppRTVDesc = 
+	{
+        DXGI_FORMAT_R32G32B32A32_FLOAT,
+        D3D11_RTV_DIMENSION_TEXTURE2D,
+        0,
+        0
+    };
+
+	V_RETURN(pd3dDevice->CreateRenderTargetView(_ppTextures[0], &ppRTVDesc, &_ppRenderTargetViews[0]));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(_ppTextures[1], &ppRTVDesc, &_ppRenderTargetViews[1]));
+
+	// Call the sub content holders
 	V_RETURN(_gBuffer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_lightBuffer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_modelRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
@@ -130,6 +196,13 @@ HRESULT Renderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFA
 
 void Renderer::OnD3D11DestroyDevice()
 {
+	SAFE_RELEASE(_ppTextures[0]);
+	SAFE_RELEASE(_ppTextures[1]);
+	SAFE_RELEASE(_ppShaderResourceViews[0]);
+	SAFE_RELEASE(_ppShaderResourceViews[1]);
+	SAFE_RELEASE(_ppRenderTargetViews[0]);
+	SAFE_RELEASE(_ppRenderTargetViews[1]);
+
 	_gBuffer.OnD3D11DestroyDevice();
 	_lightBuffer.OnD3D11DestroyDevice();
 	_modelRenderer.OnD3D11DestroyDevice();

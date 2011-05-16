@@ -5,6 +5,7 @@
 
 class DeferredBuffer : public IHasContent
 {
+
 public:
 	virtual const ID3D11ShaderResourceView* GetShaderResourceView(int idx) = 0;
 	virtual ID3D11ShaderResourceView*const* GetShaderResourceViews() = 0;	
@@ -15,7 +16,6 @@ public:
 	virtual int GetRenderTargetViewCount() = 0;
 
 	virtual const ID3D11DepthStencilView* GetDepthStencilView() = 0;
-	virtual const ID3D11DepthStencilState* GetDepthStencilState() = 0;	
 
 	virtual HRESULT GSSetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx) = 0;
 	virtual HRESULT VSSetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx) = 0;

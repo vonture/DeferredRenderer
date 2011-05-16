@@ -186,19 +186,7 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapCha
 	V_RETURN(pd3dDevice->CreateDepthStencilView(_textures[3], &dsvd, &_depthStencilView));
 
 	DXUT_SetDebugName(_renderTargetViews[3], "RT3 DSV");
-
-	// Create the depth stencil state
-	D3D11_DEPTH_STENCIL_DESC dsd;
-    ZeroMemory( &dsd, sizeof( D3D11_DEPTH_STENCIL_DESC ) );
-    dsd.DepthEnable = FALSE;
-    dsd.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-    dsd.DepthFunc = D3D11_COMPARISON_LESS;
-    dsd.StencilEnable = FALSE;
-
-    V_RETURN(pd3dDevice->CreateDepthStencilState(&dsd, &_depthStencilState));
-
-	DXUT_SetDebugName(_depthStencilState, "GBuffer Depth Stencil State");
-
+	
 	return S_OK;
 }
 
@@ -214,7 +202,5 @@ void GBuffer::OnD3D11ReleasingSwapChain()
 	{
 		SAFE_RELEASE(_renderTargetViews[i]);
 	}
-
-	SAFE_RELEASE(_depthStencilState);
 	SAFE_RELEASE(_depthStencilView);
 }

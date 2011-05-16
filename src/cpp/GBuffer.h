@@ -14,7 +14,6 @@ private:
 	ID3D11ShaderResourceView* _shaderResourceViews[4];
 	ID3D11RenderTargetView* _renderTargetViews[3];
 	ID3D11DepthStencilView* _depthStencilView;
-	ID3D11DepthStencilState* _depthStencilState;
 
 public:
 	GBuffer()
@@ -30,7 +29,6 @@ public:
 			_renderTargetViews[i] = NULL;
 		}
 
-		_depthStencilState = NULL;
 		_depthStencilView = NULL;
 	}
 	
@@ -77,11 +75,6 @@ public:
 	const ID3D11DepthStencilView* GetDepthStencilView()
 	{
 		return _depthStencilView;
-	}
-
-	const ID3D11DepthStencilState* GetDepthStencilState()
-	{
-		return _depthStencilState;
 	}
 
 	HRESULT GSSetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx);

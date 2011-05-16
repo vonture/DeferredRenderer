@@ -72,7 +72,7 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 	pd3dDeviceContext->OMSetDepthStencilState(_dsStates.GetDepthWriteEnabled(), 0);
 
 	float blendFactor[4] = {1, 1, 1, 1};
-	pd3dDeviceContext->OMSetBlendState(_blendStates.GetAlphaBlend(), blendFactor, 0xFFFFFFFF);
+	pd3dDeviceContext->OMSetBlendState(_blendStates.GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
 
 	ID3D11SamplerState* sampler = _samplerStates.GetLinear();
 	pd3dDeviceContext->PSSetSamplers(0, 1, &sampler);

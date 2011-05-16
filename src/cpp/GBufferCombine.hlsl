@@ -16,6 +16,9 @@ struct PS_In_Combine
 
 float4 PS_Combine(PS_In_Combine input) : SV_TARGET0
 {
+	// RT0 =       Diffuse.r           | Diffuse.g         | Diffuse.b     | Specular Intensity
+    // RT1 =       Normal.x            | Normal.y          | Normal.z      | Specular Power
+    // RT2 =                           | Ambient Occlusion | Translucency  | Material ID
 	float4 rt0Sample = RT0.Sample(PointSampler, input.vTexCoord);
 	float4 rt1Sample = RT1.Sample(PointSampler, input.vTexCoord);
 	float4 rt2Sample = RT2.Sample(PointSampler, input.vTexCoord);
@@ -31,6 +34,7 @@ float4 PS_Combine(PS_In_Combine input) : SV_TARGET0
 						  (vLightColor * vDiffuse) + 
 						  (fSpecular * vLightColor * vDiffuse);
 
+	//return float4(fAmbient, fAmbient, fAmbient, 1.0f);
 	//return float4(vDiffuse, 1.0f);
 	//return float4(lightSample.rgb, 1.0f);
 	return float4(vFinalColour, 1.0f);

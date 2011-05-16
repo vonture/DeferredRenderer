@@ -12,11 +12,11 @@ Game::Game()
 	//	DirectionalLight(XMVectorSet(1.0f, 0.4f, 0.2f, 1.0f), 0.4f, XMVectorSet(-0.2f, 0.5f, -0.2f, 1.0f)));
 	//_directionalLights.push_back(
 	//	DirectionalLight(XMVectorSet(0.6f, 1.0f, 0.3f, 1.0f), 0.3f, XMVectorSet(0.5f, 0.5f, -0.5f, 1.0f)));
-	//_directionalLights.push_back(
-	//	DirectionalLight(XMVectorSet(1.0f, 1.0f, 0.3f, 1.0f), 2.0f, XMVectorSet(0.8f, 0.9, 0.8f, 1.0f)));
+	_directionalLights.push_back(
+		DirectionalLight(XMVectorSet(1.0f, 1.0f, 0.3f, 1.0f), 1.0f, XMVectorSet(0.8f, 0.9, 0.8f, 1.0f)));
 
 	_pointLights.push_back(
-		PointLight(XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, XMVectorSet(0.0f, 4.0f, 0.0f, 1.0f), 15.0f));
+		PointLight(XMVectorSet(0.0f, 1.0f, 0.2f, 1.0f), 2.0f, XMVectorSet(0.0f, 4.0f, 0.0f, 1.0f), 15.0f));
 }
 
 Game::~Game()

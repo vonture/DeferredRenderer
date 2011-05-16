@@ -62,11 +62,6 @@ public:
 		return NULL;
 	}
 
-	const ID3D11DepthStencilState* GetDepthStencilState()
-	{
-		return NULL;
-	}
-
 	int GetCount()
 	{
 		return 1;
