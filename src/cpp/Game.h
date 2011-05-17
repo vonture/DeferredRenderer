@@ -14,8 +14,8 @@ private:
 	Renderer _renderer;
 	FirstPersonCamera _camera;
 
-	ModelInstance _powerPlant;
-	ModelInstance _tankScene;
+	ModelInstance _scene;
+
 	std::vector<DirectionalLight> _directionalLights;
 	std::vector<PointLight> _pointLights;
 public:

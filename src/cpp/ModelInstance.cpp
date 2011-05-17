@@ -5,7 +5,7 @@ ModelInstance::ModelInstance(const WCHAR* path)
 {
 	_position = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
 	_scale = XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f);
-	_orientation = XMQuaternionIdentity();
+	_orientation = XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 ModelInstance::~ModelInstance()
@@ -16,10 +16,10 @@ ModelInstance::~ModelInstance()
 void ModelInstance::clean()
 {
 	XMMATRIX translate = XMMatrixTranslation(XMVectorGetX(_position), XMVectorGetY(_position), XMVectorGetZ(_position));
-	XMMATRIX rotate = XMMatrixRotationQuaternion(_orientation);
+	XMMATRIX rotate = XMMatrixRotationRollPitchYawFromVector(_orientation);
 	XMMATRIX scale = XMMatrixScalingFromVector(_scale);
 
-	_world = XMMatrixMultiply(scale, XMMatrixMultiply(rotate, translate));
+	_world = XMMatrixMultiply(rotate, XMMatrixMultiply(scale, translate));
 	
 	BoundingBox::Transform(&_worldBB, &_modelBB, &_world);
 

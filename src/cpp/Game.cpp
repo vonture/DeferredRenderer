@@ -1,19 +1,21 @@
 #include "Game.h"
 
 Game::Game()
-	: _renderer(), _camera(0.1f, 50.0f, 1.0f, 1.0f), _powerPlant(L"\\models\\powerplant\\powerplant.sdkmesh"),
-	 _tankScene(L"\\models\\tankscene\\tankscene.sdkmesh")
+	: _renderer(), _camera(0.1f, 200.0f, 1.0f, 1.0f), _scene(L"\\models\\sponza\\sponzanoflag.sdkmesh")
 {
+	_scene.SetScale(XMVectorSet(0.02f, 0.02f, 0.02f, 1.0f));
+	_scene.SetOrientation(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f));
+
 	_camera.SetPosition(XMVectorSet(-5.0f, 5.0f, -5.0f, 1.0f));
 	_camera.SetXRotation(PiOver4);
 	_camera.SetYRotation(PiOver8);
 
 	_directionalLights.push_back(
-		DirectionalLight(XMVectorSet(1.0f, 0.4f, 0.2f, 1.0f), 0.3f, XMVectorSet(-0.2f, 0.5f, -0.2f, 1.0f)));
-	_directionalLights.push_back(
-		DirectionalLight(XMVectorSet(0.6f, 1.0f, 0.3f, 1.0f), 0.2f, XMVectorSet(0.5f, 0.5f, -0.5f, 1.0f)));
-	_directionalLights.push_back(
-		DirectionalLight(XMVectorSet(1.0f, 1.0f, 0.3f, 1.0f), 0.4f, XMVectorSet(0.8f, 0.9, 0.8f, 1.0f)));
+		DirectionalLight(XMVectorSet(1.0f, 0.4f, 0.2f, 1.0f), 2.5f, XMVectorSet(-0.2f, 1.0f, 0.2f, 1.0f)));
+	//_directionalLights.push_back(
+	//	DirectionalLight(XMVectorSet(0.6f, 1.0f, 0.3f, 1.0f), 0.2f, XMVectorSet(0.5f, 0.5f, -0.5f, 1.0f)));
+	//_directionalLights.push_back(
+	//	DirectionalLight(XMVectorSet(1.0f, 1.0f, 0.3f, 1.0f), 0.4f, XMVectorSet(0.8f, 0.9, 0.8f, 1.0f)));
 	
 	_pointLights.push_back(
 		PointLight(XMVectorSet(0.4f, 1.0f, 0.3f, 1.0f), 1.3f, XMVectorSet(0.0f, 4.0f, 0.0f, 1.0f), 15.0f));
@@ -74,8 +76,7 @@ void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3
 
 	V(_renderer.Begin());
 
-	//_renderer.AddModel(&_powerPlant);
-	_renderer.AddModel(&_tankScene);
+	_renderer.AddModel(&_scene);
 
 	for (UINT i = 0; i < _directionalLights.size(); i++)
 	{
@@ -95,8 +96,7 @@ HRESULT Game::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_D
 	HRESULT hr;
 
 	V_RETURN(_renderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	//V_RETURN(_powerPlant.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_tankScene.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_scene.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
@@ -104,8 +104,7 @@ HRESULT Game::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_D
 void Game::OnD3D11DestroyDevice()
 {
 	_renderer.OnD3D11DestroyDevice();
-	//_powerPlant.OnD3D11DestroyDevice();
-	_tankScene.OnD3D11DestroyDevice();
+	_scene.OnD3D11DestroyDevice();
 }
 
 HRESULT Game::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
@@ -117,14 +116,12 @@ HRESULT Game::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain*
 	_camera.SetAspectRatio(fAspectRatio);
 	
 	V_RETURN(_renderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	//V_RETURN(_powerPlant.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_tankScene.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_scene.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
 void Game::OnD3D11ReleasingSwapChain()
 {
 	_renderer.OnD3D11ReleasingSwapChain();
-	//_powerPlant.OnD3D11ReleasingSwapChain();
-	_tankScene.OnD3D11ReleasingSwapChain();
+	_scene.OnD3D11ReleasingSwapChain();
 }
