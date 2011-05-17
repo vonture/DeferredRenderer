@@ -53,18 +53,34 @@ HRESULT LightBuffer::Clear(ID3D11DeviceContext* pd3dImmediateContext)
 	return S_OK;
 }
 
-HRESULT LightBuffer::SetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext)
+HRESULT LightBuffer::SetRenderTargetsAndDepthStencil(ID3D11DeviceContext* pd3dImmediateContext)
 {
 	pd3dImmediateContext->OMSetRenderTargets(1, &_renderTargetView, NULL);
 
 	return S_OK;
 }
 
-HRESULT LightBuffer::UnsetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext)
+HRESULT LightBuffer::SetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext, ID3D11DepthStencilView* dsv)
+{
+	pd3dImmediateContext->OMSetRenderTargets(1, &_renderTargetView, dsv);
+
+	return S_OK;
+}
+
+HRESULT LightBuffer::UnsetRenderTargetsAndDepthStencil(ID3D11DeviceContext* pd3dImmediateContext)
 {
 	ID3D11RenderTargetView* ppRTVNULL[1] = { NULL };
 
 	pd3dImmediateContext->OMSetRenderTargets(1, ppRTVNULL, NULL);
+
+	return S_OK;
+}
+
+HRESULT LightBuffer::UnsetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext, ID3D11DepthStencilView* dsv)
+{
+	ID3D11RenderTargetView* ppRTVNULL[1] = { NULL };
+
+	pd3dImmediateContext->OMSetRenderTargets(1, ppRTVNULL, dsv);
 
 	return S_OK;
 }

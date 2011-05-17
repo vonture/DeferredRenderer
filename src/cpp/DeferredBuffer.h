@@ -15,7 +15,8 @@ public:
 	virtual ID3D11RenderTargetView*const* GetRenderTargetViews() = 0;
 	virtual int GetRenderTargetViewCount() = 0;
 
-	virtual const ID3D11DepthStencilView* GetDepthStencilView() = 0;
+	virtual ID3D11DepthStencilView* GetDepthStencilView() = 0;
+	virtual ID3D11DepthStencilView* GetReadOnlyDepthStencilView() = 0;
 
 	virtual HRESULT GSSetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx) = 0;
 	virtual HRESULT VSSetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx) = 0;
@@ -25,8 +26,11 @@ public:
 	virtual HRESULT VSUnsetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx) = 0;
 	virtual HRESULT PSUnsetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx) = 0;
 
-	virtual HRESULT SetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext) = 0;
-	virtual HRESULT UnsetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext) = 0;
+	virtual HRESULT SetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext, ID3D11DepthStencilView* dsv) = 0;
+	virtual HRESULT SetRenderTargetsAndDepthStencil(ID3D11DeviceContext* pd3dImmediateContext) = 0;
+
+	virtual HRESULT UnsetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext, ID3D11DepthStencilView* dsv) = 0;
+	virtual HRESULT UnsetRenderTargetsAndDepthStencil(ID3D11DeviceContext* pd3dImmediateContext) = 0;
 
 	virtual HRESULT Clear(ID3D11DeviceContext* pd3dImmediateContext) = 0;
 

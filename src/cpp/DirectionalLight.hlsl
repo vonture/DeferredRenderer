@@ -57,7 +57,7 @@ float4 PS_DirectionalLightCommon(PS_In_DirectionalLight input, float4 vPositionW
 		    
 	float3 N = vNormalData.xyz;
     float3 L = normalize(LightDirection);
-	float3 V = normalize(CameraPosition - vPositionWS);
+	float3 V = normalize(CameraPosition - vPositionWS.xyz);
 
     float3 R = normalize(V - 2 * dot(N, V) * N);
 
@@ -70,7 +70,7 @@ float4 PS_DirectionalLightCommon(PS_In_DirectionalLight input, float4 vPositionW
 float4 PS_DirectionalLightUnshadowed(PS_In_DirectionalLight input) : SV_TARGET0
 {
 	float fDepth = RT3.Sample(LinearSampler, input.vTexCoord).r;
-	float4 vPositionWS = GetPositionWS(input.vPosition, fDepth);
+	float4 vPositionWS = GetPositionWS(input.vPosition2, fDepth);
 
 	return PS_DirectionalLightCommon(input, vPositionWS);
 };
@@ -128,6 +128,7 @@ float SampleShadowCascade(in float4 positionWS, in uint cascadeIdx)
 float4 PS_DirectionalLightShadowed(PS_In_DirectionalLight input) : SV_TARGET0
 {
 	float fDepth = RT3.Sample(LinearSampler, input.vTexCoord).r;
+
 	float4 vPositionWS = GetPositionWS(input.vPosition2, fDepth);
 	
 	float fPercFar = CameraClips.y / (CameraClips.y - CameraClips.x);

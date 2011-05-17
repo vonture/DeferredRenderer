@@ -57,7 +57,12 @@ public:
 		return 1;
 	}
 
-	const ID3D11DepthStencilView* GetDepthStencilView()
+	ID3D11DepthStencilView* GetDepthStencilView()
+	{
+		return NULL;
+	}
+
+	ID3D11DepthStencilView* GetReadOnlyDepthStencilView() 
 	{
 		return NULL;
 	}
@@ -77,8 +82,11 @@ public:
 
 	HRESULT Clear(ID3D11DeviceContext* pd3dImmediateContext);
 
-	HRESULT SetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext);
-	HRESULT UnsetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext);
+	HRESULT SetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext, ID3D11DepthStencilView* dsv);
+	HRESULT SetRenderTargetsAndDepthStencil(ID3D11DeviceContext* pd3dImmediateContext);
+
+	HRESULT UnsetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext, ID3D11DepthStencilView* dsv);
+	HRESULT UnsetRenderTargetsAndDepthStencil(ID3D11DeviceContext* pd3dImmediateContext);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
 	void OnD3D11DestroyDevice();

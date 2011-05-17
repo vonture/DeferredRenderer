@@ -42,7 +42,7 @@ private:
 
 	static const UINT NUM_SHADOW_MAPS = 3;
 	static const UINT NUM_CASCADES = 4;
-	static const UINT SHADOW_MAP_SIZE = 4096;
+	static const UINT SHADOW_MAP_SIZE = 2048;
 	static const float CASCADE_SPLITS[NUM_CASCADES];
 	static const float BACKUP;
 	static const float BIAS;

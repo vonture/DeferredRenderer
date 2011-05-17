@@ -58,18 +58,34 @@ HRESULT GBuffer::Clear(ID3D11DeviceContext* pd3dImmediateContext)
 	return S_OK;
 }
 
-HRESULT GBuffer::SetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext)
+HRESULT GBuffer::SetRenderTargetsAndDepthStencil(ID3D11DeviceContext* pd3dImmediateContext)
 {
 	pd3dImmediateContext->OMSetRenderTargets(3, &_renderTargetViews[0], _depthStencilView);
 
 	return S_OK;
 }
 
-HRESULT GBuffer::UnsetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext)
+HRESULT GBuffer::SetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext, ID3D11DepthStencilView* dsv)
+{
+	pd3dImmediateContext->OMSetRenderTargets(3, &_renderTargetViews[0], dsv);
+
+	return S_OK;
+}
+
+HRESULT GBuffer::UnsetRenderTargetsAndDepthStencil(ID3D11DeviceContext* pd3dImmediateContext)
 {
 	ID3D11RenderTargetView* ppRTVNULL[3] = { NULL, NULL, NULL };
 
 	pd3dImmediateContext->OMSetRenderTargets(3, ppRTVNULL, NULL);
+
+	return S_OK;
+}
+
+HRESULT GBuffer::UnsetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext, ID3D11DepthStencilView* dsv)
+{
+	ID3D11RenderTargetView* ppRTVNULL[3] = { NULL, NULL, NULL };
+
+	pd3dImmediateContext->OMSetRenderTargets(3, ppRTVNULL, dsv);
 
 	return S_OK;
 }
@@ -184,9 +200,20 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapCha
 	};
 
 	V_RETURN(pd3dDevice->CreateDepthStencilView(_textures[3], &dsvd, &_depthStencilView));
-
-	DXUT_SetDebugName(_renderTargetViews[3], "RT3 DSV");
 	
+	DXUT_SetDebugName(_renderTargetViews[3], "RT3 DSV");
+
+	// Create the readonly depth stencil view
+	D3D11_DEPTH_STENCIL_VIEW_DESC rodsvd =
+	{
+		DXGI_FORMAT_D32_FLOAT,
+		D3D11_DSV_DIMENSION_TEXTURE2D,
+		D3D11_DSV_READ_ONLY_DEPTH,
+	};
+
+	V_RETURN(pd3dDevice->CreateDepthStencilView(_textures[3], &rodsvd, &_readonlyDepthStencilView));
+	
+	DXUT_SetDebugName(_renderTargetViews[3], "RT3 DSV");
 	return S_OK;
 }
 
@@ -203,4 +230,5 @@ void GBuffer::OnD3D11ReleasingSwapChain()
 		SAFE_RELEASE(_renderTargetViews[i]);
 	}
 	SAFE_RELEASE(_depthStencilView);
+	SAFE_RELEASE(_readonlyDepthStencilView);
 }

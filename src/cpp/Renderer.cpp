@@ -93,19 +93,18 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 
 	// Render the scene to the gbuffer
 	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Render to G-Buffer");
-	V_RETURN(_gBuffer.SetRenderTargets(pd3dImmediateContext));
+	V_RETURN(_gBuffer.SetRenderTargetsAndDepthStencil(pd3dImmediateContext));
 	V_RETURN(_gBuffer.Clear(pd3dImmediateContext));
 
 	V_RETURN(_modelRenderer.RenderModels(pd3dImmediateContext, &_models, camera));
 
-	V_RETURN(_gBuffer.UnsetRenderTargets(pd3dImmediateContext));
+	V_RETURN(_gBuffer.UnsetRenderTargetsAndDepthStencil(pd3dImmediateContext));
 	DXUT_EndPerfEvent();
 
 	// render the lights
-	V_RETURN(_lightBuffer.SetRenderTargets(pd3dImmediateContext));
+	V_RETURN(_lightBuffer.SetRenderTargets(pd3dImmediateContext, _gBuffer.GetReadOnlyDepthStencilView()));
 	V_RETURN(_lightBuffer.Clear(pd3dImmediateContext));
 
-	
 	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Render Directional Lights");
 	V_RETURN(_directionalLightRenderer.RenderLights(pd3dImmediateContext, camera, &_gBuffer));
 	DXUT_EndPerfEvent();
@@ -114,11 +113,11 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 	V_RETURN(_pointLightRenderer.RenderLights(pd3dImmediateContext, camera, &_gBuffer));
 	DXUT_EndPerfEvent();
 
-	V_RETURN(_lightBuffer.UnsetRenderTargets(pd3dImmediateContext));
+	V_RETURN(_lightBuffer.UnsetRenderTargetsAndDepthStencil(pd3dImmediateContext));
 
 	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Render Post-Processes");
 	// render the post processes	
-	for (int i = 0; i < _postProcesses.size(); i++)
+	for (UINT i = 0; i < _postProcesses.size(); i++)
 	{
 		// calculate source resource view
 		ID3D11ShaderResourceView* srcSRV = (i % 2 != 0) ? _ppShaderResourceViews[0] : _ppShaderResourceViews[1];

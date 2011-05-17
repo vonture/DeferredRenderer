@@ -198,7 +198,7 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 		GetSamplerStates()->GetPoint(),
 	};
 	pd3dImmediateContext->PSSetSamplers(0, 2, samplers);
-	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthDisabled(), 0);
+	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetReverseDepthEnabled(), 0);	
 
 	float blendFactor[4] = {1, 1, 1, 1};
 	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetAdditiveBlend(), blendFactor, 0xFFFFFFFF);

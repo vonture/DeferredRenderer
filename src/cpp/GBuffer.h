@@ -14,6 +14,7 @@ private:
 	ID3D11ShaderResourceView* _shaderResourceViews[4];
 	ID3D11RenderTargetView* _renderTargetViews[3];
 	ID3D11DepthStencilView* _depthStencilView;
+	ID3D11DepthStencilView* _readonlyDepthStencilView;
 
 public:
 	GBuffer()
@@ -30,6 +31,7 @@ public:
 		}
 
 		_depthStencilView = NULL;
+		_readonlyDepthStencilView = NULL;
 	}
 	
 	const ID3D11ShaderResourceView* GetShaderResourceView(int idx)
@@ -72,9 +74,14 @@ public:
 		return 3;
 	}
 
-	const ID3D11DepthStencilView* GetDepthStencilView()
+	ID3D11DepthStencilView* GetDepthStencilView()
 	{
 		return _depthStencilView;
+	}
+
+	ID3D11DepthStencilView* GetReadOnlyDepthStencilView() 
+	{
+		return _readonlyDepthStencilView;
 	}
 
 	HRESULT GSSetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx);
@@ -86,9 +93,12 @@ public:
 	HRESULT PSUnsetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx);
 
 	HRESULT Clear(ID3D11DeviceContext* pd3dImmediateContext);
+	
+	HRESULT SetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext, ID3D11DepthStencilView* dsv);
+	HRESULT SetRenderTargetsAndDepthStencil(ID3D11DeviceContext* pd3dImmediateContext);
 
-	HRESULT SetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext);
-	HRESULT UnsetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext);
+	HRESULT UnsetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext, ID3D11DepthStencilView* dsv);
+	HRESULT UnsetRenderTargetsAndDepthStencil(ID3D11DeviceContext* pd3dImmediateContext);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
 	void OnD3D11DestroyDevice();
