@@ -13,6 +13,9 @@ private:
 
 	void updateValues(const XMMATRIX& matrix)
 	{
+		XMVECTOR det;
+		XMMATRIX invMatrix = XMMatrixInverse(&det, matrix);
+
 		XMVECTOR corners[8] =
 		{                                               //                         7--------6
 			XMVectorSet( 1.0f, -1.0f, 0.0f, 1.0f),      //                        /|       /|
@@ -27,7 +30,7 @@ private:
 
 		for(UINT i = 0; i < 8; ++i)
 		{
-			_corners[i] = XMVector3TransformCoord(corners[i], matrix);
+			_corners[i] = XMVector3TransformCoord(corners[i], invMatrix);
 		}
 
 		_planes[0] = XMPlaneFromPoints(_corners[0], _corners[4], _corners[2]);
@@ -38,7 +41,7 @@ private:
 		_planes[5] = XMPlaneFromPoints(_corners[1], _corners[0], _corners[3]);
 
 		// Calculate the mid point
-		_mid = XMVector3TransformCoord(XMVectorSet(0.5f, 0.5f, 0.5f, 1.0f), matrix);
+		_mid = XMVector3TransformCoord(XMVectorSet(0.5f, 0.5f, 0.5f, 1.0f), invMatrix);
 	}
 
 public:
@@ -203,7 +206,8 @@ public:
 	{
 		for (UINT i = 0; i < 6; i++)
 		{
-			if (XMVectorGetX(XMPlaneDotCoord(frust->_planes[i], sphere->_position)) + sphere->_radius < 0)
+			float dist = XMVectorGetX(XMPlaneDotCoord(frust->_planes[i], sphere->_position));
+			if (dist < -sphere->_radius)
 			{
 				return false;
 			}
@@ -221,7 +225,8 @@ public:
 
 		for (UINT i = 0; i < 6; i++)
 		{
-			if (XMVectorGetX(XMPlaneDotCoord(frust->_planes[i], bbMid)) + bbRadius < 0)
+			float dist = XMVectorGetX(XMPlaneDotCoord(frust->_planes[i], bbMid));
+			if (dist < -bbRadius)
 			{
 				return false;
 			}

@@ -55,7 +55,7 @@ public:
 
 	UINT GetCount(bool shadowed)
 	{
-		return shadowed ? _shadowed.size() : _unshadowed.size();
+		return shadowed ? (UINT)_shadowed.size() : (UINT)_unshadowed.size();
 	}
 
 	T* GetLight(int idx, bool shadowed)

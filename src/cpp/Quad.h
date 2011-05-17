@@ -6,8 +6,8 @@
 
 struct QUAD_VERTEX
 {
-    D3DXVECTOR4 Position;
-    D3DXVECTOR2 TexCoord;
+    XMFLOAT4 Position;
+    XMFLOAT2 TexCoord;
 };
 
 class Quad : public IHasContent

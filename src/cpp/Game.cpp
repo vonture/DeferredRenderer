@@ -8,22 +8,22 @@ Game::Game()
 	_camera.SetXRotation(PiOver4);
 	_camera.SetYRotation(PiOver8);
 
-	//_directionalLights.push_back(
-	//	DirectionalLight(XMVectorSet(1.0f, 0.4f, 0.2f, 1.0f), 0.4f, XMVectorSet(-0.2f, 0.5f, -0.2f, 1.0f)));
-	//_directionalLights.push_back(
-	//	DirectionalLight(XMVectorSet(0.6f, 1.0f, 0.3f, 1.0f), 0.3f, XMVectorSet(0.5f, 0.5f, -0.5f, 1.0f)));
 	_directionalLights.push_back(
-		DirectionalLight(XMVectorSet(1.0f, 1.0f, 0.3f, 1.0f), 1.0f, XMVectorSet(0.8f, 0.9, 0.8f, 1.0f)));
+		DirectionalLight(XMVectorSet(1.0f, 0.4f, 0.2f, 1.0f), 0.3f, XMVectorSet(-0.2f, 0.5f, -0.2f, 1.0f)));
+	_directionalLights.push_back(
+		DirectionalLight(XMVectorSet(0.6f, 1.0f, 0.3f, 1.0f), 0.2f, XMVectorSet(0.5f, 0.5f, -0.5f, 1.0f)));
+	_directionalLights.push_back(
+		DirectionalLight(XMVectorSet(1.0f, 1.0f, 0.3f, 1.0f), 0.4f, XMVectorSet(0.8f, 0.9, 0.8f, 1.0f)));
 
 	_pointLights.push_back(
-		PointLight(XMVectorSet(0.0f, 1.0f, 0.2f, 1.0f), 2.0f, XMVectorSet(0.0f, 4.0f, 0.0f, 1.0f), 15.0f));
+		PointLight(XMVectorSet(0.4f, 1.0f, 0.3f, 1.0f), 1.3f, XMVectorSet(0.0f, 4.0f, 0.0f, 1.0f), 15.0f));
+	_pointLights.push_back(
+		PointLight(XMVectorSet(1.0f, 0.0f, 0.3f, 1.0f), 0.9f, XMVectorSet(12.0f, 2.0f, 7.0f, 1.0f), 8.0f));
+	_pointLights.push_back(
+		PointLight(XMVectorSet(0.0f, 1.0f, 1.0f, 1.0f), 0.8f, XMVectorSet(-14.0f, 9.0f, 12.0f, 1.0f), 20.0f));
 }
 
 Game::~Game()
-{
-}
-
-void Game::OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown)
 {
 }
 
@@ -76,16 +76,14 @@ void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3
 	//_renderer.AddModel(&_powerPlant);
 	_renderer.AddModel(&_tankScene);
 
-	for (vector<DirectionalLight>::iterator i = _directionalLights.begin(); i != _directionalLights.end(); i++)
+	for (int i = 0; i < _directionalLights.size(); i++)
 	{
-		DirectionalLight* light = &(*i);
-		_renderer.AddLight(light, true);
+		_renderer.AddLight(&_directionalLights[i], true);
 	}
 
-	for (vector<PointLight>::iterator i = _pointLights.begin(); i != _pointLights.end(); i++)
+	for (int i = 0; i < _pointLights.size(); i++)
 	{
-		PointLight* light = &(*i);
-		_renderer.AddLight(light, false);
+		_renderer.AddLight(&_pointLights[i], false);
 	}
 
 	V(_renderer.End(pd3dDevice, pd3dImmediateContext, &_camera));

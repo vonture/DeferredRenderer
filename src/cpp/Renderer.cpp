@@ -83,26 +83,40 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 	}
 
 	// render the shadow maps
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Directional Light Shadow Maps");
 	V_RETURN(_directionalLightRenderer.RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
+	DXUT_EndPerfEvent();
+
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Point Light Shadow Maps");
 	V_RETURN(_pointLightRenderer.RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
+	DXUT_EndPerfEvent();
 
 	// Render the scene to the gbuffer
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Render to G-Buffer");
 	V_RETURN(_gBuffer.SetRenderTargets(pd3dImmediateContext));
 	V_RETURN(_gBuffer.Clear(pd3dImmediateContext));
 
 	V_RETURN(_modelRenderer.RenderModels(pd3dImmediateContext, &_models, camera));
 
 	V_RETURN(_gBuffer.UnsetRenderTargets(pd3dImmediateContext));
+	DXUT_EndPerfEvent();
 
 	// render the lights
 	V_RETURN(_lightBuffer.SetRenderTargets(pd3dImmediateContext));
 	V_RETURN(_lightBuffer.Clear(pd3dImmediateContext));
 
+	
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Render Directional Lights");
 	V_RETURN(_directionalLightRenderer.RenderLights(pd3dImmediateContext, camera, &_gBuffer));
+	DXUT_EndPerfEvent();
+
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Render Point Lights");
 	V_RETURN(_pointLightRenderer.RenderLights(pd3dImmediateContext, camera, &_gBuffer));
+	DXUT_EndPerfEvent();
 
 	V_RETURN(_lightBuffer.UnsetRenderTargets(pd3dImmediateContext));
 
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Render Post-Processes");
 	// render the post processes	
 	for (int i = 0; i < _postProcesses.size(); i++)
 	{
@@ -128,6 +142,7 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 		// Render the post process
 		V_RETURN(_postProcesses[i]->Render(pd3dImmediateContext, srcSRV, dstRTV, dstDSV, &_gBuffer, &_lightBuffer));
 	}
+	DXUT_EndPerfEvent();
 
 	SAFE_RELEASE( pOrigRTV );
     SAFE_RELEASE( pOrigDSV );

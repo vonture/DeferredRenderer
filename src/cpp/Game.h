@@ -22,7 +22,6 @@ public:
 	Game();
 	~Game();
 
-	void OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown);
 	void OnFrameMove(double totalTime, float dt);
 	void OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext);
 

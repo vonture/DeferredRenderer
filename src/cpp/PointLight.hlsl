@@ -72,7 +72,7 @@ float4 PS_PointLightCommon(VS_Out_PointLight input, float4 vPositionWS, float2 v
     float3 vLightDir = LightPosition - vPositionWS.xyz;
 
 	float fAttenuation = saturate(1.0f - (length(vLightDir) / LightRadius));
-	fAttenuation *= fAttenuation;
+	fAttenuation = fAttenuation * fAttenuation;
 
 	float3 N = vNormalData.xyz;
     float3 L = normalize(vLightDir);

@@ -206,7 +206,7 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
     }
 
 	g_pGame->OnD3D11FrameRender(pd3dDevice, pd3dImmediateContext);
-	
+	/*
     DXUT_BeginPerfEvent( DXUT_PERFEVENTCOLOR, L"HUD / Stats" );
     g_HUD.OnRender( fElapsedTime );
     g_SampleUI.OnRender( fElapsedTime );
@@ -220,7 +220,7 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
         OutputDebugString( L"\n" );
         dwTimefirst = GetTickCount();
     }
-	
+	*/
 }
 
 
@@ -315,7 +315,6 @@ LRESULT CALLBACK MsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bo
 //--------------------------------------------------------------------------------------
 void CALLBACK OnKeyboard( UINT nChar, bool bKeyDown, bool bAltDown, void* pUserContext )
 {
-	g_pGame->OnKeyboard(nChar, bKeyDown, bAltDown);
 }
 
 

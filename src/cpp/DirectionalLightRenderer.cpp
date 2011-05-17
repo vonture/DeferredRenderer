@@ -75,10 +75,8 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 		float prevSplitDist = i == 0 ? 0.0f : CASCADE_SPLITS[i - 1];
         float splitDist = CASCADE_SPLITS[i];
 
-		// Create the inverse view matrix and create a frustum
-		XMVECTOR det;
-		XMMATRIX invViewProj = XMMatrixInverse(&det, *camera->GetViewProjection());
-		BoundingFrustum lightFrust = BoundingFrustum(invViewProj);
+		// Create the frustum
+		BoundingFrustum lightFrust = BoundingFrustum(*camera->GetViewProjection());
 	
 		XMVECTOR frustCorners[8];
 		lightFrust.GetCorners(frustCorners);
