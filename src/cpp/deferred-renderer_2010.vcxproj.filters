@@ -119,6 +119,9 @@
     <None Include="PointLight.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="DualParaboloidDepth.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="deferred-renderer.cpp" />
@@ -241,6 +244,9 @@
     <ClInclude Include="Utility.h" />
     <ClInclude Include="PointLightRenderer.h">
       <Filter>Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="HDRPostProcess.h">
+      <Filter>Post Process</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

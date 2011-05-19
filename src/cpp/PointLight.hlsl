@@ -18,10 +18,20 @@ cbuffer cbLightProperties : register(b2)
 	float  LightIntensity	: packoffset(c1.w);	
 }
 
+cbuffer cbShadowProperties : register(b3)
+{
+	float2 CameraClips;
+	float Bias;
+	float Padding;
+	float4x4 ShadowMatrix;	
+}
+
 Texture2D RT0 : register(t0);
 Texture2D RT1 : register(t1);
 Texture2D RT2 : register(t2);
 Texture2D RT3 : register(t3);
+
+Texture2D ShadowMap : register(t5);
 
 SamplerState LinearSampler	: register(s0);
 SamplerState ShadowSampler	: register(s1);
@@ -109,5 +119,35 @@ float4 PS_PointLightShadowed(VS_Out_PointLight input) : SV_TARGET0
 	float fDepth = RT3.Sample(LinearSampler, vScreenCoord).r;
 	float4 vPositionWS = GetPositionWS(input.vPositionCS2.xy, fDepth);
 
-	return PS_PointLightCommon(input, vPositionWS, vScreenCoord);
+	float4 vPositionLS = mul(vPositionWS, ShadowMatrix);
+	
+	float fLength = length(vPositionLS);
+	vPositionLS /= fLength;
+
+	float fSceneDepth = (fLength - CameraClips.x) / (CameraClips.y - CameraClips.x);
+
+	float2 vShadowTexCoord;		
+	if(vPositionLS.z >= 0.0f)
+	{		
+		vShadowTexCoord.x = (vPositionLS.x / (1.0f + vPositionLS.z)) * 0.5f + 0.5f; 
+		vShadowTexCoord.y = 1.0f - ((vPositionLS.y / (1.0f + vPositionLS.z)) * 0.5f + 0.5f); 	
+
+		// Offset to the left side of the shadow map
+		vShadowTexCoord.x = vShadowTexCoord.x * 0.5f;		
+	}
+	else
+	{
+		// for the back the z has to be inverted	
+		vShadowTexCoord.x =  (vPositionLS.x /  (1.0f - vPositionLS.z)) * 0.5f + 0.5f; 
+		vShadowTexCoord.y =  1.0f - ((vPositionLS.y /  (1.0f - vPositionLS.z)) * 0.5f + 0.5f); 
+		
+		// Offset to the right side of the shadow map
+		vShadowTexCoord.x = vShadowTexCoord.x * 0.5f + 0.5f;
+	}
+
+	float2 fLightDepth = ShadowMap.Sample(ShadowSampler, vShadowTexCoord).xy;
+		
+	float shadow = (fLightDepth.x + Bias) > fSceneDepth;
+
+	return shadow * PS_PointLightCommon(input, vPositionWS, vScreenCoord);
 }

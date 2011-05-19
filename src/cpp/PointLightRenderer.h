@@ -5,6 +5,14 @@
 #include "ModelRenderer.h"
 #include "ModelInstance.h"
 
+struct CB_DEPTH_PROPERTIES
+{
+	XMMATRIX WorldView;
+	float Direction;
+	XMFLOAT2 CameraClips;
+	float Padding;
+};
+
 struct CB_POINTLIGHT_MODEL_PROPERTIES
 {
 	XMMATRIX World;
@@ -25,23 +33,53 @@ struct CB_POINTLIGHT_CAMERA_PROPERTIES
 	XMFLOAT4 CameraPosition;
 };
 
+struct CB_POINTLIGHT_SHADOW_PROPERTIES
+{
+	XMFLOAT2 CameraClips;
+	float Bias;
+	float Padding;
+	XMMATRIX ShadowMatrix;
+};
+
 class PointLightRenderer : public LightRenderer<PointLight>
 {
 private:
+	ID3D11VertexShader* _depthVS;
+	ID3D11PixelShader* _depthPS;
+
+	ID3D11InputLayout* _depthInput;
+	ID3D11Buffer* _depthPropertiesBuffer;
+
+
 	ID3D11VertexShader* _vertexShader;
 	ID3D11PixelShader* _unshadowedPS;
-	ID3D11PixelShader* _shadowedPS;		
+	ID3D11PixelShader* _shadowedPS;	
 
 	ID3D11Buffer* _modelPropertiesBuffer;
 	ID3D11Buffer* _lightPropertiesBuffer;
 	ID3D11Buffer* _cameraPropertiesBuffer;
-	
+	ID3D11Buffer* _shadowPropertiesBuffer;
+
 	ModelRenderer _modelRenderer;
 	ModelInstance _lightModel;
 	ID3D11InputLayout* _lightInputLayout;
 
+	static const UINT NUM_SHADOW_MAPS = 3;
+	static const UINT SHADOW_MAP_SIZE = 4096;
+	static const float BIAS;
+	ID3D11Texture2D* _shadowMapTextures[NUM_SHADOW_MAPS];
+	ID3D11RenderTargetView* _shadowMapRTVs[NUM_SHADOW_MAPS];
+	ID3D11ShaderResourceView* _shadowMapSRVs[NUM_SHADOW_MAPS];
+	ID3D11Texture2D* _shadowMapDSTexture;
+	ID3D11DepthStencilView* _shadowMapDSView;
+	XMMATRIX _shadowMatricies[NUM_SHADOW_MAPS];
+	 
+	HRESULT renderDepth(ID3D11DeviceContext* pd3dImmediateContext, PointLight* light,
+		UINT shadowMapIdx, std::vector<ModelInstance*>* models, Camera* camera,
+		BoundingBox* sceneBounds);
+
 protected:
-	UINT GetMaxShadowedLights() { return 0; }
+	UINT GetMaxShadowedLights() { return NUM_SHADOW_MAPS; }
 
 public:
 	PointLightRenderer();

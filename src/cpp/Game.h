@@ -14,6 +14,8 @@ private:
 	Renderer _renderer;
 	FirstPersonCamera _camera;
 
+	bool _mouseLocked;
+
 	ModelInstance _scene;
 
 	std::vector<DirectionalLight> _directionalLights;

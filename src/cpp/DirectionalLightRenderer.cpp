@@ -92,6 +92,12 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
         }
 
 		// Calculate the centroid of the view frustum
+		BoundingBox viewFrustBox;
+		BoundingBox::CreateFromPoints(&viewFrustBox, frustCorners, 8);
+
+		XMVECTOR bbRad = XMVectorRound(XMVectorSubtract(*viewFrustBox.GetMax(), *viewFrustBox.GetMin()) * 0.5f);
+		XMVECTOR bbMid = XMVectorRound(XMVectorAdd(*viewFrustBox.GetMax(), *viewFrustBox.GetMin()) * 0.5f);
+		/*
 		XMVECTOR sphereCenterVec = XMVectorZero();
         for(UINT j = 0; j < 8; j++)
 		{
@@ -106,31 +112,33 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
             XMVECTOR dist = XMVector3Length(XMVectorSubtract(frustCorners[j], sphereCenterVec));
             sphereRadiusVec = XMVectorMax(sphereRadiusVec, dist);
         }
+		*/
+		//sphereRadiusVec = XMVectorRound(sphereRadiusVec);
+        //const float sphereRadius = XMVectorGetX(sphereRadiusVec);
 
-		sphereRadiusVec = XMVectorRound(sphereRadiusVec);
-        const float sphereRadius = XMVectorGetX(sphereRadiusVec);
-        const float backupDist = sphereRadius + camera->GetNearClip() + BACKUP;
-
+		const float bbRadius = XMVectorGetX(XMVector3Length(bbRad));
+        const float backupDist = bbRadius + camera->GetNearClip() + BACKUP;
+		
 		// Get position of the shadow camera
-        XMVECTOR shadowCameraPosVec = sphereCenterVec;
+        XMVECTOR shadowCameraPosVec = bbMid;
         XMVECTOR backupDirVec = *dlight->GetDirection();
         backupDirVec = XMVectorScale(backupDirVec, backupDist);
         shadowCameraPosVec = XMVectorAdd(shadowCameraPosVec, backupDirVec);
 
-		XMFLOAT3 sphereCenter, shadowCameraPos;
-        XMStoreFloat3(&sphereCenter, sphereCenterVec);
+		XMFLOAT3 bbCenter, shadowCameraPos;
+        XMStoreFloat3(&bbCenter, bbMid);
         XMStoreFloat3(&shadowCameraPos, shadowCameraPosVec);
         XMFLOAT3 up(0.0f, 1.0f, 0.0f);
 
 		// Set the camera perameters
 		OrthographicCamera shadowCamera;
 		shadowCamera.SetNearClip(camera->GetNearClip());
-		shadowCamera.SetFarClip(backupDist + sphereRadius);
-		shadowCamera.SetMinX(-sphereRadius);
-		shadowCamera.SetMinY(-sphereRadius);
-		shadowCamera.SetMaxX(sphereRadius);
-		shadowCamera.SetMaxY(sphereRadius);
-		shadowCamera.SetLookAt(shadowCameraPos, sphereCenter, up);
+		shadowCamera.SetFarClip(backupDist + bbRadius);
+		shadowCamera.SetMinX(-bbRadius);
+		shadowCamera.SetMinY(-bbRadius);
+		shadowCamera.SetMaxX(bbRadius);
+		shadowCamera.SetMaxY(bbRadius);
+		shadowCamera.SetLookAt(shadowCameraPos, bbCenter, up);
 
 		// Create the rounding matrix, by projecting the world-space origin and determining
         // the fractional offset in texel space

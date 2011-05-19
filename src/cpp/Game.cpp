@@ -1,28 +1,30 @@
 #include "Game.h"
 
 Game::Game()
-	: _renderer(), _camera(0.1f, 200.0f, 1.0f, 1.0f), _scene(L"\\models\\sponza\\sponzanoflag.sdkmesh")
+	: _renderer(), _camera(0.1f, 50.0f, 1.0f, 1.0f), _mouseLocked(false), 
+	  _scene(L"\\models\\tankscene\\tankscene.sdkmesh")
 {
-	_scene.SetScale(XMVectorSet(0.02f, 0.02f, 0.02f, 1.0f));
-	_scene.SetOrientation(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f));
+	_scene.SetScale(XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
+	_scene.SetPosition(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f));
+	_scene.SetOrientation(XMVectorSet(0.0f, PiOver2, 0.0f, 1.0f));
 
 	_camera.SetPosition(XMVectorSet(-5.0f, 5.0f, -5.0f, 1.0f));
 	_camera.SetXRotation(PiOver4);
 	_camera.SetYRotation(PiOver8);
 
-	_directionalLights.push_back(
-		DirectionalLight(XMVectorSet(1.0f, 0.4f, 0.2f, 1.0f), 2.5f, XMVectorSet(-0.2f, 1.0f, 0.2f, 1.0f)));
+	//_directionalLights.push_back(
+	//	DirectionalLight(XMVectorSet(1.0f, 0.4f, 0.2f, 1.0f), 2.5f, XMVectorSet(-0.4f, 1.0f, 0.4f, 1.0f)));
 	//_directionalLights.push_back(
 	//	DirectionalLight(XMVectorSet(0.6f, 1.0f, 0.3f, 1.0f), 0.2f, XMVectorSet(0.5f, 0.5f, -0.5f, 1.0f)));
 	//_directionalLights.push_back(
 	//	DirectionalLight(XMVectorSet(1.0f, 1.0f, 0.3f, 1.0f), 0.4f, XMVectorSet(0.8f, 0.9, 0.8f, 1.0f)));
 	
 	_pointLights.push_back(
-		PointLight(XMVectorSet(0.4f, 1.0f, 0.3f, 1.0f), 1.3f, XMVectorSet(0.0f, 4.0f, 0.0f, 1.0f), 15.0f));
-	_pointLights.push_back(
-		PointLight(XMVectorSet(1.0f, 0.0f, 0.3f, 1.0f), 0.9f, XMVectorSet(12.0f, 2.0f, 7.0f, 1.0f), 8.0f));
-	_pointLights.push_back(
-		PointLight(XMVectorSet(0.0f, 1.0f, 1.0f, 1.0f), 0.8f, XMVectorSet(-14.0f, 9.0f, 12.0f, 1.0f), 20.0f));
+		PointLight(XMVectorSet(0.4f, 1.0f, 0.3f, 1.0f), 1.3f, XMVectorSet(-3.0f, 4.0f, -4.0f, 1.0f), 15.0f));
+	//_pointLights.push_back(
+	//	PointLight(XMVectorSet(1.0f, 0.0f, 0.3f, 1.0f), 0.9f, XMVectorSet(12.0f, 2.0f, 7.0f, 1.0f), 8.0f));
+	//_pointLights.push_back(
+	//	PointLight(XMVectorSet(0.0f, 1.0f, 1.0f, 1.0f), 0.8f, XMVectorSet(-14.0f, 9.0f, 12.0f, 1.0f), 20.0f));
 		
 }
 
@@ -34,8 +36,19 @@ void Game::OnFrameMove(double totalTime, float dt)
 {
 	KeyboardState kb = KeyboardState::GetState();
 	MouseState mouse = MouseState::GetState();
-	
-	if (mouse.IsButtonDown(LeftButton))
+
+	if (mouse.IsButtonJustPressed(LeftButton))
+	{
+		_mouseLocked = true;
+		MouseState::SetCursorVisible(false);
+	}
+	if (mouse.IsButtonJustPressed(RightButton))
+	{
+		_mouseLocked = false;
+		MouseState::SetCursorVisible(true);
+	}
+
+	if (_mouseLocked)
 	{
 		const float mouseRotateSpeed = 0.002f;
 		_camera.SetXRotation(_camera.GetXRotation() + (mouse.GetDX() * mouseRotateSpeed));
@@ -68,6 +81,10 @@ void Game::OnFrameMove(double totalTime, float dt)
 
 		_camera.SetPosition(XMVectorAdd(_camera.GetPosition(), cameraMove));
 	}
+
+	//XMVECTOR newPos = XMVectorSet(sinf((float)totalTime) * 3.0f - 2.0f, 6.0f,
+	//	cosf((float)totalTime) * 5.0f - 2.0f, 1.0f);
+	//_pointLights[0].SetPosition(newPos);
 }
 
 void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext)
@@ -85,7 +102,7 @@ void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3
 
 	for (UINT i = 0; i < _pointLights.size(); i++)
 	{
-		_renderer.AddLight(&_pointLights[i], false);
+		_renderer.AddLight(&_pointLights[i], true);
 	}
 
 	V(_renderer.End(pd3dDevice, pd3dImmediateContext, &_camera));

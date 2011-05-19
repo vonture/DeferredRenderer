@@ -10,7 +10,6 @@ ModelInstance::ModelInstance(const WCHAR* path)
 
 ModelInstance::~ModelInstance()
 {
-	SAFE_DELETE(_path);
 }
 
 void ModelInstance::clean()
