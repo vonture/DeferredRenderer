@@ -154,7 +154,7 @@ float4 PS_PointLightShadowed(VS_Out_PointLight input) : SV_TARGET0
 	float m_d = (fLightDepth.x - fSceneDepth);
 	float p = variance / (variance + m_d * m_d); //Chebychev's inequality
 
-	float shadow = max(fLightDepth.x >= fSceneDepth, p);
+	float shadow = max((fLightDepth.x + Bias) >= fSceneDepth, p);
 #else
 	float shadow = (fLightDepth.x + Bias) >= fSceneDepth;
 #endif
