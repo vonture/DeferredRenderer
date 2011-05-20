@@ -150,8 +150,9 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 	ID3D11SamplerState* samplers[2] =
 	{
 		GetSamplerStates()->GetLinear(),
+		GetSamplerStates()->GetAnisotropic(),
 	};
-	pd3dImmediateContext->PSSetSamplers(0, 1, samplers);	
+	pd3dImmediateContext->PSSetSamplers(0, 2, samplers);	
 
 	float blendFactor[4] = {1, 1, 1, 1};
 	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetAdditiveBlend(), blendFactor, 0xFFFFFFFF);
