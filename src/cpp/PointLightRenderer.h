@@ -69,10 +69,10 @@ private:
 	static const UINT SHADOW_MAP_SIZE = 4096;
 	static const float BIAS;
 	ID3D11Texture2D* _shadowMapTextures[NUM_SHADOW_MAPS];
-	ID3D11RenderTargetView* _shadowMapRTVs[NUM_SHADOW_MAPS];
+	ID3D11DepthStencilView* _shadowMapDSVs[NUM_SHADOW_MAPS];
 	ID3D11ShaderResourceView* _shadowMapSRVs[NUM_SHADOW_MAPS];
-	ID3D11Texture2D* _shadowMapDSTexture;
-	ID3D11DepthStencilView* _shadowMapDSView;
+	//ID3D11Texture2D* _shadowMapDSTexture;
+	//ID3D11DepthStencilView* _shadowMapDSView;
 	XMMATRIX _shadowMatricies[NUM_SHADOW_MAPS];
 	 
 	HRESULT renderDepth(ID3D11DeviceContext* pd3dImmediateContext, PointLight* light,
