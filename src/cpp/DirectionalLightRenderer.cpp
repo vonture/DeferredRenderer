@@ -202,7 +202,7 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 	// Set the global properties for all directional lights
 	ID3D11SamplerState* samplers[2] =
 	{
-		GetSamplerStates()->GetLinear(),
+		GetSamplerStates()->GetPoint(),
 		GetSamplerStates()->GetPoint(),
 	};
 	pd3dImmediateContext->PSSetSamplers(0, 2, samplers);

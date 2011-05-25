@@ -28,7 +28,7 @@ Texture2D RT3 : register(t3);
 
 Texture2D ShadowMap : register(t5);
 
-SamplerState LinearSampler	: register(s0);
+SamplerState SceneSampler	: register(s0);
 SamplerState ShadowSampler	: register(s1);
 
 struct PS_In_DirectionalLight
@@ -49,15 +49,15 @@ float4 GetPositionWS(float2 vPositionCS, float fDepth)
 
 float4 PS_DirectionalLightCommon(PS_In_DirectionalLight input, float4 vPositionWS)
 {
-	float4 vColorData = RT0.Sample(LinearSampler, input.vTexCoord);
-    float4 vNormalData = RT1.Sample(LinearSampler, input.vTexCoord);
+	float4 vColorData = RT0.Sample(SceneSampler, input.vTexCoord);
+    float4 vNormalData = RT1.Sample(SceneSampler, input.vTexCoord);
     
 	float fSpecularIntensity = vColorData.a;
 	float fSpecularPower = vNormalData.a;	
 		    
 	float3 N = vNormalData.xyz;
     float3 L = normalize(LightDirection);
-	float3 V = normalize(CameraPosition - vPositionWS.xyz);
+	float3 V = normalize(CameraPosition.xyz - vPositionWS.xyz);
 
     float3 R = normalize(V - 2 * dot(N, V) * N);
 
@@ -69,7 +69,7 @@ float4 PS_DirectionalLightCommon(PS_In_DirectionalLight input, float4 vPositionW
 
 float4 PS_DirectionalLightUnshadowed(PS_In_DirectionalLight input) : SV_TARGET0
 {
-	float fDepth = RT3.Sample(LinearSampler, input.vTexCoord).r;
+	float fDepth = RT3.Sample(SceneSampler, input.vTexCoord).r;
 	float4 vPositionWS = GetPositionWS(input.vPosition2, fDepth);
 
 	return PS_DirectionalLightCommon(input, vPositionWS);
@@ -127,7 +127,7 @@ float SampleShadowCascade(in float4 positionWS, in uint cascadeIdx)
 
 float4 PS_DirectionalLightShadowed(PS_In_DirectionalLight input) : SV_TARGET0
 {
-	float fDepth = RT3.Sample(LinearSampler, input.vTexCoord).r;
+	float fDepth = RT3.Sample(SceneSampler, input.vTexCoord).r;
 
 	float4 vPositionWS = GetPositionWS(input.vPosition2, fDepth);
 	
@@ -136,7 +136,7 @@ float4 PS_DirectionalLightShadowed(PS_In_DirectionalLight input) : SV_TARGET0
 
 	uint iCascadeIdx = 0;
 	[unroll]
-	for (uint i = 0; i < (SqrtCascadeCount * SqrtCascadeCount) - 1; i++)
+	for (int i = 0; i < (SqrtCascadeCount * SqrtCascadeCount) - 1; i++)
 	{
 		[flatten]
 		if(fSceneZ > CascadeSplits[i])
@@ -148,4 +148,58 @@ float4 PS_DirectionalLightShadowed(PS_In_DirectionalLight input) : SV_TARGET0
 	float shadowVisibility = SampleShadowCascade(vPositionWS, iCascadeIdx);
 	
 	return shadowVisibility * PS_DirectionalLightCommon(input, vPositionWS);
+};
+
+float4 ___PS_DirectionalLightShadowed(PS_In_DirectionalLight input) : SV_TARGET0
+{
+	float fDepth = RT3.Sample(SceneSampler, input.vTexCoord).r;
+
+	float4 vPositionWS = GetPositionWS(input.vPosition2, fDepth);
+	
+	float fPercFar = CameraClips.y / (CameraClips.y - CameraClips.x);
+	float fSceneZ = ( -CameraClips.x * fPercFar ) / ( fDepth - fPercFar);	
+
+	uint iCascadeIdx = 0;
+	[unroll]
+	for (int i = 0; i < (SqrtCascadeCount * SqrtCascadeCount) - 1; i++)
+	{
+		[flatten]
+		if(fSceneZ > CascadeSplits[i])
+		{
+			iCascadeIdx = i + 1;
+		}
+	}
+
+	float4 vShadowTexCoord = mul(vPositionWS, ShadowMatrices[iCascadeIdx]);
+	float fShadowDepth = vShadowTexCoord.z / vShadowTexCoord.w;
+
+	float3 vShadowTexCoordDDX = ddx(vPositionWS).xyz;
+    float3 vShadowTexCoordDDY = ddy(vPositionWS).xyz;
+
+	float2 fMapDepth = ShadowMap.SampleGrad(ShadowSampler, vShadowTexCoord.xy / vShadowTexCoord.ww, 
+		vShadowTexCoordDDX, vShadowTexCoordDDY);
+
+	float  fAvgZ  = fMapDepth.x; // Filtered z
+    float  fAvgZ2 = fMapDepth.y; // Filtered z-squared
+
+	float fPercentLit = 0.0f;
+	if (fShadowDepth <= fAvgZ ) // We put the z value in w so that we can index the texture array with Z.
+    {
+        fPercentLit = 1.0f;
+	}
+	else 
+	{		
+	    float variance = ( fAvgZ2 ) - ( fAvgZ * fAvgZ );
+        variance       = min( 1.0f, max( 0.0f, variance + 0.00001f ) );
+    
+        float mean     = fAvgZ;
+        float d        = fShadowDepth - mean; // We put the z value in w so that we can index the texture array with Z.
+        float p_max    = variance / ( variance + d*d );
+
+        // To combat light-bleeding, experiment with raising p_max to some power
+        // (Try values from 0.1 to 100.0, if you like.)
+        fPercentLit = pow( p_max, 4 );	    		
+	}
+		
+	return fPercentLit * PS_DirectionalLightCommon(input, vPositionWS);
 };
