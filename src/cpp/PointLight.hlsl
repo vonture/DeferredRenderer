@@ -21,8 +21,9 @@ cbuffer cbLightProperties : register(b2)
 cbuffer cbShadowProperties : register(b3)
 {
 	float2 CameraClips;
+	float2 ShadowMapSize;
 	float Bias;
-	float Padding;
+	float3 Padding;	
 	float4x4 ShadowMatrix;	
 }
 
@@ -33,7 +34,7 @@ Texture2D RT3 : register(t3);
 
 Texture2D ShadowMap : register(t5);
 
-SamplerState LinearSampler	: register(s0);
+SamplerState SceneSampler	: register(s0);
 SamplerState ShadowSampler	: register(s1);
 
 struct VS_In_PointLight
@@ -73,8 +74,8 @@ float2 GetScreenTexCoord(float2 vPositionCS)
 
 float4 PS_PointLightCommon(VS_Out_PointLight input, float4 vPositionWS, float2 vTexCoord)
 {
-	float4 vColorData = RT0.Sample(LinearSampler, vTexCoord);
-    float4 vNormalData = RT1.Sample(LinearSampler, vTexCoord);
+	float4 vColorData = RT0.Sample(SceneSampler, vTexCoord);
+    float4 vNormalData = RT1.Sample(SceneSampler, vTexCoord);
 
 	float fSpecularIntensity = vColorData.a;
 	float fSpecularPower = vNormalData.a;	
@@ -103,10 +104,56 @@ float4 PS_PointLightUnshadowed(VS_Out_PointLight input) : SV_TARGET0
 
 	float2 vScreenCoord = GetScreenTexCoord(input.vPositionCS2.xy);
 
-	float fDepth = RT3.Sample(LinearSampler, vScreenCoord).r;
+	float fDepth = RT3.Sample(SceneSampler, vScreenCoord).r;
 	float4 vPositionWS = GetPositionWS(input.vPositionCS2.xy, fDepth);
 
 	return PS_PointLightCommon(input, vPositionWS, vScreenCoord);
+}
+
+float SampleShadow(in float2 vShadowTexCoord, in float fSceneDepth)
+{
+	// Edge tap smoothing
+	const int Radius = 2;
+	const int NumSamples = (Radius * 2 + 1) * (Radius * 2 + 1);
+
+	float2 fracs = frac(vShadowTexCoord.xy * ShadowMapSize);
+	float leftEdge = 1.0f - fracs.x;
+	float rightEdge = fracs.x;
+	float topEdge = 1.0f - fracs.y;
+	float bottomEdge = fracs.y;
+
+	float shadowVisibility = 0.0f;
+
+	[unroll(NumSamples)]
+	for (int y = -Radius; y <= Radius; y++)
+	{
+		[unroll(NumSamples)]
+		for (int x = -Radius; x <= Radius; x++)
+		{
+			float2 offset = float2(x, y) / ShadowMapSize;
+			float sample = (ShadowMap.Sample(ShadowSampler, vShadowTexCoord + offset).x + Bias) > fSceneDepth;
+
+			float xWeight = 1;
+			float yWeight = 1;
+			
+			if(x == -Radius)
+				xWeight = leftEdge;
+			else if(x == Radius)
+				xWeight = rightEdge;
+
+			if(y == -Radius)
+				yWeight = topEdge;
+			else if(y == Radius)
+				yWeight = bottomEdge;
+				
+			shadowVisibility += sample * xWeight * yWeight;
+		}
+	}
+
+	shadowVisibility /= NumSamples;
+	shadowVisibility *= 1.5f;
+
+	return shadowVisibility;
 }
 
 float4 PS_PointLightShadowed(VS_Out_PointLight input) : SV_TARGET0
@@ -116,7 +163,7 @@ float4 PS_PointLightShadowed(VS_Out_PointLight input) : SV_TARGET0
 
 	float2 vScreenCoord = GetScreenTexCoord(input.vPositionCS2.xy);
 
-	float fDepth = RT3.Sample(LinearSampler, vScreenCoord).r;
+	float fDepth = RT3.Sample(SceneSampler, vScreenCoord).r;
 	float4 vPositionWS = GetPositionWS(input.vPositionCS2.xy, fDepth);
 
 	float4 vPositionLS = mul(vPositionWS, ShadowMatrix);
@@ -145,19 +192,7 @@ float4 PS_PointLightShadowed(VS_Out_PointLight input) : SV_TARGET0
 		vShadowTexCoord.x = vShadowTexCoord.x * 0.5f + 0.5f;
 	}
 
-	float2 fLightDepth = ShadowMap.Sample(ShadowSampler, vShadowTexCoord).xy;
+	float fShadow = SampleShadow(vShadowTexCoord, fSceneDepth);
 
-#if 0
-	float E_x2 = fLightDepth.y;
-	float Ex_2 = fLightDepth.x * fLightDepth.x;
-	float variance = min(max(E_x2 - Ex_2, 0.0) + Bias, 1.0);
-	float m_d = (fLightDepth.x - fSceneDepth);
-	float p = variance / (variance + m_d * m_d); //Chebychev's inequality
-
-	float shadow = max((fLightDepth.x + Bias) >= fSceneDepth, p);
-#else
-	float shadow = (fLightDepth.x + Bias) >= fSceneDepth;
-#endif
-
-	return shadow * PS_PointLightCommon(input, vPositionWS, vScreenCoord);
+	return fShadow * PS_PointLightCommon(input, vPositionWS, vScreenCoord);
 }

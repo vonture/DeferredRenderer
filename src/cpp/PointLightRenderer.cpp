@@ -149,8 +149,8 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 	// Set the global properties for all point lights
 	ID3D11SamplerState* samplers[2] =
 	{
-		GetSamplerStates()->GetLinear(),
-		GetSamplerStates()->GetAnisotropic(),
+		GetSamplerStates()->GetPoint(),
+		GetSamplerStates()->GetPoint(),
 	};
 	pd3dImmediateContext->PSSetSamplers(0, 2, samplers);	
 
@@ -315,6 +315,7 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 			(CB_POINTLIGHT_SHADOW_PROPERTIES*)mappedResource.pData;
 		
 		shadowProperties->CameraClips = XMFLOAT2(0.1f, light->GetRadius());
+		shadowProperties->ShadowMapSize = XMFLOAT2((float)SHADOW_MAP_SIZE, (float)SHADOW_MAP_SIZE * 0.5f);
 		shadowProperties->Bias = BIAS;
 		shadowProperties->ShadowMatrix = XMMatrixTranspose(_shadowMatricies[i]);
 
