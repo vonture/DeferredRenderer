@@ -85,7 +85,7 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 		XMMATRIX wv = XMMatrixMultiply(*model->GetWorld(), view);
 
 		V(pd3dImmediateContext->Map(_depthPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
-		CB_DEPTH_PROPERTIES* depthProperties = (CB_DEPTH_PROPERTIES*)mappedResource.pData;
+		CB_POINTLIGHT_DEPTH_PROPERTIES* depthProperties = (CB_POINTLIGHT_DEPTH_PROPERTIES*)mappedResource.pData;
 
 		depthProperties->WorldView = XMMatrixTranspose(wv);
 		depthProperties->Direction = 1.0f;
@@ -111,7 +111,7 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 		XMMATRIX wv = XMMatrixMultiply(*model->GetWorld(), view);
 
 		V(pd3dImmediateContext->Map(_depthPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
-		CB_DEPTH_PROPERTIES* depthProperties = (CB_DEPTH_PROPERTIES*)mappedResource.pData;
+		CB_POINTLIGHT_DEPTH_PROPERTIES* depthProperties = (CB_POINTLIGHT_DEPTH_PROPERTIES*)mappedResource.pData;
 
 		depthProperties->WorldView = XMMatrixTranspose(wv);
 		depthProperties->Direction = -1.0f;
@@ -145,7 +145,7 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 	ID3D11SamplerState* samplers[2] =
 	{
 		GetSamplerStates()->GetPoint(),
-		GetSamplerStates()->GetPoint(),
+		GetSamplerStates()->GetShadowMap(),
 	};
 	pd3dImmediateContext->PSSetSamplers(0, 2, samplers);	
 
@@ -372,7 +372,7 @@ HRESULT PointLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const 
 	bufferDesc.ByteWidth = sizeof(CB_POINTLIGHT_SHADOW_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_shadowPropertiesBuffer));
 
-	bufferDesc.ByteWidth = sizeof(CB_DEPTH_PROPERTIES);
+	bufferDesc.ByteWidth = sizeof(CB_POINTLIGHT_DEPTH_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_depthPropertiesBuffer));
 
 	// Create the shaders and input layout

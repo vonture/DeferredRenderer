@@ -35,7 +35,7 @@ Texture2D RT3 : register(t3);
 Texture2D ShadowMap : register(t5);
 
 SamplerState SceneSampler	: register(s0);
-SamplerState ShadowSampler	: register(s1);
+SamplerComparisonState ShadowSampler	: register(s1);
 
 struct VS_In_PointLight
 {
@@ -131,7 +131,7 @@ float SampleShadow(in float2 vShadowTexCoord, in float fSceneDepth)
 		for (int x = -Radius; x <= Radius; x++)
 		{
 			float2 offset = float2(x, y) / ShadowMapSize;
-			float sample = (ShadowMap.Sample(ShadowSampler, vShadowTexCoord + offset).x + Bias) > fSceneDepth;
+			float sample = ShadowMap.SampleCmp(ShadowSampler, vShadowTexCoord + offset, fSceneDepth - Bias).x;
 
 			float xWeight = 1;
 			float yWeight = 1;

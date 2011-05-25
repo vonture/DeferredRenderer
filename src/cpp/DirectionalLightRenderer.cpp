@@ -5,14 +5,14 @@ const float DirectionalLightRenderer::BACKUP = 20.0f;
 const float DirectionalLightRenderer::BIAS = 0.002f;
 
 DirectionalLightRenderer::DirectionalLightRenderer()
-	: _unshadowedPS(NULL), _shadowedPS(NULL), _cameraPropertiesBuffer(NULL),
-	  _lightPropertiesBuffer(NULL), _shadowPropertiesBuffer(NULL),  _shadowMapDSTexture(NULL),
-	  _shadowMapDSView(NULL)
+	: _depthVS(NULL), _depthInput(NULL), _depthPropertiesBuffer(NULL),  _unshadowedPS(NULL),
+	  _shadowedPS(NULL), _cameraPropertiesBuffer(NULL), _lightPropertiesBuffer(NULL),
+	  _shadowPropertiesBuffer(NULL)
 {
 	for (int i = 0; i < NUM_SHADOW_MAPS; i++)
 	{
 		_shadowMapTextures[i] = NULL;
-		_shadowMapRTVs[i] = NULL;
+		_shadowMapDSVs[i] = NULL;
 		_shadowMapSRVs[i] = NULL;
 	}
 }
@@ -40,12 +40,24 @@ HRESULT DirectionalLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImme
 HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContext, DirectionalLight* dlight,
 	UINT shadowMapIdx, std::vector<ModelInstance*>* models, Camera* camera, BoundingBox* sceneBounds)
 {
-	// Set up the render targets for the shadow map and clear them
-	pd3dImmediateContext->OMSetRenderTargets(1, &_shadowMapRTVs[shadowMapIdx], _shadowMapDSView);
+	HRESULT hr;
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
 
-	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-	pd3dImmediateContext->ClearRenderTargetView(_shadowMapRTVs[shadowMapIdx], clearColor);
-	pd3dImmediateContext->ClearDepthStencilView(_shadowMapDSView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	// Set up the render targets for the shadow map and clear them
+	pd3dImmediateContext->OMSetRenderTargets(0, NULL, _shadowMapDSVs[shadowMapIdx]);
+	pd3dImmediateContext->ClearDepthStencilView(_shadowMapDSVs[shadowMapIdx], D3D11_CLEAR_DEPTH, 1.0f, 0);
+		
+	pd3dImmediateContext->GSSetShader(NULL, NULL, 0);
+	pd3dImmediateContext->VSSetShader(_depthVS, NULL, 0);
+	pd3dImmediateContext->PSSetShader(NULL, NULL, 0);
+
+	pd3dImmediateContext->IASetInputLayout(_depthInput);
+	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthWriteEnabled(), 0);
+
+	float blendFactor[4] = {1, 1, 1, 1};
+	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
+
+	pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetNoCull());
 
 	// Cascade offsets
     const XMFLOAT2 offsets[4] = {
@@ -97,25 +109,7 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 
 		XMVECTOR bbRad = XMVectorRound(XMVectorSubtract(*viewFrustBox.GetMax(), *viewFrustBox.GetMin()) * 0.5f);
 		XMVECTOR bbMid = XMVectorRound(XMVectorAdd(*viewFrustBox.GetMax(), *viewFrustBox.GetMin()) * 0.5f);
-		/*
-		XMVECTOR sphereCenterVec = XMVectorZero();
-        for(UINT j = 0; j < 8; j++)
-		{
-            sphereCenterVec = XMVectorAdd(sphereCenterVec, frustCorners[j]);
-		}
-        sphereCenterVec = XMVectorScale(sphereCenterVec, 1.0f / 8.0f);
-
-		// Calculate the radius of a bounding sphere
-        XMVECTOR sphereRadiusVec = XMVectorZero();
-        for(UINT j = 0; j < 8; j++)
-        {
-            XMVECTOR dist = XMVector3Length(XMVectorSubtract(frustCorners[j], sphereCenterVec));
-            sphereRadiusVec = XMVectorMax(sphereRadiusVec, dist);
-        }
-		*/
-		//sphereRadiusVec = XMVectorRound(sphereRadiusVec);
-        //const float sphereRadius = XMVectorGetX(sphereRadiusVec);
-
+		
 		const float bbRadius = XMVectorGetX(XMVector3Length(bbRad));
         const float backupDist = bbRadius + camera->GetNearClip() + BACKUP;
 		
@@ -159,7 +153,22 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
         shadowMatrix = *shadowCamera.GetViewProjection();
 
 		// Render the depth of all the models in the scene
-		_modelRenderer.RenderDepth(pd3dImmediateContext, models, &shadowCamera);
+		for (UINT j = 0; j < models->size(); j++)
+		{
+			ModelInstance* instance = models->at(j);
+
+			XMMATRIX wvp = XMMatrixMultiply(*instance->GetWorld(), *shadowCamera.GetViewProjection());
+		
+			V_RETURN(pd3dImmediateContext->Map(_depthPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+			CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES* modelProperties = (CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES*)mappedResource.pData;
+			modelProperties->WorldViewProjection = XMMatrixTranspose(wvp);
+			pd3dImmediateContext->Unmap(_depthPropertiesBuffer, 0);
+
+			pd3dImmediateContext->VSSetConstantBuffers(0, 1, &_depthPropertiesBuffer);
+
+			CDXUTSDKMesh* mesh = instance->GetMesh();
+			mesh->Render(pd3dImmediateContext);
+		}
 		
 		// Apply the scale/offset/bias matrix, which transforms from [-1,1]
         // post-projection space to [0,1] UV spac
@@ -203,7 +212,7 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 	ID3D11SamplerState* samplers[2] =
 	{
 		GetSamplerStates()->GetPoint(),
-		GetSamplerStates()->GetPoint(),
+		GetSamplerStates()->GetShadowMap(),
 	};
 	pd3dImmediateContext->PSSetSamplers(0, 2, samplers);
 	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetReverseDepthEnabled(), 0);	
@@ -320,6 +329,18 @@ HRESULT DirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, 
 	V_RETURN(pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_shadowedPS));
 	SAFE_RELEASE(pBlob);
 	
+	V_RETURN(CompileShaderFromFile(L"Depth.hlsl", "VS_Depth", "vs_4_0", NULL, &pBlob));   
+	V_RETURN(pd3dDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_depthVS));
+
+	const D3D11_INPUT_ELEMENT_DESC layout[] =
+	{
+		{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+
+	V_RETURN( pd3dDevice->CreateInputLayout(layout, ARRAYSIZE(layout), pBlob->GetBufferPointer(),
+		pBlob->GetBufferSize(), &_depthInput));
+	SAFE_RELEASE(pBlob);
+
 	// Create the buffers
 	D3D11_BUFFER_DESC bufferDesc =
 	{
@@ -330,6 +351,9 @@ HRESULT DirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, 
 		0, //UINT MiscFlags;
 		0, //UINT StructureByteStride;
 	};
+
+	bufferDesc.ByteWidth = sizeof(CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES);
+	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_depthPropertiesBuffer));
 
 	bufferDesc.ByteWidth = sizeof(CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_cameraPropertiesBuffer));
@@ -347,56 +371,6 @@ HRESULT DirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, 
 		SHADOW_MAP_SIZE,//UINT Height;
 		1,//UINT MipLevels;
 		1,//UINT ArraySize;
-		DXGI_FORMAT_R32G32_FLOAT,//DXGI_FORMAT Format;
-		1,//DXGI_SAMPLE_DESC SampleDesc;
-		0,
-		D3D11_USAGE_DEFAULT,//D3D11_USAGE Usage;
-		D3D11_BIND_RENDER_TARGET|D3D11_BIND_SHADER_RESOURCE,//UINT BindFlags;
-		0,//UINT CPUAccessFlags;
-		0//UINT MiscFlags;    
-	};
-
-	for (UINT i = 0; i < NUM_SHADOW_MAPS; i++)
-	{
-		V_RETURN(pd3dDevice->CreateTexture2D(&shadowMapTextureDesc, NULL, &_shadowMapTextures[i]));
-	}
-
-	// Create the shadow map SRVs
-	D3D11_SHADER_RESOURCE_VIEW_DESC shadowMapSRVDesc = 
-	{
-		DXGI_FORMAT_R32G32_FLOAT,
-		D3D11_SRV_DIMENSION_TEXTURE2D,
-		0,
-		0
-	};
-	shadowMapSRVDesc.Texture2D.MipLevels = 1;
-
-	for (UINT i = 0; i < NUM_SHADOW_MAPS; i++)
-	{
-		V_RETURN(pd3dDevice->CreateShaderResourceView(_shadowMapTextures[i], &shadowMapSRVDesc, &_shadowMapSRVs[i]));
-	}
-
-	// Create the shadow map RTVs
-	D3D11_RENDER_TARGET_VIEW_DESC shadowMapRTVDesc = 
-	{
-		DXGI_FORMAT_R32G32_FLOAT,
-		D3D11_RTV_DIMENSION_TEXTURE2D,
-		0,
-		0
-	};
-
-	for (UINT i = 0; i < NUM_SHADOW_MAPS; i++)
-	{
-		V_RETURN(pd3dDevice->CreateRenderTargetView(_shadowMapTextures[i], &shadowMapRTVDesc, &_shadowMapRTVs[i]));
-	}
-
-	// Create the shadow map depth stencil texture
-	D3D11_TEXTURE2D_DESC shadowMapDSTextureDesc = 
-	{
-		SHADOW_MAP_SIZE,//UINT Width;
-		SHADOW_MAP_SIZE,//UINT Height;
-		1,//UINT MipLevels;
-		1,//UINT ArraySize;
 		DXGI_FORMAT_R32_TYPELESS,//DXGI_FORMAT Format;
 		1,//DXGI_SAMPLE_DESC SampleDesc;
 		0,
@@ -405,9 +379,17 @@ HRESULT DirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, 
 		0,//UINT CPUAccessFlags;
 		0//UINT MiscFlags;    
 	};
-
-	V_RETURN(pd3dDevice->CreateTexture2D(&shadowMapDSTextureDesc, NULL, &_shadowMapDSTexture));
-
+	
+	// Create the shadow map SRVs
+	D3D11_SHADER_RESOURCE_VIEW_DESC shadowMapSRVDesc = 
+	{
+		DXGI_FORMAT_R32_FLOAT,
+		D3D11_SRV_DIMENSION_TEXTURE2D,
+		0,
+		0
+	};
+	shadowMapSRVDesc.Texture2D.MipLevels = 1;
+	
 	// create the shadow map depth stencil view
 	D3D11_DEPTH_STENCIL_VIEW_DESC shadowMapDSVDesc =
 	{
@@ -416,7 +398,12 @@ HRESULT DirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, 
 		0,
 	};
 
-	V_RETURN(pd3dDevice->CreateDepthStencilView(_shadowMapDSTexture, &shadowMapDSVDesc, &_shadowMapDSView));
+	for (UINT i = 0; i < NUM_SHADOW_MAPS; i++)
+	{
+		V_RETURN(pd3dDevice->CreateTexture2D(&shadowMapTextureDesc, NULL, &_shadowMapTextures[i]));
+		V_RETURN(pd3dDevice->CreateShaderResourceView(_shadowMapTextures[i], &shadowMapSRVDesc, &_shadowMapSRVs[i]));
+		V_RETURN(pd3dDevice->CreateDepthStencilView(_shadowMapTextures[i], &shadowMapDSVDesc, &_shadowMapDSVs[i]));
+	}
 
 	// Load the other IHasContents
 	V_RETURN(_fsQuad.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
@@ -429,6 +416,10 @@ void DirectionalLightRenderer::OnD3D11DestroyDevice()
 {
 	LightRenderer::OnD3D11DestroyDevice();
 
+	SAFE_RELEASE(_depthVS);
+	SAFE_RELEASE(_depthInput);
+	SAFE_RELEASE(_depthPropertiesBuffer);
+
 	SAFE_RELEASE(_unshadowedPS);
 	SAFE_RELEASE(_shadowedPS);
 	SAFE_RELEASE(_lightPropertiesBuffer);
@@ -439,12 +430,9 @@ void DirectionalLightRenderer::OnD3D11DestroyDevice()
 	{
 		SAFE_RELEASE(_shadowMapTextures[i]);
 		SAFE_RELEASE(_shadowMapSRVs[i]);
-		SAFE_RELEASE(_shadowMapRTVs[i]);
+		SAFE_RELEASE(_shadowMapDSVs[i]);
 	}
 
-	SAFE_RELEASE(_shadowMapDSTexture);
-	SAFE_RELEASE(_shadowMapDSView);
-	
 	_fsQuad.OnD3D11DestroyDevice();
 	_modelRenderer.OnD3D11DestroyDevice();
 }

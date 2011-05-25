@@ -29,7 +29,7 @@ Texture2D RT3 : register(t3);
 Texture2D ShadowMap : register(t5);
 
 SamplerState SceneSampler	: register(s0);
-SamplerState ShadowSampler	: register(s1);
+SamplerComparisonState ShadowSampler	: register(s1);
 
 struct PS_In_DirectionalLight
 {
@@ -99,8 +99,8 @@ float SampleShadowCascade(in float4 positionWS, in uint cascadeIdx)
 		[unroll(NumSamples)]
 		for (int x = -Radius; x <= Radius; x++)
 		{
-			int2 offset = int2(x, y);
-			float sample = ShadowMap.Sample(ShadowSampler, shadowTexCoord, offset).x > shadowDepth;
+			float2 offset = float2(x, y) / ShadowMapSize;
+			float sample = ShadowMap.SampleCmp(ShadowSampler, shadowTexCoord + offset, shadowDepth).x;
 
 			float xWeight = 1;
 			float yWeight = 1;
@@ -145,61 +145,7 @@ float4 PS_DirectionalLightShadowed(PS_In_DirectionalLight input) : SV_TARGET0
 		}
 	}
 
-	float shadowVisibility = SampleShadowCascade(vPositionWS, iCascadeIdx);
+	float fShadow = SampleShadowCascade(vPositionWS, iCascadeIdx);
 	
-	return shadowVisibility * PS_DirectionalLightCommon(input, vPositionWS);
-};
-
-float4 ___PS_DirectionalLightShadowed(PS_In_DirectionalLight input) : SV_TARGET0
-{
-	float fDepth = RT3.Sample(SceneSampler, input.vTexCoord).r;
-
-	float4 vPositionWS = GetPositionWS(input.vPosition2, fDepth);
-	
-	float fPercFar = CameraClips.y / (CameraClips.y - CameraClips.x);
-	float fSceneZ = ( -CameraClips.x * fPercFar ) / ( fDepth - fPercFar);	
-
-	uint iCascadeIdx = 0;
-	[unroll]
-	for (int i = 0; i < (SqrtCascadeCount * SqrtCascadeCount) - 1; i++)
-	{
-		[flatten]
-		if(fSceneZ > CascadeSplits[i])
-		{
-			iCascadeIdx = i + 1;
-		}
-	}
-
-	float4 vShadowTexCoord = mul(vPositionWS, ShadowMatrices[iCascadeIdx]);
-	float fShadowDepth = vShadowTexCoord.z / vShadowTexCoord.w;
-
-	float3 vShadowTexCoordDDX = ddx(vPositionWS).xyz;
-    float3 vShadowTexCoordDDY = ddy(vPositionWS).xyz;
-
-	float2 fMapDepth = ShadowMap.SampleGrad(ShadowSampler, vShadowTexCoord.xy / vShadowTexCoord.ww, 
-		vShadowTexCoordDDX, vShadowTexCoordDDY);
-
-	float  fAvgZ  = fMapDepth.x; // Filtered z
-    float  fAvgZ2 = fMapDepth.y; // Filtered z-squared
-
-	float fPercentLit = 0.0f;
-	if (fShadowDepth <= fAvgZ ) // We put the z value in w so that we can index the texture array with Z.
-    {
-        fPercentLit = 1.0f;
-	}
-	else 
-	{		
-	    float variance = ( fAvgZ2 ) - ( fAvgZ * fAvgZ );
-        variance       = min( 1.0f, max( 0.0f, variance + 0.00001f ) );
-    
-        float mean     = fAvgZ;
-        float d        = fShadowDepth - mean; // We put the z value in w so that we can index the texture array with Z.
-        float p_max    = variance / ( variance + d*d );
-
-        // To combat light-bleeding, experiment with raising p_max to some power
-        // (Try values from 0.1 to 100.0, if you like.)
-        fPercentLit = pow( p_max, 4 );	    		
-	}
-		
-	return fPercentLit * PS_DirectionalLightCommon(input, vPositionWS);
+	return fShadow * PS_DirectionalLightCommon(input, vPositionWS);
 };

@@ -5,7 +5,7 @@
 #include "ModelRenderer.h"
 #include "ModelInstance.h"
 
-struct CB_DEPTH_PROPERTIES
+struct CB_POINTLIGHT_DEPTH_PROPERTIES
 {
 	XMMATRIX WorldView;
 	float Direction;

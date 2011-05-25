@@ -1,7 +1,7 @@
 cbuffer cbModelProperties : register(b0)
 {
-    float4x4 World					: packoffset(c0);
-    float4x4 WorldViewProjection	: packoffset(c4);
+    float4x4 WorldViewProjection;
+	float4x4 Padding;
 }
 
 struct VS_In_Depth
@@ -21,11 +21,4 @@ VS_Out_Depth VS_Depth(VS_In_Depth input)
     output.vPositionCS = mul(input.vPositionOS, WorldViewProjection);
 
     return output;
-}
-
-float4 PS_Depth(VS_Out_Depth input) : SV_TARGET0
-{
-	float fDepth = input.vPositionCS.z / input.vPositionCS.w;
-
-	return float4(fDepth, fDepth * fDepth, 0.0f, 0.0f);
 }
