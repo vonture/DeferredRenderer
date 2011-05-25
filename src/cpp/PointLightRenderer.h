@@ -36,8 +36,9 @@ struct CB_POINTLIGHT_CAMERA_PROPERTIES
 struct CB_POINTLIGHT_SHADOW_PROPERTIES
 {
 	XMFLOAT2 CameraClips;
+	XMFLOAT2 ShadowMapSize;
 	float Bias;
-	float Padding;
+	XMFLOAT3 Padding;
 	XMMATRIX ShadowMatrix;
 };
 
