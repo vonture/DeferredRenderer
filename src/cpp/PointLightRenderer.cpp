@@ -3,7 +3,8 @@
 const float PointLightRenderer::BIAS = 0.01f;
 
 PointLightRenderer::PointLightRenderer()
-	: _vertexShader(NULL), _unshadowedPS(NULL), _shadowedPS(NULL), _modelPropertiesBuffer(NULL),
+	: _depthVS(NULL), _depthInput(NULL), _depthPropertiesBuffer(NULL), _vertexShader(NULL),
+	  _unshadowedPS(NULL), _shadowedPS(NULL), _modelPropertiesBuffer(NULL),
 	  _lightPropertiesBuffer(NULL), _cameraPropertiesBuffer(NULL), _lightInputLayout(NULL),
 	  _lightModel(L"\\models\\sphere\\sphere.sdkmesh")
 {
@@ -13,9 +14,6 @@ PointLightRenderer::PointLightRenderer()
 		_shadowMapDSVs[i] = NULL;
 		_shadowMapSRVs[i] = NULL;
 	}
-
-	//_shadowMapDSTexture = NULL;
-	//_shadowMapDSView = NULL;
 }
 
 HRESULT PointLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*>* models,
@@ -47,12 +45,7 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 	// Set up the render targets for the shadow map and clear them
 	pd3dImmediateContext->OMSetRenderTargets(0, NULL, _shadowMapDSVs[shadowMapIdx]);
 	pd3dImmediateContext->ClearDepthStencilView(_shadowMapDSVs[shadowMapIdx], D3D11_CLEAR_DEPTH, 1.0f, 0);
-
-
-	//float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-	//pd3dImmediateContext->ClearRenderTargetView(_shadowMapRTVs[shadowMapIdx], clearColor);
-	
-	
+		
 	pd3dImmediateContext->GSSetShader(NULL, NULL, 0);
 	pd3dImmediateContext->VSSetShader(_depthVS, NULL, 0);
 	pd3dImmediateContext->PSSetShader(NULL, NULL, 0);	
@@ -405,10 +398,6 @@ HRESULT PointLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const 
 		pBlob->GetBufferSize(), &_lightInputLayout));
 	SAFE_RELEASE(pBlob);
 
-	V_RETURN(CompileShaderFromFile(L"DualParaboloidDepth.hlsl", "PS_Depth", "ps_4_0", NULL, &pBlob));   
-	V_RETURN(pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_depthPS));
-	SAFE_RELEASE(pBlob);	
-
 	V_RETURN(CompileShaderFromFile(L"DualParaboloidDepth.hlsl", "VS_Depth", "vs_4_0", NULL, &pBlob));   
 	V_RETURN(pd3dDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_depthVS));
 
@@ -457,49 +446,6 @@ HRESULT PointLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const 
 		V_RETURN(pd3dDevice->CreateDepthStencilView(_shadowMapTextures[i], &shadowMapDSVDesc, &_shadowMapDSVs[i]));
 	}
 
-	/*
-	// Create the shadow map RTVs
-	D3D11_RENDER_TARGET_VIEW_DESC shadowMapRTVDesc = 
-	{
-		DXGI_FORMAT_R32G32_FLOAT,
-		D3D11_RTV_DIMENSION_TEXTURE2D,
-		0,
-		0
-	};
-
-	for (UINT i = 0; i < NUM_SHADOW_MAPS; i++)
-	{
-		V_RETURN(pd3dDevice->CreateRenderTargetView(_shadowMapTextures[i], &shadowMapRTVDesc, &_shadowMapRTVs[i]));
-	}
-	
-	// Create the shadow map depth stencil texture
-	D3D11_TEXTURE2D_DESC shadowMapDSTextureDesc = 
-	{
-		SHADOW_MAP_SIZE,//UINT Width;
-		SHADOW_MAP_SIZE / 2,//UINT Height;
-		1,//UINT MipLevels;
-		1,//UINT ArraySize;
-		DXGI_FORMAT_R32_TYPELESS,//DXGI_FORMAT Format;
-		1,//DXGI_SAMPLE_DESC SampleDesc;
-		0,
-		D3D11_USAGE_DEFAULT,//D3D11_USAGE Usage;
-		D3D11_BIND_DEPTH_STENCIL|D3D11_BIND_SHADER_RESOURCE,//UINT BindFlags;
-		0,//UINT CPUAccessFlags;
-		0//UINT MiscFlags;    
-	};
-
-	V_RETURN(pd3dDevice->CreateTexture2D(&shadowMapDSTextureDesc, NULL, &_shadowMapDSTexture));
-
-	// create the shadow map depth stencil view
-	D3D11_DEPTH_STENCIL_VIEW_DESC shadowMapDSVDesc =
-	{
-		DXGI_FORMAT_D32_FLOAT,
-		D3D11_DSV_DIMENSION_TEXTURE2D,
-		0,
-	};
-
-	V_RETURN(pd3dDevice->CreateDepthStencilView(_shadowMapDSTexture, &shadowMapDSVDesc, &_shadowMapDSView));
-	*/
 	return S_OK;
 }
 
@@ -511,7 +457,6 @@ void PointLightRenderer::OnD3D11DestroyDevice()
 	_lightModel.OnD3D11DestroyDevice();
 
 	SAFE_RELEASE(_depthVS);
-	SAFE_RELEASE(_depthPS);
 	SAFE_RELEASE(_depthInput);
 	SAFE_RELEASE(_depthPropertiesBuffer);
 
@@ -530,9 +475,6 @@ void PointLightRenderer::OnD3D11DestroyDevice()
 		SAFE_RELEASE(_shadowMapDSVs[i]);
 		SAFE_RELEASE(_shadowMapSRVs[i]);
 	}
-
-	//SAFE_RELEASE(_shadowMapDSTexture);
-	//SAFE_RELEASE(_shadowMapDSView);
 }
 
 HRESULT PointLightRenderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,

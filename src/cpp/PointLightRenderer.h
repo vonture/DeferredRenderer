@@ -46,11 +46,8 @@ class PointLightRenderer : public LightRenderer<PointLight>
 {
 private:
 	ID3D11VertexShader* _depthVS;
-	ID3D11PixelShader* _depthPS;
-
 	ID3D11InputLayout* _depthInput;
 	ID3D11Buffer* _depthPropertiesBuffer;
-
 
 	ID3D11VertexShader* _vertexShader;
 	ID3D11PixelShader* _unshadowedPS;
@@ -71,8 +68,6 @@ private:
 	ID3D11Texture2D* _shadowMapTextures[NUM_SHADOW_MAPS];
 	ID3D11DepthStencilView* _shadowMapDSVs[NUM_SHADOW_MAPS];
 	ID3D11ShaderResourceView* _shadowMapSRVs[NUM_SHADOW_MAPS];
-	//ID3D11Texture2D* _shadowMapDSTexture;
-	//ID3D11DepthStencilView* _shadowMapDSView;
 	XMMATRIX _shadowMatricies[NUM_SHADOW_MAPS];
 	 
 	HRESULT renderDepth(ID3D11DeviceContext* pd3dImmediateContext, PointLight* light,
