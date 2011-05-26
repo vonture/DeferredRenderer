@@ -488,10 +488,7 @@ HRESULT SamplerStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_
 
 	desc = getShadowMapDesc();
 	V_RETURN(pd3dDevice->CreateSamplerState(&desc, &_shadowMap));
-
-	desc = getShadowMapPCFDesc();
-	V_RETURN(pd3dDevice->CreateSamplerState(&desc, &_shadowMapPCF));
-
+	
 	return S_OK;
 }
 void SamplerStates::OnD3D11DestroyDevice()
@@ -500,7 +497,6 @@ void SamplerStates::OnD3D11DestroyDevice()
 	SAFE_RELEASE(_point);
 	SAFE_RELEASE(_anisotropic);
 	SAFE_RELEASE(_shadowMap);
-	SAFE_RELEASE(_shadowMapPCF);
 }
 
 HRESULT SamplerStates::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
@@ -573,24 +569,6 @@ D3D11_SAMPLER_DESC SamplerStates::getShadowMapDesc()
 	D3D11_SAMPLER_DESC sampDesc;
 
 	sampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
-	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-	sampDesc.MipLODBias = 0.0f;
-	sampDesc.MaxAnisotropy = 1;
-	sampDesc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
-	sampDesc.BorderColor[0] = sampDesc.BorderColor[1] = sampDesc.BorderColor[2] = sampDesc.BorderColor[3] = 0;
-	sampDesc.MinLOD = 0;
-	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
-
-	return sampDesc;
-}
-
-D3D11_SAMPLER_DESC SamplerStates::getShadowMapPCFDesc()
-{
-	D3D11_SAMPLER_DESC sampDesc;
-
-	sampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
 	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
 	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
 	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;

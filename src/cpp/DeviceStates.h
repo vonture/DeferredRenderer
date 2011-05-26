@@ -109,13 +109,11 @@ private:
 	ID3D11SamplerState* _point;
 	ID3D11SamplerState* _anisotropic;
 	ID3D11SamplerState* _shadowMap;
-	ID3D11SamplerState* _shadowMapPCF;
 	
 	static D3D11_SAMPLER_DESC getLinearDesc();
 	static D3D11_SAMPLER_DESC getPointDesc();
 	static D3D11_SAMPLER_DESC getAnisotropicDesc();
 	static D3D11_SAMPLER_DESC getShadowMapDesc();
-	static D3D11_SAMPLER_DESC getShadowMapPCFDesc();
 
 public:
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
@@ -128,5 +126,4 @@ public:
 	ID3D11SamplerState* GetPoint() { return _point; };
 	ID3D11SamplerState* GetAnisotropic() { return _anisotropic; };
 	ID3D11SamplerState* GetShadowMap() { return _shadowMap; };
-	ID3D11SamplerState* GetShadowMapPCF() { return _shadowMapPCF; };
 };
