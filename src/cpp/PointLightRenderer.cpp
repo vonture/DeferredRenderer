@@ -56,7 +56,7 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 	float blendFactor[4] = {1, 1, 1, 1};
 	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
 
-	pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetNoCull());
+	pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetBackFaceCull());
 
 	// Create view matrix
 	XMVECTOR lightPos = *light->GetPosition();

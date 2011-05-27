@@ -57,7 +57,7 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 	float blendFactor[4] = {1, 1, 1, 1};
 	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
 
-	pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetNoCull());
+	pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetBackFaceCull());
 
 	// Cascade offsets
     const XMFLOAT2 offsets[4] = {
@@ -117,7 +117,7 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
         XMVECTOR shadowCameraPosVec = bbMid;
         XMVECTOR backupDirVec = *dlight->GetDirection();
         backupDirVec = XMVectorScale(backupDirVec, backupDist);
-        shadowCameraPosVec = XMVectorAdd(shadowCameraPosVec, backupDirVec);
+        shadowCameraPosVec = XMVectorRound(XMVectorAdd(shadowCameraPosVec, backupDirVec));
 
 		XMFLOAT3 bbCenter, shadowCameraPos;
         XMStoreFloat3(&bbCenter, bbMid);
@@ -171,7 +171,7 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 		}
 		
 		// Apply the scale/offset/bias matrix, which transforms from [-1,1]
-        // post-projection space to [0,1] UV spac
+        // post-projection space to [0,1] UV space
         XMMATRIX texScaleBias;
         texScaleBias.r[0] = XMVectorSet(0.5f,  0.0f, 0.0f, 0.0f);
         texScaleBias.r[1] = XMVectorSet(0.0f, -0.5f, 0.0f, 0.0f);
