@@ -102,6 +102,9 @@ float SampleShadowCascade(in float4 positionWS, in uint cascadeIdx)
 			float2 offset = float2(x, y) / ShadowMapSize;
 			float sample = ShadowMap.SampleCmp(ShadowSampler, shadowTexCoord + offset, shadowDepth).x;
 
+			//int2 offset = int2(x, y);
+			//float sample = ShadowMap.Sample(SceneSampler, shadowTexCoord, offset).x > shadowDepth;
+
 			float xWeight = 1;
 			float yWeight = 1;
 
@@ -146,6 +149,6 @@ float4 PS_DirectionalLightShadowed(PS_In_DirectionalLight input) : SV_TARGET0
 	}
 
 	float fShadow = SampleShadowCascade(vPositionWS, iCascadeIdx);
-	
+
 	return fShadow * PS_DirectionalLightCommon(input, vPositionWS);
 };
