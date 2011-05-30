@@ -143,8 +143,8 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 	}
 	DXUT_EndPerfEvent();
 
-	SAFE_RELEASE( pOrigRTV );
-    SAFE_RELEASE( pOrigDSV );
+	SAFE_RELEASE(pOrigRTV);
+    SAFE_RELEASE(pOrigDSV);
 		
 	return S_OK;
 }
