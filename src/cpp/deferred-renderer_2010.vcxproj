@@ -402,6 +402,7 @@
     <ClInclude Include="FullscreenQuad.h" />
     <ClInclude Include="HDRPostProcess.h" />
     <ClInclude Include="KeyboardState.h" />
+    <ClInclude Include="Model.h" />
     <ClInclude Include="MouseState.h" />
     <ClInclude Include="PointLightRenderer.h" />
     <ClInclude Include="ShaderLoader.h" />

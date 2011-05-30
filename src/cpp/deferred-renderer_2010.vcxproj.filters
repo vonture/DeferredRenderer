@@ -248,6 +248,9 @@
     <ClInclude Include="HDRPostProcess.h">
       <Filter>Post Process</Filter>
     </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>Models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
