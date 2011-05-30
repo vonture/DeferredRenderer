@@ -20,7 +20,7 @@ void ModelInstance::clean()
 
 	_world = XMMatrixMultiply(rotate, XMMatrixMultiply(scale, translate));
 	
-	BoundingBox::Transform(&_worldBB, &_modelBB, &_world);
+	BoundingBox::Transform(&_worldBB, _modelBB, _world);
 
 	_dirty = false;
 }

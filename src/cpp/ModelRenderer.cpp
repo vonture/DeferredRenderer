@@ -14,7 +14,7 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;	
 
-	XMMATRIX viewProj = *camera->GetViewProjection();
+	XMMATRIX viewProj = camera->GetViewProjection();
 
 	BoundingFrustum cameraFrust = BoundingFrustum(viewProj);
 
@@ -28,18 +28,20 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 	float blendFactor[4] = {1, 1, 1, 1};
 	pd3dDeviceContext->OMSetBlendState(_blendStates.GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
 
-	ID3D11SamplerState* sampler = _samplerStates.GetLinear();
+	ID3D11SamplerState* sampler = _samplerStates.GetAnisotropic16();
 	pd3dDeviceContext->PSSetSamplers(0, 1, &sampler);
 	
-	for (vector<ModelInstance*>::iterator i = instances->begin(); i != instances->end(); i++)
+	for (UINT i = 0; i < instances->size(); i++)
 	{
+		ModelInstance* instance = instances->at(i);
+
 		// Skip this model if it's bounding box is not in the frustum
-		if (!Intersection::Contains(&cameraFrust, (*i)->GetBounds()))
+		if (!Intersection::Contains(cameraFrust, instance->GetBounds()))
 		{
 			continue;
 		}
 
-		XMMATRIX world = *(*i)->GetWorld();
+		XMMATRIX world = instance->GetWorld();
 		XMMATRIX wvp = XMMatrixMultiply(world, viewProj);
 
 		V(pd3dDeviceContext->Map(_constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
@@ -50,7 +52,7 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 
 		pd3dDeviceContext->VSSetConstantBuffers(0, 1, &_constantBuffer);
 
-		CDXUTSDKMesh* mesh = (*i)->GetMesh();
+		CDXUTSDKMesh* mesh = instance->GetMesh();
 		mesh->Render(pd3dDeviceContext, 0, 1, 2);
 	}
 

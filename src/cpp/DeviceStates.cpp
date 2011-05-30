@@ -483,9 +483,18 @@ HRESULT SamplerStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_
 	desc = getPointDesc();
 	V_RETURN(pd3dDevice->CreateSamplerState(&desc, &_point));
 
-	desc = getAnisotropicDesc();
-	V_RETURN(pd3dDevice->CreateSamplerState(&desc, &_anisotropic));
+	desc = getAnisotropic2Desc();
+	V_RETURN(pd3dDevice->CreateSamplerState(&desc, &_anisotropic2));
 
+	desc = getAnisotropic4Desc();
+	V_RETURN(pd3dDevice->CreateSamplerState(&desc, &_anisotropic4));
+
+	desc = getAnisotropic8Desc();
+	V_RETURN(pd3dDevice->CreateSamplerState(&desc, &_anisotropic8));
+
+	desc = getAnisotropic16Desc();
+	V_RETURN(pd3dDevice->CreateSamplerState(&desc, &_anisotropic16));
+	
 	desc = getShadowMapDesc();
 	V_RETURN(pd3dDevice->CreateSamplerState(&desc, &_shadowMap));
 	
@@ -495,7 +504,10 @@ void SamplerStates::OnD3D11DestroyDevice()
 {
 	SAFE_RELEASE(_linear);
 	SAFE_RELEASE(_point);
-	SAFE_RELEASE(_anisotropic);
+	SAFE_RELEASE(_anisotropic2);
+	SAFE_RELEASE(_anisotropic4);
+	SAFE_RELEASE(_anisotropic8);
+	SAFE_RELEASE(_anisotropic16);
 	SAFE_RELEASE(_shadowMap);
 }
 
@@ -546,7 +558,61 @@ D3D11_SAMPLER_DESC SamplerStates::getPointDesc()
 	return sampDesc;
 }
 
-D3D11_SAMPLER_DESC SamplerStates::getAnisotropicDesc()
+D3D11_SAMPLER_DESC SamplerStates::getAnisotropic2Desc()
+{
+	D3D11_SAMPLER_DESC sampDesc;
+
+	sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.MipLODBias = 0.0f;
+	sampDesc.MaxAnisotropy = 2;
+	sampDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	sampDesc.BorderColor[0] = sampDesc.BorderColor[1] = sampDesc.BorderColor[2] = sampDesc.BorderColor[3] = 0;
+	sampDesc.MinLOD = 0;
+	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	return sampDesc;
+}
+
+D3D11_SAMPLER_DESC SamplerStates::getAnisotropic4Desc()
+{
+	D3D11_SAMPLER_DESC sampDesc;
+
+	sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.MipLODBias = 0.0f;
+	sampDesc.MaxAnisotropy = 4;
+	sampDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	sampDesc.BorderColor[0] = sampDesc.BorderColor[1] = sampDesc.BorderColor[2] = sampDesc.BorderColor[3] = 0;
+	sampDesc.MinLOD = 0;
+	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	return sampDesc;
+}
+
+D3D11_SAMPLER_DESC SamplerStates::getAnisotropic8Desc()
+{
+	D3D11_SAMPLER_DESC sampDesc;
+
+	sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.MipLODBias = 0.0f;
+	sampDesc.MaxAnisotropy = 8;
+	sampDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	sampDesc.BorderColor[0] = sampDesc.BorderColor[1] = sampDesc.BorderColor[2] = sampDesc.BorderColor[3] = 0;
+	sampDesc.MinLOD = 0;
+	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	return sampDesc;
+}
+
+D3D11_SAMPLER_DESC SamplerStates::getAnisotropic16Desc()
 {
 	D3D11_SAMPLER_DESC sampDesc;
 

@@ -88,7 +88,7 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
         float splitDist = CASCADE_SPLITS[i];
 
 		// Create the frustum
-		BoundingFrustum lightFrust = BoundingFrustum(*camera->GetViewProjection());
+		BoundingFrustum lightFrust = BoundingFrustum(camera->GetViewProjection());
 	
 		XMVECTOR frustCorners[8];
 		lightFrust.GetCorners(frustCorners);
@@ -107,8 +107,8 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 		BoundingBox viewFrustBox;
 		BoundingBox::CreateFromPoints(&viewFrustBox, frustCorners, 8);
 
-		XMVECTOR bbRad = XMVectorRound(XMVectorSubtract(*viewFrustBox.GetMax(), *viewFrustBox.GetMin()) * 0.5f);
-		XMVECTOR bbMid = XMVectorRound(XMVectorAdd(*viewFrustBox.GetMax(), *viewFrustBox.GetMin()) * 0.5f);
+		XMVECTOR bbRad = XMVectorRound(XMVectorSubtract(viewFrustBox.GetMax(), viewFrustBox.GetMin()) * 0.5f);
+		XMVECTOR bbMid = XMVectorRound(XMVectorAdd(viewFrustBox.GetMax(), viewFrustBox.GetMin()) * 0.5f);
 		
 		const float bbRadius = XMVectorGetX(XMVector3Length(bbRad));
         const float backupDist = bbRadius + camera->GetNearClip() + BACKUP;
@@ -136,7 +136,7 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 
 		// Create the rounding matrix, by projecting the world-space origin and determining
         // the fractional offset in texel space
-        XMMATRIX shadowMatrix = *shadowCamera.GetViewProjection();
+        XMMATRIX shadowMatrix = shadowCamera.GetViewProjection();
         XMVECTOR shadowOrigin = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
         shadowOrigin = XMVector4Transform(shadowOrigin, shadowMatrix);
         shadowOrigin = XMVectorScale(shadowOrigin, cascadeSize / 2.0f);
@@ -147,17 +147,17 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
         roundOffset = XMVectorSetZ(roundOffset, 0.0f);
         roundOffset = XMVectorSetW(roundOffset, 0.0f);
 		
-        XMMATRIX shadowProj = *shadowCamera.GetProjection();
+        XMMATRIX shadowProj = shadowCamera.GetProjection();
         shadowProj.r[3] = XMVectorAdd(shadowProj.r[3], roundOffset);
         shadowCamera.SetProjection(shadowProj);
-        shadowMatrix = *shadowCamera.GetViewProjection();
+        shadowMatrix = shadowCamera.GetViewProjection();
 
 		// Render the depth of all the models in the scene
 		for (UINT j = 0; j < models->size(); j++)
 		{
 			ModelInstance* instance = models->at(j);
 
-			XMMATRIX wvp = XMMatrixMultiply(*instance->GetWorld(), *shadowCamera.GetViewProjection());
+			XMMATRIX wvp = XMMatrixMultiply(instance->GetWorld(), shadowCamera.GetViewProjection());
 		
 			V_RETURN(pd3dImmediateContext->Map(_depthPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 			CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES* modelProperties = (CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES*)mappedResource.pData;
@@ -166,8 +166,7 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 
 			pd3dImmediateContext->VSSetConstantBuffers(0, 1, &_depthPropertiesBuffer);
 
-			CDXUTSDKMesh* mesh = instance->GetMesh();
-			mesh->Render(pd3dImmediateContext);
+			instance->GetMesh()->Render(pd3dImmediateContext);
 		}
 		
 		// Apply the scale/offset/bias matrix, which transforms from [-1,1]
@@ -205,7 +204,7 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 	
 	// prepare the camera properties buffer
 	XMVECTOR det;
-	XMMATRIX cameraInvViewProj = XMMatrixInverse(&det, *camera->GetViewProjection());
+	XMMATRIX cameraInvViewProj = XMMatrixInverse(&det, camera->GetViewProjection());
 	XMVECTOR cameraPos = camera->GetPosition();
 
 	// Set the global properties for all directional lights

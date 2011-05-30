@@ -87,9 +87,9 @@ public:
 	{
 	}
 
-	const XMVECTOR* GetPosition() const
+	const XMVECTOR& GetPosition() const
 	{
-		return &_position;
+		return _position;
 	}
 
 	void SetPosition(const XMVECTOR& pos)
@@ -127,9 +127,9 @@ public:
 	{
 	}
 
-	const XMVECTOR* GetMin() const
+	const XMVECTOR& GetMin() const
 	{
-		return &_min;
+		return _min;
 	}
 
 	void SetMin(const XMVECTOR& min)
@@ -137,9 +137,9 @@ public:
 		_min = min;
 	}
 
-	const XMVECTOR* GetMax() const
+	const XMVECTOR& GetMax() const
 	{
-		return &_max;
+		return _max;
 	}
 
 	void SetMax(const XMVECTOR& max)
@@ -179,35 +179,35 @@ public:
 		}
 	}
 
-	static void Transform(BoundingBox* outBB, const BoundingBox* inBB, const XMMATRIX* transform)
+	static void Transform(BoundingBox* outBB, const BoundingBox& inBB, const XMMATRIX& transform)
 	{
 		XMVECTOR corners[8];
-		inBB->GetCorners(&corners[0]);
+		inBB.GetCorners(&corners[0]);
 
 		for(int i = 0; i < 8; i++)
 		{
-			corners[i] = XMVector3TransformCoord(corners[i], *transform);
+			corners[i] = XMVector3TransformCoord(corners[i], transform);
 		}
 
 		CreateFromPoints(outBB, corners, 8);
 	}
 
-	static void Combine(BoundingBox* outBB, const BoundingBox* inBBFirst, const BoundingBox* inBBSecond)
+	static void Combine(BoundingBox* outBB, const BoundingBox& inBBFirst, const BoundingBox& inBBSecond)
 	{
-		outBB->_min = XMVectorMin(inBBFirst->_min, inBBSecond->_min);
-		outBB->_min = XMVectorMin(inBBFirst->_max, inBBSecond->_max);
+		outBB->_min = XMVectorMin(inBBFirst._min, inBBSecond._min);
+		outBB->_min = XMVectorMin(inBBFirst._max, inBBSecond._max);
 	}
 };
 
 class Intersection
 {
 public:
-	static bool Contains(const BoundingFrustum* frust, const BoundingSphere* sphere)
+	static bool Contains(const BoundingFrustum& frust, const BoundingSphere& sphere)
 	{
 		for (UINT i = 0; i < 6; i++)
 		{
-			float dist = XMVectorGetX(XMPlaneDotCoord(frust->_planes[i], sphere->_position));
-			if (dist < -sphere->_radius)
+			float dist = XMVectorGetX(XMPlaneDotCoord(frust._planes[i], sphere._position));
+			if (dist < -sphere._radius)
 			{
 				return false;
 			}
@@ -215,17 +215,17 @@ public:
 		return true;
 	}
 
-	static bool Contains(const BoundingFrustum* frust, const BoundingBox* box)
+	static bool Contains(const BoundingFrustum& frust, const BoundingBox& box)
 	{
 		// not a perfect intersection test but much faster than checking each corner and plane
 
-		XMVECTOR bbMid = (box->_min + box->_max) * 0.5f;
-		XMVECTOR bbHalfSize = (box->_min - box->_max) * 0.5f;
+		XMVECTOR bbMid = (box._min + box._max) * 0.5f;
+		XMVECTOR bbHalfSize = (box._min - box._max) * 0.5f;
 		float bbRadius = XMVectorGetX(XMVector3Length(bbHalfSize));
 
 		for (UINT i = 0; i < 6; i++)
 		{
-			float dist = XMVectorGetX(XMPlaneDotCoord(frust->_planes[i], bbMid));
+			float dist = XMVectorGetX(XMPlaneDotCoord(frust._planes[i], bbMid));
 			if (dist < -bbRadius)
 			{
 				return false;
@@ -234,10 +234,10 @@ public:
 		return true;
 	}
 
-	static bool Contains(const BoundingSphere* sphere, const XMVECTOR* pt)
+	static bool Contains(const BoundingSphere& sphere, const XMVECTOR& pt)
 	{
-		XMVECTOR radiusVec = XMVectorSubtract(sphere->_position, *pt);
+		XMVECTOR radiusVec = XMVectorSubtract(sphere._position, pt);
 		
-		return XMVectorGetX(XMVector3LengthSq(radiusVec)) < (sphere->_radius * sphere->_radius);
+		return XMVectorGetX(XMVector3LengthSq(radiusVec)) < (sphere._radius * sphere._radius);
 	}
 };

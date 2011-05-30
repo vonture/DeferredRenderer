@@ -7,7 +7,7 @@ cbuffer cbModelProperties : register(b0)
 Texture2D DiffuseMap	: register(t0);
 Texture2D NormalMap		: register(t1);
 
-SamplerState	LinearSampler	: register(s0);
+SamplerState Sampler	: register(s0);
 
 struct VS_In_Mesh
 {
@@ -45,8 +45,8 @@ PS_Out_Mesh PS_Mesh(VS_Out_Mesh input)
 {
 	PS_Out_Mesh output;
 
-	float4 vDiffuse = DiffuseMap.Sample(LinearSampler, input.vTexCoord);	
-	//float3 vNormal = NormalMap.Sample(LinearSampler, input.vTexCoord);
+	float4 vDiffuse = DiffuseMap.Sample(Sampler, input.vTexCoord);	
+	//float3 vNormal = NormalMap.Sample(Sampler, input.vTexCoord);
 	float3 vNormal = normalize(input.vNormalWS);
 
     // RT0 =       Diffuse.r           | Diffuse.g         | Diffuse.b     | Specular Intensity

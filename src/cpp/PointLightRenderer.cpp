@@ -82,7 +82,7 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 	{
 		ModelInstance* model = models->at(i);
 
-		XMMATRIX wv = XMMatrixMultiply(*model->GetWorld(), view);
+		XMMATRIX wv = XMMatrixMultiply(model->GetWorld(), view);
 
 		V(pd3dImmediateContext->Map(_depthPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 		CB_POINTLIGHT_DEPTH_PROPERTIES* depthProperties = (CB_POINTLIGHT_DEPTH_PROPERTIES*)mappedResource.pData;
@@ -108,7 +108,7 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 	{
 		ModelInstance* model = models->at(i);
 
-		XMMATRIX wv = XMMatrixMultiply(*model->GetWorld(), view);
+		XMMATRIX wv = XMMatrixMultiply(model->GetWorld(), view);
 
 		V(pd3dImmediateContext->Map(_depthPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 		CB_POINTLIGHT_DEPTH_PROPERTIES* depthProperties = (CB_POINTLIGHT_DEPTH_PROPERTIES*)mappedResource.pData;
@@ -138,7 +138,7 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 	
 	// prepare the camera properties buffer
 	XMVECTOR det;
-	XMMATRIX cameraInvViewProj = XMMatrixInverse(&det, *camera->GetViewProjection());
+	XMMATRIX cameraInvViewProj = XMMatrixInverse(&det, camera->GetViewProjection());
 	XMVECTOR cameraPos = camera->GetPosition();
 
 	// Set the global properties for all point lights
@@ -161,7 +161,7 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 	pd3dImmediateContext->IASetInputLayout(_lightInputLayout);
 
 	// build the camera frustum
-	BoundingFrustum cameraFrust = BoundingFrustum(*camera->GetViewProjection());
+	BoundingFrustum cameraFrust = BoundingFrustum(camera->GetViewProjection());
 
 	// map the camera properties
 	V_RETURN(pd3dImmediateContext->Map(_cameraPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
@@ -192,13 +192,13 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 
 		// Verify that the light is visible
 		BoundingSphere lightBounds = BoundingSphere(lightPosition, lightRadius);
-		if (!Intersection::Contains(&cameraFrust, &lightBounds))
+		if (!Intersection::Contains(cameraFrust, lightBounds))
 		{
 			continue;
 		}
 
 		// Depending on if the camera is within the light, flip the vertex winding
-		if (Intersection::Contains(&lightBounds, &cameraPos))
+		if (Intersection::Contains(lightBounds, cameraPos))
 		{
 			pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetFrontFaceCull());
 			pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetReverseDepthEnabled(), 0);
@@ -212,8 +212,8 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 		// Setup the model and map the model properties
 		_lightModel.SetPosition(lightPosition);
 		_lightModel.SetScale(XMVectorSet(lightRadius, lightRadius, lightRadius, 1.0f));
-		XMMATRIX world = *_lightModel.GetWorld();
-		XMMATRIX wvp = XMMatrixMultiply(world, *camera->GetViewProjection());
+		XMMATRIX world = _lightModel.GetWorld();
+		XMMATRIX wvp = XMMatrixMultiply(world, camera->GetViewProjection());
 
 		V_RETURN(pd3dImmediateContext->Map(_modelPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 		CB_POINTLIGHT_MODEL_PROPERTIES* modelProperties = 
@@ -256,13 +256,13 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 
 		// Verify that the light is visible
 		BoundingSphere lightBounds = BoundingSphere(lightPosition, lightRadius);
-		if (!Intersection::Contains(&cameraFrust, &lightBounds))
+		if (!Intersection::Contains(cameraFrust, lightBounds))
 		{
 			continue;
 		}
 
 		// Depending on if the camera is within the light, flip the vertex winding
-		if (Intersection::Contains(&lightBounds, &cameraPos))
+		if (Intersection::Contains(lightBounds, cameraPos))
 		{
 			pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetFrontFaceCull());
 			pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetReverseDepthEnabled(), 0);
@@ -276,8 +276,8 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 		// Setup the model and map the model properties
 		_lightModel.SetPosition(lightPosition);
 		_lightModel.SetScale(XMVectorSet(lightRadius, lightRadius, lightRadius, 1.0f));
-		XMMATRIX world = *_lightModel.GetWorld();
-		XMMATRIX wvp = XMMatrixMultiply(world, *camera->GetViewProjection());
+		XMMATRIX world = _lightModel.GetWorld();
+		XMMATRIX wvp = XMMatrixMultiply(world, camera->GetViewProjection());
 
 		V_RETURN(pd3dImmediateContext->Map(_modelPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 		CB_POINTLIGHT_MODEL_PROPERTIES* modelProperties = 

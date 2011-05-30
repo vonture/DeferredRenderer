@@ -27,16 +27,17 @@ public:
 	ModelInstance(const WCHAR* path);
 	~ModelInstance();
 
+	const XMVECTOR& GetPosition() const { return _position; }
+
+	const XMVECTOR& GetScale() const { return _scale; }
+
+	const XMVECTOR& GetOrientation() const { return _orientation; }
+
 	void SetPosition(const XMVECTOR& pos)
 	{
 		_position = pos;
 
 		_dirty = true;
-	}
-
-	const XMVECTOR* GetScale() const
-	{ 
-		return &_scale; 
 	}
 
 	void SetScale(const XMVECTOR& scale)
@@ -46,11 +47,6 @@ public:
 		_dirty = true;
 	}
 
-	const XMVECTOR* GetPosition() const
-	{ 
-		return &_position; 
-	}
-
 	void SetOrientation(const XMVECTOR& orientation)
 	{
 		_orientation = orientation;
@@ -58,29 +54,24 @@ public:
 		_dirty = true;
 	}
 
-	const XMVECTOR* GetOrientation() const
-	{ 		
-		return &_orientation;
-	}
-
-	const XMMATRIX* GetWorld() 
+	const XMMATRIX& GetWorld() 
 	{ 
 		if (_dirty)
 		{
 			clean();
 		}
 
-		return &_world;
+		return _world;
 	}
 
-	const BoundingBox* GetBounds()
+	const BoundingBox& GetBounds()
 	{
 		if (_dirty)
 		{
 			clean();
 		}
 
-		return &_worldBB;
+		return _worldBB;
 	}
 
 	CDXUTSDKMesh* GetMesh()

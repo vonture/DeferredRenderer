@@ -140,14 +140,14 @@ public:
 		return _farClip;
 	}
 
-	const XMMATRIX* GetView()
+	const XMMATRIX& GetView()
 	{ 
-		return &_view;
+		return _view;
 	}
 
-	const XMMATRIX* GetProjection()
+	const XMMATRIX& GetProjection()
 	{ 
-		return &_proj; 
+		return _proj; 
 	}
 
 	void SetProjection(const XMMATRIX& proj)
@@ -156,14 +156,14 @@ public:
 		_viewProj = XMMatrixMultiply(_view, _proj);
 	}
 
-	const XMMATRIX* GetViewProjection()
+	const XMMATRIX& GetViewProjection()
 	{ 
-		return &_viewProj; 
+		return _viewProj; 
 	}
 
-	const XMMATRIX* GetWorld() 
+	const XMMATRIX& GetWorld() 
 	{ 
-		return &_world;
+		return _world;
 	}
 
 	void SetWorld(const XMMATRIX& world)
