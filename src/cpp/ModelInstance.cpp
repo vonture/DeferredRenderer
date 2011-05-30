@@ -38,7 +38,7 @@ HRESULT ModelInstance::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_
 	for (UINT i = 0; i < _mesh.GetNumMeshes(); i++)
 	{
 		D3DXVECTOR3 meshMin = _mesh.GetMeshBBoxCenter(i) - _mesh.GetMeshBBoxExtents(i);
-		D3DXVECTOR3 meshMax = _mesh.GetMeshBBoxCenter(i) + _mesh.GetMeshBBoxExtents(i);;
+		D3DXVECTOR3 meshMax = _mesh.GetMeshBBoxCenter(i) + _mesh.GetMeshBBoxExtents(i);
 
 		min = XMVectorMin(min, XMVectorSet(meshMin.x, meshMin.y, meshMin.z, 1.0f));
 		max = XMVectorMax(max, XMVectorSet(meshMax.x, meshMax.y, meshMax.z, 1.0f));
