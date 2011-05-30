@@ -1,55 +1,28 @@
 #pragma once
 
 #include "Defines.h"
-#include "BoundingObjects.h"
+#include "Material.h"
+#include "Mesh.h"
 
-struct Material
-{
-    XMFLOAT3 AmbientColor;
-    XMFLOAT3 DiffuseColor;
-    XMFLOAT3 EmissiveColor;
-    
-	XMFLOAT3 SpecularColor;
-	float SpecularPower;
-
-    float Alpha;
-
-    ID3D11ShaderResourceView* DiffuseMap;
-    ID3D11ShaderResourceView* NormalMap;
-	ID3D11ShaderResourceView* SpecularMap;
-};
-
-struct MeshPart
-{
-	UINT VertexStart;
-    UINT VertexCount;
-    UINT IndexStart;
-    UINT IndexCount;
-    UINT MaterialIndex;
-};
-
-class Mesh
+class Model
 {
 private:
-	ID3D11Buffer* _indexBuffer;
-	ID3D11Buffer* _vertexBuffer;
+	Mesh* _meshes;
+	UINT _meshCount;
 
-	MeshPart _meshParts[];
-	UINT _numMeshParts;
-
-	BoundingSphere _boundingSphere;
-	BoundingBox _boundingBox;
+	Material* _materials;
+	UINT _materialCount;
 
 public:
-	Mesh();
-	~Mesh();
+	Model();
+	~Model();
 
-	const MeshPart& GetMeshPart(UINT idx) const { return _meshParts[idx]; }
-	UINT GetMeshPartCount() const { return _numMeshParts; }
+	const Mesh& GetMesh(int idx) const { return _meshes[idx]; }
+	UINT GetMeshCount() const { return _meshCount; }
 
-	const ID3D11Buffer* GetVertexBuffer() const { return _vertexBuffer; }
-	const ID3D11Buffer* GetIndexBuffer() const { return _indexBuffer; }
+	const Material& GetMaterial(int idx) const { return _materials[idx]; }
+	UINT GetMaterialCount() const { return _materialCount; }
 
-	const BoundingBox& GetBoundingBox() const { return _boundingBox; }
-	const BoundingSphere& GetBoundingSphere() const { return _boundingSphere; }
+	HRESULT CreateFromSDKMeshFile(ID3D11Device* device, LPCWSTR fileName, bool generateTangents = false);
+	void Destroy();
 };

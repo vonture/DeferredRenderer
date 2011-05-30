@@ -386,6 +386,9 @@
     <ClCompile Include="GBuffer.cpp" />
     <ClCompile Include="KeyboardState.cpp" />
     <ClCompile Include="LightBuffer.cpp" />
+    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelInstance.cpp" />
     <ClCompile Include="ModelRenderer.cpp" />
     <ClCompile Include="MouseState.cpp" />
@@ -402,6 +405,8 @@
     <ClInclude Include="FullscreenQuad.h" />
     <ClInclude Include="HDRPostProcess.h" />
     <ClInclude Include="KeyboardState.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="MouseState.h" />
     <ClInclude Include="PointLightRenderer.h" />
