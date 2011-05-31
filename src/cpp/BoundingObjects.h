@@ -106,6 +106,15 @@ public:
 	{
 		_radius = max(radius, 0.0f);
 	}
+
+	static void Transform(BoundingSphere* outBS, const BoundingSphere& inBS, const XMMATRIX& transform)
+	{
+		// Transform the origin of the sphere
+		outBS->_position = XMVector3TransformCoord(inBS._position, transform);		
+		
+		// Assume that the matrix scale is uniform and scale the radius
+		outBS->_radius = inBS._radius * transform._11;
+	}
 };
 
 class BoundingBox
@@ -239,5 +248,13 @@ public:
 		XMVECTOR radiusVec = XMVectorSubtract(sphere._position, pt);
 		
 		return XMVectorGetX(XMVector3LengthSq(radiusVec)) < (sphere._radius * sphere._radius);
+	}
+
+	static bool Intersects(const BoundingSphere& sphereA, const BoundingSphere& sphereB)
+	{
+		float distanceSq = XMVectorGetX(XMVector3LengthSq(XMVectorSubtract(sphereA._position, sphereB._position)));
+		float radiusSq = (sphereA._radius + sphereB._radius) * (sphereA._radius + sphereB._radius);
+
+		return distanceSq <= radiusSq;
 	}
 };
