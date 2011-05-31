@@ -10,7 +10,7 @@ Model::~Model()
 {
 }
 
-HRESULT Model::CreateFromSDKMeshFile(ID3D11Device* device, LPCWSTR fileName, bool generateTangents)
+HRESULT Model::CreateFromSDKMeshFile(ID3D11Device* device, LPCWSTR fileName)
 {
 	HRESULT hr;
 	CDXUTSDKMesh sdkMesh;
@@ -23,7 +23,7 @@ HRESULT Model::CreateFromSDKMeshFile(ID3D11Device* device, LPCWSTR fileName, boo
     {
         V_RETURN(_materials[i].CreateFromSDKMeshMaterial(sdkMesh.GetMaterial(i)));
     }
-
+	
 	// Copy the meshes
 	_meshCount = sdkMesh.GetNumMeshes();
 	_meshes = new Mesh[_meshCount];
@@ -52,4 +52,53 @@ void Model::Destroy()
 	}
 	SAFE_DELETE_ARRAY(_meshes);
 	_meshCount = 0;
+}
+
+HRESULT Model::Render(ID3D11DeviceContext* context, UINT diffuseSlot, UINT normalSlot,
+	UINT specularSlot)
+{
+	HRESULT hr;
+
+	for (UINT i = 0; i < _meshCount; i++)
+	{
+		V_RETURN(RenderPart(context, i, diffuseSlot, normalSlot, specularSlot));
+	}
+
+	return S_OK;
+}
+
+HRESULT Model::RenderPart(ID3D11DeviceContext* context, UINT partIdx, UINT diffuseSlot, 
+	UINT normalSlot, UINT specularSlot)
+{
+	context->IASetVertexBuffers(0, _meshes[partIdx].GetVertexBufferCount(), 
+		_meshes[partIdx].GetVertexBuffers(), _meshes[partIdx].GetVertexStrides(),
+		_meshes[partIdx].GetOffsets());
+	context->IASetIndexBuffer(_meshes[partIdx].GetIndexBuffer(), _meshes[partIdx].GetIndexBufferFormat(), 0);
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	
+	for (UINT i = 0; i < _meshes[partIdx].GetMeshPartCount(); i++)
+	{
+		MeshPart part = _meshes[partIdx].GetMeshPart(i);
+		UINT matIdx = part.MaterialIndex;
+
+		if (diffuseSlot != INVALID_SAMPLER_SLOT)
+		{
+			ID3D11ShaderResourceView* srv = _materials[matIdx].GetDiffuseSRV();
+			context->PSSetShaderResources(diffuseSlot, 1, &srv);
+		}
+		if (normalSlot != INVALID_SAMPLER_SLOT)
+		{
+			ID3D11ShaderResourceView* srv = _materials[matIdx].GetNormalSRV();
+			context->PSSetShaderResources(normalSlot, 1, &srv);
+		}
+		if (specularSlot != INVALID_SAMPLER_SLOT)
+		{
+			ID3D11ShaderResourceView* srv = _materials[matIdx].GetSpecularSRV();
+			context->PSSetShaderResources(specularSlot, 1, &srv);
+		}
+
+        context->DrawIndexed(part.IndexCount, part.IndexStart, 0);
+	}
+
+	return S_OK;
 }

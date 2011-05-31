@@ -29,9 +29,9 @@ public:
 	float GetSpecularPower() const { return _specularPower; }
 	float GetAlpha() const { return _alpha; }
 
-	const ID3D11ShaderResourceView* GetDiffuseSRV() const { return _diffuseSRV; }
-	const ID3D11ShaderResourceView* GetNormalSRV() const { return _normalSRV; }
-	const ID3D11ShaderResourceView* GetSpecularSRV() const { return _specularSRV; }
+	ID3D11ShaderResourceView* GetDiffuseSRV() const { return _diffuseSRV; }
+	ID3D11ShaderResourceView* GetNormalSRV() const { return _normalSRV; }
+	ID3D11ShaderResourceView* GetSpecularSRV() const { return _specularSRV; }
 
 	HRESULT CreateFromSDKMeshMaterial(SDKMESH_MATERIAL* sdkmat);
 	void Destroy();

@@ -1,9 +1,8 @@
 #include "Mesh.h"
 
 Mesh::Mesh()
-	: _vertexBufferCount(0), _vertexBuffers(NULL), _indexBuffer(NULL), _meshParts(NULL), 
-	  _numMeshParts(0)
-	  //,_inputElements(NULL), _inputElementCount(0)
+	: _vertexBufferCount(0), _vertexBuffers(NULL), _vertexCounts(NULL), _vertexStrides(NULL), _offsets(NULL), 
+	  _indexBuffer(NULL), _meshParts(NULL), _meshPartCount(0), _inputElements(NULL), _inputElementCount(0)
 {
 }
 
@@ -14,27 +13,49 @@ Mesh::~Mesh()
 HRESULT Mesh::CreateFromSDKMeshMesh(CDXUTSDKMesh* model, UINT meshIdx)
 {
 	SDKMESH_MESH* mesh = model->GetMesh(meshIdx);
-	
+
 	// Set the index buffer
 	_indexBuffer = model->GetIB11At(mesh->IndexBuffer);
 	_indexBuffer->AddRef();
 	
-	// Set the vertex buffers
-	_vertexBufferCount = mesh->NumVertexBuffers;
-	_vertexBuffers = new ID3D11Buffer*[_vertexBufferCount];
-	_vertexStrides = new UINT[_vertexBufferCount];
-	for (UINT i = 0; i < _vertexBufferCount; i++)
-	{
-		_vertexBuffers[i] = model->GetVB11At(mesh->VertexBuffers[i]);
-		_vertexBuffers[i]->AddRef();
-
-		_vertexStrides[i] = model->GetVertexStride(meshIdx, i);
-	}
+	_indexBufferFormat = (model->GetIndexType(meshIdx) == IT_32BIT) ? 
+		DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
 	
+	// Set the vertex buffers
+	_vertexBufferCount = mesh->NumVertexBuffers;	
+	_vertexBuffers = new ID3D11Buffer*[_vertexBufferCount];
+	_vertexCounts = new UINT64[_vertexBufferCount];
+	_vertexStrides = new UINT[_vertexBufferCount];
+	_offsets = new UINT[_vertexBufferCount];
+	for (UINT i = 0; i < _vertexBufferCount; i++)
+	{		
+		// Simply copy the vertex buffers from the original model
+		_vertexBuffers[i] = model->GetVB11(meshIdx, i);
+		_vertexBuffers[i]->AddRef();
+		
+		_vertexCounts[i] = model->GetNumVertices(meshIdx, i);
+		_vertexStrides[i] = model->GetVertexStride(meshIdx, i);
+		_offsets[i] = 0;
+
+		// Create the input layout
+		const D3D11_INPUT_ELEMENT_DESC layout_mesh[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "TANGENT",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		};
+
+		_inputElementCount = 5;
+		_inputElements = new D3D11_INPUT_ELEMENT_DESC[_inputElementCount];
+		memcpy(_inputElements, layout_mesh, sizeof(D3D11_INPUT_ELEMENT_DESC) * _inputElementCount);		
+	}
+
 	// Copy over the subset information
-	_numMeshParts = mesh->NumSubsets;
-	_meshParts = new MeshPart[_numMeshParts];
-	for (UINT i = 0; i < _numMeshParts; i++)
+	_meshPartCount = mesh->NumSubsets;
+	_meshParts = new MeshPart[_meshPartCount];
+	for (UINT i = 0; i < _meshPartCount; i++)
 	{
 		SDKMESH_SUBSET* subset = model->GetSubset(meshIdx, i);
 		
@@ -54,7 +75,7 @@ HRESULT Mesh::CreateFromSDKMeshMesh(CDXUTSDKMesh* model, UINT meshIdx)
 
 	_boundingBox.SetMin(XMVectorSet(meshMid.x - meshExtent.x, meshMid.y - meshExtent.y, meshMid.z - meshExtent.z, 1.0f));
 	_boundingBox.SetMin(XMVectorSet(meshMid.x + meshExtent.x, meshMid.y + meshExtent.y, meshMid.z + meshExtent.z, 1.0f));
-
+	
 	return S_OK;
 }
 
@@ -65,11 +86,16 @@ void Mesh::Destroy()
 		SAFE_RELEASE(_vertexBuffers[i]);
 	}
 	SAFE_DELETE_ARRAY(_vertexBuffers);
+	SAFE_DELETE_ARRAY(_vertexCounts);
 	SAFE_DELETE_ARRAY(_vertexStrides);
+	SAFE_DELETE_ARRAY(_offsets);
 	_vertexBufferCount = 0;
 
 	SAFE_RELEASE(_indexBuffer);
 
 	SAFE_DELETE_ARRAY(_meshParts);
-	//SAFE_DELETE_ARRAY(_inputElements);
+	_meshPartCount = 0;
+
+	SAFE_DELETE_ARRAY(_inputElements);
+	_inputElementCount = 0;
 }
