@@ -166,7 +166,7 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 
 			pd3dImmediateContext->VSSetConstantBuffers(0, 1, &_depthPropertiesBuffer);
 
-			instance->GetMesh()->Render(pd3dImmediateContext);
+			instance->GetModel()->Render(pd3dImmediateContext);
 		}
 		
 		// Apply the scale/offset/bias matrix, which transforms from [-1,1]

@@ -37,5 +37,6 @@ float4 PS_Combine(PS_In_Combine input) : SV_TARGET0
 	//return float4(fAmbient, fAmbient, fAmbient, 1.0f);
 	//return float4(vDiffuse, 1.0f);
 	//return float4(lightSample.rgb, 1.0f);
+	//return float4((rt1Sample.rgb * 0.5f) + 0.5f, 1.0f);
 	return float4(vFinalColour, 1.0f);
 }

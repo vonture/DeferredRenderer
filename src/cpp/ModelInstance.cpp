@@ -14,13 +14,14 @@ ModelInstance::~ModelInstance()
 
 void ModelInstance::clean()
 {
-	XMMATRIX translate = XMMatrixTranslation(XMVectorGetX(_position), XMVectorGetY(_position), XMVectorGetZ(_position));
+	XMMATRIX translate = XMMatrixTranslationFromVector(_position);
 	XMMATRIX rotate = XMMatrixRotationRollPitchYawFromVector(_orientation);
 	XMMATRIX scale = XMMatrixScalingFromVector(_scale);
 
-	_world = XMMatrixMultiply(rotate, XMMatrixMultiply(scale, translate));
+	_world = XMMatrixMultiply(scale, XMMatrixMultiply(rotate, translate));
 	
-	BoundingBox::Transform(&_worldBB, _modelBB, _world);
+	//BoundingBox::Transform(&_worldBB, _modelBB, _world);
+	//BoundingSphere::Tra
 
 	_dirty = false;
 }
@@ -28,30 +29,14 @@ void ModelInstance::clean()
 HRESULT ModelInstance::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
-	V_RETURN(_mesh.Create(pd3dDevice, _path));
-
-	// Build the model space bb
-	XMVECTOR max = XMVectorSet(-FLT_MAX, -FLT_MAX, -FLT_MAX, 1.0f);
-	XMVECTOR min = XMVectorSet(FLT_MAX, FLT_MAX, FLT_MAX, 1.0f);
-
-	// Combine all of the mesh's min and maxes
-	for (UINT i = 0; i < _mesh.GetNumMeshes(); i++)
-	{
-		D3DXVECTOR3 meshMin = _mesh.GetMeshBBoxCenter(i) - _mesh.GetMeshBBoxExtents(i);
-		D3DXVECTOR3 meshMax = _mesh.GetMeshBBoxCenter(i) + _mesh.GetMeshBBoxExtents(i);
-
-		min = XMVectorMin(min, XMVectorSet(meshMin.x, meshMin.y, meshMin.z, 1.0f));
-		max = XMVectorMax(max, XMVectorSet(meshMax.x, meshMax.y, meshMax.z, 1.0f));
-	}
-
-	_modelBB = BoundingBox(min, max);
-
+	V_RETURN(_model.CreateFromSDKMeshFile(pd3dDevice, _path));
+	
 	return S_OK;
 }
 
 void ModelInstance::OnD3D11DestroyDevice()
 {
-	_mesh.Destroy();
+	_model.Destroy();
 }
 
 HRESULT ModelInstance::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,

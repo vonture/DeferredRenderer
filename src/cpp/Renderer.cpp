@@ -75,11 +75,11 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 	BoundingBox sceneBounds;
 	if (_models.size() > 0)
 	{
-		BoundingBox sceneBounds= _models[0]->GetBounds();
-		for (UINT i = 0; i < _models.size(); i++)
-		{
-			BoundingBox::Combine(&sceneBounds, sceneBounds, _models[i]->GetBounds());
-		}
+		//BoundingBox sceneBounds= _models[0]->GetBounds();
+		//for (UINT i = 0; i < _models.size(); i++)
+		//{
+		//	BoundingBox::Combine(&sceneBounds, sceneBounds, _models[i]->GetBounds());
+		//}
 	}
 
 	// render the shadow maps

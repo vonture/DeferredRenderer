@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Defines.h"
-#include "SDKmesh.h"
+#include "Model.h"
 #include "IHasContent.h"
 #include "BoundingObjects.h"
 #include <map>
@@ -10,11 +10,8 @@ class ModelInstance : public IHasContent
 {
 private:
 	const WCHAR* _path;
-	CDXUTSDKMesh _mesh;
+	Model _model;
 	
-	BoundingBox _modelBB;
-	BoundingBox _worldBB;
-
 	XMMATRIX _world;
 	XMVECTOR _position;
 	XMVECTOR _scale;
@@ -28,9 +25,7 @@ public:
 	~ModelInstance();
 
 	const XMVECTOR& GetPosition() const { return _position; }
-
 	const XMVECTOR& GetScale() const { return _scale; }
-
 	const XMVECTOR& GetOrientation() const { return _orientation; }
 
 	void SetPosition(const XMVECTOR& pos)
@@ -63,20 +58,10 @@ public:
 
 		return _world;
 	}
-
-	const BoundingBox& GetBounds()
+	
+	Model* GetModel()
 	{
-		if (_dirty)
-		{
-			clean();
-		}
-
-		return _worldBB;
-	}
-
-	CDXUTSDKMesh* GetMesh()
-	{
-		return &_mesh;
+		return &_model;
 	}
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	

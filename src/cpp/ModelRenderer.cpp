@@ -34,13 +34,8 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 	for (UINT i = 0; i < instances->size(); i++)
 	{
 		ModelInstance* instance = instances->at(i);
-
-		// Skip this model if it's bounding box is not in the frustum
-		if (!Intersection::Contains(cameraFrust, instance->GetBounds()))
-		{
-			continue;
-		}
-
+		Model* model = instance->GetModel();
+		
 		XMMATRIX world = instance->GetWorld();
 		XMMATRIX wvp = XMMatrixMultiply(world, viewProj);
 
@@ -52,8 +47,22 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 
 		pd3dDeviceContext->VSSetConstantBuffers(0, 1, &_constantBuffer);
 
-		CDXUTSDKMesh* mesh = instance->GetMesh();
-		mesh->Render(pd3dDeviceContext, 0, 1, 2);
+		for (UINT j = 0; j < model->GetMeshCount(); j++)
+		{
+			Mesh mesh = model->GetMesh(j);
+			BoundingSphere meshBounds = mesh.GetBoundingSphere();
+			
+			// transform the bounding box to it's world position
+			BoundingSphere::Transform(&meshBounds, meshBounds, world);
+
+			// Make sure it's in the camera frustum
+			if (!Intersection::Contains(cameraFrust, meshBounds))
+			{
+				continue;
+			}
+
+			model->RenderPart(pd3dDeviceContext, j, 0, 1, 2);
+		}
 	}
 
 	return S_OK;
@@ -73,9 +82,11 @@ HRESULT ModelRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_
 	
 	const D3D11_INPUT_ELEMENT_DESC layout_mesh[] =
     {
-        { "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "NORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "TEXCOORD",  0, DXGI_FORMAT_R32G32_FLOAT,    0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TANGENT",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
 
 	V_RETURN( pd3dDevice->CreateInputLayout(layout_mesh, ARRAYSIZE(layout_mesh), pBlob->GetBufferPointer(),
