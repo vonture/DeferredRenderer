@@ -42,6 +42,16 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;	
 
+	// Create a bounding sphere for the light
+	BoundingSphere lightBounds = BoundingSphere(*light->GetPosition(), light->GetRadius());
+
+	// Make sure this light is in the view fustrum
+	BoundingFrustum cameraBounds = BoundingFrustum(camera->GetViewProjection());
+	if (!Intersection::Contains(cameraBounds, lightBounds))
+	{
+		return S_OK;
+	}
+
 	// Set up the render targets for the shadow map and clear them
 	pd3dImmediateContext->OMSetRenderTargets(0, NULL, _shadowMapDSVs[shadowMapIdx]);
 	pd3dImmediateContext->ClearDepthStencilView(_shadowMapDSVs[shadowMapIdx], D3D11_CLEAR_DEPTH, 1.0f, 0);
@@ -73,16 +83,17 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 	vp.Height = SHADOW_MAP_SIZE * 0.5f;
 	vp.TopLeftX = 0.0f;
     vp.TopLeftY = 0.0f;
-
+	
 	// Render the front depths
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 		
 	// Render the front depths
 	for (UINT i = 0; i < models->size(); i++)
 	{
-		ModelInstance* model = models->at(i);
+		ModelInstance* instance = models->at(i);
+		Model* model = instance->GetModel();
 
-		XMMATRIX wv = XMMatrixMultiply(model->GetWorld(), view);
+		XMMATRIX wv = XMMatrixMultiply(instance->GetWorld(), view);
 
 		V(pd3dImmediateContext->Map(_depthPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 		CB_POINTLIGHT_DEPTH_PROPERTIES* depthProperties = (CB_POINTLIGHT_DEPTH_PROPERTIES*)mappedResource.pData;
@@ -95,8 +106,23 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 
 		pd3dImmediateContext->VSSetConstantBuffers(0, 1, &_depthPropertiesBuffer);
 
-		CDXUTSDKMesh* mesh = model->GetMesh();
-		mesh->Render(pd3dImmediateContext);
+		for (UINT j = 0; j < model->GetMeshCount(); j++)
+		{
+			Mesh mesh = model->GetMesh(j);
+			BoundingSphere meshBounds = mesh.GetBoundingSphere();
+
+			// transform the bounding box to it's world position
+			BoundingSphere::Transform(&meshBounds, meshBounds, instance->GetWorld());
+
+			// Make sure it's in the light radius and on the front side
+			if (!Intersection::Intersects(lightBounds, meshBounds) ||
+				XMVectorGetX(meshBounds.GetPosition()) + meshBounds.GetRadius() < XMVectorGetX(*light->GetPosition()))
+			{
+				continue;
+			}
+
+			model->RenderPart(pd3dImmediateContext, j, 0, 1, 2);
+		}
 	}
 
 	// render the back depths
@@ -106,9 +132,10 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 
 	for (UINT i = 0; i < models->size(); i++)
 	{
-		ModelInstance* model = models->at(i);
+		ModelInstance* instance = models->at(i);
+		Model* model = instance->GetModel();
 
-		XMMATRIX wv = XMMatrixMultiply(model->GetWorld(), view);
+		XMMATRIX wv = XMMatrixMultiply(instance->GetWorld(), view);
 
 		V(pd3dImmediateContext->Map(_depthPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 		CB_POINTLIGHT_DEPTH_PROPERTIES* depthProperties = (CB_POINTLIGHT_DEPTH_PROPERTIES*)mappedResource.pData;
@@ -121,8 +148,23 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 
 		pd3dImmediateContext->VSSetConstantBuffers(0, 1, &_depthPropertiesBuffer);
 
-		CDXUTSDKMesh* mesh = model->GetMesh();
-		mesh->Render(pd3dImmediateContext);
+		for (UINT j = 0; j < model->GetMeshCount(); j++)
+		{
+			Mesh mesh = model->GetMesh(j);
+			BoundingSphere meshBounds = mesh.GetBoundingSphere();
+
+			// transform the bounding box to it's world position
+			BoundingSphere::Transform(&meshBounds, meshBounds, instance->GetWorld());
+
+			// Make sure it's in the light radius
+			if (!Intersection::Intersects(lightBounds, meshBounds) ||
+				XMVectorGetX(meshBounds.GetPosition()) - meshBounds.GetRadius() > XMVectorGetX(*light->GetPosition()))
+			{
+				continue;
+			}
+
+			model->RenderPart(pd3dImmediateContext, j, 0, 1, 2);
+		}
 	}
 
     _shadowMatricies[shadowMapIdx] = view;
@@ -240,8 +282,8 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 				
 		pd3dImmediateContext->PSSetConstantBuffers(2, 1, &_lightPropertiesBuffer);
 		
-		CDXUTSDKMesh* mesh = _lightModel.GetMesh();
-		mesh->Render(pd3dImmediateContext);
+		Model* model = _lightModel.GetModel();
+		model->Render(pd3dImmediateContext);
 	}
 
 	// Render the shadowed lights
@@ -321,8 +363,8 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 		// Set the shadow map
 		pd3dImmediateContext->PSSetShaderResources(5, 1, &_shadowMapSRVs[i]);
 
-		CDXUTSDKMesh* mesh = _lightModel.GetMesh();
-		mesh->Render(pd3dImmediateContext);
+		Model* model = _lightModel.GetModel();
+		model->Render(pd3dImmediateContext);
 	}
 
 	// Unset the shadow map SRV
