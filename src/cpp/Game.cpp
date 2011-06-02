@@ -1,7 +1,7 @@
 #include "Game.h"
 
 Game::Game()
-	: _renderer(), _camera(0.1f, 30.0f, 1.0f, 1.0f), _mouseLocked(false), 
+	: _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f), _mouseLocked(false), 
 	  _scene(L"\\models\\tankscene\\tankscene.sdkmesh")
 {
 	_scene.SetScale(XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
