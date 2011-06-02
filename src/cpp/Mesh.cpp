@@ -81,6 +81,8 @@ HRESULT Mesh::CreateFromSDKMeshMesh(CDXUTSDKMesh* model, UINT meshIdx)
 
 void Mesh::Destroy()
 {
+	SAFE_RELEASE(_indexBuffer);
+
 	for (UINT i = 0; i < _vertexBufferCount; i++)
 	{
 		SAFE_RELEASE(_vertexBuffers[i]);
@@ -90,8 +92,6 @@ void Mesh::Destroy()
 	SAFE_DELETE_ARRAY(_vertexStrides);
 	SAFE_DELETE_ARRAY(_offsets);
 	_vertexBufferCount = 0;
-
-	SAFE_RELEASE(_indexBuffer);
 
 	SAFE_DELETE_ARRAY(_meshParts);
 	_meshPartCount = 0;
