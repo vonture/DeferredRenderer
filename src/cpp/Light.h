@@ -13,9 +13,9 @@ public:
 	{
 	}
 
-	const XMVECTOR* GetColor()
+	const XMVECTOR& GetColor()
 	{
-		return &_color;
+		return _color;
 	}
 	
 	void SetColor(const XMVECTOR& color)
@@ -46,9 +46,9 @@ public:
 		_direction = XMVector3Normalize(direction);
 	}
 
-	const XMVECTOR* GetDirection()
+	const XMVECTOR& GetDirection()
 	{
-		return &_direction;
+		return _direction;
 	}
 
 	void SetDirection(const XMVECTOR& direction)
@@ -70,9 +70,9 @@ public:
 		_radius = max(_radius, 0.0f);
 	}
 
-	const XMVECTOR* GetPosition()
+	const XMVECTOR& GetPosition()
 	{
-		return &_position;
+		return _position;
 	}
 
 	void SetPosition(const XMVECTOR& position)
