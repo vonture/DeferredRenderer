@@ -43,7 +43,7 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 	D3D11_MAPPED_SUBRESOURCE mappedResource;	
 
 	// Create a bounding sphere for the light
-	BoundingSphere lightBounds = BoundingSphere(*light->GetPosition(), light->GetRadius());
+	BoundingSphere lightBounds = BoundingSphere(light->GetPosition(), light->GetRadius());
 
 	// Make sure this light is in the view fustrum
 	BoundingFrustum cameraBounds = BoundingFrustum(camera->GetViewProjection());
@@ -69,7 +69,7 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 	pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetBackFaceCull());
 
 	// Create view matrix
-	XMVECTOR lightPos = *light->GetPosition();
+	XMVECTOR lightPos = light->GetPosition();
 	XMVECTOR lightForward = XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f);
 	XMVECTOR lightUp = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
 
@@ -116,7 +116,7 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 
 			// Make sure it's in the light radius and on the front side
 			if (!Intersection::Intersects(lightBounds, meshBounds) ||
-				XMVectorGetX(meshBounds.GetPosition()) + meshBounds.GetRadius() < XMVectorGetX(*light->GetPosition()))
+				XMVectorGetX(meshBounds.GetPosition()) + meshBounds.GetRadius() < XMVectorGetX(light->GetPosition()))
 			{
 				continue;
 			}
@@ -158,7 +158,7 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 
 			// Make sure it's in the light radius
 			if (!Intersection::Intersects(lightBounds, meshBounds) ||
-				XMVectorGetX(meshBounds.GetPosition()) - meshBounds.GetRadius() > XMVectorGetX(*light->GetPosition()))
+				XMVectorGetX(meshBounds.GetPosition()) - meshBounds.GetRadius() > XMVectorGetX(light->GetPosition()))
 			{
 				continue;
 			}
@@ -229,7 +229,7 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 	for (int i = 0; i < numUnshadowed; i++)
 	{
 		PointLight* light = GetLight(i, false);
-		XMVECTOR lightPosition = *light->GetPosition();
+		XMVECTOR lightPosition = light->GetPosition();
 		float lightRadius = light->GetRadius();
 
 		// Verify that the light is visible
@@ -273,7 +273,7 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 		CB_POINTLIGHT_LIGHT_PROPERTIES* lightProperties = 
 			(CB_POINTLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
 
-		XMStoreFloat3(&lightProperties->LightColor, *light->GetColor());
+		XMStoreFloat3(&lightProperties->LightColor, light->GetColor());
 		XMStoreFloat3(&lightProperties->LightPosition, lightPosition);
 		lightProperties->LightIntensity = light->GetItensity();
 		lightProperties->LightRadius = light->GetRadius();
@@ -293,7 +293,7 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 	for (int i = 0; i < numShadowed; i++)
 	{
 		PointLight* light = GetLight(i, true);
-		XMVECTOR lightPosition = *light->GetPosition();
+		XMVECTOR lightPosition = light->GetPosition();
 		float lightRadius = light->GetRadius();
 
 		// Verify that the light is visible
@@ -337,7 +337,7 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 		CB_POINTLIGHT_LIGHT_PROPERTIES* lightProperties = 
 			(CB_POINTLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
 
-		XMStoreFloat3(&lightProperties->LightColor, *light->GetColor());
+		XMStoreFloat3(&lightProperties->LightColor, light->GetColor());
 		XMStoreFloat3(&lightProperties->LightPosition, lightPosition);
 		lightProperties->LightIntensity = light->GetItensity();
 		lightProperties->LightRadius = light->GetRadius();

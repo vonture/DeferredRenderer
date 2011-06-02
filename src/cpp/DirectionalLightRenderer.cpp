@@ -115,7 +115,7 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 		
 		// Get position of the shadow camera
         XMVECTOR shadowCameraPosVec = bbMid;
-        XMVECTOR backupDirVec = *dlight->GetDirection();
+        XMVECTOR backupDirVec = dlight->GetDirection();
         backupDirVec = XMVectorScale(backupDirVec, backupDist);
         shadowCameraPosVec = XMVectorRound(XMVectorAdd(shadowCameraPosVec, backupDirVec));
 
@@ -177,7 +177,7 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
         texScaleBias.r[2] = XMVectorSet(0.0f,  0.0f, 1.0f, 0.0f);
         texScaleBias.r[3] = XMVectorSet(0.5f,  0.5f, -BIAS, 1.0f);
         shadowMatrix = XMMatrixMultiply(shadowMatrix, texScaleBias);
-
+		
 		// Apply the cascade offset/scale matrix, which applies the offset and scale needed to
         // convert the UV coordinate into the proper coordinate for the cascade being sampled in
         // the atlas.
@@ -242,8 +242,8 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 		CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES* lightProperties = 
 			(CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
 
-		XMStoreFloat4(&lightProperties->LightColor, *light->GetColor());
-		XMStoreFloat3(&lightProperties->LightDirection, *light->GetDirection());
+		XMStoreFloat4(&lightProperties->LightColor, light->GetColor());
+		XMStoreFloat3(&lightProperties->LightDirection, light->GetDirection());
 		lightProperties->LightIntensity = light->GetItensity();
 
 		pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
@@ -264,8 +264,8 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 		CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES* lightProperties = 
 			(CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
 
-		XMStoreFloat4(&lightProperties->LightColor, *light->GetColor());
-		XMStoreFloat3(&lightProperties->LightDirection, *light->GetDirection());
+		XMStoreFloat4(&lightProperties->LightColor, light->GetColor());
+		XMStoreFloat3(&lightProperties->LightDirection, light->GetDirection());
 		lightProperties->LightIntensity = light->GetItensity();
 
 		pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
