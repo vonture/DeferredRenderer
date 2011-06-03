@@ -32,7 +32,28 @@ HRESULT Model::CreateFromSDKMeshFile(ID3D11Device* device, LPCWSTR fileName)
 		V_RETURN(_meshes[i].CreateFromSDKMeshMesh(&sdkMesh, i));
 	}
 
+	// Done with the sdk mesh, free all it's resources
 	sdkMesh.Destroy();
+
+	// Compute the overall bounding box
+	if (_meshCount > 0)
+	{
+		AxisAlignedBox firstBox = _meshes[0].GetBoundingBox();
+		XMVECTOR mainBBmin = XMVectorSubtract(XMLoadFloat3(&firstBox.Center), XMLoadFloat3(&firstBox.Extents));
+		XMVECTOR mainBBmax = XMVectorAdd(XMLoadFloat3(&firstBox.Center), XMLoadFloat3(&firstBox.Extents));
+
+		for (UINT i = 1; i < _meshCount; i++)
+		{
+			AxisAlignedBox aaBox = _meshes[i].GetBoundingBox();
+
+			// Merge this bb and the main bb
+			mainBBmin = XMVectorMin(mainBBmin,  XMVectorSubtract(XMLoadFloat3(&aaBox.Center), XMLoadFloat3(&aaBox.Extents)));
+			mainBBmax = XMVectorMax(mainBBmin,  XMVectorAdd(XMLoadFloat3(&aaBox.Center), XMLoadFloat3(&aaBox.Extents)));
+		}
+
+		XMStoreFloat3(&_boundingBox.Center, (mainBBmax + mainBBmin) * 0.5f);
+		XMStoreFloat3(&_boundingBox.Extents, (mainBBmax - mainBBmin) * 0.5f);
+	}
 
 	return S_OK;
 }
@@ -61,13 +82,13 @@ HRESULT Model::Render(ID3D11DeviceContext* context, UINT diffuseSlot, UINT norma
 
 	for (UINT i = 0; i < _meshCount; i++)
 	{
-		V_RETURN(RenderPart(context, i, diffuseSlot, normalSlot, specularSlot));
+		V_RETURN(RenderMesh(context, i, diffuseSlot, normalSlot, specularSlot));
 	}
 
 	return S_OK;
 }
 
-HRESULT Model::RenderPart(ID3D11DeviceContext* context, UINT partIdx, UINT diffuseSlot, 
+HRESULT Model::RenderMesh(ID3D11DeviceContext* context, UINT partIdx, UINT diffuseSlot, 
 	UINT normalSlot, UINT specularSlot)
 {
 	context->IASetVertexBuffers(0, _meshes[partIdx].GetVertexBufferCount(), 

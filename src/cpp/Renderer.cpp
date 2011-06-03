@@ -54,6 +54,8 @@ HRESULT Renderer::Begin()
 	_postProcesses.clear();
 	_postProcesses.push_back(&_combinePP);
 
+	_boRenderer.Clear();
+
 	return S_OK;
 }
 
@@ -143,6 +145,52 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 	}
 	DXUT_EndPerfEvent();
 
+	// Render the bounding shapes
+	if (_drawBoundingObjects)
+	{
+		DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 1.0f, 1.0f), L"Render Bounding Objects");
+		
+		for (UINT i = 0; i < _models.size(); i++)
+		{
+			UINT meshCount = _models[i]->GetModelMeshCount();
+			for (UINT j = 0; j < meshCount; j++)
+			{
+				OrientedBox obb = _models[i]->GetMeshBoundingBox(j);
+				_boRenderer.Add(obb);
+			}
+		}
+		for (UINT i = 0; i < _pointLightRenderer.GetCount(false); i++)
+		{
+			PointLight* light = _pointLightRenderer.GetLight(i, false);
+
+			Sphere lightSphere;
+			XMStoreFloat3(&lightSphere.Center, light->GetPosition());
+			lightSphere.Radius = light->GetRadius();
+		
+			_boRenderer.Add(lightSphere);
+		}
+		for (UINT i = 0; i < _pointLightRenderer.GetCount(true); i++)
+		{
+			PointLight* light = _pointLightRenderer.GetLight(i, true);
+
+			Sphere lightSphere;
+			XMStoreFloat3(&lightSphere.Center, light->GetPosition());
+			lightSphere.Radius = light->GetRadius();
+		
+			_boRenderer.Add(lightSphere);
+		}
+	
+		XMMATRIX cameraViewProj = camera->GetViewProjection();
+
+		Frustum cameraFrust;
+		ComputeFrustumFromProjection(&cameraFrust, &cameraViewProj);
+
+		_boRenderer.Add(cameraFrust);
+
+		_boRenderer.Render(pd3dImmediateContext, camera);
+		DXUT_EndPerfEvent();
+	}
+
 	SAFE_RELEASE(pOrigRTV);
     SAFE_RELEASE(pOrigDSV);
 		
@@ -204,6 +252,7 @@ HRESULT Renderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFA
 	V_RETURN(_combinePP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_directionalLightRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_pointLightRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_boRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
@@ -223,6 +272,7 @@ void Renderer::OnD3D11DestroyDevice()
 	_combinePP.OnD3D11DestroyDevice();
 	_directionalLightRenderer.OnD3D11DestroyDevice();
 	_pointLightRenderer.OnD3D11DestroyDevice();
+	_boRenderer.OnD3D11DestroyDevice();
 }
 
 HRESULT Renderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
@@ -236,6 +286,7 @@ HRESULT Renderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapCh
 	V_RETURN(_combinePP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_directionalLightRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_pointLightRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_boRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
@@ -248,4 +299,5 @@ void Renderer::OnD3D11ReleasingSwapChain()
 	_combinePP.OnD3D11ReleasingSwapChain();
 	_directionalLightRenderer.OnD3D11ReleasingSwapChain();
 	_pointLightRenderer.OnD3D11ReleasingSwapChain();
+	_boRenderer.OnD3D11ReleasingSwapChain();
 }

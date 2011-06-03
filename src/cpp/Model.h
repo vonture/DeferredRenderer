@@ -15,8 +15,7 @@ private:
 	Material* _materials;
 	UINT _materialCount;
 
-	BoundingBox _boundingBox;
-	BoundingSphere _boundingSphere;
+	AxisAlignedBox _boundingBox;
 
 public:
 	Model();
@@ -28,17 +27,14 @@ public:
 	const Material& GetMaterial(UINT idx) const { return _materials[idx]; }
 	UINT GetMaterialCount() const { return _materialCount; }
 
-	const BoundingBox& GetBoundingBox(UINT idx) const { return _meshes[idx].GetBoundingBox(); }
-	const BoundingSphere& GetBoundingSphere(UINT idx) const { return _meshes[idx].GetBoundingSphere(); }
-
-	const BoundingBox& GetBoundingBox() const { return _boundingBox; }
-	const BoundingSphere& GetBoundingSphere() const { return _boundingSphere; }
+	const AxisAlignedBox& GetMeshBoundingBox(UINT idx) const { return _meshes[idx].GetBoundingBox(); }
+	const AxisAlignedBox& GetBoundingBox() const { return _boundingBox; }
 
 	HRESULT CreateFromSDKMeshFile(ID3D11Device* device, LPCWSTR fileName);
 	void Destroy();
 	
 	HRESULT Render(ID3D11DeviceContext* context, UINT diffuseSlot = INVALID_SAMPLER_SLOT,
 		UINT normalSlot = INVALID_SAMPLER_SLOT, UINT specularSlot = INVALID_SAMPLER_SLOT);
-	HRESULT RenderPart(ID3D11DeviceContext* context, UINT partIdx, UINT diffuseSlot = INVALID_SAMPLER_SLOT,
+	HRESULT RenderMesh(ID3D11DeviceContext* context, UINT meshIdx, UINT diffuseSlot = INVALID_SAMPLER_SLOT,
 		UINT normalSlot = INVALID_SAMPLER_SLOT, UINT specularSlot = INVALID_SAMPLER_SLOT);
 };

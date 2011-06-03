@@ -2,7 +2,6 @@
 
 #include "Defines.h"
 #include "SDKmesh.h"
-#include "BoundingObjects.h"
 
 struct MeshPart
 {
@@ -31,8 +30,7 @@ private:
 	D3D11_INPUT_ELEMENT_DESC* _inputElements;
 	UINT _inputElementCount;
 
-	BoundingSphere _boundingSphere;
-	BoundingBox _boundingBox;
+	AxisAlignedBox _boundingBox;
 
 public:
 	Mesh();
@@ -58,8 +56,7 @@ public:
 	const D3D11_INPUT_ELEMENT_DESC* GetInputLayout() const { return _inputElements; }
 	UINT GetInputElementCount() const { return _inputElementCount; }
 
-	const BoundingBox& GetBoundingBox() const { return _boundingBox; }
-	const BoundingSphere& GetBoundingSphere() const { return _boundingSphere; }
+	const AxisAlignedBox& GetBoundingBox() const { return _boundingBox; }
 	
 	HRESULT CreateFromSDKMeshMesh(CDXUTSDKMesh* model, UINT meshIdx);
 	void Destroy();

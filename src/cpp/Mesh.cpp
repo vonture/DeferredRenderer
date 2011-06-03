@@ -66,15 +66,12 @@ HRESULT Mesh::CreateFromSDKMeshMesh(CDXUTSDKMesh* model, UINT meshIdx)
 		_meshParts[i].MaterialIndex = subset->MaterialID;
 	}	
 
-	// Copy over the bounding box/sphere information
+	// Copy over the bounding box information
 	D3DXVECTOR3 meshMid = mesh->BoundingBoxCenter;
 	D3DXVECTOR3 meshExtent = mesh->BoundingBoxExtents;
 
-	_boundingSphere.SetPosition(XMVectorSet(meshMid.x, meshMid.y, meshMid.z, 1.0f));
-	_boundingSphere.SetRadius(D3DXVec3Length(&meshExtent));
-
-	_boundingBox.SetMin(XMVectorSet(meshMid.x - meshExtent.x, meshMid.y - meshExtent.y, meshMid.z - meshExtent.z, 1.0f));
-	_boundingBox.SetMin(XMVectorSet(meshMid.x + meshExtent.x, meshMid.y + meshExtent.y, meshMid.z + meshExtent.z, 1.0f));
+	_boundingBox.Center = XMFLOAT3(meshMid.x, meshMid.y, meshMid.z);
+	_boundingBox.Extents = XMFLOAT3(meshExtent.x, meshExtent.y, meshExtent.z);
 	
 	return S_OK;
 }

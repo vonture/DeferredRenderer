@@ -4,6 +4,7 @@
 #include "LightRenderer.h"
 #include "ModelRenderer.h"
 #include "ModelInstance.h"
+#include "xnaCollision.h"
 
 struct CB_POINTLIGHT_DEPTH_PROPERTIES
 {

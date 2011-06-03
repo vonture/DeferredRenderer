@@ -43,11 +43,16 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 	D3D11_MAPPED_SUBRESOURCE mappedResource;	
 
 	// Create a bounding sphere for the light
-	BoundingSphere lightBounds = BoundingSphere(light->GetPosition(), light->GetRadius());
+	Sphere lightSphere;
+	XMStoreFloat3(&lightSphere.Center, light->GetPosition());
+	lightSphere.Radius = light->GetRadius();
 
 	// Make sure this light is in the view fustrum
-	BoundingFrustum cameraBounds = BoundingFrustum(camera->GetViewProjection());
-	if (!Intersection::Contains(cameraBounds, lightBounds))
+	XMMATRIX viewProj = camera->GetViewProjection();
+
+	Frustum cameraFrust;
+	ComputeFrustumFromProjection(&cameraFrust, &viewProj);
+	if (!IntersectSphereFrustum(&lightSphere, &cameraFrust))
 	{
 		return S_OK;
 	}
@@ -93,6 +98,8 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 		ModelInstance* instance = models->at(i);
 		Model* model = instance->GetModel();
 
+		// First a large check to see if any of the model is in the light's radius
+
 		XMMATRIX wv = XMMatrixMultiply(instance->GetWorld(), view);
 
 		V(pd3dImmediateContext->Map(_depthPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
@@ -108,20 +115,15 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 
 		for (UINT j = 0; j < model->GetMeshCount(); j++)
 		{
-			Mesh mesh = model->GetMesh(j);
-			BoundingSphere meshBounds = mesh.GetBoundingSphere();
-
-			// transform the bounding box to it's world position
-			BoundingSphere::Transform(&meshBounds, meshBounds, instance->GetWorld());
-
-			// Make sure it's in the light radius and on the front side
-			if (!Intersection::Intersects(lightBounds, meshBounds) ||
-				XMVectorGetX(meshBounds.GetPosition()) + meshBounds.GetRadius() < XMVectorGetX(light->GetPosition()))
+			OrientedBox meshBounds = instance->GetMeshBoundingBox(j);
+			
+			// Make sure it's in the light radius
+			if (!IntersectSphereOrientedBox(&lightSphere, &meshBounds))
 			{
 				continue;
 			}
 
-			model->RenderPart(pd3dImmediateContext, j, 0, 1, 2);
+			model->RenderMesh(pd3dImmediateContext, j, 0, 1, 2);
 		}
 	}
 
@@ -150,20 +152,15 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 
 		for (UINT j = 0; j < model->GetMeshCount(); j++)
 		{
-			Mesh mesh = model->GetMesh(j);
-			BoundingSphere meshBounds = mesh.GetBoundingSphere();
-
-			// transform the bounding box to it's world position
-			BoundingSphere::Transform(&meshBounds, meshBounds, instance->GetWorld());
-
+			OrientedBox meshBounds = instance->GetMeshBoundingBox(j);
+			
 			// Make sure it's in the light radius
-			if (!Intersection::Intersects(lightBounds, meshBounds) ||
-				XMVectorGetX(meshBounds.GetPosition()) - meshBounds.GetRadius() > XMVectorGetX(light->GetPosition()))
+			if (!IntersectSphereOrientedBox(&lightSphere, &meshBounds))
 			{
 				continue;
 			}
 
-			model->RenderPart(pd3dImmediateContext, j, 0, 1, 2);
+			model->RenderMesh(pd3dImmediateContext, j, 0, 1, 2);
 		}
 	}
 
@@ -253,7 +250,7 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 
 		// Setup the model and map the model properties
 		_lightModel.SetPosition(lightPosition);
-		_lightModel.SetScale(XMVectorSet(lightRadius, lightRadius, lightRadius, 1.0f));
+		_lightModel.SetScale(lightRadius);
 		XMMATRIX world = _lightModel.GetWorld();
 		XMMATRIX wvp = XMMatrixMultiply(world, camera->GetViewProjection());
 
@@ -317,7 +314,7 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 
 		// Setup the model and map the model properties
 		_lightModel.SetPosition(lightPosition);
-		_lightModel.SetScale(XMVectorSet(lightRadius, lightRadius, lightRadius, 1.0f));
+		_lightModel.SetScale(lightRadius);
 		XMMATRIX world = _lightModel.GetWorld();
 		XMMATRIX wvp = XMMatrixMultiply(world, camera->GetViewProjection());
 

@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Defines.h"
-#include "Model.h"
+#include "xnaCollision.h"
 #include "IHasContent.h"
-#include "BoundingObjects.h"
+#include "Model.h"
 #include <map>
 
 class ModelInstance : public IHasContent
@@ -14,9 +14,14 @@ private:
 	
 	XMMATRIX _world;
 	XMVECTOR _position;
-	XMVECTOR _scale;
+	float _scale;
 	XMVECTOR _orientation;
 
+	OrientedBox _transformedMainBox;
+	OrientedBox* _transformedMeshBoxes;
+
+	VOID TransformOrientedBox( OrientedBox* pOut, const OrientedBox* pIn, FLOAT Scale, FXMVECTOR Rotation,
+                           FXMVECTOR Translation );
 	bool _dirty;
 	void clean();
 
@@ -25,7 +30,7 @@ public:
 	~ModelInstance();
 
 	const XMVECTOR& GetPosition() const { return _position; }
-	const XMVECTOR& GetScale() const { return _scale; }
+	float GetScale() const { return _scale; }
 	const XMVECTOR& GetOrientation() const { return _orientation; }
 
 	void SetPosition(const XMVECTOR& pos)
@@ -35,7 +40,7 @@ public:
 		_dirty = true;
 	}
 
-	void SetScale(const XMVECTOR& scale)
+	void SetScale(float scale)
 	{
 		_scale = scale;
 
@@ -59,10 +64,29 @@ public:
 		return _world;
 	}
 	
-	Model* GetModel()
+	const OrientedBox& GetMeshBoundingBox(UINT meshIdx)
 	{
-		return &_model;
+		if (_dirty)
+		{
+			clean();
+		}
+
+		return _transformedMeshBoxes[meshIdx];
 	}
+
+	const OrientedBox& GetBoundingBox() 
+	{ 
+		if (_dirty)
+		{
+			clean();
+		}
+
+		return _transformedMainBox;
+	}
+
+	UINT GetModelMeshCount() const { return _model.GetMeshCount(); }
+
+	Model* GetModel() { return &_model; }
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
 	void OnD3D11DestroyDevice();

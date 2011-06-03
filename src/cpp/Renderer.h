@@ -12,6 +12,7 @@
 #include "ModelRenderer.h"
 #include "PointLightRenderer.h"
 #include "DirectionalLightRenderer.h"
+#include "BoundingObjectRenderer.h"
 #include <vector>
 
 using namespace std;
@@ -27,6 +28,9 @@ private:
 	vector<WCHAR*> _debugText;
 	ModelRenderer _modelRenderer;
 	CombinePostProcess _combinePP;
+
+	bool _drawBoundingObjects;
+	BoundingObjectRenderer _boRenderer;
 	
 	ID3D11Texture2D* _ppTextures[2];
 	ID3D11ShaderResourceView* _ppShaderResourceViews[2];
@@ -44,6 +48,9 @@ public:
 	void AddLight(PointLight* light, bool shadowed);
 	void AddPostProcess(PostProcess* postProcess);
 	void AddDebugText(WCHAR* text);
+
+	bool GetDrawBoundingObjects() const { return _drawBoundingObjects; }
+	void SetDrawBoundingObjects(bool draw) { _drawBoundingObjects = draw; }
 
 	HRESULT Begin();
 	HRESULT End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext, Camera* camera);
