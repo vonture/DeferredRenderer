@@ -36,6 +36,9 @@
     <Filter Include="Input">
       <UniqueIdentifier>{b8843b02-6f5a-4d22-a73a-f73f3f78ae62}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Collision">
+      <UniqueIdentifier>{db123f84-d85b-4c7f-9058-9cd3f7d1b8d5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="DXUT\Optional\directx.ico">
@@ -122,6 +125,9 @@
     <None Include="DualParaboloidDepth.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="BoundingObject.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="deferred-renderer.cpp" />
@@ -173,6 +179,12 @@
     </ClCompile>
     <ClCompile Include="Mesh.cpp">
       <Filter>Models</Filter>
+    </ClCompile>
+    <ClCompile Include="xnaCollision.cpp">
+      <Filter>Collision</Filter>
+    </ClCompile>
+    <ClCompile Include="BoundingObjectRenderer.cpp">
+      <Filter>Collision</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -265,6 +277,12 @@
     </ClInclude>
     <ClInclude Include="Mesh.h">
       <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="xnaCollision.h">
+      <Filter>Collision</Filter>
+    </ClInclude>
+    <ClInclude Include="BoundingObjectRenderer.h">
+      <Filter>Collision</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

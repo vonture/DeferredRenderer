@@ -378,6 +378,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BoundingObjectRenderer.cpp" />
     <ClCompile Include="CombinePostProcess.cpp" />
     <ClCompile Include="DeviceStates.cpp" />
     <ClCompile Include="DirectionalLightRenderer.cpp" />
@@ -397,6 +398,8 @@
     <ClCompile Include="Quad.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="ShaderLoader.cpp" />
+    <ClCompile Include="xnaCollision.cpp" />
+    <ClInclude Include="BoundingObjectRenderer.h" />
     <ClInclude Include="ButtonState.h" />
     <ClInclude Include="CombinePostProcess.h" />
     <ClInclude Include="Defines.h" />
@@ -412,6 +415,8 @@
     <ClInclude Include="PointLightRenderer.h" />
     <ClInclude Include="ShaderLoader.h" />
     <ClInclude Include="Utility.h" />
+    <ClInclude Include="xnaCollision.h" />
+    <None Include="BoundingObject.hlsl" />
     <None Include="Depth.hlsl" />
     <None Include="DirectionalLight.hlsl" />
     <None Include="DualParaboloidDepth.hlsl" />
