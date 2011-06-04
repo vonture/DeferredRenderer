@@ -1,12 +1,12 @@
 #include "Game.h"
 
 Game::Game()
-	: _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f), _mouseLocked(false), 
+	: _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f),
 	  _scene(L"\\models\\tankscene\\tankscene.sdkmesh")
 {
-	_scene.SetScale(XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
+	_scene.SetScale(1.0f);
 	_scene.SetPosition(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f));
-	_scene.SetOrientation(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f));
+	//_scene.SetOrientation(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f));
 
 	_camera.SetPosition(XMVectorSet(-5.0f, 5.0f, -5.0f, 1.0f));
 	_camera.SetXRotation(PiOver4);
@@ -20,11 +20,11 @@ Game::Game()
 	//	DirectionalLight(XMVectorSet(1.0f, 1.0f, 0.3f, 1.0f), 0.4f, XMVectorSet(0.8f, 0.9, 0.8f, 1.0f)));
 	
 	_pointLights.push_back(
-		PointLight(XMVectorSet(0.6f, 1.0f, 0.5f, 1.0f), 1.3f, XMVectorSet(3.0f, 3.0f, -4.0f, 1.0f), 15.0f));
-	_pointLights.push_back(
-		PointLight(XMVectorSet(1.0f, 0.0f, 0.3f, 1.0f), 0.9f, XMVectorSet(11.0f, 5.0f, 6.5f, 1.0f), 9.0f));
-	_pointLights.push_back(
-		PointLight(XMVectorSet(0.0f, 1.0f, 1.0f, 1.0f), 0.8f, XMVectorSet(-7.0f, 11.0f, 5.0f, 1.0f), 20.0f));
+		PointLight(XMVectorSet(0.6f, 1.0f, 0.5f, 1.0f), 1.3f, XMVectorSet(3.0f, 3.0f, -4.0f, 1.0f), 10.0f));
+	//_pointLights.push_back(
+	//	PointLight(XMVectorSet(1.0f, 0.0f, 0.3f, 1.0f), 0.9f, XMVectorSet(11.0f, 5.0f, 6.5f, 1.0f), 9.0f));
+	//_pointLights.push_back(
+	//	PointLight(XMVectorSet(0.0f, 1.0f, 1.0f, 1.0f), 0.8f, XMVectorSet(-7.0f, 6.0f, 5.0f, 1.0f), 12.0f));
 		
 }
 
@@ -37,18 +37,12 @@ void Game::OnFrameMove(double totalTime, float dt)
 	KeyboardState kb = KeyboardState::GetState();
 	MouseState mouse = MouseState::GetState();
 
-	if (mouse.IsButtonJustPressed(LeftButton))
+	if (kb.IsKeyJustPressed(B))
 	{
-		_mouseLocked = true;
-		MouseState::SetCursorVisible(false);
+		_renderer.SetDrawBoundingObjects(!_renderer.GetDrawBoundingObjects());
 	}
-	if (mouse.IsButtonJustPressed(RightButton))
-	{
-		_mouseLocked = false;
-		MouseState::SetCursorVisible(true);
-	}
-
-	if (_mouseLocked)
+	
+	if (mouse.IsButtonDown(LeftButton))
 	{
 		const float mouseRotateSpeed = 0.002f;
 		_camera.SetXRotation(_camera.GetXRotation() + (mouse.GetDX() * mouseRotateSpeed));
