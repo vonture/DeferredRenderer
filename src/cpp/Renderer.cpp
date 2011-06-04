@@ -180,10 +180,12 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 			_boRenderer.Add(lightSphere);
 		}
 	
-		XMMATRIX cameraViewProj = camera->GetViewProjection();
+		XMMATRIX cameraProj = camera->GetProjection();
 
 		Frustum cameraFrust;
-		ComputeFrustumFromProjection(&cameraFrust, &cameraViewProj);
+		ComputeFrustumFromProjection(&cameraFrust, &cameraProj);
+		XMStoreFloat3(&cameraFrust.Origin, camera->GetPosition());
+		XMStoreFloat4(&cameraFrust.Orientation, camera->GetOrientation());
 
 		_boRenderer.Add(cameraFrust);
 
