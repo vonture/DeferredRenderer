@@ -3,7 +3,7 @@
 
 BoundingObjectRenderer::BoundingObjectRenderer()
 	: _boxVB(NULL), _boxIB(NULL), _sphereVB(NULL), _inputLayout(NULL), _vertexShader(NULL),
-	  _pixelShader(NULL), _constantBuffer(NULL)
+	  _pixelShader(NULL), _constantBuffer(NULL), _nextAABB(0), _nextOBB(0), _nextSphere(0), _nextFrust(0)
 {
 }
 

@@ -180,10 +180,10 @@
     <ClCompile Include="Mesh.cpp">
       <Filter>Models</Filter>
     </ClCompile>
-    <ClCompile Include="xnaCollision.cpp">
+    <ClCompile Include="BoundingObjectRenderer.cpp">
       <Filter>Collision</Filter>
     </ClCompile>
-    <ClCompile Include="BoundingObjectRenderer.cpp">
+    <ClCompile Include="xnaCollision.cpp">
       <Filter>Collision</Filter>
     </ClCompile>
   </ItemGroup>
@@ -278,10 +278,10 @@
     <ClInclude Include="Mesh.h">
       <Filter>Models</Filter>
     </ClInclude>
-    <ClInclude Include="xnaCollision.h">
+    <ClInclude Include="BoundingObjectRenderer.h">
       <Filter>Collision</Filter>
     </ClInclude>
-    <ClInclude Include="BoundingObjectRenderer.h">
+    <ClInclude Include="xnaCollision.h">
       <Filter>Collision</Filter>
     </ClInclude>
   </ItemGroup>
