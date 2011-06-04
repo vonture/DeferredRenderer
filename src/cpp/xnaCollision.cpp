@@ -10,6 +10,7 @@
 #include "DXUT.h"
 #include "xnaCollision.h"
 
+
 static const XMVECTOR g_UnitQuaternionEpsilon =
 {
     1.0e-4f, 1.0e-4f, 1.0e-4f, 1.0e-4f
