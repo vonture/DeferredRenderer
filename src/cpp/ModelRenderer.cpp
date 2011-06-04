@@ -15,9 +15,12 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 	D3D11_MAPPED_SUBRESOURCE mappedResource;	
 
 	XMMATRIX viewProj = camera->GetViewProjection();
+	XMMATRIX proj = camera->GetProjection();
 
 	Frustum cameraFrust;
-	ComputeFrustumFromProjection(&cameraFrust, &viewProj);
+	ComputeFrustumFromProjection(&cameraFrust, &proj);
+	XMStoreFloat3(&cameraFrust.Origin, camera->GetPosition());
+	XMStoreFloat4(&cameraFrust.Orientation, camera->GetOrientation());
 
 	pd3dDeviceContext->GSSetShader(NULL, NULL, 0);
 	pd3dDeviceContext->VSSetShader(_meshVertexShader, NULL, 0);
@@ -25,6 +28,8 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 
 	pd3dDeviceContext->IASetInputLayout(_meshInputLayout);
 	pd3dDeviceContext->OMSetDepthStencilState(_dsStates.GetDepthWriteEnabled(), 0);
+
+	pd3dDeviceContext->RSSetState(_rasterStates.GetBackFaceCull());
 
 	float blendFactor[4] = {1, 1, 1, 1};
 	pd3dDeviceContext->OMSetBlendState(_blendStates.GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
