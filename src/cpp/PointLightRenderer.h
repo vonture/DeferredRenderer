@@ -75,6 +75,8 @@ private:
 		UINT shadowMapIdx, std::vector<ModelInstance*>* models, Camera* camera,
 		BoundingBox* sceneBounds);
 
+	BOOL IntersectPointSphere(FXMVECTOR Point, const Sphere* pVolume);
+
 protected:
 	UINT GetMaxShadowedLights() { return NUM_SHADOW_MAPS; }
 

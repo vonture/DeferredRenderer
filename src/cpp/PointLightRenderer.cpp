@@ -1,10 +1,10 @@
 #include "PointLightRenderer.h"
 
-const float PointLightRenderer::BIAS = 0.01f;
+const float PointLightRenderer::BIAS = 0.02f;
 
 PointLightRenderer::PointLightRenderer()
-	: _depthVS(NULL), _depthInput(NULL), _depthPropertiesBuffer(NULL), _vertexShader(NULL),
-	  _unshadowedPS(NULL), _shadowedPS(NULL), _modelPropertiesBuffer(NULL),
+	: _depthVS(NULL), _depthInput(NULL), _depthPropertiesBuffer(NULL),
+	  _vertexShader(NULL), _unshadowedPS(NULL), _shadowedPS(NULL), _modelPropertiesBuffer(NULL),
 	  _lightPropertiesBuffer(NULL), _cameraPropertiesBuffer(NULL), _lightInputLayout(NULL),
 	  _lightModel(L"\\models\\sphere\\sphere.sdkmesh")
 {
@@ -48,10 +48,12 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 	lightSphere.Radius = light->GetRadius();
 
 	// Make sure this light is in the view fustrum
-	XMMATRIX viewProj = camera->GetViewProjection();
+	XMMATRIX proj = camera->GetProjection();
 
 	Frustum cameraFrust;
-	ComputeFrustumFromProjection(&cameraFrust, &viewProj);
+	ComputeFrustumFromProjection(&cameraFrust, &proj);
+	XMStoreFloat3(&cameraFrust.Origin, camera->GetPosition());
+	XMStoreFloat4(&cameraFrust.Orientation, camera->GetOrientation());
 	if (!IntersectSphereFrustum(&lightSphere, &cameraFrust))
 	{
 		return S_OK;
@@ -66,12 +68,9 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 	pd3dImmediateContext->PSSetShader(NULL, NULL, 0);	
 
 	pd3dImmediateContext->IASetInputLayout(_depthInput);
-	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthWriteEnabled(), 0);
 
 	float blendFactor[4] = {1, 1, 1, 1};
 	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
-
-	pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetBackFaceCull());
 
 	// Create view matrix
 	XMVECTOR lightPos = light->GetPosition();
@@ -92,6 +91,9 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 	// Render the front depths
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 		
+	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthWriteEnabled(), 0);
+
+	pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetBackFaceCull());
 	// Render the front depths
 	for (UINT i = 0; i < models->size(); i++)
 	{
@@ -126,12 +128,13 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 			model->RenderMesh(pd3dImmediateContext, j, 0, 1, 2);
 		}
 	}
-
+	
 	// render the back depths
 	vp.TopLeftX = SHADOW_MAP_SIZE * 0.5f;
-
+	
 	pd3dImmediateContext->RSSetViewports(1, &vp);
-
+	
+	pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetFrontFaceCull());
 	for (UINT i = 0; i < models->size(); i++)
 	{
 		ModelInstance* instance = models->at(i);
@@ -163,10 +166,23 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 			model->RenderMesh(pd3dImmediateContext, j, 0, 1, 2);
 		}
 	}
-
+	
     _shadowMatricies[shadowMapIdx] = view;
 
 	return S_OK;
+}
+
+BOOL PointLightRenderer::IntersectPointSphere( FXMVECTOR Point, const Sphere* pVolume )
+{
+    XMASSERT( pVolume );
+
+    XMVECTOR Center = XMLoadFloat3( &pVolume->Center );
+    XMVECTOR Radius = XMVectorReplicatePtr( &pVolume->Radius );
+
+    XMVECTOR DistanceSquared = XMVector3LengthSq( Point - Center );
+    XMVECTOR RadiusSquared = Radius * Radius;
+
+    return XMVector4LessOrEqual( DistanceSquared, RadiusSquared );
 }
 
 HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
@@ -200,7 +216,12 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 	pd3dImmediateContext->IASetInputLayout(_lightInputLayout);
 
 	// build the camera frustum
-	BoundingFrustum cameraFrust = BoundingFrustum(camera->GetViewProjection());
+	XMMATRIX proj = camera->GetProjection();
+
+	Frustum cameraFrust;
+	ComputeFrustumFromProjection(&cameraFrust, &proj);
+	XMStoreFloat3(&cameraFrust.Origin, camera->GetPosition());
+	XMStoreFloat4(&cameraFrust.Orientation, camera->GetOrientation());
 
 	// map the camera properties
 	V_RETURN(pd3dImmediateContext->Map(_cameraPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
@@ -230,14 +251,17 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 		float lightRadius = light->GetRadius();
 
 		// Verify that the light is visible
-		BoundingSphere lightBounds = BoundingSphere(lightPosition, lightRadius);
-		if (!Intersection::Contains(cameraFrust, lightBounds))
+		Sphere lightBounds;
+		XMStoreFloat3(&lightBounds.Center, lightPosition);
+		lightBounds.Radius = lightRadius;
+
+		if (!IntersectSphereFrustum(&lightBounds, &cameraFrust))
 		{
 			continue;
 		}
 
 		// Depending on if the camera is within the light, flip the vertex winding
-		if (Intersection::Contains(lightBounds, cameraPos))
+		if (IntersectPointSphere(cameraPos, &lightBounds))
 		{
 			pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetFrontFaceCull());
 			pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetReverseDepthEnabled(), 0);
@@ -294,14 +318,17 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 		float lightRadius = light->GetRadius();
 
 		// Verify that the light is visible
-		BoundingSphere lightBounds = BoundingSphere(lightPosition, lightRadius);
-		if (!Intersection::Contains(cameraFrust, lightBounds))
+		Sphere lightBounds;
+		XMStoreFloat3(&lightBounds.Center, lightPosition);
+		lightBounds.Radius = lightRadius;
+
+		if (!IntersectSphereFrustum(&lightBounds, &cameraFrust))
 		{
 			continue;
 		}
 
 		// Depending on if the camera is within the light, flip the vertex winding
-		if (Intersection::Contains(lightBounds, cameraPos))
+		if (IntersectPointSphere(cameraPos, &lightBounds))
 		{
 			pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetFrontFaceCull());
 			pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetReverseDepthEnabled(), 0);
