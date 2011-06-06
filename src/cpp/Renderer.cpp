@@ -204,6 +204,34 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 HRESULT Renderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
+		
+	// Call the sub content holders
+	V_RETURN(_gBuffer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_lightBuffer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_modelRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_combinePP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_directionalLightRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_pointLightRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_boRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+
+	return S_OK;
+}
+
+void Renderer::OnD3D11DestroyDevice()
+{
+	_gBuffer.OnD3D11DestroyDevice();
+	_lightBuffer.OnD3D11DestroyDevice();
+	_modelRenderer.OnD3D11DestroyDevice();
+	_combinePP.OnD3D11DestroyDevice();
+	_directionalLightRenderer.OnD3D11DestroyDevice();
+	_pointLightRenderer.OnD3D11DestroyDevice();
+	_boRenderer.OnD3D11DestroyDevice();
+}
+
+HRESULT Renderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+                            const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+{
+	HRESULT hr;
 
 	// Create the pp textures
 	D3D11_TEXTURE2D_DESC ppTextureDesc = 
@@ -248,42 +276,7 @@ HRESULT Renderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFA
 
 	V_RETURN(pd3dDevice->CreateRenderTargetView(_ppTextures[0], &ppRTVDesc, &_ppRenderTargetViews[0]));
 	V_RETURN(pd3dDevice->CreateRenderTargetView(_ppTextures[1], &ppRTVDesc, &_ppRenderTargetViews[1]));
-
-	// Call the sub content holders
-	V_RETURN(_gBuffer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_lightBuffer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_modelRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_combinePP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_directionalLightRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_pointLightRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_boRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-
-	return S_OK;
-}
-
-void Renderer::OnD3D11DestroyDevice()
-{
-	SAFE_RELEASE(_ppTextures[0]);
-	SAFE_RELEASE(_ppTextures[1]);
-	SAFE_RELEASE(_ppShaderResourceViews[0]);
-	SAFE_RELEASE(_ppShaderResourceViews[1]);
-	SAFE_RELEASE(_ppRenderTargetViews[0]);
-	SAFE_RELEASE(_ppRenderTargetViews[1]);
-
-	_gBuffer.OnD3D11DestroyDevice();
-	_lightBuffer.OnD3D11DestroyDevice();
-	_modelRenderer.OnD3D11DestroyDevice();
-	_combinePP.OnD3D11DestroyDevice();
-	_directionalLightRenderer.OnD3D11DestroyDevice();
-	_pointLightRenderer.OnD3D11DestroyDevice();
-	_boRenderer.OnD3D11DestroyDevice();
-}
-
-HRESULT Renderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
-                            const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
-{
-	HRESULT hr;
-
+	
 	V_RETURN(_gBuffer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_lightBuffer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_modelRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
@@ -296,7 +289,14 @@ HRESULT Renderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapCh
 }
 
 void Renderer::OnD3D11ReleasingSwapChain()
-{
+{	
+	SAFE_RELEASE(_ppTextures[0]);
+	SAFE_RELEASE(_ppTextures[1]);
+	SAFE_RELEASE(_ppShaderResourceViews[0]);
+	SAFE_RELEASE(_ppShaderResourceViews[1]);
+	SAFE_RELEASE(_ppRenderTargetViews[0]);
+	SAFE_RELEASE(_ppRenderTargetViews[1]);
+
 	_gBuffer.OnD3D11ReleasingSwapChain();
 	_lightBuffer.OnD3D11ReleasingSwapChain();
 	_modelRenderer.OnD3D11ReleasingSwapChain();
