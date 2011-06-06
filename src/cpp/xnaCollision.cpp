@@ -166,7 +166,7 @@ static inline XMVECTOR PointOnPlaneInsideTriangle( FXMVECTOR P, FXMVECTOR V0, FX
 // The algorithm is based on  Jack Ritter, "An Efficient Bounding Sphere", 
 // Graphics Gems.
 //-----------------------------------------------------------------------------
-VOID ComputeBoundingSphereFromPoints( Sphere* pOut, UINT Count, const XMFLOAT3* pPoints, UINT Stride )
+VOID Collision::ComputeBoundingSphereFromPoints( Sphere* pOut, UINT Count, const XMFLOAT3* pPoints, UINT Stride )
 {
     XMASSERT( pOut );
     XMASSERT( Count > 0 );
@@ -276,7 +276,7 @@ VOID ComputeBoundingSphereFromPoints( Sphere* pOut, UINT Count, const XMFLOAT3* 
 //-----------------------------------------------------------------------------
 // Find the minimum axis aligned bounding box containing a set of points.
 //-----------------------------------------------------------------------------
-VOID ComputeBoundingAxisAlignedBoxFromPoints( AxisAlignedBox* pOut, UINT Count, const XMFLOAT3* pPoints, UINT Stride )
+VOID Collision::ComputeBoundingAxisAlignedBoxFromPoints( AxisAlignedBox* pOut, UINT Count, const XMFLOAT3* pPoints, UINT Stride )
 {
     XMASSERT( pOut );
     XMASSERT( Count > 0 );
@@ -555,7 +555,7 @@ static inline BOOL CalculateEigenVectorsFromCovarianceMatrix( FLOAT Cxx, FLOAT C
 // Exact computation of the minimum oriented bounding box is possible but the
 // best know algorithm is O(N^3) and is significanly more complex to implement.
 //-----------------------------------------------------------------------------
-VOID ComputeBoundingOrientedBoxFromPoints( OrientedBox* pOut, UINT Count, const XMFLOAT3* pPoints, UINT Stride )
+VOID Collision::ComputeBoundingOrientedBoxFromPoints( OrientedBox* pOut, UINT Count, const XMFLOAT3* pPoints, UINT Stride )
 {
     static CONST XMVECTORI32 PermuteXXY =
                  {
@@ -680,7 +680,7 @@ VOID ComputeBoundingOrientedBoxFromPoints( OrientedBox* pOut, UINT Count, const 
 // contain a projection; any rotation, translation or scale will cause the
 // constructed frustum to be incorrect.
 //-----------------------------------------------------------------------------
-VOID ComputeFrustumFromProjection( Frustum* pOut, XMMATRIX* pProjection )
+VOID Collision::ComputeFrustumFromProjection( Frustum* pOut, XMMATRIX* pProjection )
 {
     XMASSERT( pOut );
     XMASSERT( pProjection );
@@ -738,7 +738,7 @@ VOID ComputeFrustumFromProjection( Frustum* pOut, XMMATRIX* pProjection )
 //-----------------------------------------------------------------------------
 // Build the 6 frustum planes from a frustum.
 //-----------------------------------------------------------------------------
-VOID ComputePlanesFromFrustum( const Frustum* pVolume, XMVECTOR* pPlane0, XMVECTOR* pPlane1, XMVECTOR* pPlane2,
+VOID Collision::ComputePlanesFromFrustum( const Frustum* pVolume, XMVECTOR* pPlane0, XMVECTOR* pPlane1, XMVECTOR* pPlane2,
                                XMVECTOR* pPlane3, XMVECTOR* pPlane4, XMVECTOR* pPlane5 )
 {
     XMASSERT( pVolume );
@@ -776,12 +776,114 @@ VOID ComputePlanesFromFrustum( const Frustum* pVolume, XMVECTOR* pPlane0, XMVECT
     *pPlane5 = XMPlaneNormalize( Plane5 );
 }
 
+//-----------------------------------------------------------------------------
+// Compute the corners of an axis aligned box.
+//-----------------------------------------------------------------------------
+VOID Collision::ComputeAxisAlignedBoxCorners( const AxisAlignedBox* pVolume, XMVECTOR* pCorner1, XMVECTOR* pCorner2,
+							XMVECTOR* pCorner3, XMVECTOR* pCorner4, XMVECTOR* pCorner5, 
+							XMVECTOR* pCorner6,  XMVECTOR* pCorner7, XMVECTOR* pCorner8)
+{
+	XMASSERT( pVolume );
+    XMASSERT( pCorner1 );
+    XMASSERT( pCorner2 );
+    XMASSERT( pCorner3 );
+    XMASSERT( pCorner4 );
+    XMASSERT( pCorner5 );
+    XMASSERT( pCorner6 );
+	XMASSERT( pCorner7 );
+	XMASSERT( pCorner8 );
+
+	XMVECTOR Origin = XMLoadFloat3( &pVolume->Center );
+    XMVECTOR Extents = XMLoadFloat3( &pVolume->Extents );
+
+	XMMATRIX transform = XMMatrixMultiply(XMMatrixScalingFromVector(Extents),
+										  XMMatrixTranslationFromVector(Origin));
+
+	*pCorner1 = XMVector3TransformCoord(XMVectorSet(-1.0f, -1.0f, -1.0f, 1.0f), transform);
+	*pCorner2 = XMVector3TransformCoord(XMVectorSet( 1.0f, -1.0f, -1.0f, 1.0f), transform);
+	*pCorner3 = XMVector3TransformCoord(XMVectorSet( 1.0f, -1.0f,  1.0f, 1.0f), transform);
+	*pCorner4 = XMVector3TransformCoord(XMVectorSet(-1.0f, -1.0f,  1.0f, 1.0f), transform);
+	*pCorner5 = XMVector3TransformCoord(XMVectorSet(-1.0f,  1.0f, -1.0f, 1.0f), transform);
+	*pCorner6 = XMVector3TransformCoord(XMVectorSet( 1.0f,  1.0f, -1.0f, 1.0f), transform);
+	*pCorner7 = XMVector3TransformCoord(XMVectorSet( 1.0f,  1.0f,  1.0f, 1.0f), transform);
+	*pCorner8 = XMVector3TransformCoord(XMVectorSet(-1.0f,  1.0f,  1.0f, 1.0f), transform);
+}
+
+
+//-----------------------------------------------------------------------------
+// Compute the corners of a frustum.
+//----------------------------------------------------------------------------- 
+VOID Collision::ComputeFrustumCorners( const Frustum* pVolume, XMVECTOR* pCorner1, XMVECTOR* pCorner2,
+							XMVECTOR* pCorner3, XMVECTOR* pCorner4, XMVECTOR* pCorner5, 
+							XMVECTOR* pCorner6,  XMVECTOR* pCorner7, XMVECTOR* pCorner8)
+{
+	XMASSERT( pVolume );
+    XMASSERT( pCorner1 );
+    XMASSERT( pCorner2 );
+    XMASSERT( pCorner3 );
+    XMASSERT( pCorner4 );
+    XMASSERT( pCorner5 );
+    XMASSERT( pCorner6 );
+	XMASSERT( pCorner7 );
+	XMASSERT( pCorner8 );
+
+	XMVECTOR Origin = XMLoadFloat3( &pVolume->Origin );
+    XMVECTOR Orientation = XMLoadFloat4( &pVolume->Orientation );
+
+	// Set w of the origin to one so we can dot4 with a plane.
+    Origin = XMVectorInsert( Origin, XMVectorSplatOne(), 0, 0, 0, 0, 1);
+
+    // Build the corners of the frustum (in world space).
+    XMVECTOR RightTop = XMVectorSet( pVolume->RightSlope, pVolume->TopSlope, 1.0f, 0.0f );
+    XMVECTOR RightBottom = XMVectorSet( pVolume->RightSlope, pVolume->BottomSlope, 1.0f, 0.0f );
+    XMVECTOR LeftTop = XMVectorSet( pVolume->LeftSlope, pVolume->TopSlope, 1.0f, 0.0f );
+    XMVECTOR LeftBottom = XMVectorSet( pVolume->LeftSlope, pVolume->BottomSlope, 1.0f, 0.0f );
+    XMVECTOR Near = XMVectorSet( pVolume->Near, pVolume->Near, pVolume->Near, 0.0f );
+    XMVECTOR Far = XMVectorSet( pVolume->Far, pVolume->Far, pVolume->Far, 0.0f );
+
+    RightTop = XMVector3Rotate( RightTop, Orientation );
+    RightBottom = XMVector3Rotate( RightBottom, Orientation );
+    LeftTop = XMVector3Rotate( LeftTop, Orientation );
+    LeftBottom = XMVector3Rotate( LeftBottom, Orientation );
+
+    *pCorner1 = Origin + RightTop * Near;
+    *pCorner2 = Origin + RightBottom * Near;
+    *pCorner3 = Origin + LeftTop * Near;
+    *pCorner4 = Origin + LeftBottom * Near;
+    *pCorner5 = Origin + RightTop * Far;    
+	*pCorner6 = Origin + RightBottom * Far;
+    *pCorner7 = Origin + LeftTop * Far;
+    *pCorner8 = Origin + LeftBottom * Far;
+}
+
+
+//-----------------------------------------------------------------------------
+// Merge two axis aligned boxes.
+//-----------------------------------------------------------------------------
+VOID Collision::MergeAxisAlignedBoxes(AxisAlignedBox* pOut, AxisAlignedBox* pInA, AxisAlignedBox* pInB)
+{
+	XMASSERT( pOut );
+    XMASSERT( pInA );
+    XMASSERT( pInB );
+	
+	XMVECTOR OriginA = XMLoadFloat3(&pInA->Center);
+	XMVECTOR ExtentsA = XMLoadFloat3(&pInA->Extents);
+
+	XMVECTOR OriginB = XMLoadFloat3(&pInB->Center);
+	XMVECTOR ExtentsB = XMLoadFloat3(&pInB->Extents);
+
+	XMVECTOR min = XMVectorMin(XMVectorSubtract(OriginA, ExtentsA), XMVectorSubtract(OriginB, ExtentsB));
+	XMVECTOR max = XMVectorMax(XMVectorAdd(OriginA, ExtentsA), XMVectorAdd(OriginB, ExtentsB));
+
+	XMStoreFloat3(&pOut->Center, (max + min) * 0.5f);
+	XMStoreFloat3(&pOut->Extents, (max - min) * 0.5f);
+}
 
 
 //-----------------------------------------------------------------------------
 // Transform a sphere by an angle preserving transform.
 //-----------------------------------------------------------------------------
-VOID TransformSphere( Sphere* pOut, const Sphere* pIn, FLOAT Scale, FXMVECTOR Rotation, FXMVECTOR Translation )
+VOID Collision::TransformSphere( Sphere* pOut, const Sphere* pIn, FLOAT Scale, FXMVECTOR Rotation, FXMVECTOR Translation )
 {
     XMASSERT( pOut );
     XMASSERT( pIn );
@@ -807,7 +909,7 @@ VOID TransformSphere( Sphere* pOut, const Sphere* pIn, FLOAT Scale, FXMVECTOR Ro
 //-----------------------------------------------------------------------------
 // Transform an axis aligned box by an angle preserving transform.
 //-----------------------------------------------------------------------------
-VOID TransformAxisAlignedBox( AxisAlignedBox* pOut, const AxisAlignedBox* pIn, FLOAT Scale, FXMVECTOR Rotation,
+VOID Collision::TransformAxisAlignedBox( AxisAlignedBox* pOut, const AxisAlignedBox* pIn, FLOAT Scale, FXMVECTOR Rotation,
                               FXMVECTOR Translation )
 {
     XMASSERT( pOut );
@@ -860,7 +962,7 @@ VOID TransformAxisAlignedBox( AxisAlignedBox* pOut, const AxisAlignedBox* pIn, F
 //-----------------------------------------------------------------------------
 // Transform an oriented box by an angle preserving transform.
 //-----------------------------------------------------------------------------
-VOID TransformOrientedBox( OrientedBox* pOut, const OrientedBox* pIn, FLOAT Scale, FXMVECTOR Rotation,
+VOID Collision::TransformOrientedBox( OrientedBox* pOut, const OrientedBox* pIn, FLOAT Scale, FXMVECTOR Rotation,
                            FXMVECTOR Translation )
 {
     XMASSERT( pOut );
@@ -897,7 +999,7 @@ VOID TransformOrientedBox( OrientedBox* pOut, const OrientedBox* pIn, FLOAT Scal
 //-----------------------------------------------------------------------------
 // Transform a frustum by an angle preserving transform.
 //-----------------------------------------------------------------------------
-VOID TransformFrustum( Frustum* pOut, const Frustum* pIn, FLOAT Scale, FXMVECTOR Rotation, FXMVECTOR Translation )
+VOID Collision::TransformFrustum( Frustum* pOut, const Frustum* pIn, FLOAT Scale, FXMVECTOR Rotation, FXMVECTOR Translation )
 {
     XMASSERT( pOut );
     XMASSERT( pIn );
@@ -937,7 +1039,7 @@ VOID TransformFrustum( Frustum* pOut, const Frustum* pIn, FLOAT Scale, FXMVECTOR
 //-----------------------------------------------------------------------------
 // Point in sphere test.
 //-----------------------------------------------------------------------------
-BOOL IntersectPointSphere( FXMVECTOR Point, const Sphere* pVolume )
+BOOL Collision::IntersectPointSphere( FXMVECTOR Point, const Sphere* pVolume )
 {
     XMASSERT( pVolume );
 
@@ -955,7 +1057,7 @@ BOOL IntersectPointSphere( FXMVECTOR Point, const Sphere* pVolume )
 //-----------------------------------------------------------------------------
 // Point in axis aligned box test.
 //-----------------------------------------------------------------------------
-BOOL IntersectPointAxisAlignedBox( FXMVECTOR Point, const AxisAlignedBox* pVolume )
+BOOL Collision::IntersectPointAxisAlignedBox( FXMVECTOR Point, const AxisAlignedBox* pVolume )
 {
     XMASSERT( pVolume );
 
@@ -970,7 +1072,7 @@ BOOL IntersectPointAxisAlignedBox( FXMVECTOR Point, const AxisAlignedBox* pVolum
 //-----------------------------------------------------------------------------
 // Point in oriented box test.
 //-----------------------------------------------------------------------------
-BOOL IntersectPointOrientedBox( FXMVECTOR Point, const OrientedBox* pVolume )
+BOOL Collision::IntersectPointOrientedBox( FXMVECTOR Point, const OrientedBox* pVolume )
 {
     XMASSERT( pVolume );
 
@@ -991,7 +1093,7 @@ BOOL IntersectPointOrientedBox( FXMVECTOR Point, const OrientedBox* pVolume )
 //-----------------------------------------------------------------------------
 // Point in frustum test.
 //-----------------------------------------------------------------------------
-BOOL IntersectPointFrustum( FXMVECTOR Point, const Frustum* pVolume )
+BOOL Collision::IntersectPointFrustum( FXMVECTOR Point, const Frustum* pVolume )
 {
     static const XMVECTORU32 SelectW = {XM_SELECT_0, XM_SELECT_0, XM_SELECT_0, XM_SELECT_1};
     static const XMVECTORU32 SelectZ = {XM_SELECT_0, XM_SELECT_0, XM_SELECT_1, XM_SELECT_0};
@@ -1059,7 +1161,7 @@ BOOL IntersectPointFrustum( FXMVECTOR Point, const Frustum* pVolume )
 // Ray-Triangle Intersection", Journal of Graphics Tools, vol. 2, no. 1, 
 // pp 21-28, 1997.
 //-----------------------------------------------------------------------------
-BOOL IntersectRayTriangle( FXMVECTOR Origin, FXMVECTOR Direction, FXMVECTOR V0, CXMVECTOR V1, CXMVECTOR V2,
+BOOL Collision::IntersectRayTriangle( FXMVECTOR Origin, FXMVECTOR Direction, FXMVECTOR V0, CXMVECTOR V1, CXMVECTOR V2,
                            FLOAT* pDist )
 {
     XMASSERT( pDist );
@@ -1162,7 +1264,7 @@ BOOL IntersectRayTriangle( FXMVECTOR Origin, FXMVECTOR Direction, FXMVECTOR V0, 
 //-----------------------------------------------------------------------------
 // Compute the intersection of a ray (Origin, Direction) with a sphere.
 //-----------------------------------------------------------------------------
-BOOL IntersectRaySphere( FXMVECTOR Origin, FXMVECTOR Direction, const Sphere* pVolume, FLOAT* pDist )
+BOOL Collision::IntersectRaySphere( FXMVECTOR Origin, FXMVECTOR Direction, const Sphere* pVolume, FLOAT* pDist )
 {
     XMASSERT( pVolume );
     XMASSERT( pDist );
@@ -1218,7 +1320,7 @@ BOOL IntersectRaySphere( FXMVECTOR Origin, FXMVECTOR Direction, const Sphere* pV
 // Compute the intersection of a ray (Origin, Direction) with an axis aligned 
 // box using the slabs method.
 //-----------------------------------------------------------------------------
-BOOL IntersectRayAxisAlignedBox( FXMVECTOR Origin, FXMVECTOR Direction, const AxisAlignedBox* pVolume, FLOAT* pDist )
+BOOL Collision::IntersectRayAxisAlignedBox( FXMVECTOR Origin, FXMVECTOR Direction, const AxisAlignedBox* pVolume, FLOAT* pDist )
 {
     XMASSERT( pVolume );
     XMASSERT( pDist );
@@ -1295,7 +1397,7 @@ BOOL IntersectRayAxisAlignedBox( FXMVECTOR Origin, FXMVECTOR Direction, const Ax
 // Compute the intersection of a ray (Origin, Direction) with an oriented box
 // using the slabs method.
 //-----------------------------------------------------------------------------
-BOOL IntersectRayOrientedBox( FXMVECTOR Origin, FXMVECTOR Direction, const OrientedBox* pVolume, FLOAT* pDist )
+BOOL Collision::IntersectRayOrientedBox( FXMVECTOR Origin, FXMVECTOR Direction, const OrientedBox* pVolume, FLOAT* pDist )
 {
     XMASSERT( pVolume );
     XMASSERT( pDist );
@@ -1399,7 +1501,7 @@ BOOL IntersectRayOrientedBox( FXMVECTOR Origin, FXMVECTOR Direction, const Orien
 // the 9 possible cases narrowed down to the only two pairs of edges that can 
 // actaully result in a seperation.
 //-----------------------------------------------------------------------------
-BOOL IntersectTriangleTriangle( FXMVECTOR A0, FXMVECTOR A1, FXMVECTOR A2, CXMVECTOR B0, CXMVECTOR B1, CXMVECTOR B2 )
+BOOL Collision::IntersectTriangleTriangle( FXMVECTOR A0, FXMVECTOR A1, FXMVECTOR A2, CXMVECTOR B0, CXMVECTOR B1, CXMVECTOR B2 )
 {
     static const XMVECTOR Epsilon =
     {
@@ -1702,7 +1804,7 @@ BOOL IntersectTriangleTriangle( FXMVECTOR A0, FXMVECTOR A1, FXMVECTOR A2, CXMVEC
 
 
 //-----------------------------------------------------------------------------
-BOOL IntersectTriangleSphere( FXMVECTOR V0, FXMVECTOR V1, FXMVECTOR V2, const Sphere* pVolume )
+BOOL Collision::IntersectTriangleSphere( FXMVECTOR V0, FXMVECTOR V1, FXMVECTOR V2, const Sphere* pVolume )
 {
     XMASSERT( pVolume );
 
@@ -1761,7 +1863,7 @@ BOOL IntersectTriangleSphere( FXMVECTOR V0, FXMVECTOR V1, FXMVECTOR V2, const Sp
 
 
 //-----------------------------------------------------------------------------
-BOOL IntersectTriangleAxisAlignedBox( FXMVECTOR V0, FXMVECTOR V1, FXMVECTOR V2, const AxisAlignedBox* pVolume )
+BOOL Collision::IntersectTriangleAxisAlignedBox( FXMVECTOR V0, FXMVECTOR V1, FXMVECTOR V2, const AxisAlignedBox* pVolume )
 {
     XMASSERT( pVolume );
 
@@ -1942,7 +2044,7 @@ BOOL IntersectTriangleAxisAlignedBox( FXMVECTOR V0, FXMVECTOR V1, FXMVECTOR V2, 
 
 
 //-----------------------------------------------------------------------------
-BOOL IntersectTriangleOrientedBox( FXMVECTOR V0, FXMVECTOR V1, FXMVECTOR V2, const OrientedBox* pVolume )
+BOOL Collision::IntersectTriangleOrientedBox( FXMVECTOR V0, FXMVECTOR V1, FXMVECTOR V2, const OrientedBox* pVolume )
 {
     XMASSERT( pVolume );
 
@@ -1968,7 +2070,7 @@ BOOL IntersectTriangleOrientedBox( FXMVECTOR V0, FXMVECTOR V1, FXMVECTOR V2, con
 
 
 //-----------------------------------------------------------------------------
-BOOL IntersectSphereSphere( const Sphere* pVolumeA, const Sphere* pVolumeB )
+BOOL Collision::IntersectSphereSphere( const Sphere* pVolumeA, const Sphere* pVolumeB )
 {
     XMASSERT( pVolumeA );
     XMASSERT( pVolumeB );
@@ -1995,7 +2097,7 @@ BOOL IntersectSphereSphere( const Sphere* pVolumeA, const Sphere* pVolumeB )
 
 
 //-----------------------------------------------------------------------------
-BOOL IntersectSphereAxisAlignedBox( const Sphere* pVolumeA, const AxisAlignedBox* pVolumeB )
+BOOL Collision::IntersectSphereAxisAlignedBox( const Sphere* pVolumeA, const AxisAlignedBox* pVolumeB )
 {
     XMASSERT( pVolumeA );
     XMASSERT( pVolumeB );
@@ -2036,7 +2138,7 @@ BOOL IntersectSphereAxisAlignedBox( const Sphere* pVolumeA, const AxisAlignedBox
 
 
 //-----------------------------------------------------------------------------
-BOOL IntersectSphereOrientedBox( const Sphere* pVolumeA, const OrientedBox* pVolumeB )
+BOOL Collision::IntersectSphereOrientedBox( const Sphere* pVolumeA, const OrientedBox* pVolumeB )
 {
     XMASSERT( pVolumeA );
     XMASSERT( pVolumeB );
@@ -2082,7 +2184,7 @@ BOOL IntersectSphereOrientedBox( const Sphere* pVolumeA, const OrientedBox* pVol
 
 
 //-----------------------------------------------------------------------------
-BOOL IntersectAxisAlignedBoxAxisAlignedBox( const AxisAlignedBox* pVolumeA, const AxisAlignedBox* pVolumeB )
+BOOL Collision::IntersectAxisAlignedBoxAxisAlignedBox( const AxisAlignedBox* pVolumeA, const AxisAlignedBox* pVolumeB )
 {
     XMASSERT( pVolumeA );
     XMASSERT( pVolumeB );
@@ -2108,7 +2210,7 @@ BOOL IntersectAxisAlignedBoxAxisAlignedBox( const AxisAlignedBox* pVolumeA, cons
 
 
 //-----------------------------------------------------------------------------
-BOOL IntersectAxisAlignedBoxOrientedBox( const AxisAlignedBox* pVolumeA, const OrientedBox* pVolumeB )
+BOOL Collision::IntersectAxisAlignedBoxOrientedBox( const AxisAlignedBox* pVolumeA, const OrientedBox* pVolumeB )
 {
     XMASSERT( pVolumeA );
     XMASSERT( pVolumeB );
@@ -2132,7 +2234,7 @@ BOOL IntersectAxisAlignedBoxOrientedBox( const AxisAlignedBox* pVolumeA, const O
 // Fast oriented box / oriented box intersection test using the separating axis 
 // theorem.
 //-----------------------------------------------------------------------------
-BOOL IntersectOrientedBoxOrientedBox( const OrientedBox* pVolumeA, const OrientedBox* pVolumeB )
+BOOL Collision::IntersectOrientedBoxOrientedBox( const OrientedBox* pVolumeA, const OrientedBox* pVolumeB )
 {
     static CONST XMVECTORI32 Permute0W1Z0Y0X =
                  {
@@ -2368,7 +2470,7 @@ BOOL IntersectOrientedBoxOrientedBox( const OrientedBox* pVolumeA, const Oriente
 //                1 = intersection, 
 //                2 = triangle is completely inside frustum
 //-----------------------------------------------------------------------------
-INT IntersectTriangleFrustum( FXMVECTOR V0, FXMVECTOR V1, FXMVECTOR V2, const Frustum* pVolume )
+INT Collision::IntersectTriangleFrustum( FXMVECTOR V0, FXMVECTOR V1, FXMVECTOR V2, const Frustum* pVolume )
 {
     XMASSERT( pVolume );
 
@@ -2529,7 +2631,7 @@ INT IntersectTriangleFrustum( FXMVECTOR V0, FXMVECTOR V1, FXMVECTOR V2, const Fr
 //                1 = intersection, 
 //                2 = sphere is completely inside frustum
 //-----------------------------------------------------------------------------
-INT IntersectSphereFrustum( const Sphere* pVolumeA, const Frustum* pVolumeB )
+INT Collision::IntersectSphereFrustum( const Sphere* pVolumeA, const Frustum* pVolumeB )
 {
     XMASSERT( pVolumeA );
     XMASSERT( pVolumeB );
@@ -2712,7 +2814,7 @@ INT IntersectSphereFrustum( const Sphere* pVolumeA, const Frustum* pVolumeB )
 //                1 = intersection, 
 //                2 = box is completely inside frustum
 //-----------------------------------------------------------------------------
-INT IntersectAxisAlignedBoxFrustum( const AxisAlignedBox* pVolumeA, const Frustum* pVolumeB )
+INT Collision::IntersectAxisAlignedBoxFrustum( const AxisAlignedBox* pVolumeA, const Frustum* pVolumeB )
 {
     XMASSERT( pVolumeA );
     XMASSERT( pVolumeB );
@@ -2737,7 +2839,7 @@ INT IntersectAxisAlignedBoxFrustum( const AxisAlignedBox* pVolumeA, const Frustu
 //                1 = intersection, 
 //                2 = box is completely inside frustum
 //-----------------------------------------------------------------------------
-INT IntersectOrientedBoxFrustum( const OrientedBox* pVolumeA, const Frustum* pVolumeB )
+INT Collision::IntersectOrientedBoxFrustum( const OrientedBox* pVolumeA, const Frustum* pVolumeB )
 {
     XMASSERT( pVolumeA );
     XMASSERT( pVolumeB );
@@ -2940,7 +3042,7 @@ INT IntersectOrientedBoxFrustum( const OrientedBox* pVolumeA, const Frustum* pVo
 //                1 = intersection, 
 //                2 = frustum A is completely inside frustum B
 //-----------------------------------------------------------------------------
-INT IntersectFrustumFrustum( const Frustum* pVolumeA, const Frustum* pVolumeB )
+INT Collision::IntersectFrustumFrustum( const Frustum* pVolumeA, const Frustum* pVolumeB )
 {
     XMASSERT( pVolumeA );
     XMASSERT( pVolumeB );
@@ -3190,7 +3292,7 @@ static inline void FastIntersectTrianglePlane( FXMVECTOR V0, FXMVECTOR V1, FXMVE
 //                1 = may be intersecting, 
 //                2 = triangle is inside all planes
 //-----------------------------------------------------------------------------
-INT IntersectTriangle6Planes( FXMVECTOR V0, FXMVECTOR V1, FXMVECTOR V2, CXMVECTOR Plane0, CXMVECTOR Plane1,
+INT Collision::IntersectTriangle6Planes( FXMVECTOR V0, FXMVECTOR V1, FXMVECTOR V2, CXMVECTOR Plane0, CXMVECTOR Plane1,
                               CXMVECTOR Plane2, CXMVECTOR Plane3, CXMVECTOR Plane4, CXMVECTOR Plane5 )
 {
     XMVECTOR One = XMVectorSplatOne();
@@ -3263,7 +3365,7 @@ static inline void FastIntersectSpherePlane( FXMVECTOR Center, FXMVECTOR Radius,
 //                1 = may be intersecting, 
 //                2 = sphere is inside all planes
 //-----------------------------------------------------------------------------
-INT IntersectSphere6Planes( const Sphere* pVolume, FXMVECTOR Plane0, FXMVECTOR Plane1, FXMVECTOR Plane2,
+INT Collision::IntersectSphere6Planes( const Sphere* pVolume, FXMVECTOR Plane0, FXMVECTOR Plane1, FXMVECTOR Plane2,
                             CXMVECTOR Plane3, CXMVECTOR Plane4, CXMVECTOR Plane5 )
 {
     XMASSERT( pVolume );
@@ -3346,7 +3448,7 @@ static inline void FastIntersectAxisAlignedBoxPlane( FXMVECTOR Center, FXMVECTOR
 //                1 = may be intersecting, 
 //                2 = box is inside all planes
 //-----------------------------------------------------------------------------
-INT IntersectAxisAlignedBox6Planes( const AxisAlignedBox* pVolume, FXMVECTOR Plane0, FXMVECTOR Plane1,
+INT Collision::IntersectAxisAlignedBox6Planes( const AxisAlignedBox* pVolume, FXMVECTOR Plane0, FXMVECTOR Plane1,
                                     FXMVECTOR Plane2, CXMVECTOR Plane3, CXMVECTOR Plane4, CXMVECTOR Plane5 )
 {
     XMASSERT( pVolume );
@@ -3432,7 +3534,7 @@ static inline void FastIntersectOrientedBoxPlane( FXMVECTOR Center, FXMVECTOR Ex
 //                1 = may be intersecting, 
 //                2 = box is inside all planes
 //-----------------------------------------------------------------------------
-INT IntersectOrientedBox6Planes( const OrientedBox* pVolume, FXMVECTOR Plane0, FXMVECTOR Plane1, FXMVECTOR Plane2,
+INT Collision::IntersectOrientedBox6Planes( const OrientedBox* pVolume, FXMVECTOR Plane0, FXMVECTOR Plane1, FXMVECTOR Plane2,
                                  CXMVECTOR Plane3, CXMVECTOR Plane4, CXMVECTOR Plane5 )
 {
     XMASSERT( pVolume );
@@ -3547,7 +3649,7 @@ static inline void FastIntersectFrustumPlane( FXMVECTOR Point0, FXMVECTOR Point1
 //                1 = may be intersecting, 
 //                2 = frustum is inside all planes
 //-----------------------------------------------------------------------------
-INT IntersectFrustum6Planes( const Frustum* pVolume, FXMVECTOR Plane0, FXMVECTOR Plane1, FXMVECTOR Plane2,
+INT Collision::IntersectFrustum6Planes( const Frustum* pVolume, FXMVECTOR Plane0, FXMVECTOR Plane1, FXMVECTOR Plane2,
                              CXMVECTOR Plane3, CXMVECTOR Plane4, CXMVECTOR Plane5 )
 {
     XMASSERT( pVolume );
@@ -3643,7 +3745,7 @@ INT IntersectFrustum6Planes( const Frustum* pVolume, FXMVECTOR Plane0, FXMVECTOR
 
 
 //-----------------------------------------------------------------------------
-INT IntersectTrianglePlane( FXMVECTOR V0, FXMVECTOR V1, FXMVECTOR V2, CXMVECTOR Plane )
+INT Collision::IntersectTrianglePlane( FXMVECTOR V0, FXMVECTOR V1, FXMVECTOR V2, CXMVECTOR Plane )
 {
     XMVECTOR One = XMVectorSplatOne();
 
@@ -3672,7 +3774,7 @@ INT IntersectTrianglePlane( FXMVECTOR V0, FXMVECTOR V1, FXMVECTOR V2, CXMVECTOR 
 
 
 //-----------------------------------------------------------------------------
-INT IntersectSpherePlane( const Sphere* pVolume, FXMVECTOR Plane )
+INT Collision::IntersectSpherePlane( const Sphere* pVolume, FXMVECTOR Plane )
 {
     XMASSERT( pVolume );
     XMASSERT( XMPlaneIsUnit( Plane ) );
@@ -3702,7 +3804,7 @@ INT IntersectSpherePlane( const Sphere* pVolume, FXMVECTOR Plane )
 
 
 //-----------------------------------------------------------------------------
-INT IntersectAxisAlignedBoxPlane( const AxisAlignedBox* pVolume, FXMVECTOR Plane )
+INT Collision::IntersectAxisAlignedBoxPlane( const AxisAlignedBox* pVolume, FXMVECTOR Plane )
 {
     XMASSERT( pVolume );
     XMASSERT( XMPlaneIsUnit( Plane ) );
@@ -3732,7 +3834,7 @@ INT IntersectAxisAlignedBoxPlane( const AxisAlignedBox* pVolume, FXMVECTOR Plane
 
 
 //-----------------------------------------------------------------------------
-INT IntersectOrientedBoxPlane( const OrientedBox* pVolume, FXMVECTOR Plane )
+INT Collision::IntersectOrientedBoxPlane( const OrientedBox* pVolume, FXMVECTOR Plane )
 {
     XMASSERT( pVolume );
     XMASSERT( XMPlaneIsUnit( Plane ) );
@@ -3768,7 +3870,7 @@ INT IntersectOrientedBoxPlane( const OrientedBox* pVolume, FXMVECTOR Plane )
 
 
 //-----------------------------------------------------------------------------
-INT IntersectFrustumPlane( const Frustum* pVolume, FXMVECTOR Plane )
+INT Collision::IntersectFrustumPlane( const Frustum* pVolume, FXMVECTOR Plane )
 {
     XMASSERT( pVolume );
     XMASSERT( XMPlaneIsUnit( Plane ) );
