@@ -7,11 +7,11 @@ class DeferredBuffer : public IHasContent
 {
 
 public:
-	virtual const ID3D11ShaderResourceView* GetShaderResourceView(int idx) = 0;
+	virtual ID3D11ShaderResourceView* GetShaderResourceView(int idx) = 0;
 	virtual ID3D11ShaderResourceView*const* GetShaderResourceViews() = 0;	
 	virtual int GetShaderResourceCount() = 0;
 
-	virtual const ID3D11RenderTargetView* GetRenderTargetView(int idx) = 0;
+	virtual ID3D11RenderTargetView* GetRenderTargetView(int idx) = 0;
 	virtual ID3D11RenderTargetView*const* GetRenderTargetViews() = 0;
 	virtual int GetRenderTargetViewCount() = 0;
 

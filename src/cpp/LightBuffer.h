@@ -17,7 +17,7 @@ public:
 	{		
 	}
 
-	const ID3D11ShaderResourceView* GetShaderResourceView(int idx)
+	ID3D11ShaderResourceView* GetShaderResourceView(int idx)
 	{
 		if (idx != 0)
 		{
@@ -37,7 +37,7 @@ public:
 		return 1;
 	}
 	
-	const ID3D11RenderTargetView* GetRenderTargetView(int idx)
+	ID3D11RenderTargetView* GetRenderTargetView(int idx)
 	{
 		if (idx != 0)
 		{
