@@ -13,18 +13,18 @@ Game::Game()
 	_camera.SetYRotation(PiOver8);
 
 	_directionalLights.push_back(
-		DirectionalLight(XMVectorSet(1.0f, 0.4f, 0.2f, 1.0f), 8.5f, XMVectorSet(-0.4f, 1.0f, 0.4f, 1.0f)));
+		DirectionalLight(XMVectorSet(1.0f, 0.8f, 0.5f, 1.0f), 10.0f, XMVectorSet(0.5f, 0.6f, 0.5f, 1.0f)));
 	//_directionalLights.push_back(
 	//	DirectionalLight(XMVectorSet(0.6f, 1.0f, 0.3f, 1.0f), 1.2f, XMVectorSet(0.5f, 0.5f, -0.5f, 1.0f)));
 	//_directionalLights.push_back(
 	//	DirectionalLight(XMVectorSet(1.0f, 1.0f, 0.3f, 1.0f), 0.4f, XMVectorSet(0.8f, 0.9, 0.8f, 1.0f)));
 	
-	_pointLights.push_back(
-		PointLight(XMVectorSet(0.6f, 1.0f, 0.5f, 1.0f), 2.0f, XMVectorSet(3.0f, 3.0f, -4.0f, 1.0f), 10.0f));
-	_pointLights.push_back(
-		PointLight(XMVectorSet(1.0f, 0.0f, 0.3f, 1.0f), 0.9f, XMVectorSet(11.0f, 5.0f, 6.5f, 1.0f), 9.0f));
-	_pointLights.push_back(
-		PointLight(XMVectorSet(0.0f, 1.0f, 1.0f, 1.0f), 0.8f, XMVectorSet(-7.0f, 6.0f, 5.0f, 1.0f), 12.0f));
+	//_pointLights.push_back(
+	//	PointLight(XMVectorSet(0.6f, 1.0f, 0.5f, 1.0f), 2.0f, XMVectorSet(3.0f, 3.0f, -4.0f, 1.0f), 10.0f));
+	//_pointLights.push_back(
+	//	PointLight(XMVectorSet(1.0f, 0.0f, 0.3f, 1.0f), 0.9f, XMVectorSet(11.0f, 5.0f, 6.5f, 1.0f), 9.0f));
+	//_pointLights.push_back(
+	//	PointLight(XMVectorSet(0.0f, 1.0f, 1.0f, 1.0f), 0.8f, XMVectorSet(-7.0f, 6.0f, 5.0f, 1.0f), 12.0f));
 		
 }
 
