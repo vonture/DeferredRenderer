@@ -532,7 +532,6 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 		pd3dImmediateContext->RSSetViewports(1, &vp);
 
 		// calc the split depths
-		float prevSplitDist = i == 0 ? 0.0f : CASCADE_SPLITS[i - 1];
         float splitDist = CASCADE_SPLITS[i];
 
 		fFrustumIntervalBegin = 0.0f;
