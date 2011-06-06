@@ -41,8 +41,13 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	pd3dImmediateContext->Unmap(_hdrPropertiesBuffer, 0);
 
 	// Set all the device states
-	ID3D11SamplerState* sampler = GetSamplerStates()->GetPoint();
-	pd3dImmediateContext->PSSetSamplers(0, 1, &sampler);
+	ID3D11SamplerState* samplers[2] =
+	{
+		GetSamplerStates()->GetPoint(),
+		GetSamplerStates()->GetLinear(),
+	};
+
+	pd3dImmediateContext->PSSetSamplers(0, 2, samplers);
 
 	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthDisabled(), 0);
 
@@ -52,8 +57,8 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	D3D11_VIEWPORT vp;
 	vp.MinDepth = 0.0f;
 	vp.MaxDepth = 1.0f;
-	vp.Width = _lumMapSize;
-	vp.Height = _lumMapSize;
+	vp.Width = (float)_lumMapSize;
+	vp.Height = (float)_lumMapSize;
 	vp.TopLeftX = 0.0f;
     vp.TopLeftY = 0.0f;
 
@@ -166,7 +171,7 @@ HRESULT HDRPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGI
 	// Calculate the luminance map size to be the largest power of two that is smaller than
 	// the smallest back buffer dimension
 	float minSize = (float)min(pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height);
-	_lumMapSize = pow(2, floor(log(minSize)/log(2.0f)));
+	_lumMapSize = (UINT)pow(2, floor(log(minSize)/log(2.0f)));
 
 	_mipLevels = (UINT)ceil(log((float)_lumMapSize) / log(2.0f)) + 1;
 

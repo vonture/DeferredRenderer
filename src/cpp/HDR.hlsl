@@ -13,6 +13,7 @@ Texture2D Texture0 : register(t0);
 Texture2D Texture1 : register(t1);
 
 SamplerState PointSampler : register(s0);
+SamplerState LinearSampler : register(s1);
 
 struct PS_In_Quad
 {
@@ -28,7 +29,7 @@ float CalcLuminance(float3 color)
 
 float4 PS_LuminanceMap(PS_In_Quad input) : SV_TARGET0
 {
-    float3 sceneColor = Texture0.Sample(PointSampler, input.vTexCoord).rgb;
+    float3 sceneColor = Texture0.Sample(LinearSampler, input.vTexCoord).rgb;
 	float curLum = CalcLuminance(sceneColor);
 
 	float prevLum = exp(Texture1.Sample(PointSampler, input.vTexCoord).x);
@@ -67,12 +68,12 @@ float4 PS_ToneMap(PS_In_Quad input) : SV_Target0
 {	
     // Tone map the primary input
     float avgLuminance = exp(Texture1.SampleLevel(PointSampler, input.vTexCoord, MipLevels).x);
-    float3 color = Texture0.Sample(PointSampler, input.vTexCoord).rgb;
+    float3 sceneColor = Texture0.Sample(LinearSampler, input.vTexCoord).rgb;
     	
-	float pixelLuminance = CalcLuminance(color);
+	float pixelLuminance = CalcLuminance(sceneColor);
 
-	color = CalcExposedColor(color, avgLuminance, 0);
-	color = ToneMapFilmicALU(color);
+	float3 final = CalcExposedColor(sceneColor, avgLuminance, 0);
+	final = ToneMapFilmicALU(final);
 	
 	/*
     // Sample the bloom
@@ -83,5 +84,5 @@ float4 PS_ToneMap(PS_In_Quad input) : SV_Target0
 	color = color + bloom;
 	*/
 
-	return float4(color, 1.0f);
+	return float4(final, 1.0f);
 }
