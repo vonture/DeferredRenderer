@@ -64,7 +64,7 @@ private:
 
 	HRESULT renderDepth(ID3D11DeviceContext* pd3dImmediateContext, DirectionalLight* dlight,
 		UINT shadowMapIdx, std::vector<ModelInstance*>* models, Camera* camera,
-		BoundingBox* sceneBounds);
+		AxisAlignedBox* sceneBounds);
 
 protected:
 	UINT GetMaxShadowedLights() { return NUM_SHADOW_MAPS; }
@@ -73,7 +73,7 @@ public:
 	DirectionalLightRenderer();
 
 	HRESULT RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*>* models,
-		Camera* camera, BoundingBox* sceneBounds);
+		Camera* camera, AxisAlignedBox* sceneBounds);
 	HRESULT RenderLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
 		GBuffer* gBuffer);
 

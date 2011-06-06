@@ -18,13 +18,13 @@ DirectionalLightRenderer::DirectionalLightRenderer()
 }
 
 HRESULT DirectionalLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, 
-	std::vector<ModelInstance*>* models, Camera* camera, BoundingBox* sceneBounds)
+	std::vector<ModelInstance*>* models, Camera* camera, AxisAlignedBox* sceneBounds)
 {
 	// Save the old viewport
 	D3D11_VIEWPORT vpOld[D3D11_VIEWPORT_AND_SCISSORRECT_MAX_INDEX];
     UINT nViewPorts = 1;
     pd3dImmediateContext->RSGetViewports(&nViewPorts, vpOld);
-
+	
 	// Iterate over the lights and render the shadow maps
 	for (UINT i = 0; i < GetCount(true) && i < NUM_SHADOW_MAPS; i++)
 	{
@@ -37,8 +37,54 @@ HRESULT DirectionalLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImme
 	return S_OK;
 }
 
+//-----------------------------------------------------------------------------
+// Compute the corners of a frustum.
+//----------------------------------------------------------------------------- 
+VOID Collision::ComputeFrustumCorners( const Frustum* pVolume, XMVECTOR* pCorner1, XMVECTOR* pCorner2,
+							XMVECTOR* pCorner3, XMVECTOR* pCorner4, XMVECTOR* pCorner5, 
+							XMVECTOR* pCorner6,  XMVECTOR* pCorner7, XMVECTOR* pCorner8)
+{
+	XMASSERT( pVolume );
+    XMASSERT( pCorner1 );
+    XMASSERT( pCorner2 );
+    XMASSERT( pCorner3 );
+    XMASSERT( pCorner4 );
+    XMASSERT( pCorner5 );
+    XMASSERT( pCorner6 );
+	XMASSERT( pCorner7 );
+	XMASSERT( pCorner8 );
+
+	XMVECTOR Origin = XMLoadFloat3( &pVolume->Origin );
+    XMVECTOR Orientation = XMLoadFloat4( &pVolume->Orientation );
+
+	// Set w of the origin to one so we can dot4 with a plane.
+    Origin = XMVectorInsert( Origin, XMVectorSplatOne(), 0, 0, 0, 0, 1);
+
+    // Build the corners of the frustum (in world space).
+    XMVECTOR RightTop = XMVectorSet( pVolume->RightSlope, pVolume->TopSlope, 1.0f, 0.0f );
+    XMVECTOR RightBottom = XMVectorSet( pVolume->RightSlope, pVolume->BottomSlope, 1.0f, 0.0f );
+    XMVECTOR LeftTop = XMVectorSet( pVolume->LeftSlope, pVolume->TopSlope, 1.0f, 0.0f );
+    XMVECTOR LeftBottom = XMVectorSet( pVolume->LeftSlope, pVolume->BottomSlope, 1.0f, 0.0f );
+    XMVECTOR Near = XMVectorSet( pVolume->Near, pVolume->Near, pVolume->Near, 0.0f );
+    XMVECTOR Far = XMVectorSet( pVolume->Far, pVolume->Far, pVolume->Far, 0.0f );
+
+    RightTop = XMVector3Rotate( RightTop, Orientation );
+    RightBottom = XMVector3Rotate( RightBottom, Orientation );
+    LeftTop = XMVector3Rotate( LeftTop, Orientation );
+    LeftBottom = XMVector3Rotate( LeftBottom, Orientation );
+
+    *pCorner1 = Origin + RightTop * Near;
+    *pCorner2 = Origin + RightBottom * Near;
+    *pCorner3 = Origin + LeftTop * Near;
+    *pCorner4 = Origin + LeftBottom * Near;
+    *pCorner5 = Origin + RightTop * Far;    
+	*pCorner6 = Origin + RightBottom * Far;
+    *pCorner7 = Origin + LeftTop * Far;
+    *pCorner8 = Origin + LeftBottom * Far;
+}
+
 HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContext, DirectionalLight* dlight,
-	UINT shadowMapIdx, std::vector<ModelInstance*>* models, Camera* camera, BoundingBox* sceneBounds)
+	UINT shadowMapIdx, std::vector<ModelInstance*>* models, Camera* camera, AxisAlignedBox* sceneBounds)
 {
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -88,10 +134,16 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
         float splitDist = CASCADE_SPLITS[i];
 
 		// Create the frustum
-		BoundingFrustum lightFrust = BoundingFrustum(camera->GetViewProjection());
-	
+		XMMATRIX cameraProj = camera->GetProjection();
+
+		Frustum lightFrust;
+		Collision::ComputeFrustumFromProjection(&lightFrust, &cameraProj);
+		XMStoreFloat3(&lightFrust.Origin, camera->GetPosition());
+		XMStoreFloat4(&lightFrust.Orientation, camera->GetOrientation());
+			
 		XMVECTOR frustCorners[8];
-		lightFrust.GetCorners(frustCorners);
+		Collision::ComputeFrustumCorners(&lightFrust, &frustCorners[0], &frustCorners[1], &frustCorners[2],
+			&frustCorners[3], &frustCorners[4], &frustCorners[5], &frustCorners[6], &frustCorners[7]);
 
 		// Scale by the shadow view distance
         for(UINT j = 0; j < 4; j++)
@@ -103,12 +155,19 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
             frustCorners[j] = XMVectorAdd(frustCorners[j], nearCornerRay);
         }
 
-		// Calculate the centroid of the view frustum
-		BoundingBox viewFrustBox;
-		BoundingBox::CreateFromPoints(&viewFrustBox, frustCorners, 8);
+		// Convert the vector array to float3 array
+		XMFLOAT3 frustCornersFloat[8];
+		for (UINT j = 0; j < 8; j++)
+		{
+			XMStoreFloat3(&frustCornersFloat[j], frustCorners[j]);
+		}
 
-		XMVECTOR bbRad = XMVectorRound(XMVectorSubtract(viewFrustBox.GetMax(), viewFrustBox.GetMin()) * 0.5f);
-		XMVECTOR bbMid = XMVectorRound(XMVectorAdd(viewFrustBox.GetMax(), viewFrustBox.GetMin()) * 0.5f);
+		// Calculate the centroid of the view frustum
+		AxisAlignedBox viewFrustBox;
+		Collision::ComputeBoundingAxisAlignedBoxFromPoints(&viewFrustBox, 8, frustCornersFloat, sizeof(XMFLOAT3));
+		
+		XMVECTOR bbRad = XMLoadFloat3(&viewFrustBox.Extents);
+		XMVECTOR bbMid = XMLoadFloat3(&viewFrustBox.Center);
 		
 		const float bbRadius = XMVectorGetX(XMVector3Length(bbRad));
         const float backupDist = bbRadius + camera->GetNearClip() + BACKUP;
