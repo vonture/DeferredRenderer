@@ -1,5 +1,5 @@
 static const float3 Grey = float3(0.212671f, 0.715160f, 0.072169f); 
-static const float Epsilon = 0.001f;
+static const float Epsilon = 0.0001f;
 
 cbuffer cbHDRProperties : register(b0)
 {
