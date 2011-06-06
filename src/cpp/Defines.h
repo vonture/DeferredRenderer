@@ -1,5 +1,7 @@
 #pragma once
 
+#pragma warning(disable: 4324)
+
 #include "DXUT.h"
 
 #define _XM_NO_INTRINSICS_
