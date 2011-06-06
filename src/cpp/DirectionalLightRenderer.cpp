@@ -2,7 +2,7 @@
 
 const float DirectionalLightRenderer::CASCADE_SPLITS[NUM_CASCADES] = { 0.125f, 0.25f, 0.5f, 1.0f };
 const float DirectionalLightRenderer::BACKUP = 20.0f;
-const float DirectionalLightRenderer::BIAS = 0.003f;
+const float DirectionalLightRenderer::BIAS = 0.002f;
 
 DirectionalLightRenderer::DirectionalLightRenderer()
 	: _depthVS(NULL), _depthInput(NULL), _depthPropertiesBuffer(NULL),  _unshadowedPS(NULL),
