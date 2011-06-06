@@ -62,6 +62,12 @@ private:
 	XMMATRIX _shadowMatricies[NUM_SHADOW_MAPS][NUM_CASCADES];
 	float _cascadeSplits[NUM_SHADOW_MAPS][NUM_CASCADES];
 
+	void ComputeNearAndFar(FLOAT& fNearPlane, FLOAT& fFarPlane, FXMVECTOR vLightCameraOrthographicMin, 
+		FXMVECTOR vLightCameraOrthographicMax, XMVECTOR* pvPointsInCameraView);
+
+	void CreateFrustumPointsFromCascadeInterval(float fCascadeIntervalBegin, FLOAT fCascadeIntervalEnd, 
+		XMMATRIX &vProjection, XMVECTOR* pvCornerPointsWorld);
+
 	HRESULT renderDepth(ID3D11DeviceContext* pd3dImmediateContext, DirectionalLight* dlight,
 		UINT shadowMapIdx, std::vector<ModelInstance*>* models, Camera* camera,
 		AxisAlignedBox* sceneBounds);
