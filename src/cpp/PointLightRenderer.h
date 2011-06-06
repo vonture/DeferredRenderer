@@ -73,9 +73,7 @@ private:
 	 
 	HRESULT renderDepth(ID3D11DeviceContext* pd3dImmediateContext, PointLight* light,
 		UINT shadowMapIdx, std::vector<ModelInstance*>* models, Camera* camera,
-		BoundingBox* sceneBounds);
-
-	BOOL IntersectPointSphere(FXMVECTOR Point, const Sphere* pVolume);
+		AxisAlignedBox* sceneBounds);
 
 protected:
 	UINT GetMaxShadowedLights() { return NUM_SHADOW_MAPS; }
@@ -84,7 +82,7 @@ public:
 	PointLightRenderer();
 
 	HRESULT RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*>* models,
-		Camera* camera, BoundingBox* sceneBounds);
+		Camera* camera, AxisAlignedBox* sceneBounds);
 	HRESULT RenderLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
 		GBuffer* gBuffer);
 
