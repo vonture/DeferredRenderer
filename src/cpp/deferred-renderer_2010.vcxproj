@@ -399,6 +399,7 @@
     <ClCompile Include="Quad.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="ShaderLoader.cpp" />
+    <ClCompile Include="SkyPostProcess.cpp" />
     <ClCompile Include="xnaCollision.cpp" />
     <ClInclude Include="BoundingObjectRenderer.h" />
     <ClInclude Include="ButtonState.h" />
@@ -415,6 +416,7 @@
     <ClInclude Include="MouseState.h" />
     <ClInclude Include="PointLightRenderer.h" />
     <ClInclude Include="ShaderLoader.h" />
+    <ClInclude Include="SkyPostProcess.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="xnaCollision.h" />
     <None Include="BoundingObject.hlsl" />
@@ -446,6 +448,7 @@
     <ClCompile Include="DXUT\Optional\DXUTsettingsdlg.cpp" />
     <ClCompile Include="DXUT\Optional\SDKmesh.cpp" />
     <ClCompile Include="DXUT\Optional\SDKmisc.cpp" />
+    <None Include="Sky.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="deferred-renderer.cpp" />

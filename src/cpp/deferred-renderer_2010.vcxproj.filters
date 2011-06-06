@@ -131,6 +131,9 @@
     <None Include="HDR.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Sky.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="deferred-renderer.cpp" />
@@ -190,6 +193,9 @@
       <Filter>Collision</Filter>
     </ClCompile>
     <ClCompile Include="HDRPostProcess.cpp">
+      <Filter>Post Process</Filter>
+    </ClCompile>
+    <ClCompile Include="SkyPostProcess.cpp">
       <Filter>Post Process</Filter>
     </ClCompile>
   </ItemGroup>
@@ -288,6 +294,9 @@
     </ClInclude>
     <ClInclude Include="xnaCollision.h">
       <Filter>Collision</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyPostProcess.h">
+      <Filter>Post Process</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
