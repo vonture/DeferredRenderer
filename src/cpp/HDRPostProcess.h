@@ -19,6 +19,8 @@ private:
 	float _adaptationRate;
 	float _keyValue;
 
+	UINT _lumMapSize;
+
 	UINT _mipLevels;
 
 	ID3D11Texture2D* _adaptLuminanceTextures[2];
