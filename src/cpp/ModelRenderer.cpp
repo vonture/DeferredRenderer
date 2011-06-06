@@ -18,7 +18,7 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 	XMMATRIX proj = camera->GetProjection();
 
 	Frustum cameraFrust;
-	ComputeFrustumFromProjection(&cameraFrust, &proj);
+	Collision::ComputeFrustumFromProjection(&cameraFrust, &proj);
 	XMStoreFloat3(&cameraFrust.Origin, camera->GetPosition());
 	XMStoreFloat4(&cameraFrust.Orientation, camera->GetOrientation());
 
@@ -42,10 +42,10 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 		ModelInstance* instance = instances->at(i);
 		Model* model = instance->GetModel();
 
-		OrientedBox modelBounds = instance->GetBoundingBox();
+		OrientedBox modelBounds = instance->GetOrientedBox();
 
 		// If there is no intersection between the frust and this model, don't render anything
-		int modelIntersect = IntersectOrientedBoxFrustum(&modelBounds, &cameraFrust);
+		int modelIntersect = Collision::IntersectOrientedBoxFrustum(&modelBounds, &cameraFrust);
 		if (!modelIntersect)
 		{
 			continue;
@@ -65,11 +65,11 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 		for (UINT j = 0; j < model->GetMeshCount(); j++)
 		{
 			Mesh mesh = model->GetMesh(j);
-			OrientedBox meshBounds = instance->GetMeshBoundingBox(j);
+			OrientedBox meshBounds = instance->GetMeshOrientedBox(j);
 			
 			// If the main box is completely within the frust, we can skip the mesh check
 			if (modelIntersect != COMPLETELY_INSIDE &&
-				!IntersectOrientedBoxFrustum(&meshBounds, &cameraFrust))
+				!Collision::IntersectOrientedBoxFrustum(&meshBounds, &cameraFrust))
 			{
 				continue;
 			}
