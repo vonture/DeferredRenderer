@@ -3,7 +3,6 @@
 #include "Defines.h"
 #include "Light.h"
 #include "ModelInstance.h"
-#include "BoundingObjects.h"
 #include "Camera.h"
 #include "GBuffer.h"
 #include "DeviceStates.h"
@@ -70,7 +69,7 @@ public:
 	}
 	
 	virtual HRESULT RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*>* models,
-		Camera* camera, BoundingBox* sceneBounds) = 0;
+		Camera* camera, AxisAlignedBox* sceneBounds) = 0;
 	virtual HRESULT RenderLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
 		GBuffer* gBuffer) = 0;
 
