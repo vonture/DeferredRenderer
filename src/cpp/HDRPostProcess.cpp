@@ -18,8 +18,7 @@ HDRPostProcess::~HDRPostProcess()
 }
 
 HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
-	ID3D11RenderTargetView* dstRTV, ID3D11DepthStencilView* dstDSV, GBuffer* gBuffer,
-	LightBuffer* lightBuffer)
+	ID3D11RenderTargetView* dstRTV, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -78,7 +77,7 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	pd3dImmediateContext->RSSetViewports(nViewPorts, vpOld);
 
 	// Tone map the final result
-	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, dstDSV);
+	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, NULL);
 
 	pd3dImmediateContext->GenerateMips(_adaptLuminanceSRVs[0]);
 
@@ -116,7 +115,7 @@ HRESULT HDRPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI
 {
 	HRESULT hr;
 
-	PostProcess::OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc);
+	V_RETURN(PostProcess::OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	
 	// Load the shaders
 	ID3DBlob* pBlob = NULL;

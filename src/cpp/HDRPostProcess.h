@@ -50,8 +50,7 @@ public:
 	void SetKeyValue(float key) { _keyValue = max(key, 0.0f); }
 
 	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
-		ID3D11RenderTargetView* dstRTV, ID3D11DepthStencilView* dstDSV, GBuffer* gBuffer,
-		LightBuffer* lightBuffer);
+		ID3D11RenderTargetView* dstRTV, GBuffer* gBuffer, LightBuffer* lightBuffer);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
 	void OnD3D11DestroyDevice();

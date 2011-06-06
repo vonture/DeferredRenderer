@@ -128,7 +128,6 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 
 		// Calculate destination render target
 		ID3D11RenderTargetView* dstRTV = (i % 2 == 0) ? _ppRenderTargetViews[0] : _ppRenderTargetViews[1];
-		ID3D11DepthStencilView* dstDSV = NULL;
 
 		if (i == 0)
 		{
@@ -139,11 +138,10 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 		{
 			// Last pass, render to the original rtv and dsv
 			dstRTV = pOrigRTV;
-			dstDSV = pOrigDSV;
 		}
 
 		// Render the post process
-		V_RETURN(_postProcesses[i]->Render(pd3dImmediateContext, srcSRV, dstRTV, dstDSV, &_gBuffer, &_lightBuffer));
+		V_RETURN(_postProcesses[i]->Render(pd3dImmediateContext, srcSRV, dstRTV, &_gBuffer, &_lightBuffer));
 	}
 	DXUT_EndPerfEvent();
 

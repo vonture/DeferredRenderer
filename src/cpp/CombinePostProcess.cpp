@@ -10,12 +10,11 @@ CombinePostProcess::~CombinePostProcess()
 }
 
 HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
-		ID3D11RenderTargetView* dstRTV, ID3D11DepthStencilView* dstDSV, GBuffer* gBuffer,
-		LightBuffer* lightBuffer)
+		ID3D11RenderTargetView* dstRTV, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
 	HRESULT hr;
 	
-	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, dstDSV);
+	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, NULL);
 
 	V_RETURN(gBuffer->PSSetShaderResources(pd3dImmediateContext, 0));
 	V_RETURN(lightBuffer->PSSetShaderResources(pd3dImmediateContext, 4));
