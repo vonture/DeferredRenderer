@@ -99,11 +99,8 @@ float SampleShadowCascade(in float4 positionWS, in uint cascadeIdx)
 		[unroll(NumSamples)]
 		for (int x = -Radius; x <= Radius; x++)
 		{
-			float2 offset = float2(x, y) / ShadowMapSize;
-			float sample = ShadowMap.SampleCmp(ShadowSampler, shadowTexCoord + offset, shadowDepth).x;
-
-			//int2 offset = int2(x, y);
-			//float sample = ShadowMap.Sample(SceneSampler, shadowTexCoord, offset).x > shadowDepth;
+			int2 offset = int2(x, y);
+			float sample = ShadowMap.SampleCmp(ShadowSampler, shadowTexCoord, shadowDepth, offset).x;
 
 			float xWeight = 1;
 			float yWeight = 1;
@@ -122,7 +119,7 @@ float SampleShadowCascade(in float4 positionWS, in uint cascadeIdx)
 		}
 	}
 
-	shadowVisibility  /= NumSamples;
+	shadowVisibility /= NumSamples;
 	shadowVisibility *= 1.5f;
 
 	return shadowVisibility;
