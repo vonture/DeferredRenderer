@@ -128,6 +128,9 @@
     <None Include="BoundingObject.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="HDR.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="deferred-renderer.cpp" />
@@ -185,6 +188,9 @@
     </ClCompile>
     <ClCompile Include="xnaCollision.cpp">
       <Filter>Collision</Filter>
+    </ClCompile>
+    <ClCompile Include="HDRPostProcess.cpp">
+      <Filter>Post Process</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

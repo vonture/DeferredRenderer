@@ -385,6 +385,7 @@
     <ClCompile Include="FullscreenQuad.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GBuffer.cpp" />
+    <ClCompile Include="HDRPostProcess.cpp" />
     <ClCompile Include="KeyboardState.cpp" />
     <ClCompile Include="LightBuffer.cpp" />
     <ClCompile Include="Material.cpp" />
@@ -451,6 +452,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="GBufferCombine.hlsl" />
+    <None Include="HDR.hlsl" />
     <None Include="Mesh.hlsl" />
     <None Include="PointLight.hlsl" />
     <None Include="QuadVS.hlsl" />
