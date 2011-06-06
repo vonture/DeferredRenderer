@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Defines.h"
-#include "BoundingObjects.h"
 
 class Camera
 {
