@@ -421,7 +421,6 @@
     <None Include="DirectionalLight.hlsl" />
     <None Include="DualParaboloidDepth.hlsl" />
     <None Include="DXUT\Optional\directx.ico" />
-    <ClInclude Include="BoundingObjects.h" />
     <ClInclude Include="DeferredBuffer.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="DXUT\Core\DXUT.h" />

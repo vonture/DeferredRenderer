@@ -202,7 +202,6 @@
     <ClInclude Include="Camera.h">
       <Filter>Cameras</Filter>
     </ClInclude>
-    <ClInclude Include="BoundingObjects.h" />
     <ClInclude Include="IUpdateable.h">
       <Filter>Interfaces</Filter>
     </ClInclude>
