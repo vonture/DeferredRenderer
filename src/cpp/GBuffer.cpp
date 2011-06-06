@@ -47,12 +47,13 @@ HRESULT GBuffer::PSUnsetShaderResources(ID3D11DeviceContext* pd3dImmediateContex
 
 HRESULT GBuffer::Clear(ID3D11DeviceContext* pd3dImmediateContext)
 {
-	const float rt02clear[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	const float rt0clear[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	const float rt1clear[] = { 0.5f, 0.5f, 0.5f, 0.0f };
+	const float rt2clear[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-	pd3dImmediateContext->ClearRenderTargetView(_renderTargetViews[0], rt02clear);
+	pd3dImmediateContext->ClearRenderTargetView(_renderTargetViews[0], rt0clear);
 	pd3dImmediateContext->ClearRenderTargetView(_renderTargetViews[1], rt1clear);
-	pd3dImmediateContext->ClearRenderTargetView(_renderTargetViews[2], rt02clear);
+	pd3dImmediateContext->ClearRenderTargetView(_renderTargetViews[2], rt2clear);
 	pd3dImmediateContext->ClearDepthStencilView(_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	return S_OK;
