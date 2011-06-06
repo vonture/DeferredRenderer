@@ -74,14 +74,16 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
     pd3dImmediateContext->OMGetRenderTargets( 1, &pOrigRTV, &pOrigDSV );
 
 	// Calculate the scene bounds
-	BoundingBox sceneBounds;
+	AxisAlignedBox sceneBounds;
 	if (_models.size() > 0)
 	{
-		//BoundingBox sceneBounds= _models[0]->GetBounds();
-		//for (UINT i = 0; i < _models.size(); i++)
-		//{
-		//	BoundingBox::Combine(&sceneBounds, sceneBounds, _models[i]->GetBounds());
-		//}
+		sceneBounds = _models[0]->GetAxisAlignedBox();
+		for (UINT i = 0; i < _models.size(); i++)
+		{
+			AxisAlignedBox modelAABB = _models[i]->GetAxisAlignedBox();
+
+			Collision::MergeAxisAlignedBoxes(&sceneBounds, &sceneBounds, &modelAABB);
+		}
 	}
 
 	// render the shadow maps
@@ -130,7 +132,7 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 
 		if (i == 0)
 		{
-			// First pass, no source texture
+			// First pass, no source texture, just the gbuffer and light buffer
 			srcSRV = NULL;
 		}
 		if (i == _postProcesses.size() - 1)
@@ -155,7 +157,7 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 			UINT meshCount = _models[i]->GetModelMeshCount();
 			for (UINT j = 0; j < meshCount; j++)
 			{
-				OrientedBox obb = _models[i]->GetMeshBoundingBox(j);
+				OrientedBox obb = _models[i]->GetMeshOrientedBox(j);
 				_boRenderer.Add(obb);
 			}
 		}
@@ -183,7 +185,7 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 		XMMATRIX cameraProj = camera->GetProjection();
 
 		Frustum cameraFrust;
-		ComputeFrustumFromProjection(&cameraFrust, &cameraProj);
+		Collision::ComputeFrustumFromProjection(&cameraFrust, &cameraProj);
 		XMStoreFloat3(&cameraFrust.Origin, camera->GetPosition());
 		XMStoreFloat4(&cameraFrust.Orientation, camera->GetOrientation());
 
