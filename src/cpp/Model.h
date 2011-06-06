@@ -27,8 +27,8 @@ public:
 	const Material& GetMaterial(UINT idx) const { return _materials[idx]; }
 	UINT GetMaterialCount() const { return _materialCount; }
 
-	const AxisAlignedBox& GetMeshBoundingBox(UINT idx) const { return _meshes[idx].GetBoundingBox(); }
-	const AxisAlignedBox& GetBoundingBox() const { return _boundingBox; }
+	const AxisAlignedBox& GetMeshAxisAlignedBox(UINT idx) const { return _meshes[idx].GetAxisAlignedBox(); }
+	const AxisAlignedBox& GetAxisAlignedBox() const { return _boundingBox; }
 
 	HRESULT CreateFromSDKMeshFile(ID3D11Device* device, LPCWSTR fileName);
 	void Destroy();

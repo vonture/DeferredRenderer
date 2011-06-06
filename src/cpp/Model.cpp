@@ -38,21 +38,14 @@ HRESULT Model::CreateFromSDKMeshFile(ID3D11Device* device, LPCWSTR fileName)
 	// Compute the overall bounding box
 	if (_meshCount > 0)
 	{
-		AxisAlignedBox firstBox = _meshes[0].GetBoundingBox();
-		XMVECTOR mainBBmin = XMVectorSubtract(XMLoadFloat3(&firstBox.Center), XMLoadFloat3(&firstBox.Extents));
-		XMVECTOR mainBBmax = XMVectorAdd(XMLoadFloat3(&firstBox.Center), XMLoadFloat3(&firstBox.Extents));
+		_boundingBox = _meshes[0].GetAxisAlignedBox();
 
 		for (UINT i = 1; i < _meshCount; i++)
 		{
-			AxisAlignedBox aaBox = _meshes[i].GetBoundingBox();
+			AxisAlignedBox aaBox = _meshes[i].GetAxisAlignedBox();
 
-			// Merge this bb and the main bb
-			mainBBmin = XMVectorMin(mainBBmin,  XMVectorSubtract(XMLoadFloat3(&aaBox.Center), XMLoadFloat3(&aaBox.Extents)));
-			mainBBmax = XMVectorMax(mainBBmin,  XMVectorAdd(XMLoadFloat3(&aaBox.Center), XMLoadFloat3(&aaBox.Extents)));
+			Collision::MergeAxisAlignedBoxes(&_boundingBox, &_boundingBox, &aaBox);
 		}
-
-		XMStoreFloat3(&_boundingBox.Center, (mainBBmax + mainBBmin) * 0.5f);
-		XMStoreFloat3(&_boundingBox.Extents, (mainBBmax - mainBBmin) * 0.5f);
 	}
 
 	return S_OK;

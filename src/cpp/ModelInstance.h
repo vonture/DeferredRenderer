@@ -17,11 +17,12 @@ private:
 	float _scale;
 	XMVECTOR _orientation;
 
-	OrientedBox _transformedMainBox;
-	OrientedBox* _transformedMeshBoxes;
+	OrientedBox _transformedMainOrientedBox;
+	OrientedBox* _transformedMeshOrientedBoxes;
 
-	VOID TransformOrientedBox( OrientedBox* pOut, const OrientedBox* pIn, FLOAT Scale, FXMVECTOR Rotation,
-                           FXMVECTOR Translation );
+	AxisAlignedBox _transformedMainAxisBox;
+	AxisAlignedBox* _transformedMeshAxisBoxes;
+
 	bool _dirty;
 	void clean();
 
@@ -64,24 +65,45 @@ public:
 		return _world;
 	}
 	
-	const OrientedBox& GetMeshBoundingBox(UINT meshIdx)
+	const AxisAlignedBox& GetMeshAxisAlignedBox(UINT meshIdx)
 	{
 		if (_dirty)
 		{
 			clean();
 		}
 
-		return _transformedMeshBoxes[meshIdx];
+		return _transformedMeshAxisBoxes[meshIdx];
 	}
 
-	const OrientedBox& GetBoundingBox() 
+	const AxisAlignedBox& GetAxisAlignedBox() 
 	{ 
 		if (_dirty)
 		{
 			clean();
 		}
 
-		return _transformedMainBox;
+		return _transformedMainAxisBox;
+	}
+
+
+	const OrientedBox& GetMeshOrientedBox(UINT meshIdx)
+	{
+		if (_dirty)
+		{
+			clean();
+		}
+
+		return _transformedMeshOrientedBoxes[meshIdx];
+	}
+
+	const OrientedBox& GetOrientedBox() 
+	{ 
+		if (_dirty)
+		{
+			clean();
+		}
+
+		return _transformedMainOrientedBox;
 	}
 
 	UINT GetModelMeshCount() const { return _model.GetMeshCount(); }

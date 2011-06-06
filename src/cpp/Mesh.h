@@ -56,7 +56,7 @@ public:
 	const D3D11_INPUT_ELEMENT_DESC* GetInputLayout() const { return _inputElements; }
 	UINT GetInputElementCount() const { return _inputElementCount; }
 
-	const AxisAlignedBox& GetBoundingBox() const { return _boundingBox; }
+	const AxisAlignedBox& GetAxisAlignedBox() const { return _boundingBox; }
 	
 	HRESULT CreateFromSDKMeshMesh(CDXUTSDKMesh* model, UINT meshIdx);
 	void Destroy();
