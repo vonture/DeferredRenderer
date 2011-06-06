@@ -7,6 +7,7 @@
 #include "Camera.h"
 #include "KeyboardState.h"
 #include "MouseState.h"
+#include "HDRPostProcess.h"
 
 class Game : public IUpdateable, public IHasContent
 {
@@ -15,6 +16,8 @@ private:
 	FirstPersonCamera _camera;
 
 	ModelInstance _scene;
+
+	HDRPostProcess _hdrPP;
 
 	std::vector<DirectionalLight> _directionalLights;
 	std::vector<PointLight> _pointLights;
