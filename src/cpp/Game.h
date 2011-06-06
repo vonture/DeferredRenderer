@@ -8,6 +8,7 @@
 #include "KeyboardState.h"
 #include "MouseState.h"
 #include "HDRPostProcess.h"
+#include "SkyPostProcess.h"
 
 class Game : public IUpdateable, public IHasContent
 {
@@ -18,6 +19,7 @@ private:
 	ModelInstance _scene;
 
 	HDRPostProcess _hdrPP;
+	SkyPostProcess _skyPP;
 
 	std::vector<DirectionalLight> _directionalLights;
 	std::vector<PointLight> _pointLights;
