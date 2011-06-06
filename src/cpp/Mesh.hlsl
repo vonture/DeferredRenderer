@@ -64,7 +64,7 @@ PS_Out_Mesh PS_Mesh(VS_Out_Mesh input)
     // RT0 =       Diffuse.r           | Diffuse.g         | Diffuse.b     | Specular Intensity
     // RT1 =       Normal.x            | Normal.y          | Normal.z      | Specular Power
     // RT2 =                           | Ambient Occlusion | Translucency  | Material ID
-	output.RT0 = float4(vDiffuse.rgb, 4.0f);
+	output.RT0 = float4(vDiffuse.rgb, 0.0f);
 	output.RT1 = float4(vNormal, 1.0f);
 	output.RT2 = float4(0.0f, 0.02f, 0.0f, 0.0f);
 
