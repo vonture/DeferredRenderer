@@ -87,16 +87,13 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 	}
 
 	// render the shadow maps
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Directional Light Shadow Maps");
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Shadow Maps");
 	V_RETURN(_directionalLightRenderer.RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
-	DXUT_EndPerfEvent();
-
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Point Light Shadow Maps");
 	V_RETURN(_pointLightRenderer.RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
 	DXUT_EndPerfEvent();
 
 	// Render the scene to the gbuffer
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Render to G-Buffer");
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"G-Buffer");
 	V_RETURN(_gBuffer.SetRenderTargetsAndDepthStencil(pd3dImmediateContext));
 	V_RETURN(_gBuffer.Clear(pd3dImmediateContext));
 
@@ -109,17 +106,14 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 	V_RETURN(_lightBuffer.SetRenderTargets(pd3dImmediateContext, _gBuffer.GetReadOnlyDepthStencilView()));
 	V_RETURN(_lightBuffer.Clear(pd3dImmediateContext));
 
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Render Directional Lights");
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Lights");
 	V_RETURN(_directionalLightRenderer.RenderLights(pd3dImmediateContext, camera, &_gBuffer));
-	DXUT_EndPerfEvent();
-
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Render Point Lights");
 	V_RETURN(_pointLightRenderer.RenderLights(pd3dImmediateContext, camera, &_gBuffer));
 	DXUT_EndPerfEvent();
 
 	V_RETURN(_lightBuffer.UnsetRenderTargetsAndDepthStencil(pd3dImmediateContext));
 
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Render Post-Processes");
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Post-Processes");
 	// render the post processes	
 	for (UINT i = 0; i < _postProcesses.size(); i++)
 	{
@@ -141,14 +135,15 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 		}
 
 		// Render the post process
-		V_RETURN(_postProcesses[i]->Render(pd3dImmediateContext, srcSRV, dstRTV, &_gBuffer, &_lightBuffer));
+		V_RETURN(_postProcesses[i]->Render(pd3dImmediateContext, srcSRV, dstRTV, camera,
+			&_gBuffer, &_lightBuffer));
 	}
 	DXUT_EndPerfEvent();
 
 	// Render the bounding shapes
 	if (_drawBoundingObjects)
 	{
-		DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 1.0f, 1.0f), L"Render Bounding Objects");
+		DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 1.0f, 1.0f), L"Bounding Objects");
 		
 		for (UINT i = 0; i < _models.size(); i++)
 		{
