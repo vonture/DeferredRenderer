@@ -13,10 +13,12 @@ SkyPostProcess::~SkyPostProcess()
 }
 
 HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
-	ID3D11RenderTargetView* dstRTV, GBuffer* gBuffer, LightBuffer* lightBuffer)
+	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Sky");
+
 	HRESULT hr;
-	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	D3D11_MAPPED_SUBRESOURCE mappedResource;	
 
 	// Render the sky by using the gbuffer's depth stencil to render the sky in the locations without
 	// depth values
@@ -51,6 +53,8 @@ HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 
 	// Render
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _skyPS));
+
+	DXUT_EndPerfEvent();
 
 	return S_OK;
 }

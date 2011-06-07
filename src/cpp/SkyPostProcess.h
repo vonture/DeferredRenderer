@@ -37,7 +37,7 @@ public:
 	void SetSunDirection(const XMVECTOR& sunDir) { _sunDirection = sunDir; }
 
 	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
-	ID3D11RenderTargetView* dstRTV, GBuffer* gBuffer, LightBuffer* lightBuffer);
+		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
 	void OnD3D11DestroyDevice();

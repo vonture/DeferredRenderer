@@ -5,6 +5,7 @@
 #include "GBuffer.h"
 #include "LightBuffer.h"
 #include "DeviceStates.h"
+#include "Camera.h"
 
 class PostProcess : public IHasContent
 {
@@ -34,7 +35,7 @@ protected:
 
 public:
 	virtual HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
-		ID3D11RenderTargetView* dst, GBuffer* gBuffer, LightBuffer* lightBuffer) = 0;
+		ID3D11RenderTargetView* dst, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer) = 0;
 
 	virtual HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
 	virtual void OnD3D11DestroyDevice();

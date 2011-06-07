@@ -10,8 +10,10 @@ CombinePostProcess::~CombinePostProcess()
 }
 
 HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
-		ID3D11RenderTargetView* dstRTV, GBuffer* gBuffer, LightBuffer* lightBuffer)
+		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Combine");
+
 	HRESULT hr;
 	
 	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, NULL);
@@ -31,6 +33,8 @@ HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID
 
 	V_RETURN(gBuffer->PSUnsetShaderResources(pd3dImmediateContext, 0));
 	V_RETURN(lightBuffer->PSUnsetShaderResources(pd3dImmediateContext, 4));
+
+	DXUT_EndPerfEvent();
 
 	return S_OK;
 }

@@ -18,8 +18,10 @@ HDRPostProcess::~HDRPostProcess()
 }
 
 HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
-	ID3D11RenderTargetView* dstRTV, GBuffer* gBuffer, LightBuffer* lightBuffer)
+	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"HDR");
+
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 
@@ -93,6 +95,8 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	// Swap the adapted luminance buffers from the previous render
 	swapLuminanceBuffers();
 	
+	DXUT_EndPerfEvent();
+
 	return S_OK;
 }
 

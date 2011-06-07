@@ -37,7 +37,6 @@ float4 PS_LuminanceMap(PS_In_Quad input) : SV_TARGET0
 	// Adapt the luminance using Pattanaik's technique
     float adaptedLum = prevLum + (curLum - prevLum) * (1.0f - exp(-TimeDelta * AdaptationRate));
 
-	//return float4(curLum, 1.0f, 1.0f, 1.0f);
     return float4(log(adaptedLum), 1.0f, 1.0f, 1.0f);
 }
 
