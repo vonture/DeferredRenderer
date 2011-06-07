@@ -20,20 +20,26 @@ DirectionalLightRenderer::DirectionalLightRenderer()
 HRESULT DirectionalLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, 
 	std::vector<ModelInstance*>* models, Camera* camera, AxisAlignedBox* sceneBounds)
 {
-	// Save the old viewport
-	D3D11_VIEWPORT vpOld[D3D11_VIEWPORT_AND_SCISSORRECT_MAX_INDEX];
-    UINT nViewPorts = 1;
-    pd3dImmediateContext->RSGetViewports(&nViewPorts, vpOld);
-	
-	// Iterate over the lights and render the shadow maps
-	for (UINT i = 0; i < GetCount(true) && i < NUM_SHADOW_MAPS; i++)
+	if (GetCount(true) > 0)
 	{
-		renderDepth(pd3dImmediateContext, GetLight(i, true), i, models, camera, sceneBounds);
-	}
+		DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Directional Light Shadow Maps");
 
-	// Re-apply the old viewport
-	pd3dImmediateContext->RSSetViewports(nViewPorts, vpOld);
+		// Save the old viewport
+		D3D11_VIEWPORT vpOld[D3D11_VIEWPORT_AND_SCISSORRECT_MAX_INDEX];
+		UINT nViewPorts = 1;
+		pd3dImmediateContext->RSGetViewports(&nViewPorts, vpOld);
 	
+		// Iterate over the lights and render the shadow maps
+		for (UINT i = 0; i < GetCount(true) && i < NUM_SHADOW_MAPS; i++)
+		{
+			renderDepth(pd3dImmediateContext, GetLight(i, true), i, models, camera, sceneBounds);
+		}
+
+		// Re-apply the old viewport
+		pd3dImmediateContext->RSSetViewports(nViewPorts, vpOld);
+
+		DXUT_EndPerfEvent();
+	}
 	return S_OK;
 }
 
@@ -427,7 +433,6 @@ void DirectionalLightRenderer::CreateFrustumPointsFromCascadeInterval( float fCa
                                                         XMMATRIX &vProjection,
                                                         XMVECTOR* pvCornerPointsWorld ) 
 {
-
     Frustum vViewFrust;
     Collision::ComputeFrustumFromProjection( &vViewFrust, &vProjection );
     vViewFrust.Near = fCascadeIntervalBegin;
@@ -652,113 +657,120 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
 	GBuffer* gBuffer)
 {	
-	HRESULT hr;
-	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	
-	// prepare the camera properties buffer
-	XMVECTOR det;
-	XMMATRIX cameraInvViewProj = XMMatrixInverse(&det, camera->GetViewProjection());
-	XMVECTOR cameraPos = camera->GetPosition();
-
-	// Set the global properties for all directional lights
-	ID3D11SamplerState* samplers[2] =
+	if (GetCount(true) + GetCount(false) > 0)
 	{
-		GetSamplerStates()->GetPoint(),
-		GetSamplerStates()->GetShadowMap(),
-	};
-	pd3dImmediateContext->PSSetSamplers(0, 2, samplers);
-	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetReverseDepthEnabled(), 0);	
+		DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Directional Lights");
 
-	float blendFactor[4] = {1, 1, 1, 1};
-	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetAdditiveBlend(), blendFactor, 0xFFFFFFFF);
-
-	V_RETURN(gBuffer->PSSetShaderResources(pd3dImmediateContext, 0));
-
-	// map the camera properties
-	V_RETURN(pd3dImmediateContext->Map(_cameraPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
-	CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES* cameraProperties = (CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES*)mappedResource.pData;
+		HRESULT hr;
+		D3D11_MAPPED_SUBRESOURCE mappedResource;
 	
-	cameraProperties->InverseViewProjection = XMMatrixTranspose(cameraInvViewProj);
-	XMStoreFloat4(&cameraProperties->CameraPosition, cameraPos);
+		// prepare the camera properties buffer
+		XMVECTOR det;
+		XMMATRIX cameraInvViewProj = XMMatrixInverse(&det, camera->GetViewProjection());
+		XMVECTOR cameraPos = camera->GetPosition();
 
-	pd3dImmediateContext->Unmap(_cameraPropertiesBuffer, 0);
-
-	pd3dImmediateContext->PSSetConstantBuffers(0, 1, &_cameraPropertiesBuffer);
-
-	// Begin rendering unshadowed lights
-	int numUnshadowed = GetCount(false);
-	for (int i = 0; i < numUnshadowed; i++)
-	{
-		DirectionalLight* light = GetLight(i, false);
-
-		V_RETURN(pd3dImmediateContext->Map(_lightPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
-		CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES* lightProperties = 
-			(CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
-
-		XMStoreFloat4(&lightProperties->LightColor, light->GetColor());
-		XMStoreFloat3(&lightProperties->LightDirection, light->GetDirection());
-		lightProperties->LightIntensity = light->GetItensity();
-
-		pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
-
-		pd3dImmediateContext->PSSetConstantBuffers(1, 1, &_lightPropertiesBuffer);
-
-		_fsQuad.Render(pd3dImmediateContext, _unshadowedPS);
-	}
-	
-	// begin rendering shadowed lights
-	int numShadowed = GetCount(true);
-	for (int i = 0; i < numShadowed; i++)
-	{
-		DirectionalLight* light = GetLight(i, true);
-
-		// Prepare the light properties
-		V_RETURN(pd3dImmediateContext->Map(_lightPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
-		CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES* lightProperties = 
-			(CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
-
-		XMStoreFloat4(&lightProperties->LightColor, light->GetColor());
-		XMStoreFloat3(&lightProperties->LightDirection, light->GetDirection());
-		lightProperties->LightIntensity = light->GetItensity();
-
-		pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
-		
-		// Prepare the shadow properties
-		V_RETURN(pd3dImmediateContext->Map(_shadowPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
-		CB_DIRECTIONALLIGHT_SHADOW_PROPERTIES* shadowProperties = 
-			(CB_DIRECTIONALLIGHT_SHADOW_PROPERTIES*)mappedResource.pData;
-
-		for (UINT j = 0; j < NUM_CASCADES; j++)
+		// Set the global properties for all directional lights
+		ID3D11SamplerState* samplers[2] =
 		{
-			shadowProperties->CascadeSplits[j] = _cascadeSplits[i][j];
-			shadowProperties->ShadowMatricies[j] = XMMatrixTranspose(_shadowMatricies[i][j]);
-		}
-		shadowProperties->CameraClips = XMFLOAT2(camera->GetNearClip(), camera->GetFarClip());
-		shadowProperties->ShadowMapSize = XMFLOAT2((float)SHADOW_MAP_SIZE, (float)SHADOW_MAP_SIZE);
-
-		pd3dImmediateContext->Unmap(_shadowPropertiesBuffer, 0);
-
-		// Set both constant buffers back to the shader at once
-		ID3D11Buffer* constantBuffers[2] = 
-		{
-			_lightPropertiesBuffer,
-			_shadowPropertiesBuffer
+			GetSamplerStates()->GetPoint(),
+			GetSamplerStates()->GetShadowMap(),
 		};
-		pd3dImmediateContext->PSSetConstantBuffers(1, 2, constantBuffers);
+		pd3dImmediateContext->PSSetSamplers(0, 2, samplers);
+		pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetReverseDepthEnabled(), 0);	
 
-		// Set the shadow map SRV
-		pd3dImmediateContext->PSSetShaderResources(5, 1, &_shadowMapSRVs[i]);
+		float blendFactor[4] = {1, 1, 1, 1};
+		pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetAdditiveBlend(), blendFactor, 0xFFFFFFFF);
 
-		// Finally, render the quad
-		_fsQuad.Render(pd3dImmediateContext, _shadowedPS);
+		V_RETURN(gBuffer->PSSetShaderResources(pd3dImmediateContext, 0));
+
+		// map the camera properties
+		V_RETURN(pd3dImmediateContext->Map(_cameraPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+		CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES* cameraProperties = (CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES*)mappedResource.pData;
+	
+		cameraProperties->InverseViewProjection = XMMatrixTranspose(cameraInvViewProj);
+		XMStoreFloat4(&cameraProperties->CameraPosition, cameraPos);
+
+		pd3dImmediateContext->Unmap(_cameraPropertiesBuffer, 0);
+
+		pd3dImmediateContext->PSSetConstantBuffers(0, 1, &_cameraPropertiesBuffer);
+
+		// Begin rendering unshadowed lights
+		int numUnshadowed = GetCount(false);
+		for (int i = 0; i < numUnshadowed; i++)
+		{
+			DirectionalLight* light = GetLight(i, false);
+
+			V_RETURN(pd3dImmediateContext->Map(_lightPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+			CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES* lightProperties = 
+				(CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
+
+			XMStoreFloat4(&lightProperties->LightColor, light->GetColor());
+			XMStoreFloat3(&lightProperties->LightDirection, light->GetDirection());
+			lightProperties->LightIntensity = light->GetItensity();
+
+			pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
+
+			pd3dImmediateContext->PSSetConstantBuffers(1, 1, &_lightPropertiesBuffer);
+
+			_fsQuad.Render(pd3dImmediateContext, _unshadowedPS);
+		}
+	
+		// begin rendering shadowed lights
+		int numShadowed = GetCount(true);
+		for (int i = 0; i < numShadowed; i++)
+		{
+			DirectionalLight* light = GetLight(i, true);
+
+			// Prepare the light properties
+			V_RETURN(pd3dImmediateContext->Map(_lightPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+			CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES* lightProperties = 
+				(CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
+
+			XMStoreFloat4(&lightProperties->LightColor, light->GetColor());
+			XMStoreFloat3(&lightProperties->LightDirection, light->GetDirection());
+			lightProperties->LightIntensity = light->GetItensity();
+
+			pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
+		
+			// Prepare the shadow properties
+			V_RETURN(pd3dImmediateContext->Map(_shadowPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+			CB_DIRECTIONALLIGHT_SHADOW_PROPERTIES* shadowProperties = 
+				(CB_DIRECTIONALLIGHT_SHADOW_PROPERTIES*)mappedResource.pData;
+
+			for (UINT j = 0; j < NUM_CASCADES; j++)
+			{
+				shadowProperties->CascadeSplits[j] = _cascadeSplits[i][j];
+				shadowProperties->ShadowMatricies[j] = XMMatrixTranspose(_shadowMatricies[i][j]);
+			}
+			shadowProperties->CameraClips = XMFLOAT2(camera->GetNearClip(), camera->GetFarClip());
+			shadowProperties->ShadowMapSize = XMFLOAT2((float)SHADOW_MAP_SIZE, (float)SHADOW_MAP_SIZE);
+
+			pd3dImmediateContext->Unmap(_shadowPropertiesBuffer, 0);
+
+			// Set both constant buffers back to the shader at once
+			ID3D11Buffer* constantBuffers[2] = 
+			{
+				_lightPropertiesBuffer,
+				_shadowPropertiesBuffer
+			};
+			pd3dImmediateContext->PSSetConstantBuffers(1, 2, constantBuffers);
+
+			// Set the shadow map SRV
+			pd3dImmediateContext->PSSetShaderResources(5, 1, &_shadowMapSRVs[i]);
+
+			// Finally, render the quad
+			_fsQuad.Render(pd3dImmediateContext, _shadowedPS);
+		}
+
+		// Unset the shadow map SRV
+		ID3D11ShaderResourceView* nullSRV[1] = 
+		{
+			NULL,
+		};
+		pd3dImmediateContext->PSSetShaderResources(5, 1, nullSRV);
+
+		DXUT_EndPerfEvent();
 	}
-
-	// Unset the shadow map SRV
-	ID3D11ShaderResourceView* nullSRV[1] = 
-	{
-		NULL,
-	};
-	pd3dImmediateContext->PSSetShaderResources(5, 1, nullSRV);
 
 	return S_OK;
 }

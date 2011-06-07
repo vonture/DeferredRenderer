@@ -19,20 +19,26 @@ PointLightRenderer::PointLightRenderer()
 HRESULT PointLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*>* models,
 	Camera* camera, AxisAlignedBox* sceneBounds)
 {
-	// Save the old viewport
-	D3D11_VIEWPORT vpOld[D3D11_VIEWPORT_AND_SCISSORRECT_MAX_INDEX];
-    UINT nViewPorts = 1;
-    pd3dImmediateContext->RSGetViewports(&nViewPorts, vpOld);
-
-	// Iterate over the lights and render the shadow maps
-	for (UINT i = 0; i < GetCount(true) && i < NUM_SHADOW_MAPS; i++)
+	if (GetCount(true) > 0)
 	{
-		renderDepth(pd3dImmediateContext, GetLight(i, true), i, models, camera, sceneBounds);
+		DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Point Light Shadow Maps");
+
+		// Save the old viewport
+		D3D11_VIEWPORT vpOld[D3D11_VIEWPORT_AND_SCISSORRECT_MAX_INDEX];
+		UINT nViewPorts = 1;
+		pd3dImmediateContext->RSGetViewports(&nViewPorts, vpOld);
+
+		// Iterate over the lights and render the shadow maps
+		for (UINT i = 0; i < GetCount(true) && i < NUM_SHADOW_MAPS; i++)
+		{
+			renderDepth(pd3dImmediateContext, GetLight(i, true), i, models, camera, sceneBounds);
+		}
+
+		// Re-apply the old viewport
+		pd3dImmediateContext->RSSetViewports(nViewPorts, vpOld);
+		
+		DXUT_EndPerfEvent();
 	}
-
-	// Re-apply the old viewport
-	pd3dImmediateContext->RSSetViewports(nViewPorts, vpOld);
-
 	return S_OK;
 }
 
@@ -191,220 +197,226 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
 	GBuffer* gBuffer)
 {
-	HRESULT hr;
-	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	
-	// prepare the camera properties buffer
-	XMVECTOR det;
-	XMMATRIX cameraInvViewProj = XMMatrixInverse(&det, camera->GetViewProjection());
-	XMVECTOR cameraPos = camera->GetPosition();
-
-	// Set the global properties for all point lights
-	ID3D11SamplerState* samplers[2] =
+	if (GetCount(true) + GetCount(false) > 0)
 	{
-		GetSamplerStates()->GetPoint(),
-		GetSamplerStates()->GetShadowMap(),
-	};
-	pd3dImmediateContext->PSSetSamplers(0, 2, samplers);	
+		DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Point Lights");
 
-	float blendFactor[4] = {1, 1, 1, 1};
-	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetAdditiveBlend(), blendFactor, 0xFFFFFFFF);
-
-	V_RETURN(gBuffer->PSSetShaderResources(pd3dImmediateContext, 0));	
-
-	// Set the shaders and input
-	pd3dImmediateContext->GSSetShader(NULL, NULL, 0);
-	pd3dImmediateContext->VSSetShader(_vertexShader, NULL, 0);
-
-	pd3dImmediateContext->IASetInputLayout(_lightInputLayout);
-
-	// build the camera frustum
-	XMMATRIX proj = camera->GetProjection();
-
-	Frustum cameraFrust;
-	Collision::ComputeFrustumFromProjection(&cameraFrust, &proj);
-	XMStoreFloat3(&cameraFrust.Origin, camera->GetPosition());
-	XMStoreFloat4(&cameraFrust.Orientation, camera->GetOrientation());
-
-	// map the camera properties
-	V_RETURN(pd3dImmediateContext->Map(_cameraPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
-	CB_POINTLIGHT_CAMERA_PROPERTIES* cameraProperties = (CB_POINTLIGHT_CAMERA_PROPERTIES*)mappedResource.pData;
+		HRESULT hr;
+		D3D11_MAPPED_SUBRESOURCE mappedResource;
 	
-	cameraProperties->InverseViewProjection = XMMatrixTranspose(cameraInvViewProj);
-	XMStoreFloat4(&cameraProperties->CameraPosition, cameraPos);
+		// prepare the camera properties buffer
+		XMVECTOR det;
+		XMMATRIX cameraInvViewProj = XMMatrixInverse(&det, camera->GetViewProjection());
+		XMVECTOR cameraPos = camera->GetPosition();
 
-	pd3dImmediateContext->Unmap(_cameraPropertiesBuffer, 0);
-
-	pd3dImmediateContext->PSSetConstantBuffers(0, 1, &_cameraPropertiesBuffer);
-
-	ID3D11RasterizerState* prevRS;
-	pd3dImmediateContext->RSGetState(&prevRS);
-
-	D3D11_RASTERIZER_DESC rsDesc;
-	prevRS->GetDesc(&rsDesc);
-
-	// Begin rendering unshadowed lights
-	pd3dImmediateContext->PSSetShader(_unshadowedPS, NULL, 0);	
-
-	int numUnshadowed = GetCount(false);
-	for (int i = 0; i < numUnshadowed; i++)
-	{
-		PointLight* light = GetLight(i, false);
-		XMVECTOR lightPosition = light->GetPosition();
-		float lightRadius = light->GetRadius();
-
-		// Verify that the light is visible
-		Sphere lightBounds;
-		XMStoreFloat3(&lightBounds.Center, lightPosition);
-		lightBounds.Radius = lightRadius;
-
-		if (!Collision::IntersectSphereFrustum(&lightBounds, &cameraFrust))
+		// Set the global properties for all point lights
+		ID3D11SamplerState* samplers[2] =
 		{
-			continue;
-		}
+			GetSamplerStates()->GetPoint(),
+			GetSamplerStates()->GetShadowMap(),
+		};
+		pd3dImmediateContext->PSSetSamplers(0, 2, samplers);	
 
-		// Depending on if the camera is within the light, flip the vertex winding
-		if (Collision::IntersectPointSphere(cameraPos, &lightBounds))
+		float blendFactor[4] = {1, 1, 1, 1};
+		pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetAdditiveBlend(), blendFactor, 0xFFFFFFFF);
+
+		V_RETURN(gBuffer->PSSetShaderResources(pd3dImmediateContext, 0));	
+
+		// Set the shaders and input
+		pd3dImmediateContext->GSSetShader(NULL, NULL, 0);
+		pd3dImmediateContext->VSSetShader(_vertexShader, NULL, 0);
+
+		pd3dImmediateContext->IASetInputLayout(_lightInputLayout);
+
+		// build the camera frustum
+		XMMATRIX proj = camera->GetProjection();
+
+		Frustum cameraFrust;
+		Collision::ComputeFrustumFromProjection(&cameraFrust, &proj);
+		XMStoreFloat3(&cameraFrust.Origin, camera->GetPosition());
+		XMStoreFloat4(&cameraFrust.Orientation, camera->GetOrientation());
+
+		// map the camera properties
+		V_RETURN(pd3dImmediateContext->Map(_cameraPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+		CB_POINTLIGHT_CAMERA_PROPERTIES* cameraProperties = (CB_POINTLIGHT_CAMERA_PROPERTIES*)mappedResource.pData;
+	
+		cameraProperties->InverseViewProjection = XMMatrixTranspose(cameraInvViewProj);
+		XMStoreFloat4(&cameraProperties->CameraPosition, cameraPos);
+
+		pd3dImmediateContext->Unmap(_cameraPropertiesBuffer, 0);
+
+		pd3dImmediateContext->PSSetConstantBuffers(0, 1, &_cameraPropertiesBuffer);
+
+		ID3D11RasterizerState* prevRS;
+		pd3dImmediateContext->RSGetState(&prevRS);
+
+		D3D11_RASTERIZER_DESC rsDesc;
+		prevRS->GetDesc(&rsDesc);
+
+		// Begin rendering unshadowed lights
+		pd3dImmediateContext->PSSetShader(_unshadowedPS, NULL, 0);	
+
+		int numUnshadowed = GetCount(false);
+		for (int i = 0; i < numUnshadowed; i++)
 		{
-			pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetFrontFaceCull());
-			pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetReverseDepthEnabled(), 0);
-		}
-		else
-		{
-			pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetBackFaceCull());
-			pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthEnabled(), 0);
-		}
+			PointLight* light = GetLight(i, false);
+			XMVECTOR lightPosition = light->GetPosition();
+			float lightRadius = light->GetRadius();
 
-		// Setup the model and map the model properties
-		_lightModel.SetPosition(lightPosition);
-		_lightModel.SetScale(lightRadius);
-		XMMATRIX world = _lightModel.GetWorld();
-		XMMATRIX wvp = XMMatrixMultiply(world, camera->GetViewProjection());
+			// Verify that the light is visible
+			Sphere lightBounds;
+			XMStoreFloat3(&lightBounds.Center, lightPosition);
+			lightBounds.Radius = lightRadius;
 
-		V_RETURN(pd3dImmediateContext->Map(_modelPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
-		CB_POINTLIGHT_MODEL_PROPERTIES* modelProperties = 
-			(CB_POINTLIGHT_MODEL_PROPERTIES*)mappedResource.pData;
+			if (!Collision::IntersectSphereFrustum(&lightBounds, &cameraFrust))
+			{
+				continue;
+			}
 
-		modelProperties->World = XMMatrixTranspose(world);
-		modelProperties->WorldViewProjection = XMMatrixTranspose(wvp);
+			// Depending on if the camera is within the light, flip the vertex winding
+			if (Collision::IntersectPointSphere(cameraPos, &lightBounds))
+			{
+				pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetFrontFaceCull());
+				pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetReverseDepthEnabled(), 0);
+			}
+			else
+			{
+				pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetBackFaceCull());
+				pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthEnabled(), 0);
+			}
 
-		pd3dImmediateContext->Unmap(_modelPropertiesBuffer, 0);
+			// Setup the model and map the model properties
+			_lightModel.SetPosition(lightPosition);
+			_lightModel.SetScale(lightRadius);
+			XMMATRIX world = _lightModel.GetWorld();
+			XMMATRIX wvp = XMMatrixMultiply(world, camera->GetViewProjection());
 
-		pd3dImmediateContext->VSSetConstantBuffers(1, 1, &_modelPropertiesBuffer);
+			V_RETURN(pd3dImmediateContext->Map(_modelPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+			CB_POINTLIGHT_MODEL_PROPERTIES* modelProperties = 
+				(CB_POINTLIGHT_MODEL_PROPERTIES*)mappedResource.pData;
 
-		// Map the light properties
-		V_RETURN(pd3dImmediateContext->Map(_lightPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
-		CB_POINTLIGHT_LIGHT_PROPERTIES* lightProperties = 
-			(CB_POINTLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
+			modelProperties->World = XMMatrixTranspose(world);
+			modelProperties->WorldViewProjection = XMMatrixTranspose(wvp);
 
-		XMStoreFloat3(&lightProperties->LightColor, light->GetColor());
-		XMStoreFloat3(&lightProperties->LightPosition, lightPosition);
-		lightProperties->LightIntensity = light->GetItensity();
-		lightProperties->LightRadius = light->GetRadius();
+			pd3dImmediateContext->Unmap(_modelPropertiesBuffer, 0);
 
-		pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
+			pd3dImmediateContext->VSSetConstantBuffers(1, 1, &_modelPropertiesBuffer);
+
+			// Map the light properties
+			V_RETURN(pd3dImmediateContext->Map(_lightPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+			CB_POINTLIGHT_LIGHT_PROPERTIES* lightProperties = 
+				(CB_POINTLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
+
+			XMStoreFloat3(&lightProperties->LightColor, light->GetColor());
+			XMStoreFloat3(&lightProperties->LightPosition, lightPosition);
+			lightProperties->LightIntensity = light->GetItensity();
+			lightProperties->LightRadius = light->GetRadius();
+
+			pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
 				
-		pd3dImmediateContext->PSSetConstantBuffers(2, 1, &_lightPropertiesBuffer);
+			pd3dImmediateContext->PSSetConstantBuffers(2, 1, &_lightPropertiesBuffer);
 		
-		Model* model = _lightModel.GetModel();
-		model->Render(pd3dImmediateContext);
-	}
-
-	// Render the shadowed lights
-	pd3dImmediateContext->PSSetShader(_shadowedPS, NULL, 0);	
-
-	int numShadowed = GetCount(true);
-	for (int i = 0; i < numShadowed; i++)
-	{
-		PointLight* light = GetLight(i, true);
-		XMVECTOR lightPosition = light->GetPosition();
-		float lightRadius = light->GetRadius();
-
-		// Verify that the light is visible
-		Sphere lightBounds;
-		XMStoreFloat3(&lightBounds.Center, lightPosition);
-		lightBounds.Radius = lightRadius;
-
-		if (!Collision::IntersectSphereFrustum(&lightBounds, &cameraFrust))
-		{
-			continue;
+			Model* model = _lightModel.GetModel();
+			model->Render(pd3dImmediateContext);
 		}
 
-		// Depending on if the camera is within the light, flip the vertex winding
-		if (Collision::IntersectPointSphere(cameraPos, &lightBounds))
+		// Render the shadowed lights
+		pd3dImmediateContext->PSSetShader(_shadowedPS, NULL, 0);	
+
+		int numShadowed = GetCount(true);
+		for (int i = 0; i < numShadowed; i++)
 		{
-			pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetFrontFaceCull());
-			pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetReverseDepthEnabled(), 0);
-		}
-		else
-		{
-			pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetBackFaceCull());
-			pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthEnabled(), 0);
-		}
+			PointLight* light = GetLight(i, true);
+			XMVECTOR lightPosition = light->GetPosition();
+			float lightRadius = light->GetRadius();
 
-		// Setup the model and map the model properties
-		_lightModel.SetPosition(lightPosition);
-		_lightModel.SetScale(lightRadius);
-		XMMATRIX world = _lightModel.GetWorld();
-		XMMATRIX wvp = XMMatrixMultiply(world, camera->GetViewProjection());
+			// Verify that the light is visible
+			Sphere lightBounds;
+			XMStoreFloat3(&lightBounds.Center, lightPosition);
+			lightBounds.Radius = lightRadius;
 
-		V_RETURN(pd3dImmediateContext->Map(_modelPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
-		CB_POINTLIGHT_MODEL_PROPERTIES* modelProperties = 
-			(CB_POINTLIGHT_MODEL_PROPERTIES*)mappedResource.pData;
+			if (!Collision::IntersectSphereFrustum(&lightBounds, &cameraFrust))
+			{
+				continue;
+			}
 
-		modelProperties->World = XMMatrixTranspose(world);
-		modelProperties->WorldViewProjection = XMMatrixTranspose(wvp);
+			// Depending on if the camera is within the light, flip the vertex winding
+			if (Collision::IntersectPointSphere(cameraPos, &lightBounds))
+			{
+				pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetFrontFaceCull());
+				pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetReverseDepthEnabled(), 0);
+			}
+			else
+			{
+				pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetBackFaceCull());
+				pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthEnabled(), 0);
+			}
 
-		pd3dImmediateContext->Unmap(_modelPropertiesBuffer, 0);
+			// Setup the model and map the model properties
+			_lightModel.SetPosition(lightPosition);
+			_lightModel.SetScale(lightRadius);
+			XMMATRIX world = _lightModel.GetWorld();
+			XMMATRIX wvp = XMMatrixMultiply(world, camera->GetViewProjection());
 
-		pd3dImmediateContext->VSSetConstantBuffers(1, 1, &_modelPropertiesBuffer);
+			V_RETURN(pd3dImmediateContext->Map(_modelPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+			CB_POINTLIGHT_MODEL_PROPERTIES* modelProperties = 
+				(CB_POINTLIGHT_MODEL_PROPERTIES*)mappedResource.pData;
 
-		// Map the light properties
-		V_RETURN(pd3dImmediateContext->Map(_lightPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
-		CB_POINTLIGHT_LIGHT_PROPERTIES* lightProperties = 
-			(CB_POINTLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
+			modelProperties->World = XMMatrixTranspose(world);
+			modelProperties->WorldViewProjection = XMMatrixTranspose(wvp);
 
-		XMStoreFloat3(&lightProperties->LightColor, light->GetColor());
-		XMStoreFloat3(&lightProperties->LightPosition, lightPosition);
-		lightProperties->LightIntensity = light->GetItensity();
-		lightProperties->LightRadius = light->GetRadius();
+			pd3dImmediateContext->Unmap(_modelPropertiesBuffer, 0);
 
-		pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
+			pd3dImmediateContext->VSSetConstantBuffers(1, 1, &_modelPropertiesBuffer);
 
-		pd3dImmediateContext->PSSetConstantBuffers(2, 1, &_lightPropertiesBuffer);
+			// Map the light properties
+			V_RETURN(pd3dImmediateContext->Map(_lightPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+			CB_POINTLIGHT_LIGHT_PROPERTIES* lightProperties = 
+				(CB_POINTLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
 
-		// Map the shadow properties
-		V_RETURN(pd3dImmediateContext->Map(_shadowPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
-		CB_POINTLIGHT_SHADOW_PROPERTIES* shadowProperties = 
-			(CB_POINTLIGHT_SHADOW_PROPERTIES*)mappedResource.pData;
+			XMStoreFloat3(&lightProperties->LightColor, light->GetColor());
+			XMStoreFloat3(&lightProperties->LightPosition, lightPosition);
+			lightProperties->LightIntensity = light->GetItensity();
+			lightProperties->LightRadius = light->GetRadius();
+
+			pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
+
+			pd3dImmediateContext->PSSetConstantBuffers(2, 1, &_lightPropertiesBuffer);
+
+			// Map the shadow properties
+			V_RETURN(pd3dImmediateContext->Map(_shadowPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+			CB_POINTLIGHT_SHADOW_PROPERTIES* shadowProperties = 
+				(CB_POINTLIGHT_SHADOW_PROPERTIES*)mappedResource.pData;
 		
-		shadowProperties->CameraClips = XMFLOAT2(0.1f, light->GetRadius());
-		shadowProperties->ShadowMapSize = XMFLOAT2((float)SHADOW_MAP_SIZE, (float)SHADOW_MAP_SIZE * 0.5f);
-		shadowProperties->Bias = BIAS;
-		shadowProperties->ShadowMatrix = XMMatrixTranspose(_shadowMatricies[i]);
+			shadowProperties->CameraClips = XMFLOAT2(0.1f, light->GetRadius());
+			shadowProperties->ShadowMapSize = XMFLOAT2((float)SHADOW_MAP_SIZE, (float)SHADOW_MAP_SIZE * 0.5f);
+			shadowProperties->Bias = BIAS;
+			shadowProperties->ShadowMatrix = XMMatrixTranspose(_shadowMatricies[i]);
 
-		pd3dImmediateContext->Unmap(_shadowPropertiesBuffer, 0);
+			pd3dImmediateContext->Unmap(_shadowPropertiesBuffer, 0);
 
-		pd3dImmediateContext->PSSetConstantBuffers(3, 1, &_shadowPropertiesBuffer);
+			pd3dImmediateContext->PSSetConstantBuffers(3, 1, &_shadowPropertiesBuffer);
 
-		// Set the shadow map
-		pd3dImmediateContext->PSSetShaderResources(5, 1, &_shadowMapSRVs[i]);
+			// Set the shadow map
+			pd3dImmediateContext->PSSetShaderResources(5, 1, &_shadowMapSRVs[i]);
 
-		Model* model = _lightModel.GetModel();
-		model->Render(pd3dImmediateContext);
+			Model* model = _lightModel.GetModel();
+			model->Render(pd3dImmediateContext);
+		}
+
+		// Unset the shadow map SRV
+		ID3D11ShaderResourceView* nullSRV[1] = 
+		{
+			NULL,
+		};
+		pd3dImmediateContext->PSSetShaderResources(5, 1, nullSRV);
+
+		// Reset the raster state
+		pd3dImmediateContext->RSSetState(prevRS);
+		SAFE_RELEASE(prevRS);
+
+		DXUT_EndPerfEvent();
 	}
-
-	// Unset the shadow map SRV
-	ID3D11ShaderResourceView* nullSRV[1] = 
-	{
-		NULL,
-	};
-	pd3dImmediateContext->PSSetShaderResources(5, 1, nullSRV);
-
-	// Reset the raster state
-	pd3dImmediateContext->RSSetState(prevRS);
-	SAFE_RELEASE(prevRS);
-
 	return S_OK;
 }
 
