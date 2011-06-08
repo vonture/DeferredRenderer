@@ -6,6 +6,8 @@ SkyPostProcess::SkyPostProcess()
 	_skyColor = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
 	_sunColor = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
 	_sunDirection = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+	_sunWidth = 0.0f;
+	_enableSun = false;
 }
 
 SkyPostProcess::~SkyPostProcess()
@@ -24,12 +26,20 @@ HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	// depth values
 
 	// Prepare all the settings and map them
+	XMVECTOR det;	
+	XMMATRIX invViewProj = XMMatrixInverse(&det, camera->GetViewProjection());
+	//XMMATRIX invViewProj = camera->GetViewProjection();
+
 	V_RETURN(pd3dImmediateContext->Map(_skyProperties, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 	CB_SKY_PROPERTIES* skyProperties = (CB_SKY_PROPERTIES*)mappedResource.pData;
 		
 	XMStoreFloat3(&skyProperties->SkyColor, _skyColor);
 	XMStoreFloat3(&skyProperties->SunColor, _sunColor);
 	XMStoreFloat3(&skyProperties->SunDirection, _sunDirection);
+	skyProperties->SunWidth = _sunWidth;
+	skyProperties->SunEnabled = _enableSun ? 1 : 0;
+	XMStoreFloat3(&skyProperties->CameraPosition, camera->GetPosition());
+	XMStoreFloat4x4(&skyProperties->InverseViewProjection, XMMatrixTranspose(invViewProj));
 
 	pd3dImmediateContext->Unmap(_skyProperties, 0);
 
