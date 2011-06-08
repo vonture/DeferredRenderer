@@ -9,9 +9,9 @@ Game::Game()
 	_scene.SetPosition(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f));
 	//_scene.SetOrientation(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f));
 
-	_camera.SetPosition(XMVectorSet(-5.0f, 5.0f, -5.0f, 1.0f));
-	_camera.SetXRotation(PiOver4);
-	_camera.SetYRotation(PiOver8);
+	_camera.SetPosition(XMVectorSet(1.0f, 4.0f, -6.0f, 1.0f));
+	_camera.SetXRotation(-0.1f);
+	_camera.SetYRotation(0.35f);
 
 	_directionalLights.push_back(
 		DirectionalLight(XMVectorSet(1.0f, 0.8f, 0.5f, 1.0f), 5.0f, XMVectorSet(0.5f, 0.6f, 0.5f, 1.0f)));
@@ -21,7 +21,7 @@ Game::Game()
 	//	DirectionalLight(XMVectorSet(1.0f, 1.0f, 0.3f, 1.0f), 0.4f, XMVectorSet(0.8f, 0.9, 0.8f, 1.0f)));
 	
 	_pointLights.push_back(
-		PointLight(XMVectorSet(0.6f, 1.0f, 0.5f, 1.0f), 3.0f, XMVectorSet(3.0f, 3.0f, -4.0f, 1.0f), 10.0f));
+		PointLight(XMVectorSet(0.6f, 1.0f, 0.5f, 1.0f), 8.0f, XMVectorSet(3.0f, 3.0f, -4.0f, 1.0f), 10.0f));
 	//_pointLights.push_back(
 	//	PointLight(XMVectorSet(1.0f, 0.0f, 0.3f, 1.0f), 0.9f, XMVectorSet(11.0f, 5.0f, 6.5f, 1.0f), 9.0f));
 	//_pointLights.push_back(
@@ -42,12 +42,17 @@ void Game::OnFrameMove(double totalTime, float dt)
 	{
 		_renderer.SetDrawBoundingObjects(!_renderer.GetDrawBoundingObjects());
 	}
+
+	if (kb.IsKeyJustPressed(F11))
+	{
+		DXUTToggleFullScreen();
+	}
 	
 	if (mouse.IsButtonDown(LeftButton))
 	{
 		const float mouseRotateSpeed = 0.002f;
-		_camera.SetXRotation(_camera.GetXRotation() + (mouse.GetDX() * mouseRotateSpeed));
-		_camera.SetYRotation(_camera.GetYRotation() + (mouse.GetDY() * mouseRotateSpeed));
+		_camera.SetRotation(_camera.GetXRotation() + (mouse.GetDX() * mouseRotateSpeed),
+						    _camera.GetYRotation() + (mouse.GetDY() * mouseRotateSpeed));
 
 		// Set the mouse back one frame 
 		MouseState::SetCursorPosition(mouse.GetX() - mouse.GetDX(), mouse.GetY() - mouse.GetDY());
