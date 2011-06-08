@@ -81,18 +81,18 @@ HRESULT Model::Render(ID3D11DeviceContext* context, UINT diffuseSlot, UINT norma
 	return S_OK;
 }
 
-HRESULT Model::RenderMesh(ID3D11DeviceContext* context, UINT partIdx, UINT diffuseSlot, 
+HRESULT Model::RenderMesh(ID3D11DeviceContext* context, UINT meshIdx, UINT diffuseSlot, 
 	UINT normalSlot, UINT specularSlot)
 {
-	context->IASetVertexBuffers(0, _meshes[partIdx].GetVertexBufferCount(), 
-		_meshes[partIdx].GetVertexBuffers(), _meshes[partIdx].GetVertexStrides(),
-		_meshes[partIdx].GetOffsets());
-	context->IASetIndexBuffer(_meshes[partIdx].GetIndexBuffer(), _meshes[partIdx].GetIndexBufferFormat(), 0);
+	context->IASetVertexBuffers(0, _meshes[meshIdx].GetVertexBufferCount(), 
+		_meshes[meshIdx].GetVertexBuffers(), _meshes[meshIdx].GetVertexStrides(),
+		_meshes[meshIdx].GetOffsets());
+	context->IASetIndexBuffer(_meshes[meshIdx].GetIndexBuffer(), _meshes[meshIdx].GetIndexBufferFormat(), 0);
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	
-	for (UINT i = 0; i < _meshes[partIdx].GetMeshPartCount(); i++)
+	for (UINT i = 0; i < _meshes[meshIdx].GetMeshPartCount(); i++)
 	{
-		MeshPart part = _meshes[partIdx].GetMeshPart(i);
+		MeshPart part = _meshes[meshIdx].GetMeshPart(i);
 		UINT matIdx = part.MaterialIndex;
 
 		if (diffuseSlot != INVALID_SAMPLER_SLOT)
