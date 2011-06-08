@@ -40,10 +40,12 @@ float AngleBetween(float3 dirA, float3 dirB)
 //-------------------------------------------------------------------------------------------------
 float3 CIEClearSky(float3 dir, float3 sunDir)
 {
+	const float3 vUp = float3(0.0f, 1.0f, 0.0f);
+
 	float3 skyDir = float3(dir.x, abs(dir.y), dir.z);
 	float gamma = AngleBetween(skyDir, sunDir);
-	float S = AngleBetween(sunDir, float3(0, 1, 0));
-	float theta = AngleBetween(skyDir, float3(0, 1, 0));
+	float S = AngleBetween(sunDir, vUp);
+	float theta = AngleBetween(skyDir, vUp);
 
 	float cosTheta = cos(theta);
 	float cosS = cos(S);
@@ -61,7 +63,6 @@ float3 CIEClearSky(float3 dir, float3 sunDir)
 
 	float3 finalSkyColor = SkyColor;
 
-	// Draw a circle for the sun
 	[flatten]
 	if (SunEnabled)
 	{
