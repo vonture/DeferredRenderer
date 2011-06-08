@@ -86,6 +86,22 @@ void Game::OnFrameMove(double totalTime, float dt)
 
 	XMVECTOR skyColor = XMVectorSet(0.2f, 0.5f, 1.0f, 1.0f);
 	_skyPP.SetSkyColor(skyColor);
+	
+	if (_directionalLights.size() > 0)
+	{
+		XMVECTOR sunCol = _directionalLights[0].GetColor();
+		XMVECTOR sunDir = _directionalLights[0].GetDirection();
+		float intensity = _directionalLights[0].GetItensity();
+
+		_skyPP.SetSunColor(sunCol);
+		_skyPP.SetSunDirection(sunDir);
+		_skyPP.SetSunWidth(0.01f * intensity);
+		_skyPP.SetSunEnabled(true);
+	}
+	else
+	{
+		_skyPP.SetSunEnabled(false);
+	}
 }
 
 void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext)
@@ -116,20 +132,20 @@ HRESULT Game::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_D
 {
 	HRESULT hr;
 
-	V_RETURN(_renderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_scene.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_renderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));	
 	V_RETURN(_hdrPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_skyPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_scene.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
 
 void Game::OnD3D11DestroyDevice()
 {
-	_renderer.OnD3D11DestroyDevice();
-	_scene.OnD3D11DestroyDevice();	
+	_renderer.OnD3D11DestroyDevice();	
 	_hdrPP.OnD3D11DestroyDevice();
 	_skyPP.OnD3D11DestroyDevice();
+	_scene.OnD3D11DestroyDevice();	
 }
 
 HRESULT Game::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
@@ -140,17 +156,17 @@ HRESULT Game::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain*
 	float fAspectRatio = pBackBufferSurfaceDesc->Width / (float)pBackBufferSurfaceDesc->Height;
 	_camera.SetAspectRatio(fAspectRatio);
 	
-	V_RETURN(_renderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_scene.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_renderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));	
 	V_RETURN(_hdrPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_skyPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_scene.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
 void Game::OnD3D11ReleasingSwapChain()
 {
-	_renderer.OnD3D11ReleasingSwapChain();
-	_scene.OnD3D11ReleasingSwapChain();
+	_renderer.OnD3D11ReleasingSwapChain();	
 	_hdrPP.OnD3D11ReleasingSwapChain();
 	_skyPP.OnD3D11ReleasingSwapChain();
+	_scene.OnD3D11ReleasingSwapChain();
 }
