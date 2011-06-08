@@ -33,6 +33,6 @@ public:
 	ID3D11ShaderResourceView* GetNormalSRV() const { return _normalSRV; }
 	ID3D11ShaderResourceView* GetSpecularSRV() const { return _specularSRV; }
 
-	HRESULT CreateFromSDKMeshMaterial(SDKMESH_MATERIAL* sdkmat);
+	HRESULT CreateFromSDKMeshMaterial(ID3D11Device* device, CDXUTSDKMesh* model, UINT materialIdx);
 	void Destroy();
 };

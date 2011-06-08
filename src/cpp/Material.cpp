@@ -11,8 +11,10 @@ Material::~Material()
 {
 }
 
-HRESULT Material::CreateFromSDKMeshMaterial(SDKMESH_MATERIAL* sdkmat)
+HRESULT Material::CreateFromSDKMeshMaterial(ID3D11Device* device, CDXUTSDKMesh* model, UINT materialIdx)
 {
+	SDKMESH_MATERIAL* sdkmat = model->GetMaterial(materialIdx);
+
 	_ambientColor = XMFLOAT3(sdkmat->Ambient.x, sdkmat->Ambient.y, sdkmat->Ambient.z);
 	_diffuseColor = XMFLOAT3(sdkmat->Diffuse.x, sdkmat->Diffuse.y, sdkmat->Diffuse.z);
 	_specularColor = XMFLOAT3(sdkmat->Specular.x, sdkmat->Specular.y, sdkmat->Specular.z);
