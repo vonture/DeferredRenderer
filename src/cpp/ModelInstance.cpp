@@ -162,6 +162,8 @@ HRESULT ModelInstance::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_
 	_transformedMeshOrientedBoxes = new OrientedBox[meshCount];
 	_transformedMeshAxisBoxes = new AxisAlignedBox[meshCount];
 
+	_dirty = true;
+
 	return S_OK;
 }
 
@@ -171,6 +173,8 @@ void ModelInstance::OnD3D11DestroyDevice()
 
 	SAFE_DELETE_ARRAY(_transformedMeshOrientedBoxes);
 	SAFE_DELETE_ARRAY(_transformedMeshAxisBoxes);
+
+	_dirty = true;
 }
 
 HRESULT ModelInstance::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
