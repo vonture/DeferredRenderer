@@ -17,6 +17,7 @@ void CDXUTSDKMesh::LoadMaterials( ID3D11Device* pd3dDevice, SDKMESH_MATERIAL* pM
                                   SDKMESH_CALLBACKS11* pLoaderCallbacks )
 {
     char strPath[MAX_PATH];
+	HRESULT hr;
 
     if( pLoaderCallbacks && pLoaderCallbacks->pCreateTextureFromFile )
     {
@@ -65,27 +66,36 @@ void CDXUTSDKMesh::LoadMaterials( ID3D11Device* pd3dDevice, SDKMESH_MATERIAL* pM
             if( pMaterials[m].DiffuseTexture[0] != 0 )
             {
                 sprintf_s( strPath, MAX_PATH, "%s%s", m_strPath, pMaterials[m].DiffuseTexture );
-                if( FAILED( DXUTGetGlobalResourceCache().CreateTextureFromFile( pd3dDevice, DXUTGetD3D11DeviceContext(),
-                                                                                strPath, &pMaterials[m].pDiffuseRV11,
-                                                                                true ) ) )
+				D3DX11CreateShaderResourceViewFromFileA(pd3dDevice, strPath, NULL, NULL,
+					&pMaterials[m].pDiffuseRV11, &hr);
+				
+                if( FAILED(hr))
+				{
                     pMaterials[m].pDiffuseRV11 = ( ID3D11ShaderResourceView* )ERROR_RESOURCE_VALUE;
+				}
 
             }
             if( pMaterials[m].NormalTexture[0] != 0 )
             {
-                sprintf_s( strPath, MAX_PATH, "%s%s", m_strPath, pMaterials[m].NormalTexture );
-                if( FAILED( DXUTGetGlobalResourceCache().CreateTextureFromFile( pd3dDevice, DXUTGetD3D11DeviceContext(),
-                                                                                strPath,
-                                                                                &pMaterials[m].pNormalRV11 ) ) )
+				sprintf_s( strPath, MAX_PATH, "%s%s", m_strPath, pMaterials[m].NormalTexture );
+				D3DX11CreateShaderResourceViewFromFileA(pd3dDevice, strPath, NULL, NULL,
+					&pMaterials[m].pNormalRV11, &hr);
+				
+                if( FAILED(hr))
+				{
                     pMaterials[m].pNormalRV11 = ( ID3D11ShaderResourceView* )ERROR_RESOURCE_VALUE;
+				}
             }
             if( pMaterials[m].SpecularTexture[0] != 0 )
             {
-                sprintf_s( strPath, MAX_PATH, "%s%s", m_strPath, pMaterials[m].SpecularTexture );
-                if( FAILED( DXUTGetGlobalResourceCache().CreateTextureFromFile( pd3dDevice, DXUTGetD3D11DeviceContext(),
-                                                                                strPath,
-                                                                                &pMaterials[m].pSpecularRV11 ) ) )
+				sprintf_s( strPath, MAX_PATH, "%s%s", m_strPath, pMaterials[m].SpecularTexture );
+				D3DX11CreateShaderResourceViewFromFileA(pd3dDevice, strPath, NULL, NULL,
+					&pMaterials[m].pSpecularRV11, &hr);
+				
+                if( FAILED(hr))
+				{
                     pMaterials[m].pSpecularRV11 = ( ID3D11ShaderResourceView* )ERROR_RESOURCE_VALUE;
+				}
             }
         }
     }
@@ -142,27 +152,27 @@ void CDXUTSDKMesh::LoadMaterials( IDirect3DDevice9* pd3dDevice, SDKMESH_MATERIAL
             // load textures
             if( pMaterials[m].DiffuseTexture[0] != 0 )
             {
-                sprintf_s( strPath, MAX_PATH, "%s%s", m_strPath, pMaterials[m].DiffuseTexture );
-                if( FAILED( DXUTGetGlobalResourceCache().CreateTextureFromFile( pd3dDevice,
-                                                                                strPath,
-                                                                                &pMaterials[m].pDiffuseTexture9 ) ) )
+                sprintf_s( strPath, MAX_PATH, "%s%s", m_strPath, pMaterials[m].DiffuseTexture );				
+				if (FAILED(D3DXCreateTextureFromFileA(pd3dDevice, strPath, &pMaterials[m].pDiffuseTexture9)))
+				{
                     pMaterials[m].pDiffuseTexture9 = ( IDirect3DTexture9* )ERROR_RESOURCE_VALUE;
+				}
             }
             if( pMaterials[m].NormalTexture[0] != 0 )
             {
                 sprintf_s( strPath, MAX_PATH, "%s%s", m_strPath, pMaterials[m].NormalTexture );
-                if( FAILED( DXUTGetGlobalResourceCache().CreateTextureFromFile( pd3dDevice,
-                                                                                strPath,
-                                                                                &pMaterials[m].pNormalTexture9 ) ) )
+				if (FAILED(D3DXCreateTextureFromFileA(pd3dDevice, strPath, &pMaterials[m].pNormalTexture9)))
+				{
                     pMaterials[m].pNormalTexture9 = ( IDirect3DTexture9* )ERROR_RESOURCE_VALUE;
+				}
             }
             if( pMaterials[m].SpecularTexture[0] != 0 )
             {
                 sprintf_s( strPath, MAX_PATH, "%s%s", m_strPath, pMaterials[m].SpecularTexture );
-                if( FAILED( DXUTGetGlobalResourceCache().CreateTextureFromFile( pd3dDevice,
-                                                                                strPath,
-                                                                                &pMaterials[m].pSpecularTexture9 ) ) )
+				if (FAILED(D3DXCreateTextureFromFileA(pd3dDevice, strPath, &pMaterials[m].pSpecularTexture9)))
+				{
                     pMaterials[m].pSpecularTexture9 = ( IDirect3DTexture9* )ERROR_RESOURCE_VALUE;
+				}
             }
 
         }
