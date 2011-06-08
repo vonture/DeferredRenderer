@@ -27,8 +27,8 @@ private:
 	MeshPart* _meshParts;
 	UINT _meshPartCount;
 
-	D3D11_INPUT_ELEMENT_DESC* _inputElements;
-	UINT _inputElementCount;
+	D3D11_INPUT_ELEMENT_DESC** _inputElements;
+	UINT* _inputElementCounts;
 
 	AxisAlignedBox _boundingBox;
 
@@ -53,11 +53,11 @@ public:
 	DXGI_FORMAT GetIndexBufferFormat() const { return _indexBufferFormat; }
 	ID3D11Buffer* GetIndexBuffer() const { return _indexBuffer; }
 
-	const D3D11_INPUT_ELEMENT_DESC* GetInputLayout() const { return _inputElements; }
-	UINT GetInputElementCount() const { return _inputElementCount; }
+	const D3D11_INPUT_ELEMENT_DESC* GetInputLayout(UINT vbIdx) const { return _inputElements[vbIdx]; }
+	UINT GetInputElementCount(UINT vbIdx) const { return _inputElementCounts[vbIdx]; }
 
 	const AxisAlignedBox& GetAxisAlignedBox() const { return _boundingBox; }
 	
-	HRESULT CreateFromSDKMeshMesh(CDXUTSDKMesh* model, UINT meshIdx);
+	HRESULT CreateFromSDKMeshMesh(ID3D11Device* device, CDXUTSDKMesh* model, UINT meshIdx);
 	void Destroy();
 };
