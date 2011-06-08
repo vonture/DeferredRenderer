@@ -527,9 +527,9 @@ D3D11_SAMPLER_DESC SamplerStates::getLinearDesc()
 	D3D11_SAMPLER_DESC sampDesc;
 
 	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 	sampDesc.MipLODBias = 0.0f;
 	sampDesc.MaxAnisotropy = 1;
 	sampDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
@@ -545,9 +545,9 @@ D3D11_SAMPLER_DESC SamplerStates::getPointDesc()
 	D3D11_SAMPLER_DESC sampDesc;
 
 	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
-	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 	sampDesc.MipLODBias = 0.0f;
 	sampDesc.MaxAnisotropy = 1;
 	sampDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
@@ -563,9 +563,9 @@ D3D11_SAMPLER_DESC SamplerStates::getAnisotropic2Desc()
 	D3D11_SAMPLER_DESC sampDesc;
 
 	sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
-	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 	sampDesc.MipLODBias = 0.0f;
 	sampDesc.MaxAnisotropy = 2;
 	sampDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
@@ -581,9 +581,9 @@ D3D11_SAMPLER_DESC SamplerStates::getAnisotropic4Desc()
 	D3D11_SAMPLER_DESC sampDesc;
 
 	sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
-	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 	sampDesc.MipLODBias = 0.0f;
 	sampDesc.MaxAnisotropy = 4;
 	sampDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
@@ -599,9 +599,9 @@ D3D11_SAMPLER_DESC SamplerStates::getAnisotropic8Desc()
 	D3D11_SAMPLER_DESC sampDesc;
 
 	sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
-	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 	sampDesc.MipLODBias = 0.0f;
 	sampDesc.MaxAnisotropy = 8;
 	sampDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
@@ -617,9 +617,9 @@ D3D11_SAMPLER_DESC SamplerStates::getAnisotropic16Desc()
 	D3D11_SAMPLER_DESC sampDesc;
 
 	sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
-	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 	sampDesc.MipLODBias = 0.0f;
 	sampDesc.MaxAnisotropy = 16;
 	sampDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
