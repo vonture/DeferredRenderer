@@ -21,7 +21,7 @@ HRESULT Model::CreateFromSDKMeshFile(ID3D11Device* device, LPCWSTR fileName)
 	_materials = new Material[_materialCount];
     for (UINT i = 0; i < _materialCount; i++)
     {
-        V_RETURN(_materials[i].CreateFromSDKMeshMaterial(sdkMesh.GetMaterial(i)));
+        V_RETURN(_materials[i].CreateFromSDKMeshMaterial(device, &sdkMesh, i));
     }
 	
 	// Copy the meshes
@@ -29,7 +29,7 @@ HRESULT Model::CreateFromSDKMeshFile(ID3D11Device* device, LPCWSTR fileName)
 	_meshes = new Mesh[_meshCount];
     for (UINT i = 0; i < _meshCount; i++)
 	{
-		V_RETURN(_meshes[i].CreateFromSDKMeshMesh(&sdkMesh, i));
+		V_RETURN(_meshes[i].CreateFromSDKMeshMesh(device, &sdkMesh, i));
 	}
 
 	// Done with the sdk mesh, free all it's resources
