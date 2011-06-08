@@ -31,7 +31,8 @@ struct CB_DIRECTIONALLIGHT_SHADOW_PROPERTIES
 	XMFLOAT2 CameraClips;
 	XMFLOAT2 ShadowMapSize;
 	float CascadeSplits[4];
-	XMMATRIX ShadowMatricies[4];
+	XMMATRIX ShadowMatricies[4];	
+	XMMATRIX ShadowTexCoordTransforms[4];
 };
 
 class DirectionalLightRenderer : public LightRenderer<DirectionalLight>
@@ -60,6 +61,7 @@ private:
 	ID3D11DepthStencilView* _shadowMapDSVs[NUM_SHADOW_MAPS];
 	ID3D11ShaderResourceView* _shadowMapSRVs[NUM_SHADOW_MAPS];
 	XMMATRIX _shadowMatricies[NUM_SHADOW_MAPS][NUM_CASCADES];
+	XMMATRIX _shadowTexCoordTransforms[NUM_SHADOW_MAPS][NUM_CASCADES];
 	float _cascadeSplits[NUM_SHADOW_MAPS][NUM_CASCADES];
 
 	void ComputeNearAndFar(FLOAT& fNearPlane, FLOAT& fFarPlane, FXMVECTOR vLightCameraOrthographicMin, 

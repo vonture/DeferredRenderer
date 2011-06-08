@@ -639,16 +639,16 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
         texScaleBias.r[3] = XMVectorSet(0.5f,  0.5f, -BIAS, 1.0f);
         shadowViewProj = XMMatrixMultiply(shadowViewProj, texScaleBias);
 		
-		// Apply the cascade offset/scale matrix, which applies the offset and scale needed to
+		// Calculate the offset/scale matrix, which applies the offset and scale needed to
         // convert the UV coordinate into the proper coordinate for the cascade being sampled in
         // the atlas.
         XMFLOAT4 offset = XMFLOAT4(offsets[i].x, offsets[i].y, 0.0f, 1.0);
         XMMATRIX cascadeOffsetMatrix = XMMatrixScaling(0.5f, 0.5f, 1.0f);
         cascadeOffsetMatrix.r[3] = XMLoadFloat4(&offset);
-        shadowViewProj = XMMatrixMultiply(shadowViewProj, cascadeOffsetMatrix);
 
 		_shadowMatricies[shadowMapIdx][i] = shadowViewProj;
-		_cascadeSplits[shadowMapIdx][i] = camera->GetNearClip() + fFrustumIntervalEnd;
+		_shadowTexCoordTransforms[shadowMapIdx][i] = cascadeOffsetMatrix;
+		_cascadeSplits[shadowMapIdx][i] = fFrustumIntervalEnd;
 	}
 
 	return S_OK;
@@ -741,6 +741,7 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 			{
 				shadowProperties->CascadeSplits[j] = _cascadeSplits[i][j];
 				shadowProperties->ShadowMatricies[j] = XMMatrixTranspose(_shadowMatricies[i][j]);
+				shadowProperties->ShadowTexCoordTransforms[j] = XMMatrixTranspose(_shadowTexCoordTransforms[i][j]);
 			}
 			shadowProperties->CameraClips = XMFLOAT2(camera->GetNearClip(), camera->GetFarClip());
 			shadowProperties->ShadowMapSize = XMFLOAT2((float)SHADOW_MAP_SIZE, (float)SHADOW_MAP_SIZE);

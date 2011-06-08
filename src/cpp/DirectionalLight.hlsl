@@ -1,3 +1,7 @@
+static const int CascadeCount = 4;
+static const int SqrtCascadeCount = 2;
+static const int PCFRadius = 2;
+
 cbuffer cbCameraProperties : register(b0)
 {
 	float4x4 InverseViewProjection	: packoffset(c0);
@@ -16,10 +20,9 @@ cbuffer cbShadowProperties : register(b2)
 	float2 CameraClips;
 	float2 ShadowMapSize;
 	float4 CascadeSplits;
-	float4x4 ShadowMatrices[4];	
+	float4x4 ShadowMatrices[CascadeCount];	
+	float4x4 ShadowTexCoordTransforms[CascadeCount];
 }
-
-static const int SqrtCascadeCount = 2;
 
 Texture2D RT0 : register(t0);
 Texture2D RT1 : register(t1);
@@ -77,13 +80,13 @@ float4 PS_DirectionalLightUnshadowed(PS_In_DirectionalLight input) : SV_TARGET0
 
 float SampleShadowCascade(in float4 positionWS, in uint cascadeIdx)
 {
-	float4 shadowPosition = mul(positionWS, ShadowMatrices[cascadeIdx]);
+	float4x4 shadowMatrix = mul(ShadowMatrices[cascadeIdx], ShadowTexCoordTransforms[cascadeIdx]);
+	float4 shadowPosition = mul(positionWS, shadowMatrix);
 	float2 shadowTexCoord = shadowPosition.xy / shadowPosition.w;
 	float shadowDepth = shadowPosition.z / shadowPosition.w;
 
 	// Edge tap smoothing
-	const int Radius = 2;
-	const int NumSamples = (Radius * 2 + 1) * (Radius * 2 + 1);
+	const int NumSamples = (PCFRadius * 2 + 1) * (PCFRadius * 2 + 1);
 
 	float2 fracs = frac(shadowTexCoord.xy * ShadowMapSize);
 	float leftEdge = 1.0f - fracs.x;
@@ -94,10 +97,10 @@ float SampleShadowCascade(in float4 positionWS, in uint cascadeIdx)
 	float shadowVisibility = 0.0f;
 
 	[unroll(NumSamples)]
-	for (int y = -Radius; y <= Radius; y++)
+	for (int y = -PCFRadius; y <= PCFRadius; y++)
 	{
 		[unroll(NumSamples)]
-		for (int x = -Radius; x <= Radius; x++)
+		for (int x = -PCFRadius; x <= PCFRadius; x++)
 		{
 			int2 offset = int2(x, y);
 			float sample = ShadowMap.SampleCmp(ShadowSampler, shadowTexCoord, shadowDepth, offset).x;
@@ -105,15 +108,23 @@ float SampleShadowCascade(in float4 positionWS, in uint cascadeIdx)
 			float xWeight = 1;
 			float yWeight = 1;
 
-			if(x == -Radius)
+			if(x == -PCFRadius)
+			{
 				xWeight = leftEdge;
-			else if(x == Radius)
+			}
+			else if(x == PCFRadius)
+			{
 				xWeight = rightEdge;
+			}
 
-			if(y == -Radius)
+			if(y == -PCFRadius)
+			{
 				yWeight = topEdge;
-			else if(y == Radius)
+			}
+			else if(y == PCFRadius)
+			{
 				yWeight = bottomEdge;
+			}
 
 			shadowVisibility += sample * xWeight * yWeight;
 		}
@@ -128,24 +139,34 @@ float SampleShadowCascade(in float4 positionWS, in uint cascadeIdx)
 float4 PS_DirectionalLightShadowed(PS_In_DirectionalLight input) : SV_TARGET0
 {
 	float fDepth = RT3.Sample(SceneSampler, input.vTexCoord).r;
-
 	float4 vPositionWS = GetPositionWS(input.vPosition2, fDepth);
-	
-	float fPercFar = CameraClips.y / (CameraClips.y - CameraClips.x);
-	float fSceneZ = ( -CameraClips.x * fPercFar ) / ( fDepth - fPercFar);	
+		
+	// Determine how much padding is required in pixels on the shadow map so that PCF can be 
+	// done without moving into another cascade and causing artifacts
+	float2 vPaddingRequired = (1.0f / ShadowMapSize) * SqrtCascadeCount * PCFRadius;
 
+	// Find the correct cascade by calculating the tex coord in [0,1] space of the shadow
+	// map and checking that it is within the usuable bounds.  Stops when it finds the closest
+	// cascade
 	uint iCascadeIdx = 0;
+	uint iCascadeFound = 0;
 	[unroll]
-	for (int i = 0; i < (SqrtCascadeCount * SqrtCascadeCount) - 1; i++)
+	for (int i = 0; !iCascadeFound && i < CascadeCount; i++)
 	{
-		[flatten]
-		if(fSceneZ > CascadeSplits[i])
+		float4 shadowPosition = mul(vPositionWS, ShadowMatrices[i]);
+		float2 vShadowTexCoord = shadowPosition.xy / shadowPosition.w;
+
+		if (vShadowTexCoord.x > vPaddingRequired.x && 
+			vShadowTexCoord.y > vPaddingRequired.y && 
+			vShadowTexCoord.x < (1.0f - vPaddingRequired.x) && 
+			vShadowTexCoord.y < (1.0f - vPaddingRequired.x))
 		{
-			iCascadeIdx = i + 1;
+			iCascadeIdx = i;
+			iCascadeFound = 1;
 		}
 	}
 
 	float fShadow = SampleShadowCascade(vPositionWS, iCascadeIdx);
 
-	return fShadow * PS_DirectionalLightCommon(input, vPositionWS);
+	return fShadow * PS_DirectionalLightCommon(input, vPositionWS);	
 };
