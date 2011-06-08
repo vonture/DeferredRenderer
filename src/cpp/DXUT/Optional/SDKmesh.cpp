@@ -1430,6 +1430,25 @@ UINT CDXUTSDKMesh::GetNumIBs()
 }
 
 //--------------------------------------------------------------------------------------
+SDKMESH_VERTEX_BUFFER_HEADER* CDXUTSDKMesh::GetVBHeader( UINT iVB )
+{
+	return &m_pVertexBufferArray[ iVB ];
+}
+
+//--------------------------------------------------------------------------------------
+SDKMESH_VERTEX_BUFFER_HEADER* CDXUTSDKMesh::GetVBHeader( UINT iMesh, UINT iVB )
+{
+	return &m_pVertexBufferArray[ m_pMeshArray[ iMesh ].VertexBuffers[iVB] ];
+}
+
+
+//--------------------------------------------------------------------------------------
+SDKMESH_INDEX_BUFFER_HEADER* CDXUTSDKMesh::GetIBHeader( UINT iIB )
+{
+	return &m_pIndexBufferArray[ iIB ];
+}
+
+//--------------------------------------------------------------------------------------
 ID3D11Buffer* CDXUTSDKMesh::GetVB11At( UINT iVB )
 {
     return m_pVertexBufferArray[ iVB ].pVB11;

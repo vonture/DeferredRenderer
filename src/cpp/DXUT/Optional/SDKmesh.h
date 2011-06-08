@@ -473,6 +473,10 @@ public:
     UINT                            GetNumVBs();
     UINT                            GetNumIBs();
 
+	SDKMESH_VERTEX_BUFFER_HEADER* GetVBHeader( UINT iVB );
+	SDKMESH_VERTEX_BUFFER_HEADER* GetVBHeader( UINT iMesh, UINT iVB );
+	SDKMESH_INDEX_BUFFER_HEADER* GetIBHeader( UINT iIB );
+
     ID3D11Buffer* GetVB11At( UINT iVB );
     ID3D11Buffer* GetIB11At( UINT iIB );
 
