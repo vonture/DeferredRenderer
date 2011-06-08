@@ -2,15 +2,33 @@
 #include <cmath>
 
 HDRPostProcess::HDRPostProcess()
-	: _timeDelta(0.0f), _adaptationRate(4.0f), _keyValue(0.2f), _luminanceMapPS(NULL),
-	  _toneMapPS(NULL)
+	: _timeDelta(0.0f), _lumMapSize(0), _mipLevels(0), _luminanceMapPS(NULL), _toneMapPS(NULL), 
+	  _scalePS(NULL), _thresholdPS(NULL), _hBlurPS(NULL), _vBlurPS(NULL)
 {
+	// Load some default values for the parameters
+	_adaptationRate = 4.0f;
+	_keyValue = 0.2f;
+	_bloomThreshold = 1.5f;
+	_bloomMagnitude = 1.0f;
+	_bloomBlurSigma = 0.8f;
+
 	for (UINT i = 0; i < 2; i++)
 	{
-		_adaptLuminanceTextures[i] = NULL;
-		_adaptLuminanceRTVs[i] = NULL;
-		_adaptLuminanceSRVs[i] = NULL;
+		_lumTextures[i] = NULL;
+		_lumRTVs[i] = NULL;
+		_lumSRVs[i] = NULL;
 	}
+
+	for (UINT i = 0; i < 3; i++)
+	{
+		_downScaleTextures[i] = NULL;
+		_downScaleRTVs[i] = NULL;
+		_downScaleSRVs[i] = NULL;
+	}
+
+	_blurTempTexture = NULL;
+	_blurTempRTV = NULL;
+	_blurTempSRV = NULL;
 }
 
 HDRPostProcess::~HDRPostProcess()
@@ -38,6 +56,9 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	hdrProperties->KeyValue = _keyValue;
 	hdrProperties->MipLevels = _mipLevels;
 	hdrProperties->AdaptationRate = _adaptationRate;	
+	hdrProperties->BloomThreshold = _bloomThreshold;
+	hdrProperties->BloomMagnitude = _bloomMagnitude;
+	hdrProperties->BloomBlurSigma = _bloomBlurSigma;
 
 	pd3dImmediateContext->Unmap(_hdrPropertiesBuffer, 0);
 
@@ -66,14 +87,92 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 
 	// render the luminance
-	pd3dImmediateContext->OMSetRenderTargets(1, &_adaptLuminanceRTVs[0], NULL);
+	pd3dImmediateContext->OMSetRenderTargets(1, &_lumRTVs[0], NULL);
 
-	ID3D11ShaderResourceView* ppSRVLumMap[2] = { src, _adaptLuminanceSRVs[1] };
+	ID3D11ShaderResourceView* ppSRVLumMap[2] = { src, _lumSRVs[1] };
 	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVLumMap);
 
 	pd3dImmediateContext->PSSetConstantBuffers(0, 1, &_hdrPropertiesBuffer);
 
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _luminanceMapPS));
+
+	// bloom threshold and downscale to 1/2
+	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[0], NULL);
+
+	ID3D11ShaderResourceView* ppSRVThresh[2] = { src, _lumSRVs[0] };
+	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVThresh);
+
+	vp.Width = vpOld[0].Width / 2.0f;
+	vp.Height = vpOld[0].Height / 2.0f;
+	pd3dImmediateContext->RSSetViewports(1, &vp);
+
+	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _thresholdPS));
+
+	// Downscale again to 1/4
+	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[1], NULL);
+	
+	ID3D11ShaderResourceView* ppSRVDownScale1[2] = { _downScaleSRVs[0], NULL };
+	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVDownScale1);
+
+	vp.Width = vpOld[0].Width / 4.0f;
+	vp.Height = vpOld[0].Height / 4.0f;
+	pd3dImmediateContext->RSSetViewports(1, &vp);
+
+	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _scalePS));
+
+	// Downscale again to 1/8
+	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[2], NULL);	
+	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[1]);
+
+	vp.Width = vpOld[0].Width / 8.0f;
+	vp.Height = vpOld[0].Height / 8.0f;
+	pd3dImmediateContext->RSSetViewports(1, &vp);
+
+	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _scalePS));
+
+	// Blur the downscaled threshold image horizontally/vertically twice
+	pd3dImmediateContext->OMSetRenderTargets(1, &_blurTempRTV, NULL);
+	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[2]);
+	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _hBlurPS));
+
+	ID3D11ShaderResourceView* ppSRVNULL1[1] = { NULL };
+	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL1);
+
+	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[2], NULL);
+	pd3dImmediateContext->PSSetShaderResources(0, 1, &_blurTempSRV);
+	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _vBlurPS));
+
+	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL1);
+
+	pd3dImmediateContext->OMSetRenderTargets(1, &_blurTempRTV, NULL);
+	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[2]);
+	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _hBlurPS));
+
+	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL1);
+
+	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[2], NULL);
+	pd3dImmediateContext->PSSetShaderResources(0, 1, &_blurTempSRV);
+	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _vBlurPS));
+
+	// Upscale to 1/4
+	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[1], NULL);	
+	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[2]);
+
+	vp.Width = vpOld[0].Width / 4.0f;
+	vp.Height = vpOld[0].Height / 4.0f;	
+	pd3dImmediateContext->RSSetViewports(1, &vp);
+
+	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _scalePS));
+
+	// Upscale to 1/2
+	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[0], NULL);	
+	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[1]);
+
+	vp.Width = vpOld[0].Width / 2.0f;
+	vp.Height = vpOld[0].Height / 2.0f;	
+	pd3dImmediateContext->RSSetViewports(1, &vp);
+
+	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _scalePS));
 
 	// Re-apply the old viewport
 	pd3dImmediateContext->RSSetViewports(nViewPorts, vpOld);
@@ -81,16 +180,16 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	// Tone map the final result
 	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, NULL);
 
-	pd3dImmediateContext->GenerateMips(_adaptLuminanceSRVs[0]);
+	pd3dImmediateContext->GenerateMips(_lumSRVs[0]);
 
-	ID3D11ShaderResourceView* ppSRVToneMap[2] = { src, _adaptLuminanceSRVs[0] };
-	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVToneMap);
+	ID3D11ShaderResourceView* ppSRVToneMap[3] = { src, _lumSRVs[0], _downScaleSRVs[0] };
+	pd3dImmediateContext->PSSetShaderResources(0, 3, ppSRVToneMap);
 	
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _toneMapPS));
 
 	// Unset the SRVs
-	ID3D11ShaderResourceView* ppSRVNULL[2] = { NULL, NULL };
-	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVNULL);
+	ID3D11ShaderResourceView* ppSRVNULL3[3] = { NULL, NULL, NULL };
+	pd3dImmediateContext->PSSetShaderResources(0, 3, ppSRVNULL3);
 	
 	// Swap the adapted luminance buffers from the previous render
 	swapLuminanceBuffers();
@@ -102,17 +201,17 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 
 void HDRPostProcess::swapLuminanceBuffers()
 {
-	ID3D11Texture2D* tmpTex = _adaptLuminanceTextures[0];
-	ID3D11RenderTargetView* tmpRTV = _adaptLuminanceRTVs[0];
-	ID3D11ShaderResourceView* tmpSRV = _adaptLuminanceSRVs[0];
+	ID3D11Texture2D* tmpTex = _lumTextures[0];
+	ID3D11RenderTargetView* tmpRTV = _lumRTVs[0];
+	ID3D11ShaderResourceView* tmpSRV = _lumSRVs[0];
 
-	_adaptLuminanceTextures[0] = _adaptLuminanceTextures[1];
-	_adaptLuminanceRTVs[0] = _adaptLuminanceRTVs[1];
-	_adaptLuminanceSRVs[0] = _adaptLuminanceSRVs[1];
+	_lumTextures[0] = _lumTextures[1];
+	_lumRTVs[0] = _lumRTVs[1];
+	_lumSRVs[0] = _lumSRVs[1];
 
-	_adaptLuminanceTextures[1] = tmpTex;
-	_adaptLuminanceRTVs[1] = tmpRTV;
-	_adaptLuminanceSRVs[1] = tmpSRV;
+	_lumTextures[1] = tmpTex;
+	_lumRTVs[1] = tmpRTV;
+	_lumSRVs[1] = tmpSRV;
 }
 
 HRESULT HDRPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
@@ -130,6 +229,22 @@ HRESULT HDRPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI
 	
 	V_RETURN( CompileShaderFromFile( L"HDR.hlsl", "PS_ToneMap", "ps_4_0", NULL, &pBlob ) );   
     V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_toneMapPS));
+	SAFE_RELEASE(pBlob);
+
+	V_RETURN( CompileShaderFromFile( L"HDR.hlsl", "PS_Scale", "ps_4_0", NULL, &pBlob ) );   
+    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_scalePS));
+	SAFE_RELEASE(pBlob);
+
+	V_RETURN( CompileShaderFromFile( L"HDR.hlsl", "PS_Threshold", "ps_4_0", NULL, &pBlob ) );   
+    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_thresholdPS));
+	SAFE_RELEASE(pBlob);
+
+	V_RETURN( CompileShaderFromFile( L"HDR.hlsl", "PS_BlurHorizontal", "ps_4_0", NULL, &pBlob ) );   
+    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_hBlurPS));
+	SAFE_RELEASE(pBlob);
+
+	V_RETURN( CompileShaderFromFile( L"HDR.hlsl", "PS_BlurVertical", "ps_4_0", NULL, &pBlob ) );   
+    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_vBlurPS));
 	SAFE_RELEASE(pBlob);
 
 	V_RETURN(_fsQuad.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
@@ -156,6 +271,10 @@ void HDRPostProcess::OnD3D11DestroyDevice()
 			
 	SAFE_RELEASE(_luminanceMapPS);
 	SAFE_RELEASE(_toneMapPS);
+	SAFE_RELEASE(_scalePS);
+	SAFE_RELEASE(_thresholdPS);
+	SAFE_RELEASE(_hBlurPS);
+	SAFE_RELEASE(_vBlurPS);
 
 	SAFE_RELEASE(_hdrPropertiesBuffer);
 
@@ -170,6 +289,8 @@ HRESULT HDRPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGI
 	V_RETURN(PostProcess::OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	
 	V_RETURN(_fsQuad.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	
+	// Create the luminance objects first
 
 	// Calculate the luminance map size to be the largest power of two that is smaller than
 	// the smallest back buffer dimension
@@ -179,7 +300,7 @@ HRESULT HDRPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGI
 	_mipLevels = (UINT)ceil(log((float)_lumMapSize) / log(2.0f)) + 1;
 
 	// Create the textures
-	D3D11_TEXTURE2D_DESC textureDesc = 
+	D3D11_TEXTURE2D_DESC lumTextureDesc = 
     {
         _lumMapSize,//pBackBufferSurfaceDesc->Width,//UINT Width;
         _lumMapSize,//pBackBufferSurfaceDesc->Height,//UINT Height;
@@ -194,11 +315,11 @@ HRESULT HDRPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGI
         D3D11_RESOURCE_MISC_GENERATE_MIPS//UINT MiscFlags;    
     };
 	
-	V_RETURN(pd3dDevice->CreateTexture2D(&textureDesc, NULL, &_adaptLuminanceTextures[0]));
-	V_RETURN(pd3dDevice->CreateTexture2D(&textureDesc, NULL, &_adaptLuminanceTextures[1]));
+	V_RETURN(pd3dDevice->CreateTexture2D(&lumTextureDesc, NULL, &_lumTextures[0]));
+	V_RETURN(pd3dDevice->CreateTexture2D(&lumTextureDesc, NULL, &_lumTextures[1]));
 
 	// Create the render target views
-	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = 
+	D3D11_RENDER_TARGET_VIEW_DESC lumRTVDesc = 
 	{
         DXGI_FORMAT_R32_FLOAT,
         D3D11_RTV_DIMENSION_TEXTURE2D,
@@ -206,22 +327,81 @@ HRESULT HDRPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGI
         0
     };
 
-	V_RETURN(pd3dDevice->CreateRenderTargetView(_adaptLuminanceTextures[0], &rtvDesc, &_adaptLuminanceRTVs[0]));
-	V_RETURN(pd3dDevice->CreateRenderTargetView(_adaptLuminanceTextures[1], &rtvDesc, &_adaptLuminanceRTVs[1]));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(_lumTextures[0], &lumRTVDesc, &_lumRTVs[0]));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(_lumTextures[1], &lumRTVDesc, &_lumRTVs[1]));
 
 	// Create the shader resource views
-	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = 
+	D3D11_SHADER_RESOURCE_VIEW_DESC lumSRVDesc = 
     {
         DXGI_FORMAT_R32_FLOAT,
         D3D11_SRV_DIMENSION_TEXTURE2D,
         0,
         0
     };
-	srvDesc.Texture2D.MipLevels = _mipLevels;
+	lumSRVDesc.Texture2D.MipLevels = _mipLevels;
 
-	V_RETURN(pd3dDevice->CreateShaderResourceView(_adaptLuminanceTextures[0], &srvDesc, &_adaptLuminanceSRVs[0]));
-	V_RETURN(pd3dDevice->CreateShaderResourceView(_adaptLuminanceTextures[1], &srvDesc, &_adaptLuminanceSRVs[1]));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(_lumTextures[0], &lumSRVDesc, &_lumSRVs[0]));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(_lumTextures[1], &lumSRVDesc, &_lumSRVs[1]));
 	
+	// Create the downscale/blur temp objects
+	// Create the textures
+	D3D11_TEXTURE2D_DESC dsTextureDesc = 
+    {
+        1,//pBackBufferSurfaceDesc->Width,//UINT Width;
+        1,//pBackBufferSurfaceDesc->Height,//UINT Height;
+        1,//UINT MipLevels;
+        1,//UINT ArraySize;
+        DXGI_FORMAT_R32G32B32A32_FLOAT,//DXGI_FORMAT Format;
+        1,//DXGI_SAMPLE_DESC SampleDesc;
+        0,
+        D3D11_USAGE_DEFAULT,//D3D11_USAGE Usage;
+        D3D11_BIND_RENDER_TARGET|D3D11_BIND_SHADER_RESOURCE,//UINT BindFlags;
+        0,//UINT CPUAccessFlags;
+        0, //UINT MiscFlags;    
+    };
+
+	dsTextureDesc.Width = pBackBufferSurfaceDesc->Width / 2;
+	dsTextureDesc.Height = pBackBufferSurfaceDesc->Height / 2;
+	V_RETURN(pd3dDevice->CreateTexture2D(&dsTextureDesc, NULL, &_downScaleTextures[0]));
+
+	dsTextureDesc.Width = pBackBufferSurfaceDesc->Width / 4;
+	dsTextureDesc.Height = pBackBufferSurfaceDesc->Height / 4;
+	V_RETURN(pd3dDevice->CreateTexture2D(&dsTextureDesc, NULL, &_downScaleTextures[1]));
+
+	dsTextureDesc.Width = pBackBufferSurfaceDesc->Width / 8;
+	dsTextureDesc.Height = pBackBufferSurfaceDesc->Height / 8;
+	V_RETURN(pd3dDevice->CreateTexture2D(&dsTextureDesc, NULL, &_downScaleTextures[2]));
+	V_RETURN(pd3dDevice->CreateTexture2D(&dsTextureDesc, NULL, &_blurTempTexture));
+
+	// Create the render target views
+	D3D11_RENDER_TARGET_VIEW_DESC dsRTVDesc = 
+	{
+        DXGI_FORMAT_R32G32B32A32_FLOAT,
+        D3D11_RTV_DIMENSION_TEXTURE2D,
+        0,
+        0
+    };
+
+	V_RETURN(pd3dDevice->CreateRenderTargetView(_downScaleTextures[0], &dsRTVDesc, &_downScaleRTVs[0]));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(_downScaleTextures[1], &dsRTVDesc, &_downScaleRTVs[1]));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(_downScaleTextures[2], &dsRTVDesc, &_downScaleRTVs[2]));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(_blurTempTexture, &dsRTVDesc, &_blurTempRTV));
+
+	// create the SRVs
+	D3D11_SHADER_RESOURCE_VIEW_DESC dsSRVDesc = 
+    {
+        DXGI_FORMAT_R32G32B32A32_FLOAT,
+        D3D11_SRV_DIMENSION_TEXTURE2D,
+        0,
+        0
+    };
+	dsSRVDesc.Texture2D.MipLevels = 1;
+
+	V_RETURN(pd3dDevice->CreateShaderResourceView(_downScaleTextures[0], &dsSRVDesc, &_downScaleSRVs[0]));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(_downScaleTextures[1], &dsSRVDesc, &_downScaleSRVs[1]));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(_downScaleTextures[2], &dsSRVDesc, &_downScaleSRVs[2]));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(_blurTempTexture, &dsSRVDesc, &_blurTempSRV));
+
 	return S_OK;
 }
 
@@ -233,8 +413,19 @@ void HDRPostProcess::OnD3D11ReleasingSwapChain()
 
 	for (UINT i = 0; i < 2; i++)
 	{
-		SAFE_RELEASE(_adaptLuminanceTextures[i]);
-		SAFE_RELEASE(_adaptLuminanceRTVs[i]);
-		SAFE_RELEASE(_adaptLuminanceSRVs[i]);
+		SAFE_RELEASE(_lumTextures[i]);
+		SAFE_RELEASE(_lumRTVs[i]);
+		SAFE_RELEASE(_lumSRVs[i]);
 	}
+
+	for (UINT i = 0; i < 3; i++)
+	{
+		SAFE_RELEASE(_downScaleTextures[i]);
+		SAFE_RELEASE(_downScaleRTVs[i]);
+		SAFE_RELEASE(_downScaleSRVs[i]);
+	}
+
+	SAFE_RELEASE(_blurTempTexture);
+	SAFE_RELEASE(_blurTempRTV);
+	SAFE_RELEASE(_blurTempSRV);
 }

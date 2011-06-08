@@ -10,6 +10,10 @@ struct CB_HDR_PROPERTIES
 	float KeyValue;
 	float TimeDelta;
 	UINT MipLevels;
+	float BloomThreshold;
+	float BloomMagnitude;
+    float BloomBlurSigma;
+	float Padding;
 };
 
 class HDRPostProcess : public PostProcess
@@ -18,17 +22,32 @@ private:
 	float _timeDelta;
 	float _adaptationRate;
 	float _keyValue;
+	float _bloomThreshold;
+	float _bloomMagnitude;
+	float _bloomBlurSigma;
 
 	UINT _lumMapSize;
 
 	UINT _mipLevels;
 
-	ID3D11Texture2D* _adaptLuminanceTextures[2];
-	ID3D11RenderTargetView* _adaptLuminanceRTVs[2];
-	ID3D11ShaderResourceView* _adaptLuminanceSRVs[2];
+	ID3D11Texture2D* _lumTextures[2];
+	ID3D11RenderTargetView* _lumRTVs[2];
+	ID3D11ShaderResourceView* _lumSRVs[2];
+	
+	ID3D11Texture2D* _downScaleTextures[3];
+	ID3D11RenderTargetView* _downScaleRTVs[3];
+	ID3D11ShaderResourceView* _downScaleSRVs[3];
+	
+	ID3D11Texture2D* _blurTempTexture;
+	ID3D11RenderTargetView* _blurTempRTV;
+	ID3D11ShaderResourceView* _blurTempSRV;
 
 	ID3D11PixelShader* _luminanceMapPS;
 	ID3D11PixelShader* _toneMapPS;
+	ID3D11PixelShader* _scalePS;
+	ID3D11PixelShader* _thresholdPS;
+	ID3D11PixelShader* _hBlurPS;
+	ID3D11PixelShader* _vBlurPS;
 
 	ID3D11Buffer* _hdrPropertiesBuffer;
 
@@ -48,6 +67,15 @@ public:
 
 	float GetKeyValue() const { return _keyValue; }
 	void SetKeyValue(float key) { _keyValue = max(key, 0.0f); }
+
+	float GetBloomThreshold() const { return _bloomThreshold; }
+	void SetBloomThreshold(float thresh) { _bloomThreshold = max(thresh, 0.0f); }
+
+	float GetBloomMagnitude() const { return _bloomMagnitude; }
+	void SetBloomMagnitude(float mag) { _bloomMagnitude = max(mag, 0.0f); }
+
+	float GetBloomBlurSigma() const { return _bloomBlurSigma; }
+	void SetBloomBlurSigma(float sigma) { _bloomBlurSigma = max(sigma, 0.0f); }
 
 	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer);
