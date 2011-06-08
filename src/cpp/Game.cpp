@@ -3,7 +3,7 @@
 Game::Game()
 	: _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f),
 	  _scene(L"\\models\\tankscene\\tankscene.sdkmesh")
-	  //_scene(L"\\models\\sponza\\sponza.sdkmesh")
+	  //_scene(L"\\models\\sponza\\sponzanoflag.sdkmesh")
 {
 	_scene.SetScale(1.0f);
 	_scene.SetPosition(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f));
