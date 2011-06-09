@@ -12,7 +12,7 @@ AntiAliasPostProcess::~AntiAliasPostProcess()
 HRESULT AntiAliasPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
-	return S_OK;
+	return E_FAIL;
 }
 
 HRESULT AntiAliasPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
