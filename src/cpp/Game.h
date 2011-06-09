@@ -7,9 +7,12 @@
 #include "FirstPersonCamera.h"
 #include "KeyboardState.h"
 #include "MouseState.h"
+
 #include "HDRPostProcess.h"
 #include "SkyPostProcess.h"
 #include "AntiAliasPostProcess.h"
+#include "AmbientOcclusionPostProcess.h"
+#include "DepthOfFieldPostProcess.h"
 
 class Game : public IUpdateable, public IHasContent
 {
@@ -22,6 +25,8 @@ private:
 	HDRPostProcess _hdrPP;
 	SkyPostProcess _skyPP;
 	AntiAliasPostProcess _aaPP;
+	AmbientOcclusionPostProcess _aoPP;
+	DepthOfFieldPostProcess _dofPP;
 
 	std::vector<DirectionalLight> _directionalLights;
 	std::vector<PointLight> _pointLights;
