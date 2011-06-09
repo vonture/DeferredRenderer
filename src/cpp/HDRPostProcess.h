@@ -12,8 +12,8 @@ struct CB_HDR_PROPERTIES
 	UINT MipLevels;
 	float BloomThreshold;
 	float BloomMagnitude;
-    float BloomBlurSigma;
-	float Padding;
+	float BloomBlurSigma;
+    float GaussianNumerator;	
 };
 
 class HDRPostProcess : public PostProcess

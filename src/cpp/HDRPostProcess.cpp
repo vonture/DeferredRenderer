@@ -59,6 +59,7 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	hdrProperties->BloomThreshold = _bloomThreshold;
 	hdrProperties->BloomMagnitude = _bloomMagnitude;
 	hdrProperties->BloomBlurSigma = _bloomBlurSigma;
+	hdrProperties->GaussianNumerator = 1.0f / sqrt(2.0f * Pi * _bloomBlurSigma * _bloomBlurSigma);
 
 	pd3dImmediateContext->Unmap(_hdrPropertiesBuffer, 0);
 

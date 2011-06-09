@@ -1,6 +1,7 @@
 static const float3 Grey = float3(0.212671f, 0.715160f, 0.072169f); 
 static const float Epsilon = 0.0001f;
 static const float Pi = 3.14159f;
+static const int BlurRadius = 4;
 
 cbuffer cbHDRProperties : register(b0)
 {
@@ -11,7 +12,7 @@ cbuffer cbHDRProperties : register(b0)
 	float BloomThreshold;
 	float BloomMagnitude;
     float BloomBlurSigma;
-	float Padding;
+	float GaussianNumerator;
 }
 
 Texture2D Texture0 : register(t0);
@@ -110,17 +111,14 @@ float4 PS_Scale(PS_In_Quad input) : SV_TARGET0
 // Calculates the gaussian blur weight for a given distance and sigmas
 float CalcGaussianWeight(int sampleDist, float sigma)
 {
-	float g = 1.0f / sqrt(2.0f * Pi * sigma * sigma);
-	return (g * exp(-(sampleDist * sampleDist) / (2 * sigma * sigma)));
+	return (GaussianNumerator * exp(-(sampleDist * sampleDist) / (2 * sigma * sigma)));
 }
 
 // Performs a gaussian blur in one direction
 float4 Blur(float2 texCoord, int2 direction, float sigma)
 {
-	const int Radius = 6;
-
     float4 color = 0;
-    for (int i = -Radius; i < Radius; i++)
+    for (int i = -BlurRadius; i < BlurRadius; i++)
     {
 		float weight = CalcGaussianWeight(i, sigma);
 		float4 sample = Texture0.Sample(PointSampler, texCoord, direction * i);
