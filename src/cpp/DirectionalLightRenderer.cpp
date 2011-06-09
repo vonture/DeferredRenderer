@@ -611,14 +611,32 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 			XMVectorGetX(vLightCameraOrthographicMin), XMVectorGetX(vLightCameraOrthographicMax), 
             XMVectorGetY(vLightCameraOrthographicMin), XMVectorGetY(vLightCameraOrthographicMax), 
             fNearPlane, fFarPlane);
-
+		
 		XMMATRIX shadowViewProj = XMMatrixMultiply(lightSpaceTransform, shadowProj);
+
+		// Create the shadow frustum for intersection tests
+		Frustum shadowFrust;
+		Collision::ComputeFrustumFromProjection(&shadowFrust, &shadowProj);
+		shadowFrust.Origin = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		XMStoreFloat4(&shadowFrust.Orientation, XMQuaternionNormalize(-dlight->GetDirection()));
+
 
 		// Render the depth of all the models in the scene
 		for (UINT j = 0; j < models->size(); j++)
 		{
 			ModelInstance* instance = models->at(j);
+			Model* model = instance->GetModel();
 
+			// Preform a collision check
+			OrientedBox modelBounds = instance->GetOrientedBox();
+
+			int modelIntersect = Collision::IntersectOrientedBoxFrustum(&modelBounds, &shadowFrust);
+			if (!modelIntersect)
+			{
+				continue;
+			}
+
+			// Prepare the buffer
 			XMMATRIX wvp = XMMatrixMultiply(instance->GetWorld(), shadowViewProj);
 		
 			V_RETURN(pd3dImmediateContext->Map(_depthPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
@@ -628,7 +646,23 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 
 			pd3dImmediateContext->VSSetConstantBuffers(0, 1, &_depthPropertiesBuffer);
 
-			instance->GetModel()->Render(pd3dImmediateContext);
+			// Render the mesh parts
+			for (UINT k = 0; k < model->GetMeshCount(); k++)
+			{
+				// If the main box is completely within the frust, we can skip the mesh check
+				if (modelIntersect != COMPLETELY_INSIDE)
+				{
+					Mesh mesh = model->GetMesh(k);
+					OrientedBox meshBounds = instance->GetMeshOrientedBox(k);
+								
+					if (!Collision::IntersectOrientedBoxFrustum(&meshBounds, &shadowFrust))
+					{
+						continue;
+					}
+				}
+
+				model->RenderMesh(pd3dImmediateContext, k);
+			}
 		}
 
 		// Bake the cascade offset and bias into the projection matrix and then store it
