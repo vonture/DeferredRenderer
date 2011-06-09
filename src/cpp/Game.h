@@ -9,6 +9,7 @@
 #include "MouseState.h"
 #include "HDRPostProcess.h"
 #include "SkyPostProcess.h"
+#include "AntiAliasPostProcess.h"
 
 class Game : public IUpdateable, public IHasContent
 {
@@ -20,6 +21,7 @@ private:
 
 	HDRPostProcess _hdrPP;
 	SkyPostProcess _skyPP;
+	AntiAliasPostProcess _aaPP;
 
 	std::vector<DirectionalLight> _directionalLights;
 	std::vector<PointLight> _pointLights;

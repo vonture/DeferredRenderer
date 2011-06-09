@@ -124,6 +124,7 @@ void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3
 
 	_renderer.AddPostProcess(&_skyPP);
 	_renderer.AddPostProcess(&_hdrPP);
+	//_renderer.AddPostProcess(&_aaPP);
 
 	V(_renderer.End(pd3dDevice, pd3dImmediateContext, &_camera));
 }
@@ -135,6 +136,7 @@ HRESULT Game::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_D
 	V_RETURN(_renderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));	
 	V_RETURN(_hdrPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_skyPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_aaPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_scene.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
 	return S_OK;
@@ -145,6 +147,7 @@ void Game::OnD3D11DestroyDevice()
 	_renderer.OnD3D11DestroyDevice();	
 	_hdrPP.OnD3D11DestroyDevice();
 	_skyPP.OnD3D11DestroyDevice();
+	_aaPP.OnD3D11DestroyDevice();
 	_scene.OnD3D11DestroyDevice();	
 }
 
@@ -159,6 +162,7 @@ HRESULT Game::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain*
 	V_RETURN(_renderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));	
 	V_RETURN(_hdrPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_skyPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_aaPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_scene.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
@@ -168,5 +172,6 @@ void Game::OnD3D11ReleasingSwapChain()
 	_renderer.OnD3D11ReleasingSwapChain();	
 	_hdrPP.OnD3D11ReleasingSwapChain();
 	_skyPP.OnD3D11ReleasingSwapChain();
+	_aaPP.OnD3D11ReleasingSwapChain();
 	_scene.OnD3D11ReleasingSwapChain();
 }
