@@ -97,59 +97,59 @@ HRESULT Mesh::CreateFromSDKMeshMesh(ID3D11Device* device, CDXUTSDKMesh* model, U
 
 			switch (vbHeader->Decl[j].Type)
 			{
-				    case D3DDECLTYPE_FLOAT1:    //  0,   1D float expanded to (value, 0., 0., 1.)
-						_inputElements[i][j].Format = DXGI_FORMAT_R32_FLOAT;
-						break;
-					case D3DDECLTYPE_FLOAT2:    //  1,   2D float expanded to (value, value, 0., 1.)
-						_inputElements[i][j].Format = DXGI_FORMAT_R32G32_FLOAT;
-						break;
-					case D3DDECLTYPE_FLOAT3:    //  2,   3D float expanded to (value, value, value, 1.)
-						_inputElements[i][j].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-						break;
-					case D3DDECLTYPE_FLOAT4:    //  3,   4D float
-						_inputElements[i][j].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-						break;
-					case D3DDECLTYPE_D3DCOLOR:  //  4,   4D packed unsigned bytes mapped to 0. to 1. range
-					                            //        Input is in D3DCOLOR format (ARGB) expanded to (R, G, B, A)
-						_inputElements[i][j].Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-						break;
-					case D3DDECLTYPE_UBYTE4:    //  5,   4D unsigned byte
-						_inputElements[i][j].Format = DXGI_FORMAT_R8G8B8A8_UINT;
-						break;
-					case D3DDECLTYPE_SHORT2:    //  6,   2D signed short expanded to (value, value, 0., 1.)
-						_inputElements[i][j].Format = DXGI_FORMAT_R16G16_SINT;
-						break;
-					case D3DDECLTYPE_SHORT4:    //  7,   4D signed short
-						_inputElements[i][j].Format = DXGI_FORMAT_R16G16B16A16_SINT;
-						break;
+				case D3DDECLTYPE_FLOAT1:    //  0,   1D float expanded to (value, 0., 0., 1.)
+					_inputElements[i][j].Format = DXGI_FORMAT_R32_FLOAT;
+					break;
+				case D3DDECLTYPE_FLOAT2:    //  1,   2D float expanded to (value, value, 0., 1.)
+					_inputElements[i][j].Format = DXGI_FORMAT_R32G32_FLOAT;
+					break;
+				case D3DDECLTYPE_FLOAT3:    //  2,   3D float expanded to (value, value, value, 1.)
+					_inputElements[i][j].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+					break;
+				case D3DDECLTYPE_FLOAT4:    //  3,   4D float
+					_inputElements[i][j].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+					break;
+				case D3DDECLTYPE_D3DCOLOR:  //  4,   4D packed unsigned bytes mapped to 0. to 1. range
+					                        //        Input is in D3DCOLOR format (ARGB) expanded to (R, G, B, A)
+					_inputElements[i][j].Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+					break;
+				case D3DDECLTYPE_UBYTE4:    //  5,   4D unsigned byte
+					_inputElements[i][j].Format = DXGI_FORMAT_R8G8B8A8_UINT;
+					break;
+				case D3DDECLTYPE_SHORT2:    //  6,   2D signed short expanded to (value, value, 0., 1.)
+					_inputElements[i][j].Format = DXGI_FORMAT_R16G16_SINT;
+					break;
+				case D3DDECLTYPE_SHORT4:    //  7,   4D signed short
+					_inputElements[i][j].Format = DXGI_FORMAT_R16G16B16A16_SINT;
+					break;
 					
-					case D3DDECLTYPE_UBYTE4N:   //  8,   Each of 4 bytes is normalized by dividing to 255.0
-						_inputElements[i][j].Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-						break;
-					case D3DDECLTYPE_SHORT2N:   //  9,   2D signed short normalized (v[0]/32767.0,v[1]/32767.0,0,1)
-						_inputElements[i][j].Format = DXGI_FORMAT_R16G16_SNORM;
-						break;
-					case D3DDECLTYPE_SHORT4N:   // 10,   4D signed short normalized (v[0]/32767.0,v[1]/32767.0,v[2]/32767.0,v[3]/32767.0)
-						_inputElements[i][j].Format = DXGI_FORMAT_R16G16B16A16_SNORM;
-						break;
-					case D3DDECLTYPE_USHORT2N:  // 11,   2D unsigned short normalized (v[0]/65535.0,v[1]/65535.0,0,1)
-						_inputElements[i][j].Format = DXGI_FORMAT_R16G16_UNORM;
-						break;
-					case D3DDECLTYPE_USHORT4N:  // 12,   4D unsigned short normalized (v[0]/65535.0,v[1]/65535.0,v[2]/65535.0,v[3]/65535.0)
-						_inputElements[i][j].Format = DXGI_FORMAT_R16G16B16A16_UNORM;
-						break;
-					case D3DDECLTYPE_UDEC3:     // 13,   3D unsigned 10 10 10 format expanded to (value, value, value, 1)
-						_inputElements[i][j].Format = DXGI_FORMAT_R10G10B10A2_UINT;
-						break;
-					case D3DDECLTYPE_DEC3N:     // 14,   3D signed 10 10 10 format normalized and expanded to (v[0]/511.0, v[1]/511.0, v[2]/511.0, 1)
-						_inputElements[i][j].Format = DXGI_FORMAT_R10G10B10A2_UNORM;
-						break;
-					case D3DDECLTYPE_FLOAT16_2: // 15,   Two 16-bit floating point values, expanded to (value, value, 0, 1)
-						_inputElements[i][j].Format = DXGI_FORMAT_R16G16_FLOAT;
-						break;
-					case D3DDECLTYPE_FLOAT16_4: // 16,   Four 16-bit floating point values
-						_inputElements[i][j].Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-						break;
+				case D3DDECLTYPE_UBYTE4N:   //  8,   Each of 4 bytes is normalized by dividing to 255.0
+					_inputElements[i][j].Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+					break;
+				case D3DDECLTYPE_SHORT2N:   //  9,   2D signed short normalized (v[0]/32767.0,v[1]/32767.0,0,1)
+					_inputElements[i][j].Format = DXGI_FORMAT_R16G16_SNORM;
+					break;
+				case D3DDECLTYPE_SHORT4N:   // 10,   4D signed short normalized (v[0]/32767.0,v[1]/32767.0,v[2]/32767.0,v[3]/32767.0)
+					_inputElements[i][j].Format = DXGI_FORMAT_R16G16B16A16_SNORM;
+					break;
+				case D3DDECLTYPE_USHORT2N:  // 11,   2D unsigned short normalized (v[0]/65535.0,v[1]/65535.0,0,1)
+					_inputElements[i][j].Format = DXGI_FORMAT_R16G16_UNORM;
+					break;
+				case D3DDECLTYPE_USHORT4N:  // 12,   4D unsigned short normalized (v[0]/65535.0,v[1]/65535.0,v[2]/65535.0,v[3]/65535.0)
+					_inputElements[i][j].Format = DXGI_FORMAT_R16G16B16A16_UNORM;
+					break;
+				case D3DDECLTYPE_UDEC3:     // 13,   3D unsigned 10 10 10 format expanded to (value, value, value, 1)
+					_inputElements[i][j].Format = DXGI_FORMAT_R10G10B10A2_UINT;
+					break;
+				case D3DDECLTYPE_DEC3N:     // 14,   3D signed 10 10 10 format normalized and expanded to (v[0]/511.0, v[1]/511.0, v[2]/511.0, 1)
+					_inputElements[i][j].Format = DXGI_FORMAT_R10G10B10A2_UNORM;
+					break;
+				case D3DDECLTYPE_FLOAT16_2: // 15,   Two 16-bit floating point values, expanded to (value, value, 0, 1)
+					_inputElements[i][j].Format = DXGI_FORMAT_R16G16_FLOAT;
+					break;
+				case D3DDECLTYPE_FLOAT16_4: // 16,   Four 16-bit floating point values
+					_inputElements[i][j].Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+					break;
 			}
 			
 			_inputElements[i][j].InputSlot = 0;			
