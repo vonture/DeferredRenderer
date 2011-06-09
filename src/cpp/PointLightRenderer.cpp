@@ -147,7 +147,7 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 				continue;
 			}
 
-			model->RenderMesh(pd3dImmediateContext, j, 0, 1, 2);
+			model->RenderMesh(pd3dImmediateContext, j);
 		}
 	}
 	
@@ -185,7 +185,7 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 				continue;
 			}
 
-			model->RenderMesh(pd3dImmediateContext, j, 0, 1, 2);
+			model->RenderMesh(pd3dImmediateContext, j);
 		}
 	}
 	
