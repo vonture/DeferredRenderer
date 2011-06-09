@@ -4,7 +4,7 @@
 #include "IUpdateable.h"
 #include "IHasContent.h"
 #include "Renderer.h"
-#include "Camera.h"
+#include "FirstPersonCamera.h"
 #include "KeyboardState.h"
 #include "MouseState.h"
 #include "HDRPostProcess.h"
