@@ -247,8 +247,6 @@ HRESULT HDRPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI
     V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_vBlurPS));
 	SAFE_RELEASE(pBlob);
 
-	V_RETURN(_fsQuad.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-
 	// Create the buffer
 	D3D11_BUFFER_DESC bufferDesc =
 	{
@@ -261,6 +259,8 @@ HRESULT HDRPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI
 	};
 
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_hdrPropertiesBuffer));
+
+	V_RETURN(_fsQuad.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
