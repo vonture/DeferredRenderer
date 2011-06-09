@@ -51,11 +51,10 @@ float4 GetPositionWS(float2 vPositionCS, float fDepth)
 }
 
 float4 PS_DirectionalLightCommon(PS_In_DirectionalLight input, float4 vPositionWS)
-{
-	float4 vColorData = RT0.Sample(SceneSampler, input.vTexCoord);
+{	
     float4 vNormalData = RT1.Sample(SceneSampler, input.vTexCoord);
     
-	float fSpecularIntensity = vColorData.a;
+	float fSpecularIntensity = RT0.Sample(SceneSampler, input.vTexCoord).a;
 	float fSpecularPower = vNormalData.a;	
 		    
 	float3 N = vNormalData.xyz;
