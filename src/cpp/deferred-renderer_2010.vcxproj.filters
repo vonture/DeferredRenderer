@@ -213,6 +213,12 @@
     <ClCompile Include="OrthographicCamera.cpp">
       <Filter>Cameras</Filter>
     </ClCompile>
+    <ClCompile Include="AmbientOcclusionPostProcess.cpp">
+      <Filter>Post Process</Filter>
+    </ClCompile>
+    <ClCompile Include="DepthOfFiendPostProcess.cpp">
+      <Filter>Post Process</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleSample.hlsl">
@@ -324,6 +330,12 @@
     </ClInclude>
     <ClInclude Include="OrthographicCamera.h">
       <Filter>Cameras</Filter>
+    </ClInclude>
+    <ClInclude Include="AmbientOcclusionPostProcess.h">
+      <Filter>Post Process</Filter>
+    </ClInclude>
+    <ClInclude Include="DepthOfFieldPostProcess.h">
+      <Filter>Post Process</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
