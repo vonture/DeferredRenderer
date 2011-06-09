@@ -68,21 +68,21 @@ void Model::Destroy()
 	_meshCount = 0;
 }
 
-HRESULT Model::Render(ID3D11DeviceContext* context, UINT diffuseSlot, UINT normalSlot,
-	UINT specularSlot)
+HRESULT Model::Render(ID3D11DeviceContext* context,  UINT materialBufferSlot, UINT diffuseSlot,
+	UINT normalSlot, UINT specularSlot)
 {
 	HRESULT hr;
 
 	for (UINT i = 0; i < _meshCount; i++)
 	{
-		V_RETURN(RenderMesh(context, i, diffuseSlot, normalSlot, specularSlot));
+		V_RETURN(RenderMesh(context, i, materialBufferSlot, diffuseSlot, normalSlot, specularSlot));
 	}
 
 	return S_OK;
 }
 
-HRESULT Model::RenderMesh(ID3D11DeviceContext* context, UINT meshIdx, UINT diffuseSlot, 
-	UINT normalSlot, UINT specularSlot)
+HRESULT Model::RenderMesh(ID3D11DeviceContext* context, UINT meshIdx, UINT materialBufferSlot,
+	UINT diffuseSlot, UINT normalSlot, UINT specularSlot)
 {
 	context->IASetVertexBuffers(0, _meshes[meshIdx].GetVertexBufferCount(), 
 		_meshes[meshIdx].GetVertexBuffers(), _meshes[meshIdx].GetVertexStrides(),
@@ -95,6 +95,11 @@ HRESULT Model::RenderMesh(ID3D11DeviceContext* context, UINT meshIdx, UINT diffu
 		MeshPart part = _meshes[meshIdx].GetMeshPart(i);
 		UINT matIdx = part.MaterialIndex;
 
+		if (materialBufferSlot != INVALID_BUFFER_SLOT)
+		{
+			ID3D11Buffer* buf = _materials[matIdx].GetPropertiesBuffer();
+			context->PSSetConstantBuffers(materialBufferSlot, 1, &buf);
+		}
 		if (diffuseSlot != INVALID_SAMPLER_SLOT)
 		{
 			ID3D11ShaderResourceView* srv = _materials[matIdx].GetDiffuseSRV();

@@ -5,6 +5,7 @@
 #include "Mesh.h"
 
 #define INVALID_SAMPLER_SLOT ((UINT)-1)
+#define INVALID_BUFFER_SLOT ((UINT)-1)
 
 class Model
 {
@@ -33,8 +34,10 @@ public:
 	HRESULT CreateFromSDKMeshFile(ID3D11Device* device, LPCWSTR fileName);
 	void Destroy();
 	
-	HRESULT Render(ID3D11DeviceContext* context, UINT diffuseSlot = INVALID_SAMPLER_SLOT,
-		UINT normalSlot = INVALID_SAMPLER_SLOT, UINT specularSlot = INVALID_SAMPLER_SLOT);
-	HRESULT RenderMesh(ID3D11DeviceContext* context, UINT meshIdx, UINT diffuseSlot = INVALID_SAMPLER_SLOT,
-		UINT normalSlot = INVALID_SAMPLER_SLOT, UINT specularSlot = INVALID_SAMPLER_SLOT);
+	HRESULT Render(ID3D11DeviceContext* context, UINT materialBufferSlot = INVALID_BUFFER_SLOT,
+		UINT diffuseSlot = INVALID_SAMPLER_SLOT, UINT normalSlot = INVALID_SAMPLER_SLOT, 
+		UINT specularSlot = INVALID_SAMPLER_SLOT);
+	HRESULT RenderMesh(ID3D11DeviceContext* context, UINT meshIdx, UINT materialBufferSlot = INVALID_BUFFER_SLOT,
+		UINT diffuseSlot = INVALID_SAMPLER_SLOT, UINT normalSlot = INVALID_SAMPLER_SLOT, 
+		UINT specularSlot = INVALID_SAMPLER_SLOT);
 };

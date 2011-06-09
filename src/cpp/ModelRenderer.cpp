@@ -64,17 +64,18 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 
 		for (UINT j = 0; j < model->GetMeshCount(); j++)
 		{
-			Mesh mesh = model->GetMesh(j);
-			OrientedBox meshBounds = instance->GetMeshOrientedBox(j);
-			
 			// If the main box is completely within the frust, we can skip the mesh check
-			if (modelIntersect != COMPLETELY_INSIDE &&
-				!Collision::IntersectOrientedBoxFrustum(&meshBounds, &cameraFrust))
+			if (modelIntersect != COMPLETELY_INSIDE)
 			{
-				continue;
+				Mesh mesh = model->GetMesh(j);
+				OrientedBox meshBounds = instance->GetMeshOrientedBox(j);
+							
+				if (!Collision::IntersectOrientedBoxFrustum(&meshBounds, &cameraFrust))
+				{
+					continue;
+				}
 			}
-
-			model->RenderMesh(pd3dDeviceContext, j, 0, 1, 2);
+			model->RenderMesh(pd3dDeviceContext, j, 1, 0, 1, 2);
 		}
 	}
 
