@@ -256,14 +256,14 @@ public:
 
 	void SetYRotation(float yRot)
 	{
-		_yRot = clampf(yRot, -PiOver2, PiOver2);
+		_yRot = clamp(yRot, -PiOver2, PiOver2);
 		SetOrientation(XMQuaternionRotationRollPitchYaw(_yRot, _xRot, 0.0f));
 	}
 
 	void SetRotation(float xRot, float yRot)
 	{
 		_xRot = XMScalarModAngle(xRot);
-		_yRot = clampf(yRot, -PiOver2, PiOver2);
+		_yRot = clamp(yRot, -PiOver2, PiOver2);
 		SetOrientation(XMQuaternionRotationRollPitchYaw(_yRot, _xRot, 0.0f));
 	}
 };
