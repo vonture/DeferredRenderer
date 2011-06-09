@@ -6,10 +6,10 @@
 class GBuffer : public DeferredBuffer
 {
 private:
-    // RT0 =       Diffuse.r           | Diffuse.g         | Diffuse.b     | Specular Intensity
-    // RT1 =       Normal.x            | Normal.y          | Normal.z      | Specular Power
-    // RT2 =                           | Ambient Occlusion | Translucency  | Material ID
-    // RT3 =       Depth               |                   |               |
+    // RT0 =       Diffuse.r	| Diffuse.g		| Diffuse.b		| Specular Intensity
+    // RT1 =       Normal.x		| Normal.y		| Normal.z		| Specular Power
+    // RT2 =       Emissive.r	| Emissive.g	| Emissive.b	| Ambient
+    // RT3 =       Depth		|				|				|
 	ID3D11Texture2D* _textures[4];
 	ID3D11ShaderResourceView* _shaderResourceViews[4];
 	ID3D11RenderTargetView* _renderTargetViews[3];

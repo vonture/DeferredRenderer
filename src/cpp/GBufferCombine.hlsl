@@ -16,9 +16,9 @@ struct PS_In_Combine
 
 float4 PS_Combine(PS_In_Combine input) : SV_TARGET0
 {
-	// RT0 =       Diffuse.r           | Diffuse.g         | Diffuse.b     | Specular Intensity
-    // RT1 =       Normal.x            | Normal.y          | Normal.z      | Specular Power
-    // RT2 =                           | Ambient Occlusion | Translucency  | Material ID
+	// RT0 =       Diffuse.r	| Diffuse.g		| Diffuse.b		| Specular Intensity
+    // RT1 =       Normal.x		| Normal.y		| Normal.z		| Specular Power
+    // RT2 =       Emissive.r	| Emissive.g	| Emissive.b	| Ambient
 	float4 rt0Sample = RT0.Sample(PointSampler, input.vTexCoord);
 	float4 rt1Sample = RT1.Sample(PointSampler, input.vTexCoord);
 	float4 rt2Sample = RT2.Sample(PointSampler, input.vTexCoord);
@@ -26,17 +26,15 @@ float4 PS_Combine(PS_In_Combine input) : SV_TARGET0
 	float4 lightSample = LightMap.Sample(PointSampler, input.vTexCoord);
 
 	float3 vDiffuse = rt0Sample.rgb;
-	float fAmbient = rt2Sample.g;
+	float fAmbient = rt2Sample.a;
 	float3 vLightColor = lightSample.rgb;
 	float fSpecular = lightSample.a;
+	float3 vEmissive = rt2Sample.rgb;
 
 	float3 vFinalColour = (fAmbient * vDiffuse) +
+						  (vEmissive) +
 						  (vLightColor * vDiffuse) + 
 						  (fSpecular * vLightColor * vDiffuse);
 
-	//return float4(fAmbient, fAmbient, fAmbient, 1.0f);
-	//return float4(vDiffuse, 1.0f);
-	//return float4(lightSample.rgb, 1.0f);
-	//return float4((rt1Sample.rgb * 0.5f) + 0.5f, 1.0f);
 	return float4(vFinalColour, 1.0f);
 }
