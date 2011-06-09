@@ -13,6 +13,8 @@ Material::~Material()
 
 HRESULT Material::CreateFromSDKMeshMaterial(ID3D11Device* device, CDXUTSDKMesh* model, UINT materialIdx)
 {
+	HRESULT hr;
+
 	SDKMESH_MATERIAL* sdkmat = model->GetMaterial(materialIdx);
 
 	_ambientColor = XMFLOAT3(sdkmat->Ambient.x, sdkmat->Ambient.y, sdkmat->Ambient.z);
@@ -41,6 +43,32 @@ HRESULT Material::CreateFromSDKMeshMaterial(ID3D11Device* device, CDXUTSDKMesh* 
 		_specularSRV->AddRef();
 	}
 
+	// Create the buffer
+	D3D11_BUFFER_DESC bufferDesc =
+	{
+		sizeof(CB_MATERIAL_PROPERTIES), //UINT ByteWidth;
+		D3D11_USAGE_DYNAMIC, //D3D11_USAGE Usage;
+		D3D11_BIND_CONSTANT_BUFFER, //UINT BindFlags;
+		D3D11_CPU_ACCESS_WRITE, //UINT CPUAccessFlags;
+		0, //UINT MiscFlags;
+		0, //UINT StructureByteStride;
+	};
+
+	CB_MATERIAL_PROPERTIES bufferData;
+	bufferData.AmbientColor = _ambientColor;
+	bufferData.DiffuseColor = _diffuseColor;
+	bufferData.EmissiveColor = _emissiveColor;
+	bufferData.SpecularColor = _specularColor;
+	bufferData.SpecularPower = _specularPower;
+	bufferData.Alpha = _alpha;
+
+	D3D11_SUBRESOURCE_DATA initData;
+	initData.pSysMem = &bufferData;
+	initData.SysMemPitch = 0;
+	initData.SysMemSlicePitch = 0;
+
+	V_RETURN(device->CreateBuffer(&bufferDesc, &initData, &_propertiesBuffer));
+
 	return S_OK;
 }
 
@@ -49,4 +77,5 @@ void Material::Destroy()
 	SAFE_RELEASE(_diffuseSRV);
 	SAFE_RELEASE(_normalSRV);
 	SAFE_RELEASE(_specularSRV);
+	SAFE_RELEASE(_propertiesBuffer);
 }

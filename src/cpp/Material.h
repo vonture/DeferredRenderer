@@ -3,6 +3,17 @@
 #include "Defines.h"
 #include "SDKmesh.h"
 
+struct CB_MATERIAL_PROPERTIES
+{
+	_DECLSPEC_ALIGN_16_ XMFLOAT3 AmbientColor;
+    _DECLSPEC_ALIGN_16_ XMFLOAT3 DiffuseColor;
+    _DECLSPEC_ALIGN_16_ XMFLOAT3 EmissiveColor;    
+	_DECLSPEC_ALIGN_16_ XMFLOAT3 SpecularColor;
+	float SpecularPower;
+    float Alpha;
+	XMFLOAT2 Padding;
+};
+
 class Material
 {
 private:
@@ -18,6 +29,8 @@ private:
     ID3D11ShaderResourceView* _normalSRV;
 	ID3D11ShaderResourceView* _specularSRV;
 
+	ID3D11Buffer* _propertiesBuffer;
+
 public:
 	Material();
 	~Material();
@@ -32,6 +45,8 @@ public:
 	ID3D11ShaderResourceView* GetDiffuseSRV() const { return _diffuseSRV; }
 	ID3D11ShaderResourceView* GetNormalSRV() const { return _normalSRV; }
 	ID3D11ShaderResourceView* GetSpecularSRV() const { return _specularSRV; }
+
+	ID3D11Buffer* GetPropertiesBuffer() const { return _propertiesBuffer; }
 
 	HRESULT CreateFromSDKMeshMaterial(ID3D11Device* device, CDXUTSDKMesh* model, UINT materialIdx);
 	void Destroy();
