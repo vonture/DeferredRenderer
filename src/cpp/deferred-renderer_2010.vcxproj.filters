@@ -198,6 +198,9 @@
     <ClCompile Include="SkyPostProcess.cpp">
       <Filter>Post Process</Filter>
     </ClCompile>
+    <ClCompile Include="AntiAliasPostProcess.cpp">
+      <Filter>Post Process</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleSample.hlsl">
@@ -296,6 +299,9 @@
       <Filter>Collision</Filter>
     </ClInclude>
     <ClInclude Include="SkyPostProcess.h">
+      <Filter>Post Process</Filter>
+    </ClInclude>
+    <ClInclude Include="AntiAliasPostProcess.h">
       <Filter>Post Process</Filter>
     </ClInclude>
   </ItemGroup>

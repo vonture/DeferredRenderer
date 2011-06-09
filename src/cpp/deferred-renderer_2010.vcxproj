@@ -378,6 +378,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AntiAliasPostProcess.cpp" />
     <ClCompile Include="BoundingObjectRenderer.cpp" />
     <ClCompile Include="CombinePostProcess.cpp" />
     <ClCompile Include="DeviceStates.cpp" />
@@ -401,6 +402,7 @@
     <ClCompile Include="ShaderLoader.cpp" />
     <ClCompile Include="SkyPostProcess.cpp" />
     <ClCompile Include="xnaCollision.cpp" />
+    <ClInclude Include="AntiAliasPostProcess.h" />
     <ClInclude Include="BoundingObjectRenderer.h" />
     <ClInclude Include="ButtonState.h" />
     <ClInclude Include="CombinePostProcess.h" />
