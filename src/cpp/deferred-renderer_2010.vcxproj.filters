@@ -39,6 +39,12 @@
     <Filter Include="Collision">
       <UniqueIdentifier>{db123f84-d85b-4c7f-9058-9cd3f7d1b8d5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Lights\Light Types">
+      <UniqueIdentifier>{6309fa1a-c9e3-4023-ab56-8000ec803181}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lights\Renderers">
+      <UniqueIdentifier>{8b2032c1-ff26-4ab0-b81d-57df3345c54f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="DXUT\Optional\directx.ico">
@@ -167,15 +173,9 @@
     <ClCompile Include="MouseState.cpp">
       <Filter>Input</Filter>
     </ClCompile>
-    <ClCompile Include="DirectionalLightRenderer.cpp">
-      <Filter>Lights</Filter>
-    </ClCompile>
     <ClCompile Include="DeviceStates.cpp" />
     <ClCompile Include="PostProcess.cpp">
       <Filter>Post Process</Filter>
-    </ClCompile>
-    <ClCompile Include="PointLightRenderer.cpp">
-      <Filter>Lights</Filter>
     </ClCompile>
     <ClCompile Include="Model.cpp">
       <Filter>Models</Filter>
@@ -219,6 +219,12 @@
     <ClCompile Include="DepthOfFiendPostProcess.cpp">
       <Filter>Post Process</Filter>
     </ClCompile>
+    <ClCompile Include="DirectionalLightRenderer.cpp">
+      <Filter>Lights\Renderers</Filter>
+    </ClCompile>
+    <ClCompile Include="PointLightRenderer.cpp">
+      <Filter>Lights\Renderers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleSample.hlsl">
@@ -245,9 +251,6 @@
       <Filter>Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="Renderer.h" />
-    <ClInclude Include="Light.h">
-      <Filter>Lights</Filter>
-    </ClInclude>
     <ClInclude Include="PostProcess.h">
       <Filter>Post Process</Filter>
     </ClInclude>
@@ -259,9 +262,6 @@
     </ClInclude>
     <ClInclude Include="GBuffer.h">
       <Filter>Buffers</Filter>
-    </ClInclude>
-    <ClInclude Include="LightRenderer.h">
-      <Filter>Lights</Filter>
     </ClInclude>
     <ClInclude Include="Game.h" />
     <ClInclude Include="LightBuffer.h">
@@ -289,15 +289,9 @@
     <ClInclude Include="ButtonState.h">
       <Filter>Input</Filter>
     </ClInclude>
-    <ClInclude Include="DirectionalLightRenderer.h">
-      <Filter>Lights</Filter>
-    </ClInclude>
     <ClInclude Include="DeviceStates.h" />
     <ClInclude Include="Defines.h" />
     <ClInclude Include="Utility.h" />
-    <ClInclude Include="PointLightRenderer.h">
-      <Filter>Lights</Filter>
-    </ClInclude>
     <ClInclude Include="HDRPostProcess.h">
       <Filter>Post Process</Filter>
     </ClInclude>
@@ -336,6 +330,18 @@
     </ClInclude>
     <ClInclude Include="DepthOfFieldPostProcess.h">
       <Filter>Post Process</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectionalLightRenderer.h">
+      <Filter>Lights\Renderers</Filter>
+    </ClInclude>
+    <ClInclude Include="PointLightRenderer.h">
+      <Filter>Lights\Renderers</Filter>
+    </ClInclude>
+    <ClInclude Include="LightRenderer.h">
+      <Filter>Lights\Renderers</Filter>
+    </ClInclude>
+    <ClInclude Include="Light.h">
+      <Filter>Lights\Light Types</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
