@@ -1,18 +1,21 @@
 #include "SkyPostProcess.h"
 
 SkyPostProcess::SkyPostProcess()
-	: _skyPS(NULL), _skyProperties(NULL)
+	: _skyColor(0.0f, 0.0f, 0.0f), _sunColor(0.0f, 0.0f, 0.0f), _sunDirection(0.0f, 0.0f, 0.0f),
+	  _sunWidth(0.0f), _enableSun(false), _skyPS(NULL), _skyProperties(NULL)
 {
-	_skyColor = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-	_sunColor = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-	_sunDirection = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
-	_sunWidth = 0.0f;
-	_enableSun = false;
 }
 
 SkyPostProcess::~SkyPostProcess()
 {
 }
+
+void SkyPostProcess::SetSunDirection(const XMFLOAT3& sunDir)
+{
+	XMVECTOR dir = XMLoadFloat3(&sunDir);
+	XMStoreFloat3(&_sunDirection, XMVector3Normalize(dir));
+}
+
 
 HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
@@ -33,9 +36,9 @@ HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	V_RETURN(pd3dImmediateContext->Map(_skyProperties, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 	CB_SKY_PROPERTIES* skyProperties = (CB_SKY_PROPERTIES*)mappedResource.pData;
 		
-	XMStoreFloat3(&skyProperties->SkyColor, _skyColor);
-	XMStoreFloat3(&skyProperties->SunColor, _sunColor);
-	XMStoreFloat3(&skyProperties->SunDirection, _sunDirection);
+	skyProperties->SkyColor = _skyColor;
+	skyProperties->SunColor = _sunColor;
+	skyProperties->SunDirection = _sunDirection;
 	skyProperties->SunWidth = _sunWidth;
 	skyProperties->SunEnabled = _enableSun ? 1 : 0;
 	XMStoreFloat3(&skyProperties->CameraPosition, camera->GetPosition());

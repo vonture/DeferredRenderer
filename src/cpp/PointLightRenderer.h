@@ -25,7 +25,7 @@ struct CB_POINTLIGHT_LIGHT_PROPERTIES
 	XMFLOAT3 LightPosition;
 	float LightRadius;
 	XMFLOAT3 LightColor;
-	float LightIntensity;
+	float Padding;
 };
 
 struct CB_POINTLIGHT_CAMERA_PROPERTIES

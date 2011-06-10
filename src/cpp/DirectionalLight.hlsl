@@ -10,9 +10,8 @@ cbuffer cbCameraProperties : register(b0)
 
 cbuffer cbLightProperties : register(b1)
 {
-	float3 LightDirection	: packoffset(c0);
-	float  LightIntensity	: packoffset(c0.w);
-	float4 LightColor		: packoffset(c1);	
+	float3 LightDirection	: packoffset(c0.x);
+	float3 LightColor		: packoffset(c1.x);
 }
 
 cbuffer cbShadowProperties : register(b2)
@@ -66,7 +65,7 @@ float4 PS_DirectionalLightCommon(PS_In_DirectionalLight input, float4 vPositionW
 	float fDiffuseTerm = saturate(dot(N, L));
 	float fSpecularTerm = fSpecularIntensity * pow(saturate(dot(R, L)), fSpecularPower);
 	
-    return LightIntensity * float4(fDiffuseTerm * LightColor.rgb, fSpecularTerm);
+    return float4(fDiffuseTerm * LightColor, fSpecularTerm);
 }
 
 float4 PS_DirectionalLightUnshadowed(PS_In_DirectionalLight input) : SV_TARGET0

@@ -2,6 +2,28 @@
 
 #include "Defines.h"
 
+_DECLSPEC_ALIGN_16_ struct PointLight
+{	
+	XMFLOAT3 Position;
+	float Radius;
+	XMFLOAT3 Color;	
+};
+
+_DECLSPEC_ALIGN_16_ struct DirectionalLight
+{	
+	XMFLOAT3 Direction;
+	XMFLOAT3 Color;
+};
+
+_DECLSPEC_ALIGN_16_ struct SpotLight
+{	
+	XMFLOAT3 Position;
+	XMFLOAT4 Direction;
+	FLOAT Length;
+	FLOAT Radius;
+	XMFLOAT3 Color;
+};
+/*
 class Light
 {
 private:
@@ -9,7 +31,8 @@ private:
 	float _intensity;
 
 public:
-	Light(const XMVECTOR& color, float intensity) : _color(color), _intensity(max(intensity, 0.0f))
+	Light(const XMVECTOR& color, float intensity) 
+		: _color(color), _intensity(max(intensity, 0.0f))
 	{
 	}
 
@@ -90,3 +113,4 @@ public:
 		_radius = max(radius, 0.0f);
 	}
 };
+*/

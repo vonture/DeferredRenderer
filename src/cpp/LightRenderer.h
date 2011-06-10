@@ -12,7 +12,13 @@ template <class T>
 class LightRenderer : IHasContent
 {
 private:
-	std::vector<T*> _shadowed, _unshadowed;
+	static const UINT MAX_LIGHTS = 1024;
+
+	UINT _shadowedCount;
+	T* _shadowed[MAX_LIGHTS];
+	
+	UINT _unshadowedCount;
+	T* _unshadowed[MAX_LIGHTS];
 
 	DepthStencilStates _dsStates;
 	SamplerStates _samplerStates;
@@ -40,21 +46,32 @@ protected:
 	virtual UINT GetMaxShadowedLights() = 0;
 
 public:
+	LightRenderer()
+		: _shadowedCount(0), _unshadowedCount(0)
+	{
+	}
+
+	~LightRenderer()
+	{
+	}
+
 	void Add(T* light, bool shadowed) 
 	{
-		if (shadowed && _shadowed.size() <= GetMaxShadowedLights())
+		if (shadowed && _shadowedCount < max(GetMaxShadowedLights(), MAX_LIGHTS))
 		{
-			_shadowed.push_back(light);
+			_shadowed[_shadowedCount] = light;
+			_shadowedCount++;
 		}
-		else
+		else if (_unshadowedCount < MAX_LIGHTS)
 		{
-			_unshadowed.push_back(light);
+			_unshadowed[_unshadowedCount] = light;
+			_unshadowedCount++;
 		}
 	}
 
 	UINT GetCount(bool shadowed)
 	{
-		return shadowed ? (UINT)_shadowed.size() : (UINT)_unshadowed.size();
+		return shadowed ? _shadowedCount : _unshadowedCount;
 	}
 
 	T* GetLight(int idx, bool shadowed)
@@ -64,8 +81,8 @@ public:
 	
 	void Clear()
 	{
-		_shadowed.clear();
-		_unshadowed.clear();
+		_shadowedCount = 0;
+		_unshadowedCount = 0;
 	}
 	
 	virtual HRESULT RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*>* models,

@@ -18,9 +18,9 @@ struct CB_SKY_PROPERTIES
 class SkyPostProcess : public PostProcess
 {
 private:
-	XMVECTOR _skyColor;
-	XMVECTOR _sunColor;
-	XMVECTOR _sunDirection;
+	XMFLOAT3 _skyColor;
+	XMFLOAT3 _sunColor;
+	XMFLOAT3 _sunDirection;
 	float _sunWidth;
 	bool _enableSun;
 
@@ -33,15 +33,15 @@ public:
 	SkyPostProcess();
 	~SkyPostProcess();
 
-	const XMVECTOR& GetSkyColor() const { return _skyColor; }
-	const XMVECTOR& GetSunColor() const { return _sunColor; }
-	const XMVECTOR& GetSunDirection() const { return _sunDirection; }
+	const XMFLOAT3& GetSkyColor() const { return _skyColor; }
+	const XMFLOAT3& GetSunColor() const { return _sunColor; }
+	const XMFLOAT3& GetSunDirection() const { return _sunDirection; }
 	float GetSunWidth() const { return _sunWidth; }
 	bool GetSunEnabled() const { return _enableSun; }
 
-	void SetSkyColor(const XMVECTOR& skyCol) { _skyColor = skyCol; }
-	void SetSunColor(const XMVECTOR& sunCol) { _sunColor = sunCol; }
-	void SetSunDirection(const XMVECTOR& sunDir) { _sunDirection = XMVector3Normalize(sunDir); }
+	void SetSkyColor(const XMFLOAT3& skyCol) { _skyColor = skyCol; }
+	void SetSunColor(const XMFLOAT3& sunCol) { _sunColor = sunCol; }
+	void SetSunDirection(const XMFLOAT3& sunDir);
 	void SetSunWidth(float width) { _sunWidth = max(width, 0.0f); }
 	void SetSunEnabled(bool enable) { _enableSun = enable; }
 

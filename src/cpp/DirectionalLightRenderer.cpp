@@ -493,8 +493,11 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 	XMMATRIX inverseCameraView = XMMatrixInverse(&det, camera->GetView());	
 
 	// Calculate the scene aabb in light space
-	XMMATRIX lightSpaceTransform = XMMatrixLookToLH(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f),
-		-dlight->GetDirection(), XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f));
+	XMVECTOR lightDir = XMLoadFloat3(&dlight->Direction);
+	XMVECTOR origin = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+
+	XMMATRIX lightSpaceTransform = XMMatrixLookToLH(origin, -lightDir, up);
 
 	XMVECTOR sceneAABBcorners[8];
 	Collision::ComputeAxisAlignedBoxCorners(sceneBounds, &sceneAABBcorners[0], &sceneAABBcorners[1],
@@ -618,9 +621,8 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 		Frustum shadowFrust;
 		Collision::ComputeFrustumFromProjection(&shadowFrust, &shadowProj);
 		shadowFrust.Origin = XMFLOAT3(0.0f, 0.0f, 0.0f);
-		XMStoreFloat4(&shadowFrust.Orientation, XMQuaternionNormalize(-dlight->GetDirection()));
-
-
+		XMStoreFloat4(&shadowFrust.Orientation, XMQuaternionNormalize(-lightDir));
+		
 		// Render the depth of all the models in the scene
 		for (UINT j = 0; j < models->size(); j++)
 		{
@@ -641,7 +643,7 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 		
 			V_RETURN(pd3dImmediateContext->Map(_depthPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 			CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES* modelProperties = (CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES*)mappedResource.pData;
-			modelProperties->WorldViewProjection = XMMatrixTranspose(wvp);
+			XMStoreFloat4x4(&modelProperties->WorldViewProjection, XMMatrixTranspose(wvp));
 			pd3dImmediateContext->Unmap(_depthPropertiesBuffer, 0);
 
 			pd3dImmediateContext->VSSetConstantBuffers(0, 1, &_depthPropertiesBuffer);
@@ -721,7 +723,7 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 		V_RETURN(pd3dImmediateContext->Map(_cameraPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 		CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES* cameraProperties = (CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES*)mappedResource.pData;
 	
-		cameraProperties->InverseViewProjection = XMMatrixTranspose(cameraInvViewProj);
+		XMStoreFloat4x4(&cameraProperties->InverseViewProjection, XMMatrixTranspose(cameraInvViewProj));
 		XMStoreFloat4(&cameraProperties->CameraPosition, cameraPos);
 
 		pd3dImmediateContext->Unmap(_cameraPropertiesBuffer, 0);
@@ -738,9 +740,8 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 			CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES* lightProperties = 
 				(CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
 
-			XMStoreFloat4(&lightProperties->LightColor, light->GetColor());
-			XMStoreFloat3(&lightProperties->LightDirection, light->GetDirection());
-			lightProperties->LightIntensity = light->GetItensity();
+			lightProperties->LightColor = light->Color;
+			lightProperties->LightDirection = light->Direction;
 
 			pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
 
@@ -760,9 +761,8 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 			CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES* lightProperties = 
 				(CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
 
-			XMStoreFloat4(&lightProperties->LightColor, light->GetColor());
-			XMStoreFloat3(&lightProperties->LightDirection, light->GetDirection());
-			lightProperties->LightIntensity = light->GetItensity();
+			lightProperties->LightColor = light->Color;
+			lightProperties->LightDirection = light->Direction;
 
 			pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
 		

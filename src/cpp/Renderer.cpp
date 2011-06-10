@@ -159,8 +159,8 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 			PointLight* light = _pointLightRenderer.GetLight(i, false);
 
 			Sphere lightSphere;
-			XMStoreFloat3(&lightSphere.Center, light->GetPosition());
-			lightSphere.Radius = light->GetRadius();
+			lightSphere.Center = light->Position;
+			lightSphere.Radius = light->Radius;
 		
 			_boRenderer.Add(lightSphere);
 		}
@@ -169,8 +169,8 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 			PointLight* light = _pointLightRenderer.GetLight(i, true);
 
 			Sphere lightSphere;
-			XMStoreFloat3(&lightSphere.Center, light->GetPosition());
-			lightSphere.Radius = light->GetRadius();
+			lightSphere.Center = light->Position;
+			lightSphere.Radius = light->Radius;
 		
 			_boRenderer.Add(lightSphere);
 		}

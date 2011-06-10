@@ -66,8 +66,8 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 
 	// Create a bounding sphere for the light
 	Sphere lightSphere;
-	XMStoreFloat3(&lightSphere.Center, light->GetPosition());
-	lightSphere.Radius = light->GetRadius();
+	lightSphere.Center = light->Position;
+	lightSphere.Radius = light->Radius;
 
 	// Make sure this light is in the view fustrum
 	XMMATRIX proj = camera->GetProjection();
@@ -95,7 +95,7 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
 
 	// Create view matrix
-	XMVECTOR lightPos = light->GetPosition();
+	XMVECTOR lightPos = XMLoadFloat3(&light->Position);
 	XMVECTOR lightForward = XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f);
 	XMVECTOR lightUp = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
 
@@ -131,7 +131,7 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 
 		depthProperties->WorldView = XMMatrixTranspose(wv);
 		depthProperties->Direction = 1.0f;
-		depthProperties->CameraClips = XMFLOAT2(0.1f, light->GetRadius());
+		depthProperties->CameraClips = XMFLOAT2(0.1f, light->Radius);
 
 		pd3dImmediateContext->Unmap(_depthPropertiesBuffer, 0);
 
@@ -169,7 +169,7 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 
 		depthProperties->WorldView = XMMatrixTranspose(wv);
 		depthProperties->Direction = -1.0f;
-		depthProperties->CameraClips = XMFLOAT2(0.1f, light->GetRadius());
+		depthProperties->CameraClips = XMFLOAT2(0.1f, light->Radius);
 
 		pd3dImmediateContext->Unmap(_depthPropertiesBuffer, 0);
 
@@ -260,13 +260,13 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 		for (int i = 0; i < numUnshadowed; i++)
 		{
 			PointLight* light = GetLight(i, false);
-			XMVECTOR lightPosition = light->GetPosition();
-			float lightRadius = light->GetRadius();
+			XMVECTOR lightPosition = XMLoadFloat3(&light->Position);
+			float lightRadius = light->Radius;
 
 			// Verify that the light is visible
 			Sphere lightBounds;
-			XMStoreFloat3(&lightBounds.Center, lightPosition);
-			lightBounds.Radius = lightRadius;
+			lightBounds.Center = light->Position;
+			lightBounds.Radius = light->Radius;
 
 			if (!Collision::IntersectSphereFrustum(&lightBounds, &cameraFrust))
 			{
@@ -307,10 +307,9 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 			CB_POINTLIGHT_LIGHT_PROPERTIES* lightProperties = 
 				(CB_POINTLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
 
-			XMStoreFloat3(&lightProperties->LightColor, light->GetColor());
-			XMStoreFloat3(&lightProperties->LightPosition, lightPosition);
-			lightProperties->LightIntensity = light->GetItensity();
-			lightProperties->LightRadius = light->GetRadius();
+			lightProperties->LightColor = light->Color;
+			lightProperties->LightPosition = light->Position;
+			lightProperties->LightRadius = light->Radius;
 
 			pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
 				
@@ -327,14 +326,14 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 		for (int i = 0; i < numShadowed; i++)
 		{
 			PointLight* light = GetLight(i, true);
-			XMVECTOR lightPosition = light->GetPosition();
-			float lightRadius = light->GetRadius();
+			XMVECTOR lightPosition = XMLoadFloat3(&light->Position);
+			float lightRadius = light->Radius;
 
 			// Verify that the light is visible
 			Sphere lightBounds;
-			XMStoreFloat3(&lightBounds.Center, lightPosition);
-			lightBounds.Radius = lightRadius;
-
+			lightBounds.Center = light->Position;
+			lightBounds.Radius = light->Radius;
+			
 			if (!Collision::IntersectSphereFrustum(&lightBounds, &cameraFrust))
 			{
 				continue;
@@ -374,10 +373,9 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 			CB_POINTLIGHT_LIGHT_PROPERTIES* lightProperties = 
 				(CB_POINTLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
 
-			XMStoreFloat3(&lightProperties->LightColor, light->GetColor());
-			XMStoreFloat3(&lightProperties->LightPosition, lightPosition);
-			lightProperties->LightIntensity = light->GetItensity();
-			lightProperties->LightRadius = light->GetRadius();
+			lightProperties->LightColor = light->Color;
+			lightProperties->LightPosition = light->Position;
+			lightProperties->LightRadius = light->Radius;
 
 			pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
 
@@ -388,7 +386,7 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 			CB_POINTLIGHT_SHADOW_PROPERTIES* shadowProperties = 
 				(CB_POINTLIGHT_SHADOW_PROPERTIES*)mappedResource.pData;
 		
-			shadowProperties->CameraClips = XMFLOAT2(0.1f, light->GetRadius());
+			shadowProperties->CameraClips = XMFLOAT2(0.1f, light->Radius);
 			shadowProperties->ShadowMapSize = XMFLOAT2((float)SHADOW_MAP_SIZE, (float)SHADOW_MAP_SIZE * 0.5f);
 			shadowProperties->Bias = BIAS;
 			shadowProperties->ShadowMatrix = XMMatrixTranspose(_shadowMatricies[i]);

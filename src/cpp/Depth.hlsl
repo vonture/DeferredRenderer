@@ -1,7 +1,6 @@
 cbuffer cbModelProperties : register(b0)
 {
     float4x4 WorldViewProjection;
-	float4x4 Padding;
 }
 
 struct VS_In_Depth

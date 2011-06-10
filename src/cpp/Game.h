@@ -28,8 +28,8 @@ private:
 	AmbientOcclusionPostProcess _aoPP;
 	DepthOfFieldPostProcess _dofPP;
 
-	std::vector<DirectionalLight> _directionalLights;
-	std::vector<PointLight> _pointLights;
+	//std::vector<DirectionalLight> _directionalLights;
+	//std::vector<PointLight> _pointLights;
 public:
 	Game();
 	~Game();

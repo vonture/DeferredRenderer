@@ -9,20 +9,18 @@
 
 struct CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES
 {
-	XMMATRIX WorldViewProjection;
-	XMMATRIX Padding;
+	XMFLOAT4X4 WorldViewProjection;
 };
 
 struct CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES
 {
-	XMFLOAT3 LightDirection;
-	float LightIntensity;
-	XMFLOAT4 LightColor;
+	_DECLSPEC_ALIGN_16_ XMFLOAT3 LightDirection;
+	_DECLSPEC_ALIGN_16_ XMFLOAT3 LightColor;
 };
 
 struct CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES
 {
-	XMMATRIX InverseViewProjection;
+	XMFLOAT4X4 InverseViewProjection;
 	XMFLOAT4 CameraPosition;
 };
 

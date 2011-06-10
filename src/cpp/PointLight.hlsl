@@ -15,7 +15,7 @@ cbuffer cbLightProperties : register(b2)
 	float3 LightPosition	: packoffset(c0);
 	float  LightRadius		: packoffset(c0.w);
 	float3 LightColor		: packoffset(c1);	
-	float  LightIntensity	: packoffset(c1.w);	
+	float  Padding1			: packoffset(c1.w);	
 }
 
 cbuffer cbShadowProperties : register(b3)
@@ -23,7 +23,7 @@ cbuffer cbShadowProperties : register(b3)
 	float2 CameraClips;
 	float2 ShadowMapSize;
 	float Bias;
-	float3 Padding;	
+	float3 Padding2;	
 	float4x4 ShadowMatrix;	
 }
 
@@ -94,7 +94,7 @@ float4 PS_PointLightCommon(VS_Out_PointLight input, float4 vPositionWS, float2 v
     float fDiffuseTerm = saturate(dot(N, L));
 	float fSpecularTerm = fSpecularIntensity * pow(saturate(dot(R, L)), fSpecularPower);
 
-	return fAttenuation * LightIntensity * float4(fDiffuseTerm * LightColor, fSpecularTerm);
+	return fAttenuation * float4(fDiffuseTerm * LightColor, fSpecularTerm);
 }
 
 float4 PS_PointLightUnshadowed(VS_Out_PointLight input) : SV_TARGET0

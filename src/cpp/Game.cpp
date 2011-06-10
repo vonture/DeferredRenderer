@@ -13,15 +13,15 @@ Game::Game()
 	_camera.SetXRotation(-0.1f);
 	_camera.SetYRotation(0.35f);
 
-	_directionalLights.push_back(
-		DirectionalLight(XMVectorSet(1.0f, 0.8f, 0.5f, 1.0f), 5.0f, XMVectorSet(0.5f, 0.6f, 0.5f, 1.0f)));
+	//_directionalLights.push_back(
+	//	DirectionalLight(XMVectorSet(1.0f, 0.8f, 0.5f, 1.0f), 5.0f, XMVectorSet(0.5f, 0.6f, 0.5f, 1.0f)));
 	//_directionalLights.push_back(
 	//	DirectionalLight(XMVectorSet(0.6f, 1.0f, 0.3f, 1.0f), 1.2f, XMVectorSet(0.5f, 0.5f, -0.5f, 1.0f)));
 	//_directionalLights.push_back(
 	//	DirectionalLight(XMVectorSet(1.0f, 1.0f, 0.3f, 1.0f), 0.4f, XMVectorSet(0.8f, 0.9, 0.8f, 1.0f)));
 	
-	_pointLights.push_back(
-		PointLight(XMVectorSet(0.6f, 1.0f, 0.5f, 1.0f), 8.0f, XMVectorSet(3.0f, 3.0f, -4.0f, 1.0f), 10.0f));
+	//_pointLights.push_back(
+	//	PointLight(XMVectorSet(0.6f, 1.0f, 0.5f, 1.0f), 8.0f, XMVectorSet(3.0f, 3.0f, -4.0f, 1.0f), 10.0f));
 	//_pointLights.push_back(
 	//	PointLight(XMVectorSet(1.0f, 0.0f, 0.3f, 1.0f), 0.9f, XMVectorSet(11.0f, 5.0f, 6.5f, 1.0f), 9.0f));
 	//_pointLights.push_back(
@@ -84,24 +84,8 @@ void Game::OnFrameMove(double totalTime, float dt)
 
 	_hdrPP.SetTimeDelta(dt);
 
-	XMVECTOR skyColor = XMVectorSet(0.2f, 0.5f, 1.0f, 1.0f);
-	_skyPP.SetSkyColor(skyColor);
-	
-	if (_directionalLights.size() > 0)
-	{
-		XMVECTOR sunCol = _directionalLights[0].GetColor();
-		XMVECTOR sunDir = _directionalLights[0].GetDirection();
-		float intensity = _directionalLights[0].GetItensity();
-
-		_skyPP.SetSunColor(sunCol);
-		_skyPP.SetSunDirection(sunDir);
-		_skyPP.SetSunWidth(0.01f * intensity);
-		_skyPP.SetSunEnabled(true);
-	}
-	else
-	{
-		_skyPP.SetSunEnabled(false);
-	}
+	//XMVECTOR skyColor = XMVectorSet(0.2f, 0.5f, 1.0f, 1.0f);
+	//_skyPP.SetSkyColor(skyColor);	
 }
 
 void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext)
@@ -111,8 +95,31 @@ void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3
 	V(_renderer.Begin());
 
 	_renderer.AddModel(&_scene);
-		
-	for (UINT i = 0; i < _directionalLights.size(); i++)
+	
+	PointLight greenLight = 
+	{
+		XMFLOAT3(3.0f, 3.0f, -4.0f),
+		10.0f,
+		XMFLOAT3(6.0f, 8.0f, 4.0f)
+	};
+	_renderer.AddLight(&greenLight, true);
+
+	DirectionalLight sun = 
+	{
+		XMFLOAT3(0.5f, 0.6f, 0.5f),
+		XMFLOAT3(5.0f, 4.0f, 2.5f)
+	};
+	_renderer.AddLight(&sun, true);
+
+	_skyPP.SetSkyColor(XMFLOAT3(0.2f, 0.5f, 1.0f));	
+	_skyPP.SetSunColor(sun.Color);
+	_skyPP.SetSunDirection(sun.Direction);
+	_skyPP.SetSunWidth(0.05f);
+	_skyPP.SetSunEnabled(true);
+
+	//_renderer.AddLight(
+
+	/*for (UINT i = 0; i < _directionalLights.size(); i++)
 	{
 		_renderer.AddLight(&_directionalLights[i], true);
 	}
@@ -121,7 +128,7 @@ void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3
 	{
 		_renderer.AddLight(&_pointLights[i], true);
 	}
-
+	*/
 	//_renderer.AddPostProcess(&_aoPP);
 	_renderer.AddPostProcess(&_skyPP);
 	//_renderer.AddPostProcess(&_dofPP);
