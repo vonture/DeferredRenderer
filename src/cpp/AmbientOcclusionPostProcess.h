@@ -4,9 +4,32 @@
 #include "PostProcess.h"
 #include "FullscreenQuad.h"
 
+struct CB_AO_PROPERTIES
+{
+};
+
 class AmbientOcclusionPostProcess : public PostProcess
 {
 private:
+	ID3D11Texture2D* _aoTexture;
+	ID3D11RenderTargetView* _aoRTV;
+	ID3D11ShaderResourceView* _aoSRV;
+
+	ID3D11Texture2D* _downScaleTextures[2];
+	ID3D11RenderTargetView* _downScaleRTVs[2];
+	ID3D11ShaderResourceView* _downScaleSRVs[2];
+
+	ID3D11Texture2D* _blurTempTexture;
+	ID3D11RenderTargetView* _blurTempRTV;
+	ID3D11ShaderResourceView* _blurTempSRV;
+
+	ID3D11PixelShader* _aoPS;
+	ID3D11PixelShader* _scalePS;
+	ID3D11PixelShader* _hBlurPS;
+	ID3D11PixelShader* _vBlurPS;
+	
+	ID3D11Buffer* _aoPropertiesBuffer;
+
 	FullscreenQuad _fsQuad;
 
 public:
