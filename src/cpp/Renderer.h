@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Defines.h"
-#include "Light.h"
+#include "Lights.h"
 #include "Camera.h"
 #include "PostProcess.h"
 #include "CombinePostProcess.h"
@@ -12,6 +12,7 @@
 #include "ModelRenderer.h"
 #include "PointLightRenderer.h"
 #include "DirectionalLightRenderer.h"
+#include "SpotLightRenderer.h"
 #include "BoundingObjectRenderer.h"
 #include <vector>
 
@@ -38,6 +39,7 @@ private:
 
 	PointLightRenderer _pointLightRenderer;
 	DirectionalLightRenderer _directionalLightRenderer;
+	SpotLightRenderer _spotLightRenderer;
 
 public:
 	Renderer();
@@ -46,6 +48,7 @@ public:
 	void AddModel(ModelInstance* model);
 	void AddLight(DirectionalLight* light, bool shadowed);
 	void AddLight(PointLight* light, bool shadowed);
+	void AddLight(SpotLight* light, bool shadowed);
 	void AddPostProcess(PostProcess* postProcess);
 	void AddDebugText(WCHAR* text);
 

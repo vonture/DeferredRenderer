@@ -10,7 +10,7 @@ private:
 	float _aspect;
 
 protected:
-	XMMATRIX BuildProjection(float nearClip, float farClip);
+	void BuildProjection(XMMATRIX* outProj, float nearClip, float farClip);
 
 public:
 	PerspectiveCamera();

@@ -12,9 +12,9 @@ PerspectiveCamera::PerspectiveCamera(float nearClip, float farClip, float fov, f
 	UpdateProjection();
 }
 
-XMMATRIX PerspectiveCamera::BuildProjection(float nearClip, float farClip)
+void PerspectiveCamera::BuildProjection(XMMATRIX* outProj, float nearClip, float farClip)
 {
-	return XMMatrixPerspectiveFovLH(_fov, _aspect, nearClip, farClip);
+	*outProj = XMMatrixPerspectiveFovLH(_fov, _aspect, nearClip, farClip);
 }
 
 void PerspectiveCamera::SetFieldOfView(float fov)

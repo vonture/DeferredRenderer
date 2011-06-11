@@ -2,10 +2,9 @@
 
 #include "Defines.h"
 #include "LightRenderer.h"
-#include "Light.h"
+#include "Lights.h"
 #include "FullscreenQuad.h"
 #include "DeviceStates.h"
-#include "ModelRenderer.h"
 
 struct CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES
 {
@@ -21,7 +20,8 @@ struct CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES
 struct CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES
 {
 	XMFLOAT4X4 InverseViewProjection;
-	XMFLOAT4 CameraPosition;
+	XMFLOAT3 CameraPosition;
+	FLOAT Padding;
 };
 
 struct CB_DIRECTIONALLIGHT_SHADOW_PROPERTIES
@@ -29,8 +29,8 @@ struct CB_DIRECTIONALLIGHT_SHADOW_PROPERTIES
 	XMFLOAT2 CameraClips;
 	XMFLOAT2 ShadowMapSize;
 	float CascadeSplits[4];
-	XMMATRIX ShadowMatricies[4];	
-	XMMATRIX ShadowTexCoordTransforms[4];
+	XMFLOAT4X4 ShadowMatricies[4];	
+	XMFLOAT4X4 ShadowTexCoordTransforms[4];
 };
 
 class DirectionalLightRenderer : public LightRenderer<DirectionalLight>
@@ -46,9 +46,7 @@ private:
 	ID3D11Buffer* _lightPropertiesBuffer;
 	ID3D11Buffer* _shadowPropertiesBuffer;
 	FullscreenQuad _fsQuad;
-
-	ModelRenderer _modelRenderer;
-
+	
 	static const UINT NUM_SHADOW_MAPS = 3;
 	static const UINT NUM_CASCADES = 4;
 	static const UINT SHADOW_MAP_SIZE = 2048;
@@ -58,8 +56,8 @@ private:
 	ID3D11Texture2D* _shadowMapTextures[NUM_SHADOW_MAPS];
 	ID3D11DepthStencilView* _shadowMapDSVs[NUM_SHADOW_MAPS];
 	ID3D11ShaderResourceView* _shadowMapSRVs[NUM_SHADOW_MAPS];
-	XMMATRIX _shadowMatricies[NUM_SHADOW_MAPS][NUM_CASCADES];
-	XMMATRIX _shadowTexCoordTransforms[NUM_SHADOW_MAPS][NUM_CASCADES];
+	XMFLOAT4X4 _shadowMatricies[NUM_SHADOW_MAPS][NUM_CASCADES];
+	XMFLOAT4X4 _shadowTexCoordTransforms[NUM_SHADOW_MAPS][NUM_CASCADES];
 	float _cascadeSplits[NUM_SHADOW_MAPS][NUM_CASCADES];
 
 	void ComputeNearAndFar(FLOAT& fNearPlane, FLOAT& fFarPlane, FXMVECTOR vLightCameraOrthographicMin, 
@@ -73,7 +71,7 @@ private:
 		AxisAlignedBox* sceneBounds);
 
 protected:
-	UINT GetMaxShadowedLights() { return NUM_SHADOW_MAPS; }
+	UINT GetMaxShadowedLights() const { return NUM_SHADOW_MAPS; }
 
 public:
 	DirectionalLightRenderer();

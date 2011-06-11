@@ -43,86 +43,6 @@ HRESULT DirectionalLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImme
 	return S_OK;
 }
 
-//-----------------------------------------------------------------------------
-// Compute the corners of a frustum.
-//----------------------------------------------------------------------------- 
-VOID Collision::ComputeFrustumCorners( const Frustum* pVolume, XMVECTOR* pCorner1, XMVECTOR* pCorner2,
-							XMVECTOR* pCorner3, XMVECTOR* pCorner4, XMVECTOR* pCorner5, 
-							XMVECTOR* pCorner6,  XMVECTOR* pCorner7, XMVECTOR* pCorner8)
-{
-	XMASSERT( pVolume );
-    XMASSERT( pCorner1 );
-    XMASSERT( pCorner2 );
-    XMASSERT( pCorner3 );
-    XMASSERT( pCorner4 );
-    XMASSERT( pCorner5 );
-    XMASSERT( pCorner6 );
-	XMASSERT( pCorner7 );
-	XMASSERT( pCorner8 );
-
-	XMVECTOR Origin = XMLoadFloat3( &pVolume->Origin );
-    XMVECTOR Orientation = XMLoadFloat4( &pVolume->Orientation );
-
-	// Set w of the origin to one so we can dot4 with a plane.
-    Origin = XMVectorInsert( Origin, XMVectorSplatOne(), 0, 0, 0, 0, 1);
-
-    // Build the corners of the frustum (in world space).
-    XMVECTOR RightTop = XMVectorSet( pVolume->RightSlope, pVolume->TopSlope, 1.0f, 0.0f );
-    XMVECTOR RightBottom = XMVectorSet( pVolume->RightSlope, pVolume->BottomSlope, 1.0f, 0.0f );
-    XMVECTOR LeftTop = XMVectorSet( pVolume->LeftSlope, pVolume->TopSlope, 1.0f, 0.0f );
-    XMVECTOR LeftBottom = XMVectorSet( pVolume->LeftSlope, pVolume->BottomSlope, 1.0f, 0.0f );
-    XMVECTOR Near = XMVectorSet( pVolume->Near, pVolume->Near, pVolume->Near, 0.0f );
-    XMVECTOR Far = XMVectorSet( pVolume->Far, pVolume->Far, pVolume->Far, 0.0f );
-
-    RightTop = XMVector3Rotate( RightTop, Orientation );
-    RightBottom = XMVector3Rotate( RightBottom, Orientation );
-    LeftTop = XMVector3Rotate( LeftTop, Orientation );
-    LeftBottom = XMVector3Rotate( LeftBottom, Orientation );
-
-    *pCorner1 = Origin + RightTop * Near;
-    *pCorner2 = Origin + RightBottom * Near;
-    *pCorner3 = Origin + LeftTop * Near;
-    *pCorner4 = Origin + LeftBottom * Near;
-    *pCorner5 = Origin + RightTop * Far;    
-	*pCorner6 = Origin + RightBottom * Far;
-    *pCorner7 = Origin + LeftTop * Far;
-    *pCorner8 = Origin + LeftBottom * Far;
-}
-
-
-//-----------------------------------------------------------------------------
-// Compute the corners of an axis aligned box.
-//-----------------------------------------------------------------------------
-VOID Collision::ComputeAxisAlignedBoxCorners( const AxisAlignedBox* pVolume, XMVECTOR* pCorner1, XMVECTOR* pCorner2,
-							XMVECTOR* pCorner3, XMVECTOR* pCorner4, XMVECTOR* pCorner5, 
-							XMVECTOR* pCorner6,  XMVECTOR* pCorner7, XMVECTOR* pCorner8)
-{
-	XMASSERT( pVolume );
-    XMASSERT( pCorner1 );
-    XMASSERT( pCorner2 );
-    XMASSERT( pCorner3 );
-    XMASSERT( pCorner4 );
-    XMASSERT( pCorner5 );
-    XMASSERT( pCorner6 );
-	XMASSERT( pCorner7 );
-	XMASSERT( pCorner8 );
-
-	XMVECTOR Origin = XMLoadFloat3( &pVolume->Center );
-    XMVECTOR Extents = XMLoadFloat3( &pVolume->Extents );
-
-	XMMATRIX transform = XMMatrixMultiply(XMMatrixScalingFromVector(Extents),
-										  XMMatrixTranslationFromVector(Origin));
-
-	*pCorner1 = XMVector3TransformCoord(XMVectorSet(-1.0f, -1.0f, -1.0f, 1.0f), transform);
-	*pCorner2 = XMVector3TransformCoord(XMVectorSet( 1.0f, -1.0f, -1.0f, 1.0f), transform);
-	*pCorner3 = XMVector3TransformCoord(XMVectorSet( 1.0f, -1.0f,  1.0f, 1.0f), transform);
-	*pCorner4 = XMVector3TransformCoord(XMVectorSet(-1.0f, -1.0f,  1.0f, 1.0f), transform);
-	*pCorner5 = XMVector3TransformCoord(XMVectorSet(-1.0f,  1.0f, -1.0f, 1.0f), transform);
-	*pCorner6 = XMVector3TransformCoord(XMVectorSet( 1.0f,  1.0f, -1.0f, 1.0f), transform);
-	*pCorner7 = XMVector3TransformCoord(XMVectorSet( 1.0f,  1.0f,  1.0f, 1.0f), transform);
-	*pCorner8 = XMVector3TransformCoord(XMVectorSet(-1.0f,  1.0f,  1.0f, 1.0f), transform);
-}
-
 //--------------------------------------------------------------------------------------
 // Used to compute an intersection of the orthographic projection and the Scene AABB
 //--------------------------------------------------------------------------------------
@@ -486,11 +406,18 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 	pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetBackFaceCull());
 
 	// Store this for later
-	XMMATRIX cameraProj = camera->GetProjection();
+	XMFLOAT4X4 fView = camera->GetView();
+	XMMATRIX cameraView = XMLoadFloat4x4(&fView);
+
+	XMFLOAT4X4 fViewProj = camera->GetViewProjection();
+	XMMATRIX cameraViewProj = XMLoadFloat4x4(&fViewProj);
+
+	XMFLOAT4X4 fProj = camera->GetProjection();
+	XMMATRIX cameraProj = XMLoadFloat4x4(&fProj);
 
 	// Compute the inverse of the camera's view
 	XMVECTOR det;
-	XMMATRIX inverseCameraView = XMMatrixInverse(&det, camera->GetView());	
+	XMMATRIX inverseCameraView = XMMatrixInverse(&det, cameraView);	
 
 	// Calculate the scene aabb in light space
 	XMVECTOR lightDir = XMLoadFloat3(&dlight->Direction);
@@ -639,7 +566,8 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 			}
 
 			// Prepare the buffer
-			XMMATRIX wvp = XMMatrixMultiply(instance->GetWorld(), shadowViewProj);
+			XMFLOAT4X4 fWorld = instance->GetWorld();
+			XMMATRIX wvp = XMMatrixMultiply(XMLoadFloat4x4(&fWorld), shadowViewProj);
 		
 			V_RETURN(pd3dImmediateContext->Map(_depthPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 			CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES* modelProperties = (CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES*)mappedResource.pData;
@@ -682,8 +610,8 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
         XMMATRIX cascadeOffsetMatrix = XMMatrixScaling(0.5f, 0.5f, 1.0f);
         cascadeOffsetMatrix.r[3] = XMLoadFloat4(&offset);
 
-		_shadowMatricies[shadowMapIdx][i] = shadowViewProj;
-		_shadowTexCoordTransforms[shadowMapIdx][i] = cascadeOffsetMatrix;
+		XMStoreFloat4x4(&_shadowMatricies[shadowMapIdx][i], XMMatrixTranspose(shadowViewProj));
+		XMStoreFloat4x4(&_shadowTexCoordTransforms[shadowMapIdx][i], XMMatrixTranspose(cascadeOffsetMatrix));
 		_cascadeSplits[shadowMapIdx][i] = fFrustumIntervalEnd;
 	}
 
@@ -701,9 +629,11 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
 	
 		// prepare the camera properties buffer
+		XMFLOAT4X4 fCamViewProj = camera->GetViewProjection();
+
 		XMVECTOR det;
-		XMMATRIX cameraInvViewProj = XMMatrixInverse(&det, camera->GetViewProjection());
-		XMVECTOR cameraPos = camera->GetPosition();
+		XMMATRIX cameraInvViewProj = XMMatrixInverse(&det, XMLoadFloat4x4(&fCamViewProj));
+		//XMVECTOR cameraPos = camera->GetPosition();
 
 		// Set the global properties for all directional lights
 		ID3D11SamplerState* samplers[2] =
@@ -724,7 +654,7 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 		CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES* cameraProperties = (CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES*)mappedResource.pData;
 	
 		XMStoreFloat4x4(&cameraProperties->InverseViewProjection, XMMatrixTranspose(cameraInvViewProj));
-		XMStoreFloat4(&cameraProperties->CameraPosition, cameraPos);
+		cameraProperties->CameraPosition = camera->GetPosition();
 
 		pd3dImmediateContext->Unmap(_cameraPropertiesBuffer, 0);
 
@@ -773,9 +703,10 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 
 			for (UINT j = 0; j < NUM_CASCADES; j++)
 			{
+				// Matricies are already transposed
 				shadowProperties->CascadeSplits[j] = _cascadeSplits[i][j];
-				shadowProperties->ShadowMatricies[j] = XMMatrixTranspose(_shadowMatricies[i][j]);
-				shadowProperties->ShadowTexCoordTransforms[j] = XMMatrixTranspose(_shadowTexCoordTransforms[i][j]);
+				shadowProperties->ShadowMatricies[j] = _shadowMatricies[i][j];
+				shadowProperties->ShadowTexCoordTransforms[j] = _shadowTexCoordTransforms[i][j];
 			}
 			shadowProperties->CameraClips = XMFLOAT2(camera->GetNearClip(), camera->GetFarClip());
 			shadowProperties->ShadowMapSize = XMFLOAT2((float)SHADOW_MAP_SIZE, (float)SHADOW_MAP_SIZE);
@@ -906,7 +837,6 @@ HRESULT DirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, 
 
 	// Load the other IHasContents
 	V_RETURN(_fsQuad.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_modelRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));	
 
 	return S_OK;
 }
@@ -933,7 +863,6 @@ void DirectionalLightRenderer::OnD3D11DestroyDevice()
 	}
 
 	_fsQuad.OnD3D11DestroyDevice();
-	_modelRenderer.OnD3D11DestroyDevice();
 }
 
 HRESULT DirectionalLightRenderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
@@ -944,7 +873,6 @@ HRESULT DirectionalLightRenderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDev
 	V_RETURN(LightRenderer::OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 
 	V_RETURN(_fsQuad.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_modelRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
@@ -953,5 +881,4 @@ void DirectionalLightRenderer::OnD3D11ReleasingSwapChain()
 {
 	LightRenderer::OnD3D11ReleasingSwapChain();
 	_fsQuad.OnD3D11ReleasingSwapChain();
-	_modelRenderer.OnD3D11ReleasingSwapChain();
 }

@@ -4,8 +4,9 @@ static const int PCFRadius = 2;
 
 cbuffer cbCameraProperties : register(b0)
 {
-	float4x4 InverseViewProjection	: packoffset(c0);
-	float4   CameraPosition			: packoffset(c4);
+	float4x4 InverseViewProjection	: packoffset(c0.x);
+	float3 CameraPosition			: packoffset(c4.x);
+	float Padding					: packoffset(c4.w);
 }
 
 cbuffer cbLightProperties : register(b1)

@@ -6,27 +6,11 @@ Game::Game()
 	  //_scene(L"\\models\\sponza\\sponzanoflag.sdkmesh")
 {
 	_scene.SetScale(1.0f);
-	_scene.SetPosition(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f));
+	_scene.SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	//_scene.SetOrientation(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f));
 
-	_camera.SetPosition(XMVectorSet(1.0f, 4.0f, -6.0f, 1.0f));
-	_camera.SetXRotation(-0.1f);
-	_camera.SetYRotation(0.35f);
-
-	//_directionalLights.push_back(
-	//	DirectionalLight(XMVectorSet(1.0f, 0.8f, 0.5f, 1.0f), 5.0f, XMVectorSet(0.5f, 0.6f, 0.5f, 1.0f)));
-	//_directionalLights.push_back(
-	//	DirectionalLight(XMVectorSet(0.6f, 1.0f, 0.3f, 1.0f), 1.2f, XMVectorSet(0.5f, 0.5f, -0.5f, 1.0f)));
-	//_directionalLights.push_back(
-	//	DirectionalLight(XMVectorSet(1.0f, 1.0f, 0.3f, 1.0f), 0.4f, XMVectorSet(0.8f, 0.9, 0.8f, 1.0f)));
-	
-	//_pointLights.push_back(
-	//	PointLight(XMVectorSet(0.6f, 1.0f, 0.5f, 1.0f), 8.0f, XMVectorSet(3.0f, 3.0f, -4.0f, 1.0f), 10.0f));
-	//_pointLights.push_back(
-	//	PointLight(XMVectorSet(1.0f, 0.0f, 0.3f, 1.0f), 0.9f, XMVectorSet(11.0f, 5.0f, 6.5f, 1.0f), 9.0f));
-	//_pointLights.push_back(
-	//	PointLight(XMVectorSet(0.0f, 1.0f, 1.0f, 1.0f), 0.8f, XMVectorSet(-7.0f, 6.0f, 5.0f, 1.0f), 12.0f));
-		
+	_camera.SetPosition(XMFLOAT3(1.0f, 4.0f, -6.0f));
+	_camera.SetRotation(XMFLOAT2(-0.1f, 0.35f));
 }
 
 Game::~Game()
@@ -51,8 +35,11 @@ void Game::OnFrameMove(double totalTime, float dt)
 	if (mouse.IsButtonDown(LeftButton))
 	{
 		const float mouseRotateSpeed = 0.002f;
-		_camera.SetRotation(_camera.GetXRotation() + (mouse.GetDX() * mouseRotateSpeed),
-						    _camera.GetYRotation() + (mouse.GetDY() * mouseRotateSpeed));
+		
+		XMFLOAT2 rotation = _camera.GetRotation();
+		rotation.x += mouse.GetDX() * mouseRotateSpeed;
+		rotation.y += mouse.GetDY() * mouseRotateSpeed;
+		_camera.SetRotation(rotation);
 
 		// Set the mouse back one frame 
 		MouseState::SetCursorPosition(mouse.GetX() - mouse.GetDX(), mouse.GetY() - mouse.GetDY());
@@ -76,16 +63,21 @@ void Game::OnFrameMove(double totalTime, float dt)
 		}
 				
 		const float cameraMoveSpeed = 5.0f;
-		XMVECTOR cameraMove = ((moveDir.y * _camera.GetForward()) + (moveDir.x * _camera.GetRight())) * 
-			(cameraMoveSpeed * dt);
+		XMFLOAT3 camPos = _camera.GetPosition();
+		XMFLOAT3 camForward = _camera.GetForward();
+		XMFLOAT3 camRight = _camera.GetRight();
 
-		_camera.SetPosition(XMVectorAdd(_camera.GetPosition(), cameraMove));
+		XMVECTOR position = XMLoadFloat3(&camPos);
+		XMVECTOR forward = XMLoadFloat3(&camForward);
+		XMVECTOR right = XMLoadFloat3(&camRight);
+
+		position += ((moveDir.y * forward) + (moveDir.x * right)) * (cameraMoveSpeed * dt);
+
+		XMStoreFloat3(&camPos, position);
+		_camera.SetPosition(camPos);
 	}
 
 	_hdrPP.SetTimeDelta(dt);
-
-	//XMVECTOR skyColor = XMVectorSet(0.2f, 0.5f, 1.0f, 1.0f);
-	//_skyPP.SetSkyColor(skyColor);	
 }
 
 void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext)
@@ -117,18 +109,6 @@ void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3
 	_skyPP.SetSunWidth(0.05f);
 	_skyPP.SetSunEnabled(true);
 
-	//_renderer.AddLight(
-
-	/*for (UINT i = 0; i < _directionalLights.size(); i++)
-	{
-		_renderer.AddLight(&_directionalLights[i], true);
-	}
-
-	for (UINT i = 0; i < _pointLights.size(); i++)
-	{
-		_renderer.AddLight(&_pointLights[i], true);
-	}
-	*/
 	//_renderer.AddPostProcess(&_aoPP);
 	_renderer.AddPostProcess(&_skyPP);
 	//_renderer.AddPostProcess(&_dofPP);

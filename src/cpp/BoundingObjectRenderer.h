@@ -14,7 +14,7 @@ struct BOUNDING_OBJECT_VERTEX
 
 struct CB_BOUNDING_OBJECT_PROPERTIES
 {
-	XMMATRIX WorldViewProjection;
+	XMFLOAT4X4 WorldViewProjection;
 };
 
 class BoundingObjectRenderer : public IHasContent

@@ -14,13 +14,16 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;	
 
-	XMMATRIX viewProj = camera->GetViewProjection();
-	XMMATRIX proj = camera->GetProjection();
+	XMFLOAT4X4 fViewProj = camera->GetViewProjection();
+	XMMATRIX viewProj = XMLoadFloat4x4(&fViewProj);
+
+	XMFLOAT4X4 fProj = camera->GetProjection();
+	XMMATRIX proj = XMLoadFloat4x4(&fProj);
 
 	Frustum cameraFrust;
 	Collision::ComputeFrustumFromProjection(&cameraFrust, &proj);
-	XMStoreFloat3(&cameraFrust.Origin, camera->GetPosition());
-	XMStoreFloat4(&cameraFrust.Orientation, camera->GetOrientation());
+	cameraFrust.Origin =  camera->GetPosition();
+	cameraFrust.Orientation = camera->GetOrientation();
 
 	pd3dDeviceContext->GSSetShader(NULL, NULL, 0);
 	pd3dDeviceContext->VSSetShader(_meshVertexShader, NULL, 0);
@@ -51,13 +54,15 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 			continue;
 		}
 		
-		XMMATRIX world = instance->GetWorld();
+		XMFLOAT4X4 fWorld = instance->GetWorld();
+		XMMATRIX world = XMLoadFloat4x4(&fWorld);
+
 		XMMATRIX wvp = XMMatrixMultiply(world, viewProj);
 
 		V(pd3dDeviceContext->Map(_constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 		CB_MODEL_PROPERTIES* modelProperties = (CB_MODEL_PROPERTIES*)mappedResource.pData;
-		modelProperties->World = XMMatrixTranspose(world);
-		modelProperties->WorldViewProjection = XMMatrixTranspose(wvp);
+		XMStoreFloat4x4(&modelProperties->World, XMMatrixTranspose(world));
+		XMStoreFloat4x4(&modelProperties->WorldViewProjection, XMMatrixTranspose(wvp));
 		pd3dDeviceContext->Unmap(_constantBuffer, 0);
 
 		pd3dDeviceContext->VSSetConstantBuffers(0, 1, &_constantBuffer);

@@ -29,9 +29,11 @@ HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	// depth values
 
 	// Prepare all the settings and map them
+	XMFLOAT4X4 fViewProj = camera->GetViewProjection();
+	XMMATRIX viewProj = XMLoadFloat4x4(&fViewProj);
+
 	XMVECTOR det;	
-	XMMATRIX invViewProj = XMMatrixInverse(&det, camera->GetViewProjection());
-	//XMMATRIX invViewProj = camera->GetViewProjection();
+	XMMATRIX invViewProj = XMMatrixInverse(&det, viewProj);
 
 	V_RETURN(pd3dImmediateContext->Map(_skyProperties, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 	CB_SKY_PROPERTIES* skyProperties = (CB_SKY_PROPERTIES*)mappedResource.pData;
@@ -41,7 +43,7 @@ HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	skyProperties->SunDirection = _sunDirection;
 	skyProperties->SunWidth = _sunWidth;
 	skyProperties->SunEnabled = _enableSun ? 1 : 0;
-	XMStoreFloat3(&skyProperties->CameraPosition, camera->GetPosition());
+	skyProperties->CameraPosition = camera->GetPosition();
 	XMStoreFloat4x4(&skyProperties->InverseViewProjection, XMMatrixTranspose(invViewProj));
 
 	pd3dImmediateContext->Unmap(_skyProperties, 0);

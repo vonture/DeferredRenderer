@@ -60,7 +60,8 @@ HRESULT BoundingObjectRenderer::Render(ID3D11DeviceContext* pd3dImmediateContext
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;	
 
-	XMMATRIX viewProj = camera->GetViewProjection();
+	XMFLOAT4X4 fViewProj = camera->GetViewProjection();
+	XMMATRIX viewProj = XMLoadFloat4x4(&fViewProj);
 
 	UINT strides = sizeof(BOUNDING_OBJECT_VERTEX);
     UINT offsets = 0;
@@ -94,7 +95,7 @@ HRESULT BoundingObjectRenderer::Render(ID3D11DeviceContext* pd3dImmediateContext
 
 		V_RETURN(pd3dImmediateContext->Map(_constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 		CB_BOUNDING_OBJECT_PROPERTIES* properties = (CB_BOUNDING_OBJECT_PROPERTIES*)mappedResource.pData;
-		properties->WorldViewProjection = XMMatrixTranspose(wvp);
+		XMStoreFloat4x4(&properties->WorldViewProjection, XMMatrixTranspose(wvp));
 		pd3dImmediateContext->Unmap(_constantBuffer, 0);
 
 		pd3dImmediateContext->DrawIndexed(24, 0, 0);
@@ -115,7 +116,7 @@ HRESULT BoundingObjectRenderer::Render(ID3D11DeviceContext* pd3dImmediateContext
 
 		V_RETURN(pd3dImmediateContext->Map(_constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 		CB_BOUNDING_OBJECT_PROPERTIES* properties = (CB_BOUNDING_OBJECT_PROPERTIES*)mappedResource.pData;
-		properties->WorldViewProjection = XMMatrixTranspose(wvp);
+		XMStoreFloat4x4(&properties->WorldViewProjection, XMMatrixTranspose(wvp));
 		pd3dImmediateContext->Unmap(_constantBuffer, 0);
 
 		pd3dImmediateContext->VSSetConstantBuffers(0, 1, &_constantBuffer);
@@ -142,7 +143,7 @@ HRESULT BoundingObjectRenderer::Render(ID3D11DeviceContext* pd3dImmediateContext
 
 		V_RETURN(pd3dImmediateContext->Map(_constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 		CB_BOUNDING_OBJECT_PROPERTIES* properties = (CB_BOUNDING_OBJECT_PROPERTIES*)mappedResource.pData;
-		properties->WorldViewProjection = XMMatrixTranspose(wvp);
+		XMStoreFloat4x4(&properties->WorldViewProjection, XMMatrixTranspose(wvp));
 		pd3dImmediateContext->Unmap(_constantBuffer, 0);
 
 		pd3dImmediateContext->VSSetConstantBuffers(0, 1, &_constantBuffer);

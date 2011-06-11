@@ -26,6 +26,11 @@ void Renderer::AddLight(PointLight* light, bool shadowed)
 	_pointLightRenderer.Add(light, shadowed);
 }
 
+void Renderer::AddLight(SpotLight* light, bool shadowed)
+{
+	_spotLightRenderer.Add(light, shadowed);
+}
+
 void Renderer::AddPostProcess(PostProcess* postProcess)
 {
 	_postProcesses.push_back(postProcess);
@@ -90,6 +95,7 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Shadow Maps");
 	V_RETURN(_directionalLightRenderer.RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
 	V_RETURN(_pointLightRenderer.RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
+	V_RETURN(_spotLightRenderer.RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
 	DXUT_EndPerfEvent();
 
 	// Render the scene to the gbuffer
@@ -103,12 +109,13 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 	DXUT_EndPerfEvent();
 
 	// render the lights
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Lights");
 	V_RETURN(_lightBuffer.SetRenderTargets(pd3dImmediateContext, _gBuffer.GetReadOnlyDepthStencilView()));
 	V_RETURN(_lightBuffer.Clear(pd3dImmediateContext));
 
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Lights");
 	V_RETURN(_directionalLightRenderer.RenderLights(pd3dImmediateContext, camera, &_gBuffer));
 	V_RETURN(_pointLightRenderer.RenderLights(pd3dImmediateContext, camera, &_gBuffer));
+	V_RETURN(_spotLightRenderer.RenderLights(pd3dImmediateContext, camera, &_gBuffer));
 	DXUT_EndPerfEvent();
 
 	V_RETURN(_lightBuffer.UnsetRenderTargetsAndDepthStencil(pd3dImmediateContext));
@@ -175,12 +182,13 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 			_boRenderer.Add(lightSphere);
 		}
 	
-		XMMATRIX cameraProj = camera->GetProjection();
-
+		XMFLOAT4X4 fCameraProj = camera->GetProjection();
+		XMMATRIX cameraProj = XMLoadFloat4x4(&fCameraProj);
+		
 		Frustum cameraFrust;
 		Collision::ComputeFrustumFromProjection(&cameraFrust, &cameraProj);
-		XMStoreFloat3(&cameraFrust.Origin, camera->GetPosition());
-		XMStoreFloat4(&cameraFrust.Orientation, camera->GetOrientation());
+		cameraFrust.Origin = camera->GetPosition();
+		cameraFrust.Orientation = camera->GetOrientation();
 
 		_boRenderer.Add(cameraFrust);
 
@@ -205,6 +213,7 @@ HRESULT Renderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFA
 	V_RETURN(_combinePP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_directionalLightRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_pointLightRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_spotLightRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_boRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
 	return S_OK;
@@ -218,6 +227,7 @@ void Renderer::OnD3D11DestroyDevice()
 	_combinePP.OnD3D11DestroyDevice();
 	_directionalLightRenderer.OnD3D11DestroyDevice();
 	_pointLightRenderer.OnD3D11DestroyDevice();
+	_spotLightRenderer.OnD3D11DestroyDevice();
 	_boRenderer.OnD3D11DestroyDevice();
 }
 
@@ -276,6 +286,7 @@ HRESULT Renderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapCh
 	V_RETURN(_combinePP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_directionalLightRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_pointLightRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_spotLightRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_boRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
@@ -296,5 +307,6 @@ void Renderer::OnD3D11ReleasingSwapChain()
 	_combinePP.OnD3D11ReleasingSwapChain();
 	_directionalLightRenderer.OnD3D11ReleasingSwapChain();
 	_pointLightRenderer.OnD3D11ReleasingSwapChain();
+	_spotLightRenderer.OnD3D11ReleasingSwapChain();
 	_boRenderer.OnD3D11ReleasingSwapChain();
 }

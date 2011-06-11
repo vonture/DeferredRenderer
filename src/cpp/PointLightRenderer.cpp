@@ -1,4 +1,5 @@
 #include "PointLightRenderer.h"
+#include "ShaderLoader.h"
 
 const float PointLightRenderer::BIAS = 0.02f;
 
@@ -42,22 +43,6 @@ HRESULT PointLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateC
 	return S_OK;
 }
 
-//-----------------------------------------------------------------------------
-// Point in sphere test.
-//-----------------------------------------------------------------------------
-BOOL Collision::IntersectPointSphere( FXMVECTOR Point, const Sphere* pVolume )
-{
-    XMASSERT( pVolume );
-
-    XMVECTOR Center = XMLoadFloat3( &pVolume->Center );
-    XMVECTOR Radius = XMVectorReplicatePtr( &pVolume->Radius );
-
-    XMVECTOR DistanceSquared = XMVector3LengthSq( Point - Center );
-    XMVECTOR RadiusSquared = Radius * Radius;
-
-    return XMVector4LessOrEqual( DistanceSquared, RadiusSquared );
-}
-
 HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContext, PointLight* light,
 	UINT shadowMapIdx, std::vector<ModelInstance*>* models, Camera* camera, AxisAlignedBox* sceneBounds)
 {
@@ -70,12 +55,13 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 	lightSphere.Radius = light->Radius;
 
 	// Make sure this light is in the view fustrum
-	XMMATRIX proj = camera->GetProjection();
+	XMFLOAT4X4 fProj = camera->GetProjection();
+	XMMATRIX proj = XMLoadFloat4x4(&fProj);
 
 	Frustum cameraFrust;
 	Collision::ComputeFrustumFromProjection(&cameraFrust, &proj);
-	XMStoreFloat3(&cameraFrust.Origin, camera->GetPosition());
-	XMStoreFloat4(&cameraFrust.Orientation, camera->GetOrientation());
+	cameraFrust.Origin = camera->GetPosition();
+	cameraFrust.Orientation = camera->GetOrientation();
 	if (!Collision::IntersectSphereFrustum(&lightSphere, &cameraFrust))
 	{
 		return S_OK;
@@ -123,13 +109,15 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 		Model* model = instance->GetModel();
 
 		// First a large check to see if any of the model is in the light's radius
+		XMFLOAT4X4 fWorld = instance->GetWorld();
+		XMMATRIX world = XMLoadFloat4x4(&fWorld);
 
-		XMMATRIX wv = XMMatrixMultiply(instance->GetWorld(), view);
+		XMMATRIX wv = XMMatrixMultiply(world, view);
 
 		V(pd3dImmediateContext->Map(_depthPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 		CB_POINTLIGHT_DEPTH_PROPERTIES* depthProperties = (CB_POINTLIGHT_DEPTH_PROPERTIES*)mappedResource.pData;
 
-		depthProperties->WorldView = XMMatrixTranspose(wv);
+		XMStoreFloat4x4(&depthProperties->WorldView, XMMatrixTranspose(wv));
 		depthProperties->Direction = 1.0f;
 		depthProperties->CameraClips = XMFLOAT2(0.1f, light->Radius);
 
@@ -162,12 +150,15 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 		ModelInstance* instance = models->at(i);
 		Model* model = instance->GetModel();
 
-		XMMATRIX wv = XMMatrixMultiply(instance->GetWorld(), view);
+		XMFLOAT4X4 fWorld = instance->GetWorld();
+		XMMATRIX world = XMLoadFloat4x4(&fWorld);
+
+		XMMATRIX wv = XMMatrixMultiply(world, view);
 
 		V(pd3dImmediateContext->Map(_depthPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 		CB_POINTLIGHT_DEPTH_PROPERTIES* depthProperties = (CB_POINTLIGHT_DEPTH_PROPERTIES*)mappedResource.pData;
 
-		depthProperties->WorldView = XMMatrixTranspose(wv);
+		XMStoreFloat4x4(&depthProperties->WorldView, XMMatrixTranspose(wv));
 		depthProperties->Direction = -1.0f;
 		depthProperties->CameraClips = XMFLOAT2(0.1f, light->Radius);
 
@@ -189,7 +180,7 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 		}
 	}
 	
-    _shadowMatricies[shadowMapIdx] = view;
+	XMStoreFloat4x4(&_shadowMatricies[shadowMapIdx], XMMatrixTranspose(view));
 
 	return S_OK;
 }
@@ -205,9 +196,14 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
 	
 		// prepare the camera properties buffer
+		XMFLOAT4X4 fViewProj = camera->GetViewProjection();
+		XMMATRIX cameraViewProj = XMLoadFloat4x4(&fViewProj);
+
 		XMVECTOR det;
-		XMMATRIX cameraInvViewProj = XMMatrixInverse(&det, camera->GetViewProjection());
-		XMVECTOR cameraPos = camera->GetPosition();
+		XMMATRIX cameraInvViewProj = XMMatrixInverse(&det, cameraViewProj);
+
+		XMFLOAT3 fCameraPos = camera->GetPosition();
+		XMVECTOR cameraPos = XMLoadFloat3(&fCameraPos);
 
 		// Set the global properties for all point lights
 		ID3D11SamplerState* samplers[2] =
@@ -229,18 +225,19 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 		pd3dImmediateContext->IASetInputLayout(_lightInputLayout);
 
 		// build the camera frustum
-		XMMATRIX proj = camera->GetProjection();
+		XMFLOAT4X4 fProj = camera->GetProjection();
+		XMMATRIX proj = XMLoadFloat4x4(&fProj);
 
 		Frustum cameraFrust;
 		Collision::ComputeFrustumFromProjection(&cameraFrust, &proj);
-		XMStoreFloat3(&cameraFrust.Origin, camera->GetPosition());
-		XMStoreFloat4(&cameraFrust.Orientation, camera->GetOrientation());
+		cameraFrust.Origin = camera->GetPosition();
+		cameraFrust.Orientation = camera->GetOrientation();
 
 		// map the camera properties
 		V_RETURN(pd3dImmediateContext->Map(_cameraPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 		CB_POINTLIGHT_CAMERA_PROPERTIES* cameraProperties = (CB_POINTLIGHT_CAMERA_PROPERTIES*)mappedResource.pData;
 	
-		cameraProperties->InverseViewProjection = XMMatrixTranspose(cameraInvViewProj);
+		XMStoreFloat4x4(&cameraProperties->InverseViewProjection,  XMMatrixTranspose(cameraInvViewProj));
 		XMStoreFloat4(&cameraProperties->CameraPosition, cameraPos);
 
 		pd3dImmediateContext->Unmap(_cameraPropertiesBuffer, 0);
@@ -260,8 +257,6 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 		for (int i = 0; i < numUnshadowed; i++)
 		{
 			PointLight* light = GetLight(i, false);
-			XMVECTOR lightPosition = XMLoadFloat3(&light->Position);
-			float lightRadius = light->Radius;
 
 			// Verify that the light is visible
 			Sphere lightBounds;
@@ -286,17 +281,23 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 			}
 
 			// Setup the model and map the model properties
-			_lightModel.SetPosition(lightPosition);
-			_lightModel.SetScale(lightRadius);
-			XMMATRIX world = _lightModel.GetWorld();
-			XMMATRIX wvp = XMMatrixMultiply(world, camera->GetViewProjection());
+			XMFLOAT4X4 fViewProj = camera->GetViewProjection();
+			XMMATRIX viewProj = XMLoadFloat4x4(&fViewProj);
+
+			_lightModel.SetPosition(light->Position);
+			_lightModel.SetScale(light->Radius);
+
+			XMFLOAT4X4 fWorld = _lightModel.GetWorld();
+			XMMATRIX world = XMLoadFloat4x4(&fWorld);
+
+			XMMATRIX wvp = XMMatrixMultiply(world, viewProj);
 
 			V_RETURN(pd3dImmediateContext->Map(_modelPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 			CB_POINTLIGHT_MODEL_PROPERTIES* modelProperties = 
 				(CB_POINTLIGHT_MODEL_PROPERTIES*)mappedResource.pData;
 
-			modelProperties->World = XMMatrixTranspose(world);
-			modelProperties->WorldViewProjection = XMMatrixTranspose(wvp);
+			XMStoreFloat4x4(&modelProperties->World, XMMatrixTranspose(world));
+			XMStoreFloat4x4(&modelProperties->WorldViewProjection, XMMatrixTranspose(wvp));
 
 			pd3dImmediateContext->Unmap(_modelPropertiesBuffer, 0);
 
@@ -326,8 +327,6 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 		for (int i = 0; i < numShadowed; i++)
 		{
 			PointLight* light = GetLight(i, true);
-			XMVECTOR lightPosition = XMLoadFloat3(&light->Position);
-			float lightRadius = light->Radius;
 
 			// Verify that the light is visible
 			Sphere lightBounds;
@@ -352,17 +351,23 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 			}
 
 			// Setup the model and map the model properties
-			_lightModel.SetPosition(lightPosition);
-			_lightModel.SetScale(lightRadius);
-			XMMATRIX world = _lightModel.GetWorld();
-			XMMATRIX wvp = XMMatrixMultiply(world, camera->GetViewProjection());
+			XMFLOAT4X4 fViewProj = camera->GetViewProjection();
+			XMMATRIX viewProj = XMLoadFloat4x4(&fViewProj);
+
+			_lightModel.SetPosition(light->Position);
+			_lightModel.SetScale(light->Radius);
+
+			XMFLOAT4X4 fWorld = _lightModel.GetWorld();
+			XMMATRIX world = XMLoadFloat4x4(&fWorld);
+
+			XMMATRIX wvp = XMMatrixMultiply(world, viewProj);
 
 			V_RETURN(pd3dImmediateContext->Map(_modelPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 			CB_POINTLIGHT_MODEL_PROPERTIES* modelProperties = 
 				(CB_POINTLIGHT_MODEL_PROPERTIES*)mappedResource.pData;
 
-			modelProperties->World = XMMatrixTranspose(world);
-			modelProperties->WorldViewProjection = XMMatrixTranspose(wvp);
+			XMStoreFloat4x4(&modelProperties->World, XMMatrixTranspose(world));
+			XMStoreFloat4x4(&modelProperties->WorldViewProjection, XMMatrixTranspose(wvp));
 
 			pd3dImmediateContext->Unmap(_modelPropertiesBuffer, 0);
 
@@ -386,10 +391,11 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 			CB_POINTLIGHT_SHADOW_PROPERTIES* shadowProperties = 
 				(CB_POINTLIGHT_SHADOW_PROPERTIES*)mappedResource.pData;
 		
+			// Shadow matrix is already transposed
+			shadowProperties->ShadowMatrix = _shadowMatricies[i];
 			shadowProperties->CameraClips = XMFLOAT2(0.1f, light->Radius);
 			shadowProperties->ShadowMapSize = XMFLOAT2((float)SHADOW_MAP_SIZE, (float)SHADOW_MAP_SIZE * 0.5f);
-			shadowProperties->Bias = BIAS;
-			shadowProperties->ShadowMatrix = XMMatrixTranspose(_shadowMatricies[i]);
+			shadowProperties->Bias = BIAS;			
 
 			pd3dImmediateContext->Unmap(_shadowPropertiesBuffer, 0);
 
@@ -425,7 +431,6 @@ HRESULT PointLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const 
 	// Call base function
 	V_RETURN(LightRenderer::OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
-	V_RETURN(_modelRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_lightModel.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
 	// Create the constant buffers
@@ -532,7 +537,6 @@ void PointLightRenderer::OnD3D11DestroyDevice()
 {
 	LightRenderer::OnD3D11DestroyDevice();
 
-	_modelRenderer.OnD3D11DestroyDevice();
 	_lightModel.OnD3D11DestroyDevice();
 
 	SAFE_RELEASE(_depthVS);
@@ -563,7 +567,6 @@ HRESULT PointLightRenderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, I
 
 	V_RETURN(LightRenderer::OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	
-	V_RETURN(_modelRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_lightModel.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
@@ -573,6 +576,5 @@ void PointLightRenderer::OnD3D11ReleasingSwapChain()
 {
 	LightRenderer::OnD3D11ReleasingSwapChain();
 
-	_modelRenderer.OnD3D11ReleasingSwapChain();
 	_lightModel.OnD3D11ReleasingSwapChain();
 }

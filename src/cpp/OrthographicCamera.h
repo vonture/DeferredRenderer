@@ -12,7 +12,7 @@ private:
     float _yMax;
 
 protected:
-	XMMATRIX BuildProjection(float nearClip, float farClip);
+	void BuildProjection(XMMATRIX* outProj, float nearClip, float farClip);
 
 public:
 	OrthographicCamera();

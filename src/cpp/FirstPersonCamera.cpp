@@ -1,42 +1,31 @@
 #include "FirstPersonCamera.h"
 
 FirstPersonCamera::FirstPersonCamera()
-	: PerspectiveCamera(), _xRot(0.0f), _yRot(0.0f)
+	: PerspectiveCamera(), _rotation(0.0f, 0.0f)
 {
 	UpdateProjection();
 }
 
 FirstPersonCamera::FirstPersonCamera(float nearClip, float farClip, float fov, float aspect)
-	: PerspectiveCamera(nearClip, farClip, fov, aspect), _xRot(0.0f), _yRot(0.0f)
+	: PerspectiveCamera(nearClip, farClip, fov, aspect), _rotation(0.0f, 0.0f)
 {
 	UpdateProjection();
 }
 
-float FirstPersonCamera::GetXRotation()
+const XMFLOAT2& FirstPersonCamera::GetRotation() const
 {
-	return _xRot;
+	return _rotation;
 }
 
-float FirstPersonCamera::GetYRotation()
+void FirstPersonCamera::SetRotation(const XMFLOAT2& rotation)
 {
-	return _yRot;
-}
+	_rotation.x = XMScalarModAngle(rotation.x);
+	_rotation.y = clamp(rotation.y, -PiOver2, PiOver2);
 
-void FirstPersonCamera::SetXRotation(float xRot)
-{
-	_xRot = XMScalarModAngle(xRot);
-	SetOrientation(XMQuaternionRotationRollPitchYaw(_xRot, _yRot, 0.0f));
-}
+	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(_rotation.y, _rotation.x, 0.0f);
+	
+	XMFLOAT4 newOrientation;
+	XMStoreFloat4(&newOrientation, quat);
 
-void FirstPersonCamera::SetYRotation(float yRot)
-{
-	_yRot = clamp(yRot, -PiOver2, PiOver2);
-	SetOrientation(XMQuaternionRotationRollPitchYaw(_yRot, _xRot, 0.0f));
-}
-
-void FirstPersonCamera::SetRotation(float xRot, float yRot)
-{
-	_xRot = XMScalarModAngle(xRot);
-	_yRot = clamp(yRot, -PiOver2, PiOver2);
-	SetOrientation(XMQuaternionRotationRollPitchYaw(_yRot, _xRot, 0.0f));
+	SetOrientation(newOrientation);	
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Defines.h"
-#include "Light.h"
+#include "Lights.h"
 #include "ModelInstance.h"
 #include "Camera.h"
 #include "GBuffer.h"
@@ -43,7 +43,7 @@ protected:
 		return &_rasterStates;
 	}
 
-	virtual UINT GetMaxShadowedLights() = 0;
+	virtual UINT GetMaxShadowedLights() const = 0;
 
 public:
 	LightRenderer()

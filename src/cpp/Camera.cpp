@@ -3,14 +3,14 @@
 Camera::Camera()
 	: _nearClip(0.1f), _farClip(1000.0f)
 {
-	_world = XMMatrixIdentity();
+	XMStoreFloat4x4(&_world, XMMatrixIdentity());
 	worldMatrixChanged();
 }
 
 Camera::Camera(float nearClip, float farClip) 
 		: _nearClip(nearClip), _farClip(farClip)
 {
-	_world = XMMatrixIdentity();
+	XMStoreFloat4x4(&_world, XMMatrixIdentity());
 	worldMatrixChanged();
 }
 
@@ -20,65 +20,96 @@ Camera::~Camera()
 
 void Camera::worldMatrixChanged()
 {	
+	XMMATRIX world = XMLoadFloat4x4(&_world);
+	XMMATRIX proj = XMLoadFloat4x4(&_proj);
+
 	XMVECTOR det;
-	_view = XMMatrixInverse(&det, _world);
-	_viewProj = XMMatrixMultiply(_view, _proj);
+	XMMATRIX view = XMMatrixInverse(&det, world);
+	XMMATRIX viewProj = XMMatrixMultiply(view, proj);
+
+	XMStoreFloat4x4(&_view, view);
+	XMStoreFloat4x4(&_viewProj, viewProj);
 }
 
 void Camera::UpdateProjection()
 {
-	_proj = BuildProjection(_nearClip, _farClip);
-	_viewProj = XMMatrixMultiply(_view, _proj);
+	XMMATRIX view = XMLoadFloat4x4(&_view);
+
+	XMMATRIX proj;
+	BuildProjection(&proj, _nearClip, _farClip);
+	XMMATRIX viewProj = XMMatrixMultiply(view, proj);
+
+	XMStoreFloat4x4(&_proj, proj);
+	XMStoreFloat4x4(&_viewProj, viewProj);
 }
 
-void Camera::SetLookAt(const XMVECTOR &eye, const XMVECTOR &lookAt, const XMVECTOR &up)
+void Camera::SetLookAt(const XMFLOAT3 &eye, const XMFLOAT3 &lookAt, const XMFLOAT3 &up)
 {		
-	_view = XMMatrixLookAtLH(eye, lookAt, up);
+	XMMATRIX proj = XMLoadFloat4x4(&_proj);
+
+	XMMATRIX view = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&lookAt), XMLoadFloat3(&up));
 
 	XMVECTOR det;
-	_world = XMMatrixInverse(&det, _view);
-	_viewProj = XMMatrixMultiply(_view, _proj);
+	XMMATRIX world = XMMatrixInverse(&det, view);
+	XMMATRIX viewProj = XMMatrixMultiply(view, proj);
+
+	XMStoreFloat4x4(&_world, world);
+	XMStoreFloat4x4(&_view, view);
+	XMStoreFloat4x4(&_viewProj, viewProj);
 }
 
-void Camera::SetLookTo(const XMVECTOR &eye, const XMVECTOR &lookTo, const XMVECTOR &up)
+void Camera::SetLookTo(const XMFLOAT3 &eye, const XMFLOAT3 &lookTo, const XMFLOAT3 &up)
 {
-	_view = XMMatrixLookToLH(eye, lookTo, up);
+	XMMATRIX proj = XMLoadFloat4x4(&_proj);
+
+	XMMATRIX view = XMMatrixLookToLH(XMLoadFloat3(&eye), XMLoadFloat3(&lookTo), XMLoadFloat3(&up));
 
 	XMVECTOR det;
-	_world = XMMatrixInverse(&det, _view);
-	_viewProj = XMMatrixMultiply(_view, _proj);
+	XMMATRIX world = XMMatrixInverse(&det, view);
+	XMMATRIX viewProj = XMMatrixMultiply(view, proj);
+
+	XMStoreFloat4x4(&_world, world);
+	XMStoreFloat4x4(&_view, view);
+	XMStoreFloat4x4(&_viewProj, viewProj);
 }
 
-void Camera::SetPosition(const XMVECTOR& pos)
+void Camera::SetPosition(const XMFLOAT3& pos)
 {
-	_world._41 = XMVectorGetX(pos);
-	_world._42 = XMVectorGetY(pos);
-	_world._43 = XMVectorGetZ(pos);
-
+	_world._41 = pos.x;
+	_world._42 = pos.y;
+	_world._43 = pos.z;
+	
 	worldMatrixChanged();
 }
 
-XMVECTOR Camera::GetPosition() const
+XMFLOAT3 Camera::GetPosition() const
 { 
-	XMFLOAT3 pos = XMFLOAT3(_world._41, _world._42, _world._43);
-	return XMLoadFloat3(&pos);
+	return XMFLOAT3(_world._41, _world._42, _world._43);
 }
 
-void Camera::SetOrientation(const XMVECTOR& newOrientation)
+void Camera::SetOrientation(const XMFLOAT4& newOrientation)
 {
-	XMMATRIX newWorld = XMMatrixRotationQuaternion(newOrientation);
+	XMMATRIX world = XMLoadFloat4x4(&_world);
+	XMMATRIX newWorld = XMMatrixRotationQuaternion(XMLoadFloat4(&newOrientation));
 
-	newWorld._41 = _world._41;
-	newWorld._42 = _world._42;
-	newWorld._43 = _world._43;
-	_world = newWorld;
+	newWorld._41 = world._41;
+	newWorld._42 = world._42;
+	newWorld._43 = world._43;
+
+	XMStoreFloat4x4(&_world, newWorld);
 
 	worldMatrixChanged();
 }
 
-XMVECTOR Camera::GetOrientation() const 
+XMFLOAT4 Camera::GetOrientation() const 
 {
-	return XMQuaternionRotationMatrix(_world);
+	XMMATRIX world = XMLoadFloat4x4(&_world);
+	XMVECTOR quat = XMQuaternionRotationMatrix(world);
+
+	XMFLOAT4 orientation;
+	XMStoreFloat4(&orientation, quat);
+
+	return orientation;
 }
 
 void Camera::SetNearClip(float nearClip)
@@ -101,70 +132,58 @@ float Camera::GetFarClip() const
 	return _farClip;
 }
 
-const XMMATRIX& Camera::GetView() const
+const XMFLOAT4X4& Camera::GetView() const
 { 
 	return _view;
 }
 
-void Camera::SetProjection(const XMMATRIX& proj)
-{
-	_proj = proj;
-	_viewProj = XMMatrixMultiply(_view, _proj);
-}
-
-const XMMATRIX& Camera::GetProjection() const
+const XMFLOAT4X4& Camera::GetProjection() const
 { 
 	return _proj; 
 }
 
-const XMMATRIX& Camera::GetViewProjection() const
+const XMFLOAT4X4& Camera::GetViewProjection() const
 {
 	return _viewProj;
 }
 
-void Camera::SetWorld(const XMMATRIX& world)
+void Camera::SetWorld(const XMFLOAT4X4& world)
 {
 	_world = world;
 	worldMatrixChanged();
 }
 
-const XMMATRIX& Camera::GetWorld() const
+const XMFLOAT4X4& Camera::GetWorld() const
 { 
 	return _world;
 }
 
-XMVECTOR Camera::GetForward() const
+XMFLOAT3 Camera::GetForward() const
 {
-	XMFLOAT3 forward = XMFLOAT3(_world._31, _world._32, _world._33);
-	return XMLoadFloat3(&forward);
+	return XMFLOAT3(_world._31, _world._32, _world._33);
 }
 
-XMVECTOR Camera::GetBackward() const
+XMFLOAT3 Camera::GetBackward() const
 {
-	XMFLOAT3 backward = XMFLOAT3(-_world._31, -_world._32, -_world._33);
-	return XMLoadFloat3(&backward);
+	return XMFLOAT3(-_world._31, -_world._32, -_world._33);
 }	
 
-XMVECTOR Camera::GetRight() const
+XMFLOAT3 Camera::GetRight() const
 {
-	XMFLOAT3 right = XMFLOAT3(_world._11, _world._12, _world._13);
-	return XMLoadFloat3(&right);
+	return XMFLOAT3(_world._11, _world._12, _world._13);
 }
 
-XMVECTOR Camera::GetLeft() const
+XMFLOAT3 Camera::GetLeft() const
 {
-	XMFLOAT3 left = XMFLOAT3(-_world._11, -_world._12, -_world._13);
-	return XMLoadFloat3(&left);
+	return XMFLOAT3(-_world._11, -_world._12, -_world._13);
 }
 
-XMVECTOR Camera::GetUp() const
+XMFLOAT3 Camera::GetUp() const
 {
-	XMFLOAT3 up = XMFLOAT3(_world._21, _world._22, _world._23);
-	return XMLoadFloat3(&up);
+	return XMFLOAT3(_world._21, _world._22, _world._23);
 }
 
-XMVECTOR Camera::GetDown() const
+XMFLOAT3 Camera::GetDown() const
 {
-	XMFLOAT3 down = XMFLOAT3(-_world._21, -_world._22, -_world._23);
-	return XMLoadFloat3(&down);
+	return XMFLOAT3(-_world._21, -_world._22, -_world._23);
 }

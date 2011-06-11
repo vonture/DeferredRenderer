@@ -12,8 +12,8 @@ using namespace std;
 
 struct CB_MODEL_PROPERTIES
 {
-	XMMATRIX World;
-	XMMATRIX WorldViewProjection;
+	XMFLOAT4X4 World;
+	XMFLOAT4X4 WorldViewProjection;
 };
 
 class ModelRenderer : public IHasContent

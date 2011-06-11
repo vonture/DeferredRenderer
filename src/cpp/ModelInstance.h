@@ -12,10 +12,10 @@ private:
 	const WCHAR* _path;
 	Model _model;
 	
-	XMMATRIX _world;
-	XMVECTOR _position;
+	XMFLOAT4X4 _world;
+	XMFLOAT3 _position;
 	float _scale;
-	XMVECTOR _orientation;
+	XMFLOAT4 _orientation;
 
 	OrientedBox _transformedMainOrientedBox;
 	OrientedBox* _transformedMeshOrientedBoxes;
@@ -30,11 +30,11 @@ public:
 	ModelInstance(const WCHAR* path);
 	~ModelInstance();
 
-	const XMVECTOR& GetPosition() const { return _position; }
+	const XMFLOAT3& GetPosition() const { return _position; }
 	float GetScale() const { return _scale; }
-	const XMVECTOR& GetOrientation() const { return _orientation; }
+	const XMFLOAT4& GetOrientation() const { return _orientation; }
 
-	void SetPosition(const XMVECTOR& pos)
+	void SetPosition(const XMFLOAT3& pos)
 	{
 		_position = pos;
 
@@ -48,14 +48,14 @@ public:
 		_dirty = true;
 	}
 
-	void SetOrientation(const XMVECTOR& orientation)
+	void SetOrientation(const XMFLOAT4& orientation)
 	{
 		_orientation = orientation;
 
 		_dirty = true;
 	}
 
-	const XMMATRIX& GetWorld() 
+	const XMFLOAT4X4& GetWorld() 
 	{ 
 		if (_dirty)
 		{
