@@ -225,6 +225,9 @@
     <ClCompile Include="PointLightRenderer.cpp">
       <Filter>Lights\Renderers</Filter>
     </ClCompile>
+    <ClCompile Include="SpotLightRenderer.cpp">
+      <Filter>Lights\Renderers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleSample.hlsl">
@@ -340,8 +343,11 @@
     <ClInclude Include="LightRenderer.h">
       <Filter>Lights\Renderers</Filter>
     </ClInclude>
-    <ClInclude Include="Light.h">
+    <ClInclude Include="Lights.h">
       <Filter>Lights\Light Types</Filter>
+    </ClInclude>
+    <ClInclude Include="SpotLightRenderer.h">
+      <Filter>Lights\Renderers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

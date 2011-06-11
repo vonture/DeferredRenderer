@@ -407,6 +407,7 @@
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="ShaderLoader.cpp" />
     <ClCompile Include="SkyPostProcess.cpp" />
+    <ClCompile Include="SpotLightRenderer.cpp" />
     <ClCompile Include="xnaCollision.cpp" />
     <ClInclude Include="AmbientOcclusionPostProcess.h" />
     <ClInclude Include="AntiAliasPostProcess.h" />
@@ -430,6 +431,7 @@
     <ClInclude Include="PointLightRenderer.h" />
     <ClInclude Include="ShaderLoader.h" />
     <ClInclude Include="SkyPostProcess.h" />
+    <ClInclude Include="SpotLightRenderer.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="xnaCollision.h" />
     <None Include="BoundingObject.hlsl" />
@@ -480,7 +482,7 @@
     <ClInclude Include="IDrawable.h" />
     <ClInclude Include="IHasContent.h" />
     <ClInclude Include="IUpdateable.h" />
-    <ClInclude Include="Light.h" />
+    <ClInclude Include="Lights.h" />
     <ClInclude Include="LightBuffer.h" />
     <ClInclude Include="LightRenderer.h" />
     <ClInclude Include="ModelInstance.h" />
