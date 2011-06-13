@@ -2,6 +2,7 @@
 
 Renderer::Renderer() : _begun(false)
 {
+	_ambientLight.Color = XMFLOAT3(0.0f, 0.0f, 0.0f);
 }
 
 Renderer::~Renderer()
@@ -14,6 +15,13 @@ void Renderer::AddModel(ModelInstance* model)
 	{
 		_models.push_back(model);
 	}
+}
+
+void Renderer::AddLight(AmbientLight* light)
+{
+	_ambientLight.Color.x += light->Color.x;
+	_ambientLight.Color.y += light->Color.z;
+	_ambientLight.Color.y += light->Color.z;
 }
 
 void Renderer::AddLight(DirectionalLight* light, bool shadowed)
@@ -58,6 +66,8 @@ HRESULT Renderer::Begin()
 
 	_postProcesses.clear();
 	_postProcesses.push_back(&_combinePP);
+
+	_ambientLight.Color = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	_boRenderer.Clear();
 
@@ -111,6 +121,8 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 	// render the lights
 	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Lights");
 	V_RETURN(_lightBuffer.SetRenderTargets(pd3dImmediateContext, _gBuffer.GetReadOnlyDepthStencilView()));
+
+	_lightBuffer.SetAmbientColor(_ambientLight.Color);
 	V_RETURN(_lightBuffer.Clear(pd3dImmediateContext));
 
 	V_RETURN(_directionalLightRenderer.RenderLights(pd3dImmediateContext, camera, &_gBuffer));

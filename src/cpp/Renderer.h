@@ -37,6 +37,7 @@ private:
 	ID3D11ShaderResourceView* _ppShaderResourceViews[2];
 	ID3D11RenderTargetView* _ppRenderTargetViews[2];
 
+	AmbientLight _ambientLight;
 	PointLightRenderer _pointLightRenderer;
 	DirectionalLightRenderer _directionalLightRenderer;
 	SpotLightRenderer _spotLightRenderer;
@@ -46,6 +47,7 @@ public:
 	~Renderer();
 
 	void AddModel(ModelInstance* model);
+	void AddLight(AmbientLight* light);
 	void AddLight(DirectionalLight* light, bool shadowed);
 	void AddLight(PointLight* light, bool shadowed);
 	void AddLight(SpotLight* light, bool shadowed);
