@@ -2,6 +2,11 @@
 
 #include "Defines.h"
 
+_DECLSPEC_ALIGN_16_ struct AmbientLight
+{
+	XMFLOAT3 Color;	
+};
+
 _DECLSPEC_ALIGN_16_ struct PointLight
 {	
 	XMFLOAT3 Position;
