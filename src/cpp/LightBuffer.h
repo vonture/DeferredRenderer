@@ -11,11 +11,16 @@ private:
 	ID3D11ShaderResourceView* _shaderResourceView;
 	ID3D11RenderTargetView* _renderTargetView;
 
+	XMFLOAT3 _ambientColor;
+
 public:
 	LightBuffer()
-		: _texture(NULL), _shaderResourceView(NULL), _renderTargetView(NULL)
+		: _texture(NULL), _shaderResourceView(NULL), _renderTargetView(NULL), _ambientColor(0.0f, 0.0f, 0.0f)
 	{		
 	}
+
+	const XMFLOAT3& GetAmbientColor() const { return _ambientColor; }
+	void SetAmbientColor(const XMFLOAT3& color) { _ambientColor = color; }
 
 	ID3D11ShaderResourceView* GetShaderResourceView(int idx)
 	{

@@ -47,7 +47,7 @@ HRESULT LightBuffer::PSUnsetShaderResources(ID3D11DeviceContext* pd3dImmediateCo
 
 HRESULT LightBuffer::Clear(ID3D11DeviceContext* pd3dImmediateContext)
 {
-	const float rtclear[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	const float rtclear[] = { _ambientColor.x, _ambientColor.y, _ambientColor.z, 0.0f };
 	pd3dImmediateContext->ClearRenderTargetView(_renderTargetView, rtclear);
 
 	return S_OK;
