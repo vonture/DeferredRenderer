@@ -78,16 +78,13 @@ PS_Out_Mesh PS_Mesh(VS_Out_Mesh input)
 	float fSpecularIntensity = vDiffuse.a;
 	float fSpecularPower = SpecularPower;
 
-	float vAmbientColor = AmbientColor * Grey;
-	float fAmbient = AmbientColor.r + AmbientColor.g + AmbientColor.b;
-
     // RT0 =       Diffuse.r	| Diffuse.g		| Diffuse.b		| Specular Intensity
     // RT1 =       Normal.x		| Normal.y		| Normal.z		| Specular Power
-    // RT2 =       Emissive.r	| Emissive.g	| Emissive.b	| Ambient
+    // RT2 =       Emissive.r	| Emissive.g	| Emissive.b	| Material ID
     // RT3 =       Depth		|				|				|
 	output.RT0 = float4(vDiffuse.rgb, fSpecularIntensity);
 	output.RT1 = float4(vNormal, fSpecularPower);
-	output.RT2 = float4(vEmissive, fAmbient);
+	output.RT2 = float4(vEmissive, 0.0f);
 
 	return output;
 }
