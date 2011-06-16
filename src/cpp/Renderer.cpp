@@ -20,8 +20,8 @@ void Renderer::AddModel(ModelInstance* model)
 void Renderer::AddLight(AmbientLight* light)
 {
 	_ambientLight.Color.x += light->Color.x;
-	_ambientLight.Color.y += light->Color.z;
-	_ambientLight.Color.y += light->Color.z;
+	_ambientLight.Color.y += light->Color.y;
+	_ambientLight.Color.z += light->Color.z;
 }
 
 void Renderer::AddLight(DirectionalLight* light, bool shadowed)
