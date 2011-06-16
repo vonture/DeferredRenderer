@@ -1,5 +1,6 @@
 #include "Defines.h"
 #include "Game.h"
+#include <time.h>
 
 Game game;
 
@@ -31,7 +32,10 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 #if defined(DEBUG) | defined(_DEBUG)
     _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 #endif
-		
+	
+	// Seed the random function
+	srand((UINT)time(NULL));
+
     // DXUT will create and use the best device (either D3D9 or D3D11) 
     // that is available on the system depending on which D3D callbacks are set below
 
