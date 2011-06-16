@@ -1,6 +1,5 @@
 #define SSAO_SAMPLE_COUNT 16
-
-static const int BlurRadius = 4;
+#define BLUR_RADIUS 4
 
 cbuffer cbSSAOProperties : register(cb0)
 {
@@ -11,7 +10,8 @@ cbuffer cbSSAOProperties : register(cb0)
 	float GaussianNumerator			: packoffset(c8.z);
 	float CameraNearClip			: packoffset(c8.w);
 	float CameraFarClip				: packoffset(c9.x);
-	float3 Padding					: packoffset(c9.y);
+	float SamplePower				: packoffset(c9.y);
+	float2 Padding					: packoffset(c9.z);
 }
 
 cbuffer cbSSAOSampleDirections : register(cb1)
@@ -95,8 +95,7 @@ float4 PS_SSAO(PS_In_Quad input) : SV_TARGET0
 		float fRaySampleDist = fRayLinearDepth - fSampleLinearDepth;
 		if (fRaySampleDist < SampleRadius && fRaySampleDist > 0.0f && fSampleDepth < 1.0f)
 		{
-			fOcclusion = fRaySampleDist / SampleRadius;
-			fOcclusion = fOcclusion * fOcclusion;
+			fOcclusion = pow(fRaySampleDist / SampleRadius, SamplePower);
 		}
 
 		fAOSum += fOcclusion;
@@ -121,18 +120,18 @@ float4 PS_Scale(PS_In_Quad input) : SV_TARGET0
 }
 
 // Calculates the gaussian blur weight for a given distance and sigmas
-float CalcGaussianWeight(int sampleDist, float sigma)
+float CalcGaussianWeight(int sampleDist)
 {
-	return (GaussianNumerator * exp(-(sampleDist * sampleDist) / (2 * sigma * sigma)));
+	return (GaussianNumerator * exp(-(sampleDist * sampleDist) / (2 * BlurSigma * BlurSigma)));
 }
 
 // Performs a gaussian blur in one direction
-float Blur(float2 texCoord, int2 direction, float sigma)
+float Blur(float2 texCoord, int2 direction)
 {
     float value = 0;
-    for (int i = -BlurRadius; i < BlurRadius; i++)
+    for (int i = -BLUR_RADIUS; i < BLUR_RADIUS; i++)
     {
-		float weight = CalcGaussianWeight(i, sigma);
+		float weight = CalcGaussianWeight(i);
 		float sample = Texture0.Sample(PointSampler, texCoord, direction * i).x;
 		value += sample * weight;
     }
@@ -143,11 +142,11 @@ float Blur(float2 texCoord, int2 direction, float sigma)
 // Horizontal gaussian blur
 float4 PS_BlurHorizontal(PS_In_Quad input) : SV_TARGET0
 {
-    return float4(Blur(input.vTexCoord, int2(1, 0), BlurSigma), 0.0f, 0.0f, 1.0f);
+    return float4(Blur(input.vTexCoord, int2(1, 0)), 0.0f, 0.0f, 1.0f);
 }
 
 // Vertical gaussian blur
 float4 PS_BlurVertical(PS_In_Quad input) : SV_TARGET0
 {
-	return float4(Blur(input.vTexCoord, int2(0, 1), BlurSigma), 0.0f, 0.0f, 1.0f);
+	return float4(Blur(input.vTexCoord, int2(0, 1)), 0.0f, 0.0f, 1.0f);
 }

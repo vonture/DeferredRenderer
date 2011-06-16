@@ -14,8 +14,9 @@ AmbientOcclusionPostProcess::AmbientOcclusionPostProcess()
 	}
 	
 	// Initialize some parameters to default values
-	_sampleRadius = 0.3f;
+	_sampleRadius = 0.8f;
 	_blurSigma = 0.8f;
+	_samplePower = 4.0f;
 }
 
 AmbientOcclusionPostProcess::~AmbientOcclusionPostProcess()
@@ -25,7 +26,7 @@ AmbientOcclusionPostProcess::~AmbientOcclusionPostProcess()
 HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"SSAO");
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"SSAO");
 
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -52,6 +53,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	aoProperties->GaussianNumerator = 1.0f / sqrt(2.0f * Pi * _blurSigma * _blurSigma);
 	aoProperties->CameraNearClip = camera->GetNearClip();
 	aoProperties->CameraFarClip = camera->GetFarClip();
+	aoProperties->SamplePower = _samplePower;
 
 	pd3dImmediateContext->Unmap(_aoPropertiesBuffer, 0);
 
@@ -87,24 +89,31 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
     vp.TopLeftY = 0.0f;
 
 	pd3dImmediateContext->RSSetViewports(1, &vp);
-
+		
 	// Render the SSAO
-	pd3dImmediateContext->OMSetRenderTargets(1, &_aoRTV, NULL);
-	//pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, NULL);
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Occlusion");
 
-	ID3D11ShaderResourceView* ppSRVLumMap[3] =
+	pd3dImmediateContext->OMSetRenderTargets(1, &_aoRTV, NULL);
+
+	ID3D11ShaderResourceView* ppSRVAO[3] =
 	{ 
 		gBuffer->GetShaderResourceView(1),
 		gBuffer->GetShaderResourceView(3),
 		_randomSRV
 	};
-	pd3dImmediateContext->PSSetShaderResources(0, 3, ppSRVLumMap);	
+	pd3dImmediateContext->PSSetShaderResources(0, 3, ppSRVAO);	
 
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _aoPS));
-	
+
+	DXUT_EndPerfEvent();
+
 	// Down scale to 1/4
-	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[0], NULL);	
-	pd3dImmediateContext->PSSetShaderResources(0, 1, &_aoSRV);
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Down scale");
+
+	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[0], NULL);
+
+	ID3D11ShaderResourceView* ppDownScaleSRV[3] = { _aoSRV,	NULL, NULL };
+	pd3dImmediateContext->PSSetShaderResources(0, 3, ppDownScaleSRV);
 
 	vp.Width = vpOld[0].Width / 4.0f;
 	vp.Height = vpOld[0].Height / 4.0f;
@@ -112,7 +121,11 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _scalePS));
 
+	DXUT_EndPerfEvent();
+
 	// Down scale to 1/8
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Down scale");
+
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[1], NULL);	
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[0]);
 
@@ -122,19 +135,27 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _scalePS));
 
+	DXUT_EndPerfEvent();
+
 	// Blur
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Blur horizontal");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_blurTempRTV, NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[1]);
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _hBlurPS));
+	DXUT_EndPerfEvent();
 
 	ID3D11ShaderResourceView* ppSRVNULL1[1] = { NULL };
 	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL1);
 
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Blur vertical");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[1], NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_blurTempSRV);
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _vBlurPS));
-	 
+	DXUT_EndPerfEvent();
+
 	// Upscale to 1/4
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Up scale");
+
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[0], NULL);	
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[1]);
 
@@ -144,7 +165,11 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _scalePS));
 
+	DXUT_EndPerfEvent();
+
 	// Upscale to 1/2
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Up scale");
+
 	pd3dImmediateContext->OMSetRenderTargets(1, &_aoRTV, NULL);	
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[0]);
 
@@ -154,16 +179,22 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _scalePS));
 
+	DXUT_EndPerfEvent();
+
 	// Re-apply the old viewport
 	pd3dImmediateContext->RSSetViewports(nViewPorts, vpOld);
 
 	// Composite
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Composite");
+
 	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, NULL);
 
 	ID3D11ShaderResourceView* ppSRVToneMap[2] = { src, _aoSRV };
 	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVToneMap);
 
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _compositePS));
+
+	DXUT_EndPerfEvent();
 
 	// Unset the SRVs
 	ID3D11ShaderResourceView* ppSRVNULL2[2] = { NULL, NULL };
@@ -250,7 +281,7 @@ HRESULT AmbientOcclusionPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
         RANDOM_TEXTURE_SIZE,//UINT Height;
         1,//UINT MipLevels;
         1,//UINT ArraySize;
-        DXGI_FORMAT_R32G32B32_FLOAT,//DXGI_FORMAT Format;
+        DXGI_FORMAT_R32G32B32A32_FLOAT,//DXGI_FORMAT Format;
         1,//DXGI_SAMPLE_DESC SampleDesc;
         0,
         D3D11_USAGE_DEFAULT,//D3D11_USAGE Usage;
@@ -259,7 +290,7 @@ HRESULT AmbientOcclusionPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
         0//UINT MiscFlags;    
     };
 	
-	XMFLOAT3 randomData[RANDOM_TEXTURE_SIZE * RANDOM_TEXTURE_SIZE];
+	XMFLOAT4 randomData[RANDOM_TEXTURE_SIZE * RANDOM_TEXTURE_SIZE];
 	for (UINT i = 0; i < RANDOM_TEXTURE_SIZE * RANDOM_TEXTURE_SIZE; i++)
 	{
 		XMVECTOR randomDir = XMVectorSet(
@@ -270,12 +301,12 @@ HRESULT AmbientOcclusionPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 
 		randomDir = XMVector3Normalize(randomDir);
 
-		XMStoreFloat3(&randomData[i], randomDir);
+		XMStoreFloat4(&randomData[i], randomDir);
 	}
 
 	D3D11_SUBRESOURCE_DATA randomInitData;
 	randomInitData.pSysMem = &randomData;
-	randomInitData.SysMemPitch = RANDOM_TEXTURE_SIZE * sizeof(XMFLOAT3);
+	randomInitData.SysMemPitch = RANDOM_TEXTURE_SIZE * sizeof(XMFLOAT4);
 	randomInitData.SysMemSlicePitch = 0;
 
 	V_RETURN(pd3dDevice->CreateTexture2D(&randomTextureDesc, &randomInitData, &_randomTexture));
@@ -283,7 +314,7 @@ HRESULT AmbientOcclusionPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 	// Create the shader resource view
 	D3D11_SHADER_RESOURCE_VIEW_DESC randomSRVDesc = 
     {
-        DXGI_FORMAT_R32G32B32_FLOAT,
+        DXGI_FORMAT_R32G32B32A32_FLOAT,
         D3D11_SRV_DIMENSION_TEXTURE2D,
         0,
         0

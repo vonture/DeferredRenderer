@@ -15,7 +15,8 @@ struct CB_AO_PROPERTIES
 	float GaussianNumerator;
 	float CameraNearClip;
 	float CameraFarClip;
-	XMFLOAT3 Padding;
+	float SamplePower;
+	XMFLOAT2 Padding;
 };
 
 struct CB_AO_SAMPLE_DIRECTIONS
@@ -28,6 +29,7 @@ class AmbientOcclusionPostProcess : public PostProcess
 private:
 	float _sampleRadius;
 	float _blurSigma;
+	float _samplePower;
 
 	ID3D11Texture2D* _aoTexture;
 	ID3D11RenderTargetView* _aoRTV;
@@ -61,6 +63,12 @@ private:
 public:
 	AmbientOcclusionPostProcess();
 	~AmbientOcclusionPostProcess();
+
+	float GetSampleRadius() const { return _sampleRadius; }
+	void SetSampleRadius(float radius) { _sampleRadius = max(radius, 0.0f); }
+
+	float GetBlurSigma() const { return _blurSigma; }
+	void SetBlurSigma(float sigma) { _blurSigma = max(sigma, 0.0f); }
 	
 	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer);
