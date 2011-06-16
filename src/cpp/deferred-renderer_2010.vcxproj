@@ -464,6 +464,7 @@
     <ClCompile Include="DXUT\Optional\SDKmesh.cpp" />
     <ClCompile Include="DXUT\Optional\SDKmisc.cpp" />
     <None Include="Sky.hlsl" />
+    <None Include="SSAO.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="deferred-renderer.cpp" />
