@@ -18,7 +18,8 @@ float4 PS_Combine(PS_In_Combine input) : SV_TARGET0
 {
 	// RT0 =       Diffuse.r	| Diffuse.g		| Diffuse.b		| Specular Intensity
     // RT1 =       Normal.x		| Normal.y		| Normal.z		| Specular Power
-    // RT2 =       Emissive.r	| Emissive.g	| Emissive.b	| Ambient
+    // RT2 =       Emissive.r	| Emissive.g	| Emissive.b	| Material ID
+    // RT3 =       Depth		|				|				|
 	float4 rt0Sample = RT0.Sample(PointSampler, input.vTexCoord);
 	float4 rt1Sample = RT1.Sample(PointSampler, input.vTexCoord);
 	float4 rt2Sample = RT2.Sample(PointSampler, input.vTexCoord);
@@ -31,8 +32,7 @@ float4 PS_Combine(PS_In_Combine input) : SV_TARGET0
 	float fSpecular = lightSample.a;
 	float3 vEmissive = rt2Sample.rgb;
 
-	float3 vFinalColour = (fAmbient * vDiffuse) +
-						  (vEmissive) +
+	float3 vFinalColour = (vEmissive) +
 						  (vLightColor * vDiffuse) + 
 						  (fSpecular * vLightColor * vDiffuse);
 
