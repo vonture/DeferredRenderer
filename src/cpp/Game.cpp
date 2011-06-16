@@ -32,6 +32,11 @@ void Game::OnFrameMove(double totalTime, float dt)
 		DXUTToggleFullScreen();
 	}
 	
+	if (kb.IsKeyJustPressed(D1))
+	{
+		_aoEnabled = !_aoEnabled;
+	}
+
 	if (mouse.IsButtonDown(LeftButton))
 	{
 		const float mouseRotateSpeed = 0.002f;
@@ -86,15 +91,15 @@ void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3
 
 	V(_renderer.Begin());
 
-	_renderer.AddModel(&_scene);
+	_renderer.AddModel(&_scene);	
 	
-	PointLight greenLight = 
+	/*PointLight greenLight = 
 	{
 		XMFLOAT3(3.0f, 3.0f, -4.0f),
 		10.0f,
 		XMFLOAT3(6.0f, 8.0f, 4.0f)
 	};
-	//_renderer.AddLight(&greenLight, true);
+	_renderer.AddLight(&greenLight, true);*/
 
 	XMFLOAT3 sunColor = XMFLOAT3(1.0f, 0.8f, 0.5f);
 	float sunIntensity = 5.0f;
@@ -105,7 +110,7 @@ void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3
 	};
 	_renderer.AddLight(&sun, true);
 	
-	float ambientIntesity = 0.1f;
+	float ambientIntesity = 0.4f;
 	AmbientLight ambientLight = 
 	{
 		XMFLOAT3(ambientIntesity, ambientIntesity, ambientIntesity)
@@ -118,10 +123,14 @@ void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3
 	_skyPP.SetSunWidth(0.05f);
 	_skyPP.SetSunEnabled(true);
 
-	_renderer.AddPostProcess(&_aoPP);
-	//_renderer.AddPostProcess(&_skyPP);
+	if (_aoEnabled)
+	{
+		_renderer.AddPostProcess(&_aoPP);
+	}
+
+	_renderer.AddPostProcess(&_skyPP);
 	//_renderer.AddPostProcess(&_dofPP);
-	//_renderer.AddPostProcess(&_hdrPP);
+	_renderer.AddPostProcess(&_hdrPP);
 	//_renderer.AddPostProcess(&_aaPP);
 
 	V(_renderer.End(pd3dDevice, pd3dImmediateContext, &_camera));
