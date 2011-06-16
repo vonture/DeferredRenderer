@@ -3,7 +3,8 @@
 AmbientOcclusionPostProcess::AmbientOcclusionPostProcess()
 	: _aoTexture(NULL), _aoRTV(NULL), _aoSRV(NULL), _blurTempTexture(NULL), _blurTempRTV(NULL), 
 	  _blurTempSRV(NULL), _aoPS(NULL), _scalePS(NULL), _hBlurPS(NULL), _vBlurPS(NULL),
-	  _aoPropertiesBuffer(NULL), _randomTexture(NULL), _randomSRV(NULL), _sampleDirectionsBuffer(NULL)
+	  _aoPropertiesBuffer(NULL), _randomTexture(NULL), _randomSRV(NULL), _sampleDirectionsBuffer(NULL),
+	  _compositePS(NULL)
 {
 	for (UINT i = 0; i < 2; i++)
 	{
@@ -14,7 +15,6 @@ AmbientOcclusionPostProcess::AmbientOcclusionPostProcess()
 	
 	// Initialize some parameters to default values
 	_sampleRadius = 0.3f;
-	_distanceScale = 30.0f;
 	_blurSigma = 0.8f;
 }
 
@@ -48,7 +48,6 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	XMStoreFloat4x4(&aoProperties->ViewProjection, XMMatrixTranspose(viewProj));
 	XMStoreFloat4x4(&aoProperties->InverseViewProjection, XMMatrixTranspose(invViewProj));
 	aoProperties->SampleRadius = _sampleRadius;
-	aoProperties->DistanceScale = _distanceScale;
 	aoProperties->BlurSigma = _blurSigma;
 	aoProperties->GaussianNumerator = 1.0f / sqrt(2.0f * Pi * _blurSigma * _blurSigma);
 	aoProperties->CameraNearClip = camera->GetNearClip();
@@ -87,11 +86,11 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	vp.TopLeftX = 0.0f;
     vp.TopLeftY = 0.0f;
 
-	//pd3dImmediateContext->RSSetViewports(1, &vp);
+	pd3dImmediateContext->RSSetViewports(1, &vp);
 
 	// Render the SSAO
-	//pd3dImmediateContext->OMSetRenderTargets(1, &_aoRTV, NULL);
-	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, NULL);
+	pd3dImmediateContext->OMSetRenderTargets(1, &_aoRTV, NULL);
+	//pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, NULL);
 
 	ID3D11ShaderResourceView* ppSRVLumMap[3] =
 	{ 
@@ -102,11 +101,73 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	pd3dImmediateContext->PSSetShaderResources(0, 3, ppSRVLumMap);	
 
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _aoPS));
+	
+	// Down scale to 1/4
+	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[0], NULL);	
+	pd3dImmediateContext->PSSetShaderResources(0, 1, &_aoSRV);
 
+	vp.Width = vpOld[0].Width / 4.0f;
+	vp.Height = vpOld[0].Height / 4.0f;
+	pd3dImmediateContext->RSSetViewports(1, &vp);
 
+	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _scalePS));
+
+	// Down scale to 1/8
+	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[1], NULL);	
+	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[0]);
+
+	vp.Width = vpOld[0].Width / 8.0f;
+	vp.Height = vpOld[0].Height / 8.0f;
+	pd3dImmediateContext->RSSetViewports(1, &vp);
+
+	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _scalePS));
+
+	// Blur
+	pd3dImmediateContext->OMSetRenderTargets(1, &_blurTempRTV, NULL);
+	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[1]);
+	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _hBlurPS));
+
+	ID3D11ShaderResourceView* ppSRVNULL1[1] = { NULL };
+	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL1);
+
+	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[1], NULL);
+	pd3dImmediateContext->PSSetShaderResources(0, 1, &_blurTempSRV);
+	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _vBlurPS));
+	 
+	// Upscale to 1/4
+	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[0], NULL);	
+	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[1]);
+
+	vp.Width = vpOld[0].Width / 4.0f;
+	vp.Height = vpOld[0].Height / 4.0f;	
+	pd3dImmediateContext->RSSetViewports(1, &vp);
+
+	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _scalePS));
+
+	// Upscale to 1/2
+	pd3dImmediateContext->OMSetRenderTargets(1, &_aoRTV, NULL);	
+	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[0]);
+
+	vp.Width = vpOld[0].Width / 2.0f;
+	vp.Height = vpOld[0].Height / 2.0f;	
+	pd3dImmediateContext->RSSetViewports(1, &vp);
+
+	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _scalePS));
 
 	// Re-apply the old viewport
 	pd3dImmediateContext->RSSetViewports(nViewPorts, vpOld);
+
+	// Composite
+	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, NULL);
+
+	ID3D11ShaderResourceView* ppSRVToneMap[2] = { src, _aoSRV };
+	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVToneMap);
+
+	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _compositePS));
+
+	// Unset the SRVs
+	ID3D11ShaderResourceView* ppSRVNULL2[2] = { NULL, NULL };
+	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVNULL2);
 
 	DXUT_EndPerfEvent();
 
@@ -138,6 +199,10 @@ HRESULT AmbientOcclusionPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 
 	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_BlurVertical", "ps_4_0", NULL, &pBlob ) );   
     V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_vBlurPS));
+	SAFE_RELEASE(pBlob);
+
+	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_SSAO_Composite", "ps_4_0", NULL, &pBlob ) );   
+    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_compositePS));
 	SAFE_RELEASE(pBlob);
 
 	// Create the buffers
@@ -241,6 +306,7 @@ void AmbientOcclusionPostProcess::OnD3D11DestroyDevice()
 	SAFE_RELEASE(_scalePS);
 	SAFE_RELEASE(_hBlurPS);
 	SAFE_RELEASE(_vBlurPS);
+	SAFE_RELEASE(_compositePS);
 
 	SAFE_RELEASE(_aoPropertiesBuffer);
 	SAFE_RELEASE(_sampleDirectionsBuffer);

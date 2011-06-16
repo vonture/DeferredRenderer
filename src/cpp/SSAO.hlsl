@@ -7,12 +7,11 @@ cbuffer cbSSAOProperties : register(cb0)
 	float4x4 ViewProjection			: packoffset(c0.x);
 	float4x4 InverseViewProjection	: packoffset(c4.x);
 	float SampleRadius				: packoffset(c8.x);
-	float DistanceScale				: packoffset(c8.y);
-	float BlurSigma					: packoffset(c8.z);
-	float GaussianNumerator			: packoffset(c8.w);
-	float CameraNearClip			: packoffset(c9.x);
-	float CameraFarClip				: packoffset(c9.y);
-	float2 Padding					: packoffset(c9.z);
+	float BlurSigma					: packoffset(c8.y);
+	float GaussianNumerator			: packoffset(c8.z);
+	float CameraNearClip			: packoffset(c8.w);
+	float CameraFarClip				: packoffset(c9.x);
+	float3 Padding					: packoffset(c9.y);
 }
 
 cbuffer cbSSAOSampleDirections : register(cb1)
@@ -94,16 +93,29 @@ float4 PS_SSAO(PS_In_Quad input) : SV_TARGET0
 		float fRayLinearDepth = GetLinearDepth(vSamplePositionCS.z, CameraNearClip, CameraFarClip);
 
 		// Calculate the occlusion
+		float fOcclusion = 1.0f;
+
 		float fRaySampleDist = fRayLinearDepth - fSampleLinearDepth;
 		if (fRaySampleDist < SampleRadius && fRaySampleDist > 0.0f && fSampleDepth < 1.0f)
 		{
-			fAOSum += 1.0f - (fRaySampleDist / SampleRadius);
+			fOcclusion = fRaySampleDist / SampleRadius;
+			fOcclusion *= fOcclusion;
 		}
+
+		fAOSum += fOcclusion;
 	}
 
-	float fAO = 1.0f - fAOSum / SSAO_SAMPLE_COUNT;
+	float fAO = fAOSum / SSAO_SAMPLE_COUNT;
 
-	return float4(fAO.xxx, 1.0f);
+	return float4(fAO, 0.0f, 0.0f, 1.0f);
+}
+
+float4 PS_SSAO_Composite(PS_In_Quad input) : SV_TARGET0
+{
+	float3 vSceneColor = Texture0.Sample(PointSampler, input.vTexCoord);
+	float fAO = Texture1.Sample(LinearSampler, input.vTexCoord).x;
+
+	return float4(fAO * vSceneColor, 1.0f);
 }
 
 float4 PS_Scale(PS_In_Quad input) : SV_TARGET0

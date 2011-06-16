@@ -11,12 +11,11 @@ struct CB_AO_PROPERTIES
 	XMFLOAT4X4 ViewProjection;
 	XMFLOAT4X4 InverseViewProjection;
 	float SampleRadius;
-	float DistanceScale;
 	float BlurSigma;
 	float GaussianNumerator;
 	float CameraNearClip;
 	float CameraFarClip;
-	XMFLOAT2 Padding;
+	XMFLOAT3 Padding;
 };
 
 struct CB_AO_SAMPLE_DIRECTIONS
@@ -28,7 +27,6 @@ class AmbientOcclusionPostProcess : public PostProcess
 {
 private:
 	float _sampleRadius;
-	float _distanceScale;
 	float _blurSigma;
 
 	ID3D11Texture2D* _aoTexture;
@@ -53,6 +51,7 @@ private:
 	ID3D11PixelShader* _scalePS;
 	ID3D11PixelShader* _hBlurPS;
 	ID3D11PixelShader* _vBlurPS;
+	ID3D11PixelShader* _compositePS;
 	
 	ID3D11Buffer* _aoPropertiesBuffer;
 	ID3D11Buffer* _sampleDirectionsBuffer;
