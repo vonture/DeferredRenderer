@@ -6,9 +6,9 @@ HDRPostProcess::HDRPostProcess()
 	  _scalePS(NULL), _thresholdPS(NULL), _hBlurPS(NULL), _vBlurPS(NULL)
 {
 	// Load some default values for the parameters
-	_adaptationRate = 4.0f;
-	_keyValue = 0.2f;
-	_bloomThreshold = 1.5f;
+	_tau = 0.8f;
+	_keyValue = 1.0f;
+	_bloomThreshold = 0.5f;
 	_bloomMagnitude = 1.0f;
 	_bloomBlurSigma = 0.8f;
 
@@ -55,7 +55,7 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	hdrProperties->TimeDelta = _timeDelta;
 	hdrProperties->KeyValue = _keyValue;
 	hdrProperties->MipLevels = _mipLevels;
-	hdrProperties->AdaptationRate = _adaptationRate;	
+	hdrProperties->Tau = _tau;	
 	hdrProperties->BloomThreshold = _bloomThreshold;
 	hdrProperties->BloomMagnitude = _bloomMagnitude;
 	hdrProperties->BloomBlurSigma = _bloomBlurSigma;
@@ -96,6 +96,9 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	pd3dImmediateContext->PSSetConstantBuffers(0, 1, &_hdrPropertiesBuffer);
 
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _luminanceMapPS));
+
+	// Generate the mips for the luminance map
+	pd3dImmediateContext->GenerateMips(_lumSRVs[0]);
 
 	// bloom threshold and downscale to 1/2
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[0], NULL);
@@ -180,8 +183,6 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 
 	// Tone map the final result
 	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, NULL);
-
-	pd3dImmediateContext->GenerateMips(_lumSRVs[0]);
 
 	ID3D11ShaderResourceView* ppSRVToneMap[3] = { src, _lumSRVs[0], _downScaleSRVs[0] };
 	pd3dImmediateContext->PSSetShaderResources(0, 3, ppSRVToneMap);

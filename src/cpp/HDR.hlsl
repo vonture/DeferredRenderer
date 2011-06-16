@@ -1,11 +1,18 @@
-static const float3 Grey = float3(0.212671f, 0.715160f, 0.072169f); 
-static const float Epsilon = 0.0001f;
-static const float Pi = 3.14159f;
-static const int BlurRadius = 4;
+#define GREY float3(0.212671f, 0.715160f, 0.072169f)
+#define RGB_TO_CIEXYZ float3x3(0.4124f, 0.3576f, 0.1805f, \
+                               0.2126f, 0.7152f, 0.0722f, \
+							   0.0193f, 0.1192f, 0.9505f)
+#define CIEXYZ_TO_RGB float3x3( 3.2405f, -1.5371f, -0.4985f, \
+                               -0.9693f,  1.8760f,  0.0416f, \
+							    0.0556f, -0.2040f,  1.0572f)
+#define ROE_RODS 0.2f
+#define ROE_CONES 0.4f
+#define EPSILON 0.0001f
+#define BLUR_RADIUS 4
 
 cbuffer cbHDRProperties : register(b0)
 {
-	float AdaptationRate;
+	float Tau;
 	float KeyValue;
 	float TimeDelta;
 	uint MipLevels;
@@ -31,50 +38,51 @@ struct PS_In_Quad
 
 float CalcLuminance(float3 color)
 {
-    return max(dot(color, Grey), Epsilon);
+	float3 CIE_XYZ = mul(RGB_TO_CIEXYZ, color);
+
+	return CIE_XYZ.y / (CIE_XYZ.x + CIE_XYZ.y + CIE_XYZ.z);
 }
 
 float4 PS_LuminanceMap(PS_In_Quad input) : SV_TARGET0
 {
-    float3 sceneColor = Texture0.Sample(LinearSampler, input.vTexCoord).rgb;
-	float curLum = CalcLuminance(sceneColor);
+    float3 vSceneColor = Texture0.Sample(LinearSampler, input.vTexCoord).rgb;
+	float fCurLum = CalcLuminance(vSceneColor);
 
-	float prevLum = exp(Texture1.Sample(PointSampler, input.vTexCoord).x);
+	float fPrevLum = exp(Texture1.Sample(PointSampler, input.vTexCoord).x);
 
 	// Adapt the luminance using Pattanaik's technique
-    float adaptedLum = prevLum + (curLum - prevLum) * (1.0f - exp(-TimeDelta * AdaptationRate));
+	float fRoe = lerp(ROE_RODS, ROE_CONES, Tau);
+    float fAdaptedLum = fPrevLum + (fCurLum - fPrevLum) * (1.0f - exp(-TimeDelta * fRoe));
 
-    return float4(log(adaptedLum), 1.0f, 1.0f, 1.0f);
+    return float4(log(fAdaptedLum), 0.0f, 0.0f, 1.0f);
 }
 
-// Applies the filmic curve from John Hable's presentation
-float3 ToneMapFilmicALU(float3 color)
+float CalculateScaledLuminance(float3 vSceneColor, float fAvgLum)
 {
-    color = max(0.0f, color - 0.004f);
-    color = (color * (6.2f * color + 0.5f)) / (color * (6.2f * color + 1.7f) + 0.06f);
+	float fLumGrey = CalcLuminance(GREY);
+	float fLumScene = CalcLuminance(vSceneColor);
 
-    // result has 1/2.2 baked in
-    return pow(color, 2.2f);
+	return (fLumScene * fLumGrey) / fAvgLum;
 }
 
-// Determines the color based on exposure settings
-float3 CalcExposedColor(float3 color, float avgLuminance, float threshold)
+float CalculateCompressedLuminance(float fScaledLum, float fThreshold, float fOffset)
 {
-	// Use geometric mean
-	avgLuminance = max(avgLuminance, Epsilon);
-	float linearExposure = (KeyValue / avgLuminance);
-	float exposure = log2(max(linearExposure, Epsilon)) - threshold;
-    return exp2(exposure) * color;
+	float fLumWhite = KeyValue;
+
+	float fNumerator = max(fScaledLum * (1.0f + (fScaledLum / (fLumWhite * fLumWhite))) - fThreshold, 0.0f);
+	float fDenominator = fOffset + fScaledLum;
+
+	return fNumerator / fDenominator;
 }
 
 // Applies exposure and tone mapping to the specific color, and applies
 // the threshold to the exposure value.
-float3 ToneMap(float3 color, float avgLuminance, float threshold)
+float3 ToneMap(float3 vSceneColor, float fAvgLum, float fThreshold, float fOffset)
 {
-    float pixelLuminance = CalcLuminance(color);
-    color = CalcExposedColor(color, avgLuminance, threshold);
-	color = ToneMapFilmicALU(color);
-    return color;
+	float fScaledLum = CalculateScaledLuminance(vSceneColor, fAvgLum);
+	float fCompressedLum = CalculateCompressedLuminance(fScaledLum, fThreshold, fOffset);
+
+	return float3(fCompressedLum * vSceneColor);	
 }
 
 // Applies exposure and tone mapping to the input, and combines it with the
@@ -82,25 +90,24 @@ float3 ToneMap(float3 color, float avgLuminance, float threshold)
 float4 PS_ToneMap(PS_In_Quad input) : SV_TARGET0
 {	
     // Tone map the primary input
-	float3 sceneColor = Texture0.Sample(PointSampler, input.vTexCoord).rgb;
-    float avgLuminance = exp(Texture1.SampleLevel(LinearSampler, input.vTexCoord, MipLevels).x);    
+	float3 vSceneColor = Texture0.Sample(PointSampler, input.vTexCoord).rgb;
+    float fAvgLum = exp(Texture1.SampleLevel(PointSampler, input.vTexCoord, MipLevels).x);    
     	
-	float3 bloom = Texture2.Sample(LinearSampler, input.vTexCoord).rgb * BloomMagnitude;
+	float3 vBloomColor = Texture2.Sample(LinearSampler, input.vTexCoord).rgb * BloomMagnitude;
 
-	float3 finalColor = ToneMap(sceneColor, avgLuminance, 0) + bloom;
+	float3 vFinalColor = ToneMap(vSceneColor, fAvgLum, 0.0f, 1.0f) + vBloomColor;
 
-	return float4(finalColor, 1.0f);
+	return float4(vFinalColor, 1.0f);
 }
 
 float4 PS_Threshold(PS_In_Quad input) : SV_TARGET0
 {
-    float3 sceneColor = Texture0.Sample(LinearSampler, input.vTexCoord).rgb;
+    float3 vSceneColor = Texture0.Sample(LinearSampler, input.vTexCoord).rgb;
+	float fAvgLum = exp(Texture1.SampleLevel(PointSampler, input.vTexCoord, MipLevels).x);
+		
+    float3 vFinalColor = ToneMap(vSceneColor, fAvgLum, BloomThreshold, 1.0f);
 
-    // Tone map it to threshold
-    float avgLuminance = exp(Texture1.SampleLevel(LinearSampler, input.vTexCoord, MipLevels).x);
-    float3 finalColor = ToneMap(sceneColor, avgLuminance, BloomThreshold);
-
-    return float4(finalColor, 1.0f);
+    return float4(vFinalColor, 1.0f);
 }
 
 float4 PS_Scale(PS_In_Quad input) : SV_TARGET0
@@ -118,7 +125,7 @@ float CalcGaussianWeight(int sampleDist, float sigma)
 float4 Blur(float2 texCoord, int2 direction, float sigma)
 {
     float4 color = 0;
-    for (int i = -BlurRadius; i < BlurRadius; i++)
+    for (int i = -BLUR_RADIUS; i < BLUR_RADIUS; i++)
     {
 		float weight = CalcGaussianWeight(i, sigma);
 		float4 sample = Texture0.Sample(PointSampler, texCoord, direction * i);

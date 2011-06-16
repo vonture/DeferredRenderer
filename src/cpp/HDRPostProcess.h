@@ -6,7 +6,7 @@
 
 struct CB_HDR_PROPERTIES
 {
-	float AdaptationRate;
+	float Tau;
 	float KeyValue;
 	float TimeDelta;
 	UINT MipLevels;
@@ -20,7 +20,7 @@ class HDRPostProcess : public PostProcess
 {
 private:
 	float _timeDelta;
-	float _adaptationRate;
+	float _tau;
 	float _keyValue;
 	float _bloomThreshold;
 	float _bloomMagnitude;
@@ -62,8 +62,8 @@ public:
 	float GetTimeDelta() const { return _timeDelta; }
 	void SetTimeDelta(float dt) { _timeDelta = max(dt, 0.0f); }
 
-	float GetAdaptationRate() const { return _adaptationRate; }
-	void SetAdaptationRate(float adapt) { _adaptationRate = max(adapt, 0.0f); }
+	float GetTau() const { return _tau; }
+	void SetTau(float tau) { _tau = clamp(tau, 0.0f, 1.0f); }
 
 	float GetKeyValue() const { return _keyValue; }
 	void SetKeyValue(float key) { _keyValue = max(key, 0.0f); }
