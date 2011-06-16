@@ -94,14 +94,23 @@ void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3
 		10.0f,
 		XMFLOAT3(6.0f, 8.0f, 4.0f)
 	};
-	_renderer.AddLight(&greenLight, true);
+	//_renderer.AddLight(&greenLight, true);
 
+	XMFLOAT3 sunColor = XMFLOAT3(1.0f, 0.8f, 0.5f);
+	float sunIntensity = 5.0f;
 	DirectionalLight sun = 
 	{
 		XMFLOAT3(0.5f, 0.6f, 0.5f),
-		XMFLOAT3(5.0f, 4.0f, 2.5f)
+		XMFLOAT3(sunColor.x * sunIntensity, sunColor.y * sunIntensity, sunColor.z * sunIntensity)
 	};
 	_renderer.AddLight(&sun, true);
+	
+	float ambientIntesity = 0.1f;
+	AmbientLight ambientLight = 
+	{
+		XMFLOAT3(ambientIntesity, ambientIntesity, ambientIntesity)
+	};
+	_renderer.AddLight(&ambientLight);
 
 	_skyPP.SetSkyColor(XMFLOAT3(0.2f, 0.5f, 1.0f));	
 	_skyPP.SetSunColor(sun.Color);
@@ -109,10 +118,10 @@ void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3
 	_skyPP.SetSunWidth(0.05f);
 	_skyPP.SetSunEnabled(true);
 
-	//_renderer.AddPostProcess(&_aoPP);
-	_renderer.AddPostProcess(&_skyPP);
+	_renderer.AddPostProcess(&_aoPP);
+	//_renderer.AddPostProcess(&_skyPP);
 	//_renderer.AddPostProcess(&_dofPP);
-	_renderer.AddPostProcess(&_hdrPP);
+	//_renderer.AddPostProcess(&_hdrPP);
 	//_renderer.AddPostProcess(&_aaPP);
 
 	V(_renderer.End(pd3dDevice, pd3dImmediateContext, &_camera));
