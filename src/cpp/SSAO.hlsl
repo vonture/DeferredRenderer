@@ -69,11 +69,8 @@ float4 PS_SSAO(PS_In_Quad input) : SV_TARGET0
 		float3 ray = reflect(SampleDirections[i].xyz, vRandomDirection) * SampleRadius;
 		
 		// Invert the ray if it points into the surface
-		if (dot(ray, vNormal) < 0.0f)
-		{
-			ray = -ray;
-		}
-
+		ray = ray * sign(dot(ray, vNormal));
+		
 		// Calculate the position to be sampled
 		float4 vSamplePositionWS = float4(vPositionWS.xyz + ray, 1.0f);
 
@@ -99,7 +96,7 @@ float4 PS_SSAO(PS_In_Quad input) : SV_TARGET0
 		if (fRaySampleDist < SampleRadius && fRaySampleDist > 0.0f && fSampleDepth < 1.0f)
 		{
 			fOcclusion = fRaySampleDist / SampleRadius;
-			fOcclusion *= fOcclusion;
+			fOcclusion = fOcclusion * fOcclusion;
 		}
 
 		fAOSum += fOcclusion;
