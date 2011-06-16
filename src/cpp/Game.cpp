@@ -11,6 +11,8 @@ Game::Game()
 
 	_camera.SetPosition(XMFLOAT3(1.0f, 4.0f, -6.0f));
 	_camera.SetRotation(XMFLOAT2(-0.1f, 0.35f));
+
+	_aoEnabled = true;
 }
 
 Game::~Game()
