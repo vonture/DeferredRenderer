@@ -281,7 +281,7 @@ HRESULT AmbientOcclusionPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
         RANDOM_TEXTURE_SIZE,//UINT Height;
         1,//UINT MipLevels;
         1,//UINT ArraySize;
-        DXGI_FORMAT_R32G32B32A32_FLOAT,//DXGI_FORMAT Format;
+        DXGI_FORMAT_R16G16B16A16_FLOAT,//DXGI_FORMAT Format;
         1,//DXGI_SAMPLE_DESC SampleDesc;
         0,
         D3D11_USAGE_DEFAULT,//D3D11_USAGE Usage;
@@ -290,23 +290,23 @@ HRESULT AmbientOcclusionPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
         0//UINT MiscFlags;    
     };
 	
-	XMFLOAT4 randomData[RANDOM_TEXTURE_SIZE * RANDOM_TEXTURE_SIZE];
+	XMHALF4 randomData[RANDOM_TEXTURE_SIZE * RANDOM_TEXTURE_SIZE];
 	for (UINT i = 0; i < RANDOM_TEXTURE_SIZE * RANDOM_TEXTURE_SIZE; i++)
 	{
-		XMVECTOR randomDir = XMVectorSet(
-			((rand() / (float)RAND_MAX) * 2.0f) - 1.0f,
-			((rand() / (float)RAND_MAX) * 2.0f) - 1.0f,
-			((rand() / (float)RAND_MAX) * 2.0f) - 1.0f,
-			0.0f);
+		float randPitch = (rand() / (float)RAND_MAX) * 2.0f * Pi;
+		float randYaw = (rand() / (float)RAND_MAX) * 2.0f * Pi;
 
-		randomDir = XMVector3Normalize(randomDir);
+		randomData[i] = XMHALF4(0.0f, 0.0f, 1.0f, 0.0f);
+		XMVECTOR vector = XMLoadHalf4(&randomData[i]);
 
-		XMStoreFloat4(&randomData[i], randomDir);
+		XMMATRIX transform = XMMatrixRotationRollPitchYaw(randPitch, randYaw, 0.0f);
+
+		XMStoreHalf4(&randomData[i], XMVector3TransformCoord(vector, transform));
 	}
 
 	D3D11_SUBRESOURCE_DATA randomInitData;
 	randomInitData.pSysMem = &randomData;
-	randomInitData.SysMemPitch = RANDOM_TEXTURE_SIZE * sizeof(XMFLOAT4);
+	randomInitData.SysMemPitch = RANDOM_TEXTURE_SIZE * sizeof(XMHALF4);
 	randomInitData.SysMemSlicePitch = 0;
 
 	V_RETURN(pd3dDevice->CreateTexture2D(&randomTextureDesc, &randomInitData, &_randomTexture));
@@ -314,7 +314,7 @@ HRESULT AmbientOcclusionPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 	// Create the shader resource view
 	D3D11_SHADER_RESOURCE_VIEW_DESC randomSRVDesc = 
     {
-        DXGI_FORMAT_R32G32B32A32_FLOAT,
+        DXGI_FORMAT_R16G16B16A16_FLOAT,
         D3D11_SRV_DIMENSION_TEXTURE2D,
         0,
         0
