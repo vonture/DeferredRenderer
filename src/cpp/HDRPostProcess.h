@@ -42,7 +42,6 @@ private:
 	ID3D11RenderTargetView* _blurTempRTV;
 	ID3D11ShaderResourceView* _blurTempSRV;
 
-	ID3D11Texture2D* _colorGradeTexture;
 	ID3D11ShaderResourceView* _colorGradeSRV;
 
 	ID3D11PixelShader* _luminanceMapPS;
