@@ -25,6 +25,7 @@ cbuffer cbHDRProperties : register(b0)
 Texture2D Texture0 : register(t0);
 Texture2D Texture1 : register(t1);
 Texture2D Texture2 : register(t2);
+Texture3D Texture3 : register(t3);
 
 SamplerState PointSampler  : register(s0);
 SamplerState LinearSampler : register(s1);
@@ -48,7 +49,7 @@ float4 PS_LuminanceMap(PS_In_Quad input) : SV_TARGET0
     float3 vSceneColor = Texture0.Sample(LinearSampler, input.vTexCoord).rgb;
 	float fCurLum = CalcLuminance(vSceneColor);
 
-	float fPrevLum = exp(Texture1.Sample(PointSampler, input.vTexCoord).x);
+	float fPrevLum = exp(Texture1.SampleLevel(PointSampler, input.vTexCoord, MipLevels).x);
 
 	// Adapt the luminance using Pattanaik's technique
 	float fRoe = lerp(ROE_RODS, ROE_CONES, Tau);
@@ -85,6 +86,13 @@ float3 ToneMap(float3 vSceneColor, float fAvgLum, float fThreshold, float fOffse
 	return float3(fCompressedLum * vSceneColor);	
 }
 
+float3 ColorGrade(float3 vSceneColor)
+{
+	float3 vGradedColor = Texture3.Sample(LinearSampler, vSceneColor).rgb;
+
+	return vGradedColor;
+}
+
 // Applies exposure and tone mapping to the input, and combines it with the
 // results of the bloom pass
 float4 PS_ToneMap(PS_In_Quad input) : SV_TARGET0
@@ -94,10 +102,10 @@ float4 PS_ToneMap(PS_In_Quad input) : SV_TARGET0
     float fAvgLum = exp(Texture1.SampleLevel(PointSampler, input.vTexCoord, MipLevels).x);    
     	
 	float3 vBloomColor = Texture2.Sample(LinearSampler, input.vTexCoord).rgb * BloomMagnitude;
+	float3 vToneMappedColor = ToneMap(vSceneColor, fAvgLum, 0.0f, 1.0f) + vBloomColor;	
+	float3 vGradedColor = ColorGrade(vToneMappedColor);
 
-	float3 vFinalColor = ToneMap(vSceneColor, fAvgLum, 0.0f, 1.0f) + vBloomColor;
-
-	return float4(vFinalColor, 1.0f);
+	return float4(vGradedColor, 1.0f);
 }
 
 float4 PS_Threshold(PS_In_Quad input) : SV_TARGET0
@@ -106,7 +114,7 @@ float4 PS_Threshold(PS_In_Quad input) : SV_TARGET0
 	float fAvgLum = exp(Texture1.SampleLevel(PointSampler, input.vTexCoord, MipLevels).x);
 		
     float3 vFinalColor = ToneMap(vSceneColor, fAvgLum, BloomThreshold, 1.0f);
-
+	
     return float4(vFinalColor, 1.0f);
 }
 

@@ -1,5 +1,5 @@
 #include "HDRPostProcess.h"
-#include <cmath>
+#include "DDSTextureLoader.h"
 
 HDRPostProcess::HDRPostProcess()
 	: _timeDelta(0.0f), _lumMapSize(0), _mipLevels(0), _luminanceMapPS(NULL), _toneMapPS(NULL), 
@@ -7,7 +7,7 @@ HDRPostProcess::HDRPostProcess()
 {
 	// Load some default values for the parameters
 	_tau = 0.8f;
-	_keyValue = 1.0f;
+	_keyValue = 1.5f;
 	_bloomThreshold = 0.5f;
 	_bloomMagnitude = 1.0f;
 	_bloomBlurSigma = 0.8f;
@@ -29,6 +29,8 @@ HDRPostProcess::HDRPostProcess()
 	_blurTempTexture = NULL;
 	_blurTempRTV = NULL;
 	_blurTempSRV = NULL;
+
+	_colorGradeSRV = NULL;
 }
 
 HDRPostProcess::~HDRPostProcess()
@@ -39,7 +41,7 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
 	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"HDR");
-
+	
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 
@@ -184,14 +186,14 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	// Tone map the final result
 	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, NULL);
 
-	ID3D11ShaderResourceView* ppSRVToneMap[3] = { src, _lumSRVs[0], _downScaleSRVs[0] };
-	pd3dImmediateContext->PSSetShaderResources(0, 3, ppSRVToneMap);
+	ID3D11ShaderResourceView* ppSRVToneMap[4] = { src, _lumSRVs[0], _downScaleSRVs[0], _colorGradeSRV };
+	pd3dImmediateContext->PSSetShaderResources(0, 4, ppSRVToneMap);
 	
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _toneMapPS));
 
 	// Unset the SRVs
-	ID3D11ShaderResourceView* ppSRVNULL3[3] = { NULL, NULL, NULL };
-	pd3dImmediateContext->PSSetShaderResources(0, 3, ppSRVNULL3);
+	ID3D11ShaderResourceView* ppSRVNULL4[4] = { NULL, NULL, NULL, NULL };
+	pd3dImmediateContext->PSSetShaderResources(0, 4, ppSRVNULL4);
 	
 	// Swap the adapted luminance buffers from the previous render
 	swapLuminanceBuffers();
@@ -262,8 +264,16 @@ HRESULT HDRPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI
 
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_hdrPropertiesBuffer));
 
+	// Load the color grading texture
+	WCHAR str[MAX_PATH];
+    V_RETURN(DXUTFindDXSDKMediaFileCch(str, MAX_PATH, L"ColorGrades\\color_grade_default.dds"));
+	
+	V_RETURN(CreateDDSTexture3DFromFile(pd3dDevice, str, &_colorGradeSRV));
+	
+	//V_RETURN(D3DX11CreateShaderResourceViewFromFile(pd3dDevice, str, NULL, NULL, &_colorGradeSRV, NULL));
+	
 	V_RETURN(_fsQuad.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-
+	
 	return S_OK;
 }
 
@@ -279,6 +289,8 @@ void HDRPostProcess::OnD3D11DestroyDevice()
 	SAFE_RELEASE(_vBlurPS);
 
 	SAFE_RELEASE(_hdrPropertiesBuffer);
+
+	SAFE_RELEASE(_colorGradeSRV);
 
 	_fsQuad.OnD3D11DestroyDevice();
 }

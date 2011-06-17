@@ -29,7 +29,7 @@ private:
 	UINT _lumMapSize;
 
 	UINT _mipLevels;
-
+	
 	ID3D11Texture2D* _lumTextures[2];
 	ID3D11RenderTargetView* _lumRTVs[2];
 	ID3D11ShaderResourceView* _lumSRVs[2];
@@ -41,6 +41,9 @@ private:
 	ID3D11Texture2D* _blurTempTexture;
 	ID3D11RenderTargetView* _blurTempRTV;
 	ID3D11ShaderResourceView* _blurTempSRV;
+
+	ID3D11Texture2D* _colorGradeTexture;
+	ID3D11ShaderResourceView* _colorGradeSRV;
 
 	ID3D11PixelShader* _luminanceMapPS;
 	ID3D11PixelShader* _toneMapPS;
@@ -69,7 +72,7 @@ public:
 	void SetKeyValue(float key) { _keyValue = max(key, 0.0f); }
 
 	float GetBloomThreshold() const { return _bloomThreshold; }
-	void SetBloomThreshold(float thresh) { _bloomThreshold = max(thresh, 0.0f); }
+	void SetBloomThreshold(float thresh) { _bloomThreshold = clamp(thresh, 0.0f, 1.0f); }
 
 	float GetBloomMagnitude() const { return _bloomMagnitude; }
 	void SetBloomMagnitude(float mag) { _bloomMagnitude = max(mag, 0.0f); }
