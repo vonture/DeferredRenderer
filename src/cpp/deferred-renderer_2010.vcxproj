@@ -383,6 +383,7 @@
     <ClCompile Include="BoundingObjectRenderer.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CombinePostProcess.cpp" />
+    <ClCompile Include="DDSTextureLoader.cpp" />
     <ClCompile Include="DepthOfFiendPostProcess.cpp" />
     <ClCompile Include="DeviceStates.cpp" />
     <ClCompile Include="DirectionalLightRenderer.cpp" />
@@ -414,6 +415,8 @@
     <ClInclude Include="BoundingObjectRenderer.h" />
     <ClInclude Include="ButtonState.h" />
     <ClInclude Include="CombinePostProcess.h" />
+    <ClInclude Include="DDS.h" />
+    <ClInclude Include="DDSTextureLoader.h" />
     <ClInclude Include="Defines.h" />
     <ClInclude Include="DepthOfFieldPostProcess.h" />
     <ClInclude Include="DeviceStates.h" />

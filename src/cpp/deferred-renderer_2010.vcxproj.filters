@@ -231,6 +231,7 @@
     <ClCompile Include="SpotLightRenderer.cpp">
       <Filter>Lights\Renderers</Filter>
     </ClCompile>
+    <ClCompile Include="DDSTextureLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleSample.hlsl">
@@ -352,6 +353,8 @@
     <ClInclude Include="SpotLightRenderer.h">
       <Filter>Lights\Renderers</Filter>
     </ClInclude>
+    <ClInclude Include="DDSTextureLoader.h" />
+    <ClInclude Include="DDS.h" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
