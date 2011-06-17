@@ -266,11 +266,8 @@ HRESULT HDRPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI
 
 	// Load the color grading texture
 	WCHAR str[MAX_PATH];
-    V_RETURN(DXUTFindDXSDKMediaFileCch(str, MAX_PATH, L"ColorGrades\\color_grade_default.dds"));
-	
+    V_RETURN(DXUTFindDXSDKMediaFileCch(str, MAX_PATH, L"ColorGrades\\color_grade_default.dds"));	
 	V_RETURN(CreateDDSTexture3DFromFile(pd3dDevice, str, &_colorGradeSRV));
-	
-	//V_RETURN(D3DX11CreateShaderResourceViewFromFile(pd3dDevice, str, NULL, NULL, &_colorGradeSRV, NULL));
 	
 	V_RETURN(_fsQuad.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	
