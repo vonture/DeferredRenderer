@@ -1,8 +1,16 @@
 #include "Renderer.h"
 
-Renderer::Renderer() : _begun(false)
+Renderer::Renderer() 
+	: _begun(false), _drawBoundingObjects(false)
 {
 	_ambientLight.Color = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
+	for (UINT i = 0; i < 2; i++)
+	{
+		_ppTextures[i] = NULL;
+		_ppShaderResourceViews[i] = NULL;
+		_ppRenderTargetViews[i] = NULL;
+	}
 }
 
 Renderer::~Renderer()
