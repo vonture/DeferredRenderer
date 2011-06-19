@@ -45,6 +45,12 @@
     <Filter Include="Lights\Renderers">
       <UniqueIdentifier>{8b2032c1-ff26-4ab0-b81d-57df3345c54f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Application">
+      <UniqueIdentifier>{852300e5-3042-466e-9f31-942250fc7cb5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Graphics Helpers">
+      <UniqueIdentifier>{56872c66-41ce-48e6-9858-efaed604d5ef}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="DXUT\Optional\directx.ico">
@@ -145,7 +151,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="deferred-renderer.cpp" />
     <ClCompile Include="ModelInstance.cpp">
       <Filter>Models</Filter>
     </ClCompile>
@@ -153,7 +158,6 @@
       <Filter>Buffers</Filter>
     </ClCompile>
     <ClCompile Include="Renderer.cpp" />
-    <ClCompile Include="Game.cpp" />
     <ClCompile Include="LightBuffer.cpp">
       <Filter>Buffers</Filter>
     </ClCompile>
@@ -163,7 +167,6 @@
     <ClCompile Include="Quad.cpp">
       <Filter>Quads</Filter>
     </ClCompile>
-    <ClCompile Include="ShaderLoader.cpp" />
     <ClCompile Include="FullscreenQuad.cpp">
       <Filter>Quads</Filter>
     </ClCompile>
@@ -176,7 +179,6 @@
     <ClCompile Include="MouseState.cpp">
       <Filter>Input</Filter>
     </ClCompile>
-    <ClCompile Include="DeviceStates.cpp" />
     <ClCompile Include="PostProcess.cpp">
       <Filter>Post Process</Filter>
     </ClCompile>
@@ -231,7 +233,25 @@
     <ClCompile Include="SpotLightRenderer.cpp">
       <Filter>Lights\Renderers</Filter>
     </ClCompile>
-    <ClCompile Include="DDSTextureLoader.cpp" />
+    <ClCompile Include="DDSTextureLoader.cpp">
+      <Filter>Graphics Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderLoader.cpp">
+      <Filter>Graphics Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="DeviceStates.cpp">
+      <Filter>Graphics Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="Window.cpp">
+      <Filter>Application</Filter>
+    </ClCompile>
+    <ClCompile Include="DeviceManager.cpp">
+      <Filter>Graphics Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="Application.cpp">
+      <Filter>Application</Filter>
+    </ClCompile>
+    <ClCompile Include="DeferredRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleSample.hlsl">
@@ -270,7 +290,6 @@
     <ClInclude Include="GBuffer.h">
       <Filter>Buffers</Filter>
     </ClInclude>
-    <ClInclude Include="Game.h" />
     <ClInclude Include="LightBuffer.h">
       <Filter>Buffers</Filter>
     </ClInclude>
@@ -280,7 +299,6 @@
     <ClInclude Include="Quad.h">
       <Filter>Quads</Filter>
     </ClInclude>
-    <ClInclude Include="ShaderLoader.h" />
     <ClInclude Include="FullscreenQuad.h">
       <Filter>Quads</Filter>
     </ClInclude>
@@ -296,7 +314,6 @@
     <ClInclude Include="ButtonState.h">
       <Filter>Input</Filter>
     </ClInclude>
-    <ClInclude Include="DeviceStates.h" />
     <ClInclude Include="Defines.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="HDRPostProcess.h">
@@ -353,8 +370,28 @@
     <ClInclude Include="SpotLightRenderer.h">
       <Filter>Lights\Renderers</Filter>
     </ClInclude>
-    <ClInclude Include="DDSTextureLoader.h" />
-    <ClInclude Include="DDS.h" />
+    <ClInclude Include="DDS.h">
+      <Filter>Graphics Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="DDSTextureLoader.h">
+      <Filter>Graphics Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderLoader.h">
+      <Filter>Graphics Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceStates.h">
+      <Filter>Graphics Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="Window.h">
+      <Filter>Application</Filter>
+    </ClInclude>
+    <ClInclude Include="Application.h">
+      <Filter>Application</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceManager.h">
+      <Filter>Graphics Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="DeferredRenderer.h" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
