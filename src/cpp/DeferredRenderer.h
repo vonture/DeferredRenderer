@@ -1,8 +1,7 @@
 #pragma once
 
 #include "Defines.h"
-#include "IUpdateable.h"
-#include "IHasContent.h"
+#include "Application.h"
 #include "Renderer.h"
 #include "FirstPersonCamera.h"
 #include "KeyboardState.h"
@@ -14,7 +13,7 @@
 #include "AmbientOcclusionPostProcess.h"
 #include "DepthOfFieldPostProcess.h"
 
-class Game : public IUpdateable, public IHasContent
+class DeferredRenderer : public Application
 {
 private:
 	Renderer _renderer;
@@ -30,12 +29,15 @@ private:
 
 	bool _aoEnabled;
 
+protected:
+	void OnPreparingDeviceSettings(DeviceManager* deviceManager);
+
 public:
-	Game();
-	~Game();
+	DeferredRenderer();
+	~DeferredRenderer();
 
 	void OnFrameMove(double totalTime, float dt);
-	void OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext);
+	HRESULT OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
 	void OnD3D11DestroyDevice();

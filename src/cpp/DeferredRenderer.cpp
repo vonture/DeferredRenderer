@@ -1,7 +1,8 @@
-#include "Game.h"
+#include "DeferredRenderer.h"
 
-Game::Game()
-	: _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f),
+DeferredRenderer::DeferredRenderer()
+	: Application(L"Deferred Renderer", NULL),
+      _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f),
 	  _scene(L"\\models\\tankscene\\tankscene.sdkmesh")
 	  //_scene(L"\\models\\sponza\\sponzanoflag.sdkmesh")
 {
@@ -15,11 +16,18 @@ Game::Game()
 	_aoEnabled = true;
 }
 
-Game::~Game()
+DeferredRenderer::~DeferredRenderer()
 {
 }
 
-void Game::OnFrameMove(double totalTime, float dt)
+void DeferredRenderer::OnPreparingDeviceSettings(DeviceManager* deviceManager)
+{
+	Application::OnPreparingDeviceSettings(deviceManager);
+
+	deviceManager->SetVSyncEnabled(false);
+}
+
+void DeferredRenderer::OnFrameMove(double totalTime, float dt)
 {
 	KeyboardState kb = KeyboardState::GetState();
 	MouseState mouse = MouseState::GetState();
@@ -87,11 +95,11 @@ void Game::OnFrameMove(double totalTime, float dt)
 	_hdrPP.SetTimeDelta(dt);
 }
 
-void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext)
+HRESULT DeferredRenderer::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext)
 {
 	HRESULT hr;
 
-	V(_renderer.Begin());
+	V_RETURN(_renderer.Begin());
 
 	_renderer.AddModel(&_scene);	
 	
@@ -135,12 +143,16 @@ void Game::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3
 	_renderer.AddPostProcess(&_hdrPP);
 	//_renderer.AddPostProcess(&_aaPP);
 
-	V(_renderer.End(pd3dDevice, pd3dImmediateContext, &_camera));
+	V_RETURN(_renderer.End(pd3dDevice, pd3dImmediateContext, &_camera));
+
+	return S_OK;
 }
 
-HRESULT Game::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT DeferredRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
+
+	V_RETURN(Application::OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
 	V_RETURN(_renderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));	
 	V_RETURN(_hdrPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
@@ -153,8 +165,10 @@ HRESULT Game::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_D
 	return S_OK;
 }
 
-void Game::OnD3D11DestroyDevice()
+void DeferredRenderer::OnD3D11DestroyDevice()
 {
+	Application::OnD3D11DestroyDevice();
+
 	_renderer.OnD3D11DestroyDevice();	
 	_hdrPP.OnD3D11DestroyDevice();
 	_skyPP.OnD3D11DestroyDevice();
@@ -164,10 +178,12 @@ void Game::OnD3D11DestroyDevice()
 	_scene.OnD3D11DestroyDevice();	
 }
 
-HRESULT Game::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+HRESULT DeferredRenderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
                         const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
+
+	V_RETURN(Application::OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 
 	float fAspectRatio = pBackBufferSurfaceDesc->Width / (float)pBackBufferSurfaceDesc->Height;
 	_camera.SetAspectRatio(fAspectRatio);
@@ -182,8 +198,10 @@ HRESULT Game::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain*
 
 	return S_OK;
 }
-void Game::OnD3D11ReleasingSwapChain()
+void DeferredRenderer::OnD3D11ReleasingSwapChain()
 {
+	Application::OnD3D11ReleasingSwapChain();
+
 	_renderer.OnD3D11ReleasingSwapChain();	
 	_hdrPP.OnD3D11ReleasingSwapChain();
 	_skyPP.OnD3D11ReleasingSwapChain();
@@ -191,4 +209,10 @@ void Game::OnD3D11ReleasingSwapChain()
 	_aoPP.OnD3D11ReleasingSwapChain();
 	_dofPP.OnD3D11ReleasingSwapChain();
 	_scene.OnD3D11ReleasingSwapChain();
+}
+
+int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow )
+{
+	DeferredRenderer application;
+	application.Start();
 }
