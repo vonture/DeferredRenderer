@@ -7,5 +7,5 @@
 class IDrawable : public IHasContent
 {
 public:
-	virtual void OnFrameRender(Renderer* renderer, double totalTime, float dt);
+	virtual HRESULT OnFrameRender(Renderer* renderer, double totalTime, float dt) = 0;
 };
