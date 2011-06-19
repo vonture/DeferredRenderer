@@ -9,9 +9,6 @@
 
 #pragma once
 
-#ifndef _XNA_Collision_H_
-#define _XNA_Collision_H_
-
 #include <xnamath.h>
 
 //-----------------------------------------------------------------------------
@@ -57,6 +54,12 @@ _DECLSPEC_ALIGN_16_ struct Frustum
 };
 
 #pragma warning(pop)
+
+
+// Some xna collision defines
+#define NO_INTERSECTION 0
+#define INTERSECTION 1
+#define COMPLETELY_INSIDE 2
 
 class Collision
 {
@@ -174,4 +177,3 @@ public:
 	static INT IntersectOrientedBoxPlane( const OrientedBox* pVolume, FXMVECTOR Plane );
 	static INT IntersectFrustumPlane( const Frustum* pVolume, FXMVECTOR Plane );
 };
-#endif
