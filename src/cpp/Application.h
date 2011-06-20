@@ -16,6 +16,9 @@ protected:
 	virtual void OnPreparingDeviceSettings(DeviceManager* deviceManager);
 	virtual void OnInitialize();
 
+	Window* GetWindow();
+	DeviceManager* GetDeviceManager();
+
 public:
 	Application(const WCHAR* title, const WCHAR* icon);
 	~Application();
@@ -24,7 +27,14 @@ public:
 	void Exit();
 
 	void SetFullScreen(bool fullScreen);
-	bool GetFullScreen();
+	bool GetFullScreen() const;
+
+	void SetMaximized(bool maximized);
+	bool GetMaximized() const;
+
+	bool IsActive() const;
+
+	HWND GetHWND() const;
 
 	LRESULT OnResized(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 

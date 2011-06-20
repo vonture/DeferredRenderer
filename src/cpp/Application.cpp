@@ -1,13 +1,14 @@
 #include "Application.h"
 
 Application* MainApplication;
+
 LRESULT OnMainApplicationResized(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	return MainApplication->OnResized(hWnd, msg, wParam, lParam);
 }
 
 Application::Application(const WCHAR* title, const WCHAR* icon)
-	: _window(NULL, title, WS_OVERLAPPEDWINDOW, WS_EX_APPWINDOW, 1280, 720, icon)
+	: _window(NULL, title, icon, 1360, 768)
 {
 }
 
@@ -49,6 +50,16 @@ void Application::OnInitialize()
 {
 }
 
+Window* Application::GetWindow()
+{
+	return &_window;
+}
+
+DeviceManager* Application::GetDeviceManager()
+{
+	return &_deviceManager;
+}
+
 HRESULT Application::Start()
 {
 	HRESULT hr;
@@ -78,8 +89,8 @@ HRESULT Application::Start()
 		return E_FAIL;
 	}
 	INT64 startTime = largeInt.QuadPart;
-	INT64 minimizedTime = 0;
 	INT64 prevTime = startTime;
+	INT64 inactiveTime = 0;
 
 	if (!QueryPerformanceFrequency(&largeInt))
 	{
@@ -101,10 +112,10 @@ HRESULT Application::Start()
 		}
 		INT64 curTime = largeInt.QuadPart - startTime;
 
-		if (!_window.IsMinimized())
+		if (_window.IsActive())
 		{
 			float deltaSeconds = (float)((curTime - prevTime) / (double)counterFreq);
-			double totalSeconds = (curTime - minimizedTime) / (double)counterFreq;
+			double totalSeconds = (curTime - inactiveTime) / (double)counterFreq;
 
 			OnFrameMove(totalSeconds, deltaSeconds);
 			V_RETURN(OnD3D11FrameRender(_deviceManager.GetDevice(), _deviceManager.GetImmediateContext()));
@@ -114,7 +125,7 @@ HRESULT Application::Start()
 		else
 		{
 			INT64 delta = curTime - prevTime;
-			minimizedTime += delta;
+			inactiveTime += delta;
 		}
 
 		prevTime = curTime;
@@ -149,9 +160,29 @@ void Application::SetFullScreen(bool fullScreen)
 	}
 }
 
-bool Application::GetFullScreen()
+bool Application::GetFullScreen() const
 {
 	return _deviceManager.GetFullScreen();
+}
+
+void Application::SetMaximized(bool maximized)
+{
+	_window.SetMaximized(maximized);
+}
+
+bool Application::GetMaximized() const 
+{
+	return _window.GetMaximized();
+}
+
+HWND Application::GetHWND() const
+{
+	return _window.GetHWND();
+}
+
+bool Application::IsActive() const
+{
+	return _window.IsActive();
 }
 
 HRESULT Application::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
