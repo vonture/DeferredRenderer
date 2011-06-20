@@ -15,6 +15,9 @@ private:
 	DWORD _extendedStyle;
 	HACCEL _acceleratorTable;
 
+	RECT _unmaxedRect;
+	bool _maximized;
+
 	std::map<UINT, MessageFunction*> _messageFunctions;
 
 	void makeWindow(const WCHAR* name, const WCHAR* sIconResource, const WCHAR* sMenuResource);
@@ -22,9 +25,10 @@ private:
 	LRESULT MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 public:
-	Window(HINSTANCE hinstance, const WCHAR* name, DWORD style = WS_CAPTION|WS_OVERLAPPED|WS_SYSMENU,
-		DWORD extendedStyle = WS_EX_APPWINDOW, DWORD width = 1280, DWORD height = 720, 
-		LPCWSTR iconResource = NULL, LPCWSTR menuResource = NULL, LPCWSTR accelResource = NULL);
+	Window(HINSTANCE hinstance, const WCHAR* name, const WCHAR* iconResource = NULL, 
+		DWORD width = 1280, DWORD height = 720, DWORD style = WS_CAPTION|WS_OVERLAPPED|WS_SYSMENU,
+		DWORD extendedStyle = WS_EX_APPWINDOW, const WCHAR* menuResource = NULL, 
+		const WCHAR* accelResource = NULL);
 	~Window();
 
 	HWND GetHWND() const { return _hwnd; }
@@ -33,6 +37,11 @@ public:
 		
 	bool IsAlive() const;
 	bool IsMinimized() const;
+
+	bool IsActive() const;
+
+	void SetMaximized(bool maximized);
+	bool GetMaximized() const;
 
 	UINT GetClientWidth() const;
 	UINT GetClientHeight() const;

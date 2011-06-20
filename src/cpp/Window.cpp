@@ -1,9 +1,9 @@
 #include "Window.h"
 
-Window::Window(HINSTANCE hinstance, const WCHAR* name, DWORD style,	DWORD extendedStyle, DWORD width,
-	DWORD height, LPCWSTR iconResource, LPCWSTR menuResource, LPCWSTR accelResource)
+Window::Window(HINSTANCE hinstance, const WCHAR* name, const WCHAR* iconResource, DWORD width,
+	DWORD height, DWORD style,	DWORD extendedStyle, const WCHAR* menuResource, const WCHAR* accelResource)
 	: _hwnd(NULL), _name(name), _hinstance(hinstance), _style(style), _extendedStyle(extendedStyle),
-	  _acceleratorTable(NULL)
+	  _acceleratorTable(NULL), _maximized(false)
 {
 	if (!hinstance)
 	{
@@ -24,7 +24,7 @@ Window::Window(HINSTANCE hinstance, const WCHAR* name, DWORD style,	DWORD extend
 		if (!_acceleratorTable)
 		{
 			// ERROR
-			_ASSERT(false);
+			_acceleratorTable = NULL;
 		}
 	}
 }
@@ -104,7 +104,7 @@ LRESULT WINAPI Window::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 }
 
 LRESULT Window::MessageHandler( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
-{	
+{
 	if (_messageFunctions.find(uMsg) != _messageFunctions.end())
 	{
 		MessageFunction* msgFunction = _messageFunctions[uMsg];
@@ -121,7 +121,7 @@ LRESULT Window::MessageHandler( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 			// Window is being closed
 			case WM_CLOSE:
-				DestroyWindow(hWnd);
+				Destroy();
 				return 0;
 		}	
 	}
@@ -136,6 +136,67 @@ bool Window::IsAlive() const
 bool Window::IsMinimized() const
 {
 	return IsIconic(_hwnd) != 0;
+}
+
+bool Window::IsActive() const
+{
+	return GetForegroundWindow() == _hwnd;
+}
+
+void Window::SetMaximized(bool maximized)
+{
+	if (maximized != _maximized)
+	{
+		_maximized = maximized;
+
+		if (_maximized)
+		{
+			// Create the new style that has no menu bars or borders
+			DWORD newStyle = _style & 
+				~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZE | WS_MAXIMIZE | WS_SYSMENU);
+			DWORD newExStyle = _extendedStyle & 
+				~(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
+
+			// Save information so that we can be un-maximized
+			GetWindowRect(_hwnd, &_unmaxedRect);
+
+			// Determine the monitor we are on
+			HMONITOR curMonitor = MonitorFromWindow(_hwnd, MONITOR_DEFAULTTOPRIMARY);
+
+			MONITORINFO monitorInfo;
+			monitorInfo.cbSize = sizeof(MONITORINFO);
+
+			GetMonitorInfo(curMonitor, &monitorInfo);
+
+			// Determine the position to put it at
+			UINT x = monitorInfo.rcMonitor.left;
+			UINT y = monitorInfo.rcMonitor.top;
+			UINT width = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
+			UINT height = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
+
+			// place the window
+			_ASSERT(SetWindowLong(_hwnd, GWL_STYLE, newStyle));
+			_ASSERT(SetWindowLong(_hwnd, GWL_EXSTYLE, newExStyle));
+			_ASSERT(SetWindowPos(_hwnd, HWND_TOP, x, y, width, height, SWP_FRAMECHANGED | SWP_SHOWWINDOW));
+		}
+		else
+		{
+			// Determine the location to put the window back to
+			UINT x = _unmaxedRect.left;
+			UINT y = _unmaxedRect.top;
+			UINT width = _unmaxedRect.right - _unmaxedRect.left;
+			UINT height = _unmaxedRect.bottom - _unmaxedRect.top;
+
+			_ASSERT(SetWindowLong(_hwnd, GWL_STYLE, _style));
+			_ASSERT(SetWindowLong(_hwnd, GWL_EXSTYLE, _extendedStyle));
+			_ASSERT(SetWindowPos(_hwnd, HWND_NOTOPMOST, x, y, width, height, SWP_FRAMECHANGED | SWP_SHOWWINDOW));
+		}
+	}
+}
+
+bool Window::GetMaximized() const
+{
+	return _maximized;
 }
 
 UINT Window::GetClientWidth() const
