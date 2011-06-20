@@ -37,7 +37,6 @@ private:
 
 	HRESULT checkForSuitableOutput();
     HRESULT afterReset();
-    HRESULT prepareFullScreenSettings();
 
 public:
 	DeviceManager();

@@ -31,15 +31,8 @@ HRESULT DeviceManager::Initialize(HWND outputWindow)
 	DXGI_SWAP_CHAIN_DESC desc;
 	ZeroMemory(&desc, sizeof(DXGI_SWAP_CHAIN_DESC));
 
-    if(_fullScreen)
-	{
-        V_RETURN(prepareFullScreenSettings());
-	}
-    else
-    {
-        _refreshRate.Numerator = 60;
-        _refreshRate.Denominator = 1;
-    }
+    _refreshRate.Numerator = 60;
+    _refreshRate.Denominator = 1;    
 
 	desc.BufferCount = 2;
 	desc.BufferDesc.Format = _backBufferFormat;
@@ -93,15 +86,8 @@ HRESULT DeviceManager::Reset()
 
 	_immediateContext->ClearState();
 
-	if(_fullScreen)
-	{
-        V_RETURN(prepareFullScreenSettings());
-	}
-    else
-    {
-        _refreshRate.Numerator = 60;
-        _refreshRate.Denominator = 1;
-    }
+    _refreshRate.Numerator = 60;
+    _refreshRate.Denominator = 1;    
 
 	V_RETURN(_swapChain->SetFullscreenState(_fullScreen, NULL));
 
@@ -160,7 +146,7 @@ HRESULT DeviceManager::checkForSuitableOutput()
 
     if (!_adapter)
 	{
-		V_RETURN(E_FAIL);
+		return E_FAIL;
 	}
 
     // use the first output
@@ -275,36 +261,6 @@ HRESULT DeviceManager::afterReset()
 	_backBufferSurfaceDesc.Format = _backBufferFormat;
 	_backBufferSurfaceDesc.SampleDesc.Count = _msCount;
 	_backBufferSurfaceDesc.SampleDesc.Quality = _msQuality;
-
-	return S_OK;
-}
-
-HRESULT DeviceManager::prepareFullScreenSettings()
-{
-	HRESULT hr;
-	
-	if (!_output)
-	{
-		return E_FAIL;
-	}
-
-    // Have the Output look for the closest matching mode
-    DXGI_MODE_DESC desiredMode;
-    desiredMode.Format = _backBufferFormat;
-    desiredMode.Width = _backBufferWidth;
-    desiredMode.Height = _backBufferHeight;
-    desiredMode.RefreshRate.Numerator = 0;
-    desiredMode.RefreshRate.Denominator = 0;
-    desiredMode.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-    desiredMode.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-
-    DXGI_MODE_DESC closestMatch;
-    V_RETURN(_output->FindClosestMatchingMode(&desiredMode, &closestMatch, _device));
-
-    _backBufferFormat = closestMatch.Format;
-    _backBufferWidth = closestMatch.Width;
-    _backBufferHeight = closestMatch.Height;
-    _refreshRate = closestMatch.RefreshRate;
 
 	return S_OK;
 }
