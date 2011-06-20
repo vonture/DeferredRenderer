@@ -121,10 +121,8 @@ LRESULT Window::MessageHandler( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 			// Window is being closed
 			case WM_CLOSE:
-			{
 				DestroyWindow(hWnd);
 				return 0;
-			}
 		}	
 	}
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -132,12 +130,12 @@ LRESULT Window::MessageHandler( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 bool Window::IsAlive() const
 {
-	return IsWindow(_hwnd);
+	return IsWindow(_hwnd) != 0;
 }
 
 bool Window::IsMinimized() const
 {
-	return IsIconic(_hwnd);
+	return IsIconic(_hwnd) != 0;
 }
 
 UINT Window::GetClientWidth() const
