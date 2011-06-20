@@ -24,6 +24,10 @@ void DeferredRenderer::OnPreparingDeviceSettings(DeviceManager* deviceManager)
 {
 	Application::OnPreparingDeviceSettings(deviceManager);
 
+	deviceManager->SetBackBufferWidth(1360);
+	deviceManager->SetBackBufferHeight(768);	
+	deviceManager->SetFullScreen(false);
+
 	deviceManager->SetVSyncEnabled(false);
 }
 
@@ -32,6 +36,11 @@ void DeferredRenderer::OnFrameMove(double totalTime, float dt)
 	KeyboardState kb = KeyboardState::GetState();
 	MouseState mouse = MouseState::GetState();
 
+	if (kb.IsKeyJustPressed(Esc))
+	{
+		Exit();
+	}
+
 	if (kb.IsKeyJustPressed(B))
 	{
 		_renderer.SetDrawBoundingObjects(!_renderer.GetDrawBoundingObjects());
@@ -39,7 +48,7 @@ void DeferredRenderer::OnFrameMove(double totalTime, float dt)
 
 	if (kb.IsKeyJustPressed(F11))
 	{
-		DXUTToggleFullScreen();
+		SetFullScreen(!GetFullScreen());
 	}
 	
 	if (kb.IsKeyJustPressed(D1))
