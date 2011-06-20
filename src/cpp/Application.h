@@ -23,6 +23,9 @@ public:
 	HRESULT Start();
 	void Exit();
 
+	void SetFullScreen(bool fullScreen);
+	bool GetFullScreen();
+
 	LRESULT OnResized(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 	virtual void OnFrameMove(double totalTime, float dt) = 0;

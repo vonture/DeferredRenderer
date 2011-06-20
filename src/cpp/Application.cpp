@@ -63,6 +63,9 @@ HRESULT Application::Start()
 	OnPreparingDeviceSettings(&_deviceManager);
 	V_RETURN(_deviceManager.Initialize(_window.GetHWND()));
 
+	// Set the window to be the same size as the back buffer
+	_window.SetClientSize(_deviceManager.GetBackBufferWidth(), _deviceManager.GetBackBufferHeight());
+
 	// Call the IHasContent methods
 	V_RETURN(OnD3D11CreateDevice(_deviceManager.GetDevice(), _deviceManager.GetBackBufferSurfaceDesc()));
 	V_RETURN(OnD3D11ResizedSwapChain(_deviceManager.GetDevice(), _deviceManager.GetSwapChain(),
@@ -83,7 +86,7 @@ HRESULT Application::Start()
 		return E_FAIL;
 	}
 	double counterFreq = (double)largeInt.QuadPart;
-
+	
 	// Everything is ready, show the window
 	_window.Show();	
 
@@ -128,6 +131,27 @@ HRESULT Application::Start()
 void Application::Exit()
 {
 	_window.Destroy();
+}
+
+void Application::SetFullScreen(bool fullScreen)
+{
+	HRESULT hr;
+
+	if (fullScreen != _deviceManager.GetFullScreen())
+	{
+		OnD3D11ReleasingSwapChain();
+
+		_deviceManager.SetFullScreen(fullScreen);
+        _deviceManager.Reset();
+
+		V(OnD3D11ResizedSwapChain(_deviceManager.GetDevice(), _deviceManager.GetSwapChain(), 
+			_deviceManager.GetBackBufferSurfaceDesc()));
+	}
+}
+
+bool Application::GetFullScreen()
+{
+	return _deviceManager.GetFullScreen();
 }
 
 HRESULT Application::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
