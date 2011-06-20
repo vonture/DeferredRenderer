@@ -16,6 +16,7 @@ class MouseState
 {
 private:
 	int _x, _y, _dx, _dy;
+	bool _overWindow;
 	ButtonState _buttonStates[5];
 
 	static MouseState _prevState;
@@ -24,7 +25,7 @@ public:
 	MouseState();
 	~MouseState();
 
-	static void SetCursorPosition(int x, int y);
+	static void SetCursorPosition(int x, int y, HWND hwnd = NULL);
 	static void SetCursorVisible(bool visible);
 
 	int GetX();
@@ -32,11 +33,14 @@ public:
 	int GetDX();
 	int GetDY();
 
+	bool IsOverWindow();
+	bool IsJustOverWindow();
+
 	ButtonState GetButtonState(MouseButtons button);
     bool IsButtonDown(MouseButtons button);
 	bool IsButtonUp(MouseButtons button);
     bool IsButtonJustPressed(MouseButtons button);
 	bool IsButtonJustReleased(MouseButtons button);
 	
-	static MouseState GetState();
+	static MouseState GetState(HWND hwnd = NULL);
 };
