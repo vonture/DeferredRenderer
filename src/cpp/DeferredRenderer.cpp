@@ -33,72 +33,81 @@ void DeferredRenderer::OnPreparingDeviceSettings(DeviceManager* deviceManager)
 
 void DeferredRenderer::OnFrameMove(double totalTime, float dt)
 {
+	HWND hwnd = GetHWND();
 	KeyboardState kb = KeyboardState::GetState();
-	MouseState mouse = MouseState::GetState();
+	MouseState mouse = MouseState::GetState(hwnd);
 
-	if (kb.IsKeyJustPressed(Esc))
+	if (IsActive() && mouse.IsOverWindow())
 	{
-		Exit();
-	}
+		if (kb.IsKeyJustPressed(Esc))
+		{
+			Exit();
+		}
 
-	if (kb.IsKeyJustPressed(B))
-	{
-		_renderer.SetDrawBoundingObjects(!_renderer.GetDrawBoundingObjects());
-	}
+		if (kb.IsKeyJustPressed(B))
+		{
+			_renderer.SetDrawBoundingObjects(!_renderer.GetDrawBoundingObjects());
+		}
 
-	if (kb.IsKeyJustPressed(F11))
-	{
-		SetFullScreen(!GetFullScreen());
-	}
+		if (kb.IsKeyJustPressed(F11))
+		{
+			SetFullScreen(!GetFullScreen());
+		}
+
+		if (kb.IsKeyJustPressed(M))
+		{
+			SetMaximized(!GetMaximized());
+		}
 	
-	if (kb.IsKeyJustPressed(D1))
-	{
-		_aoEnabled = !_aoEnabled;
-	}
+		if (kb.IsKeyJustPressed(D1))
+		{
+			_aoEnabled = !_aoEnabled;
+		}
 
-	if (mouse.IsButtonDown(LeftButton))
-	{
-		const float mouseRotateSpeed = 0.002f;
+		if (mouse.IsButtonDown(LeftButton))
+		{
+			const float mouseRotateSpeed = 0.002f;
 		
-		XMFLOAT2 rotation = _camera.GetRotation();
-		rotation.x += mouse.GetDX() * mouseRotateSpeed;
-		rotation.y += mouse.GetDY() * mouseRotateSpeed;
-		_camera.SetRotation(rotation);
+			XMFLOAT2 rotation = _camera.GetRotation();
+			rotation.x += mouse.GetDX() * mouseRotateSpeed;
+			rotation.y += mouse.GetDY() * mouseRotateSpeed;
+			_camera.SetRotation(rotation);
 
-		// Set the mouse back one frame 
-		MouseState::SetCursorPosition(mouse.GetX() - mouse.GetDX(), mouse.GetY() - mouse.GetDY());
+			// Set the mouse back one frame
+			MouseState::SetCursorPosition(200, 200, hwnd);
 
-		XMFLOAT2 moveDir = XMFLOAT2(0.0f, 0.0f);
-		if (kb.IsKeyDown(W) || kb.IsKeyDown(Up))
-		{
-			moveDir.y++;
-		}
-		if (kb.IsKeyDown(S) || kb.IsKeyDown(Down))
-		{
-			moveDir.y--;
-		}
-		if (kb.IsKeyDown(A) || kb.IsKeyDown(Left))
-		{
-			moveDir.x--;
-		}
-		if (kb.IsKeyDown(D) || kb.IsKeyDown(Right))
-		{
-			moveDir.x++;
-		}
+			XMFLOAT2 moveDir = XMFLOAT2(0.0f, 0.0f);
+			if (kb.IsKeyDown(W) || kb.IsKeyDown(Up))
+			{
+				moveDir.y++;
+			}
+			if (kb.IsKeyDown(S) || kb.IsKeyDown(Down))
+			{
+				moveDir.y--;
+			}
+			if (kb.IsKeyDown(A) || kb.IsKeyDown(Left))
+			{
+				moveDir.x--;
+			}
+			if (kb.IsKeyDown(D) || kb.IsKeyDown(Right))
+			{
+				moveDir.x++;
+			}
 				
-		const float cameraMoveSpeed = 5.0f;
-		XMFLOAT3 camPos = _camera.GetPosition();
-		XMFLOAT3 camForward = _camera.GetForward();
-		XMFLOAT3 camRight = _camera.GetRight();
+			const float cameraMoveSpeed = 5.0f;
+			XMFLOAT3 camPos = _camera.GetPosition();
+			XMFLOAT3 camForward = _camera.GetForward();
+			XMFLOAT3 camRight = _camera.GetRight();
 
-		XMVECTOR position = XMLoadFloat3(&camPos);
-		XMVECTOR forward = XMLoadFloat3(&camForward);
-		XMVECTOR right = XMLoadFloat3(&camRight);
+			XMVECTOR position = XMLoadFloat3(&camPos);
+			XMVECTOR forward = XMLoadFloat3(&camForward);
+			XMVECTOR right = XMLoadFloat3(&camRight);
 
-		position += ((moveDir.y * forward) + (moveDir.x * right)) * (cameraMoveSpeed * dt);
+			position += ((moveDir.y * forward) + (moveDir.x * right)) * (cameraMoveSpeed * dt);
 
-		XMStoreFloat3(&camPos, position);
-		_camera.SetPosition(camPos);
+			XMStoreFloat3(&camPos, position);
+			_camera.SetPosition(camPos);
+		}
 	}
 
 	_hdrPP.SetTimeDelta(dt);
