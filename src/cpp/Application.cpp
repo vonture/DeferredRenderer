@@ -133,8 +133,11 @@ HRESULT Application::Start()
 		_window.MessageLoop();
 	}
 
+	// Clean up
 	OnD3D11ReleasingSwapChain();
 	OnD3D11DestroyDevice();	
+
+	_deviceManager.Destroy();
 
 	return S_OK;
 }
