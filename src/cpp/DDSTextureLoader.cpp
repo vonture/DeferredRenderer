@@ -944,9 +944,6 @@ static HRESULT CreateTextureFromDDS( ID3D11Device* pDev, DDS_HEADER* pHeader, __
     hr = pDev->CreateTexture2D( &desc, pInitData, &pTex2D );
     if( SUCCEEDED( hr ) && pTex2D )
     {
-#if defined(DEBUG) || defined(PROFILE)
-        pTex2D->SetPrivateData( WKPDID_D3DDebugObjectName, sizeof("DDSTextureLoader")-1, "DDSTextureLoader" );
-#endif
         D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc;
         ZeroMemory( &SRVDesc, sizeof( SRVDesc ) );
         SRVDesc.Format = desc.Format;
@@ -1004,32 +1001,9 @@ HRESULT CreateDDSTextureFromFile( ID3D11Device* pDev, const WCHAR* szFileName, I
 
     hr = CreateTextureFromDDS( pDev, pHeader, pBitData, BitSize, ppSRV, bSRGB );
     SAFE_DELETE_ARRAY( pHeapData );
-
-#if defined(DEBUG) || defined(PROFILE)
-    if ( *ppSRV )
-    {
-        CHAR strFileA[MAX_PATH];
-        WideCharToMultiByte( CP_ACP, 0, szFileName, -1, strFileA, MAX_PATH, NULL, FALSE );
-        CHAR* pstrName = strrchr( strFileA, '\\' );
-        if( pstrName == NULL )
-            pstrName = strFileA;
-        else
-            pstrName++;
-        
-        (*ppSRV)->SetPrivateData( WKPDID_D3DDebugObjectName, lstrlenA(pstrName), pstrName );
-    }
-#endif
-
+	
     return hr;
 }
-
-
-
-
-
-
-
-
 
 //--------------------------------------------------------------------------------------
 static HRESULT CreateTexture3DFromDDS( ID3D11Device* pDev, DDS_HEADER* pHeader, __inout_bcount(BitSize) BYTE* pBitData,
@@ -1134,9 +1108,6 @@ static HRESULT CreateTexture3DFromDDS( ID3D11Device* pDev, DDS_HEADER* pHeader, 
     hr = pDev->CreateTexture3D( &desc, &initData, &pTex3D );
     if( SUCCEEDED( hr ) && pTex3D )
     {
-#if defined(DEBUG) || defined(PROFILE)
-        pTex3D->SetPrivateData( WKPDID_D3DDebugObjectName, sizeof("DDSTextureLoader")-1, "DDSTextureLoader" );
-#endif
         D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc;
         ZeroMemory( &SRVDesc, sizeof( SRVDesc ) );
         SRVDesc.Format = desc.Format;
@@ -1169,21 +1140,6 @@ HRESULT CreateDDSTexture3DFromFile( ID3D11Device* pDev, const WCHAR* szFileName,
 
     hr = CreateTexture3DFromDDS( pDev, pHeader, pBitData, BitSize, ppSRV, bSRGB );
     SAFE_DELETE_ARRAY( pHeapData );
-
-#if defined(DEBUG) || defined(PROFILE)
-    if ( *ppSRV )
-    {
-        CHAR strFileA[MAX_PATH];
-        WideCharToMultiByte( CP_ACP, 0, szFileName, -1, strFileA, MAX_PATH, NULL, FALSE );
-        CHAR* pstrName = strrchr( strFileA, '\\' );
-        if( pstrName == NULL )
-            pstrName = strFileA;
-        else
-            pstrName++;
-        
-        (*ppSRV)->SetPrivateData( WKPDID_D3DDebugObjectName, lstrlenA(pstrName), pstrName );
-    }
-#endif
 
     return hr;
 }
