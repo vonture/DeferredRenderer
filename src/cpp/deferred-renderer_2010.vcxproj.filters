@@ -149,6 +149,9 @@
     <None Include="SSAO.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="MLAA.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ModelInstance.cpp">
@@ -221,9 +224,6 @@
     <ClCompile Include="AmbientOcclusionPostProcess.cpp">
       <Filter>Post Process</Filter>
     </ClCompile>
-    <ClCompile Include="DepthOfFiendPostProcess.cpp">
-      <Filter>Post Process</Filter>
-    </ClCompile>
     <ClCompile Include="DirectionalLightRenderer.cpp">
       <Filter>Lights\Renderers</Filter>
     </ClCompile>
@@ -252,6 +252,9 @@
       <Filter>Application</Filter>
     </ClCompile>
     <ClCompile Include="DeferredRenderer.cpp" />
+    <ClCompile Include="DepthOfFieldPostProcess.cpp">
+      <Filter>Post Process</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleSample.hlsl">

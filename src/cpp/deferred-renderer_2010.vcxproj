@@ -385,7 +385,7 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CombinePostProcess.cpp" />
     <ClCompile Include="DDSTextureLoader.cpp" />
-    <ClCompile Include="DepthOfFiendPostProcess.cpp" />
+    <ClCompile Include="DepthOfFieldPostProcess.cpp" />
     <ClCompile Include="DeviceManager.cpp" />
     <ClCompile Include="DeviceStates.cpp" />
     <ClCompile Include="DirectionalLightRenderer.cpp" />
@@ -472,6 +472,7 @@
     <ClCompile Include="DXUT\Optional\DXUTsettingsdlg.cpp" />
     <ClCompile Include="DXUT\Optional\SDKmesh.cpp" />
     <ClCompile Include="DXUT\Optional\SDKmisc.cpp" />
+    <None Include="MLAA.hlsl" />
     <None Include="Sky.hlsl" />
     <None Include="SSAO.hlsl" />
   </ItemGroup>
