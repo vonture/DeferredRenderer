@@ -41,7 +41,7 @@ float CalcLuminance(float3 color)
 {
 	float3 CIE_XYZ = mul(RGB_TO_CIEXYZ, color);
 
-	return CIE_XYZ.y / (CIE_XYZ.x + CIE_XYZ.y + CIE_XYZ.z);
+	return max(CIE_XYZ.y / (CIE_XYZ.x + CIE_XYZ.y + CIE_XYZ.z), EPSILON);
 }
 
 float4 PS_LuminanceMap(PS_In_Quad input) : SV_TARGET0
