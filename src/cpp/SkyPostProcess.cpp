@@ -69,6 +69,10 @@ HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	// Render
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _skyPS));
 
+	// Null the SRVs
+	ID3D11ShaderResourceView* ppSRVNULL[2] = { NULL, NULL };
+	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVNULL);
+
 	DXUT_EndPerfEvent();
 
 	return S_OK;
