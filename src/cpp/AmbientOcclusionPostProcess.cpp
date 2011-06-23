@@ -16,7 +16,7 @@ AmbientOcclusionPostProcess::AmbientOcclusionPostProcess()
 	// Initialize some parameters to default values
 	_sampleRadius = 0.8f;
 	_blurSigma = 0.8f;
-	_samplePower = 4.0f;
+	_samplePower = 2.5f;
 }
 
 AmbientOcclusionPostProcess::~AmbientOcclusionPostProcess()
