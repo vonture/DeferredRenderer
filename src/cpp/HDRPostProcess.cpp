@@ -230,26 +230,32 @@ HRESULT HDRPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI
 	V_RETURN( CompileShaderFromFile( L"HDR.hlsl", "PS_LuminanceMap", "ps_4_0", NULL, &pBlob ) );   
     V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_luminanceMapPS));
 	SAFE_RELEASE(pBlob);
-	
+	SET_DEBUG_NAME(_luminanceMapPS, "HDR Luminance Map PS");
+
 	V_RETURN( CompileShaderFromFile( L"HDR.hlsl", "PS_ToneMap", "ps_4_0", NULL, &pBlob ) );   
     V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_toneMapPS));
 	SAFE_RELEASE(pBlob);
+	SET_DEBUG_NAME(_toneMapPS, "HDR Tone Map PS");
 
 	V_RETURN( CompileShaderFromFile( L"HDR.hlsl", "PS_Scale", "ps_4_0", NULL, &pBlob ) );   
     V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_scalePS));
 	SAFE_RELEASE(pBlob);
+	SET_DEBUG_NAME(_scalePS, "HDR Scale PS");
 
 	V_RETURN( CompileShaderFromFile( L"HDR.hlsl", "PS_Threshold", "ps_4_0", NULL, &pBlob ) );   
     V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_thresholdPS));
 	SAFE_RELEASE(pBlob);
+	SET_DEBUG_NAME(_thresholdPS, "HDR Threshold PS");
 
 	V_RETURN( CompileShaderFromFile( L"HDR.hlsl", "PS_BlurHorizontal", "ps_4_0", NULL, &pBlob ) );   
     V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_hBlurPS));
 	SAFE_RELEASE(pBlob);
+	SET_DEBUG_NAME(_hBlurPS, "HDR Horizontal Blur PS");
 
 	V_RETURN( CompileShaderFromFile( L"HDR.hlsl", "PS_BlurVertical", "ps_4_0", NULL, &pBlob ) );   
     V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_vBlurPS));
 	SAFE_RELEASE(pBlob);
+	SET_DEBUG_NAME(_vBlurPS, "HDR Vertical Blur PS");
 
 	// Create the buffer
 	D3D11_BUFFER_DESC bufferDesc =
@@ -263,11 +269,13 @@ HRESULT HDRPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI
 	};
 
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_hdrPropertiesBuffer));
+	SET_DEBUG_NAME(_hdrPropertiesBuffer, "HDR Properties Buffer");
 
 	// Load the color grading texture
 	WCHAR str[MAX_PATH];
     V_RETURN(DXUTFindDXSDKMediaFileCch(str, MAX_PATH, L"ColorGrades\\color_grade_default.dds"));	
 	V_RETURN(CreateDDSTexture3DFromFile(pd3dDevice, str, &_colorGradeSRV));
+	SET_DEBUG_NAME(_colorGradeSRV, "HDR Color Grade SRV");
 	
 	V_RETURN(_fsQuad.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	
@@ -329,6 +337,9 @@ HRESULT HDRPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGI
 	V_RETURN(pd3dDevice->CreateTexture2D(&lumTextureDesc, NULL, &_lumTextures[0]));
 	V_RETURN(pd3dDevice->CreateTexture2D(&lumTextureDesc, NULL, &_lumTextures[1]));
 
+	SET_DEBUG_NAME(_lumTextures[0], "HDR Luminance Texture 0");
+	SET_DEBUG_NAME(_lumTextures[1], "HDR Luminance Texture 1");
+
 	// Create the render target views
 	D3D11_RENDER_TARGET_VIEW_DESC lumRTVDesc = 
 	{
@@ -340,6 +351,9 @@ HRESULT HDRPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGI
 
 	V_RETURN(pd3dDevice->CreateRenderTargetView(_lumTextures[0], &lumRTVDesc, &_lumRTVs[0]));
 	V_RETURN(pd3dDevice->CreateRenderTargetView(_lumTextures[1], &lumRTVDesc, &_lumRTVs[1]));
+
+	SET_DEBUG_NAME(_lumRTVs[0], "HDR Luminance RTV 0");
+	SET_DEBUG_NAME(_lumRTVs[1], "HDR Luminance RTV 1");
 
 	// Create the shader resource views
 	D3D11_SHADER_RESOURCE_VIEW_DESC lumSRVDesc = 
@@ -353,6 +367,9 @@ HRESULT HDRPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGI
 
 	V_RETURN(pd3dDevice->CreateShaderResourceView(_lumTextures[0], &lumSRVDesc, &_lumSRVs[0]));
 	V_RETURN(pd3dDevice->CreateShaderResourceView(_lumTextures[1], &lumSRVDesc, &_lumSRVs[1]));
+
+	SET_DEBUG_NAME(_lumSRVs[0], "HDR Luminance SRV 0");
+	SET_DEBUG_NAME(_lumSRVs[1], "HDR Luminance SRV 1");
 	
 	// Create the downscale/blur temp objects
 	// Create the textures
@@ -375,14 +392,21 @@ HRESULT HDRPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGI
 	dsTextureDesc.Height = pBackBufferSurfaceDesc->Height / 2;
 	V_RETURN(pd3dDevice->CreateTexture2D(&dsTextureDesc, NULL, &_downScaleTextures[0]));
 
+	SET_DEBUG_NAME(_downScaleTextures[0], "HDR 1/2 Downsample Texture");
+
 	dsTextureDesc.Width = pBackBufferSurfaceDesc->Width / 4;
 	dsTextureDesc.Height = pBackBufferSurfaceDesc->Height / 4;
 	V_RETURN(pd3dDevice->CreateTexture2D(&dsTextureDesc, NULL, &_downScaleTextures[1]));
+
+	SET_DEBUG_NAME(_downScaleTextures[1], "HDR 1/4 Downsample Texture");
 
 	dsTextureDesc.Width = pBackBufferSurfaceDesc->Width / 8;
 	dsTextureDesc.Height = pBackBufferSurfaceDesc->Height / 8;
 	V_RETURN(pd3dDevice->CreateTexture2D(&dsTextureDesc, NULL, &_downScaleTextures[2]));
 	V_RETURN(pd3dDevice->CreateTexture2D(&dsTextureDesc, NULL, &_blurTempTexture));
+
+	SET_DEBUG_NAME(_downScaleTextures[2], "HDR 1/8 Downsample Texture");
+	SET_DEBUG_NAME(_blurTempTexture, "HDR Blur Temporary Texture");
 
 	// Create the render target views
 	D3D11_RENDER_TARGET_VIEW_DESC dsRTVDesc = 
@@ -398,6 +422,11 @@ HRESULT HDRPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGI
 	V_RETURN(pd3dDevice->CreateRenderTargetView(_downScaleTextures[2], &dsRTVDesc, &_downScaleRTVs[2]));
 	V_RETURN(pd3dDevice->CreateRenderTargetView(_blurTempTexture, &dsRTVDesc, &_blurTempRTV));
 
+	SET_DEBUG_NAME(_downScaleRTVs[0], "HDR 1/2 Downsample RTV");
+	SET_DEBUG_NAME(_downScaleRTVs[1], "HDR 1/4 Downsample RTV");
+	SET_DEBUG_NAME(_downScaleRTVs[2], "HDR 1/8 Downsample RTV");
+	SET_DEBUG_NAME(_blurTempRTV, "HDR Blur Temporary RTV");
+
 	// create the SRVs
 	D3D11_SHADER_RESOURCE_VIEW_DESC dsSRVDesc = 
     {
@@ -412,6 +441,11 @@ HRESULT HDRPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGI
 	V_RETURN(pd3dDevice->CreateShaderResourceView(_downScaleTextures[1], &dsSRVDesc, &_downScaleSRVs[1]));
 	V_RETURN(pd3dDevice->CreateShaderResourceView(_downScaleTextures[2], &dsSRVDesc, &_downScaleSRVs[2]));
 	V_RETURN(pd3dDevice->CreateShaderResourceView(_blurTempTexture, &dsSRVDesc, &_blurTempSRV));
+
+	SET_DEBUG_NAME(_downScaleSRVs[0], "HDR 1/2 Downsample SRV");
+	SET_DEBUG_NAME(_downScaleSRVs[1], "HDR 1/4 Downsample SRV");
+	SET_DEBUG_NAME(_downScaleSRVs[2], "HDR 1/8 Downsample SRV");
+	SET_DEBUG_NAME(_blurTempSRV, "HDR Blur Temporary SRV");
 
 	return S_OK;
 }
