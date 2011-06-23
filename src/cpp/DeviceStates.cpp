@@ -345,6 +345,15 @@ HRESULT DepthStencilStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const 
 	HRESULT hr;
 	D3D11_DEPTH_STENCIL_DESC desc;
 
+	desc = getStencilReplaceDesc();
+	V_RETURN(pd3dDevice->CreateDepthStencilState(&desc, &_stencilReplace));
+
+	desc = getStencilEqualDesc();
+	V_RETURN(pd3dDevice->CreateDepthStencilState(&desc, &_stencilEqual));
+
+	desc = getStencilNotEqualDesc();
+	V_RETURN(pd3dDevice->CreateDepthStencilState(&desc, &_stencilNotEqual));
+
 	desc = getDepthDisabledDesc();
 	V_RETURN(pd3dDevice->CreateDepthStencilState(&desc, &_depthDisabled));
 
@@ -364,6 +373,9 @@ HRESULT DepthStencilStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const 
 }
 void DepthStencilStates::OnD3D11DestroyDevice()
 {
+	SAFE_RELEASE(_stencilReplace);
+	SAFE_RELEASE(_stencilEqual);
+	SAFE_RELEASE(_stencilNotEqual);
 	SAFE_RELEASE(_depthDisabled);
 	SAFE_RELEASE(_depthEnabled);
 	SAFE_RELEASE(_revDepthEnabled);
@@ -379,7 +391,60 @@ HRESULT DepthStencilStates::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, I
 
 void DepthStencilStates::OnD3D11ReleasingSwapChain()
 {
+}
 
+D3D11_DEPTH_STENCIL_DESC DepthStencilStates::getStencilReplaceDesc()
+{
+	D3D11_DEPTH_STENCIL_DESC dsDesc;
+	dsDesc.DepthEnable = false;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+	dsDesc.StencilEnable = true;
+	dsDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
+	dsDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
+	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_ZERO;
+	dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_ZERO;
+	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
+	dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+	dsDesc.BackFace = dsDesc.FrontFace;
+
+	return dsDesc;
+}
+
+D3D11_DEPTH_STENCIL_DESC DepthStencilStates::getStencilEqualDesc()
+{
+	D3D11_DEPTH_STENCIL_DESC dsDesc;
+	dsDesc.DepthEnable = false;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+	dsDesc.StencilEnable = true;
+	dsDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
+	dsDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
+	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_EQUAL;
+	dsDesc.BackFace = dsDesc.FrontFace;
+
+	return dsDesc;
+}
+
+D3D11_DEPTH_STENCIL_DESC DepthStencilStates::getStencilNotEqualDesc()
+{
+	D3D11_DEPTH_STENCIL_DESC dsDesc;
+	dsDesc.DepthEnable = false;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+	dsDesc.StencilEnable = true;
+	dsDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
+	dsDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
+	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_NOT_EQUAL;
+	dsDesc.BackFace = dsDesc.FrontFace;
+
+	return dsDesc;
 }
 
 D3D11_DEPTH_STENCIL_DESC DepthStencilStates::getDepthDisabledDesc()

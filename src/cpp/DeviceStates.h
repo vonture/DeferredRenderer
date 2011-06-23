@@ -75,11 +75,18 @@ public:
 class DepthStencilStates : public IHasContent
 {
 private:
+	ID3D11DepthStencilState* _stencilReplace;
+	ID3D11DepthStencilState* _stencilEqual;
+	ID3D11DepthStencilState* _stencilNotEqual;
 	ID3D11DepthStencilState* _depthDisabled;
 	ID3D11DepthStencilState* _depthEnabled;
 	ID3D11DepthStencilState* _revDepthEnabled;
 	ID3D11DepthStencilState* _depthWriteEnabled;
 	ID3D11DepthStencilState* _revDepthWriteEnabled;
+
+	static D3D11_DEPTH_STENCIL_DESC getStencilReplaceDesc();
+	static D3D11_DEPTH_STENCIL_DESC getStencilEqualDesc();
+	static D3D11_DEPTH_STENCIL_DESC getStencilNotEqualDesc();
 
 	static D3D11_DEPTH_STENCIL_DESC getDepthDisabledDesc();
 	static D3D11_DEPTH_STENCIL_DESC getDepthEnabledDesc();
@@ -94,6 +101,9 @@ public:
 		const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
 	void OnD3D11ReleasingSwapChain();
 
+	ID3D11DepthStencilState* GetStencilReplace() { return _stencilReplace; };
+	ID3D11DepthStencilState* GetStencilEqual() { return _stencilEqual; };
+	ID3D11DepthStencilState* GetStencilNotEqual() { return _stencilNotEqual; };
 	ID3D11DepthStencilState* GetDepthDisabled() { return _depthDisabled; };
 	ID3D11DepthStencilState* GetDepthEnabled() { return _depthEnabled; };
 	ID3D11DepthStencilState* GetReverseDepthEnabled() { return _revDepthEnabled; };
