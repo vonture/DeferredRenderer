@@ -28,6 +28,8 @@ private:
 	DepthOfFieldPostProcess _dofPP;
 
 	bool _aoEnabled;
+	bool _aaEnabled;
+	bool _hdrEnabled;
 
 protected:
 	void OnPreparingDeviceSettings(DeviceManager* deviceManager);

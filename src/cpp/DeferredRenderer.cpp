@@ -14,6 +14,8 @@ DeferredRenderer::DeferredRenderer()
 	_camera.SetRotation(XMFLOAT2(-0.1f, 0.35f));
 
 	_aoEnabled = true;
+	_aaEnabled = true;
+	_hdrEnabled = true;
 }
 
 DeferredRenderer::~DeferredRenderer()
@@ -26,7 +28,7 @@ void DeferredRenderer::OnPreparingDeviceSettings(DeviceManager* deviceManager)
 
 	deviceManager->SetBackBufferWidth(1360);
 	deviceManager->SetBackBufferHeight(768);	
-	deviceManager->SetFullScreen(false);
+	//deviceManager->SetFullScreen(false);
 
 	deviceManager->SetVSyncEnabled(false);
 }
@@ -64,6 +66,30 @@ void DeferredRenderer::OnFrameMove(double totalTime, float dt)
 			_aoEnabled = !_aoEnabled;
 		}
 
+		if (kb.IsKeyJustPressed(D2))
+		{
+			_aaEnabled = !_aaEnabled;
+		}
+
+		if (kb.IsKeyJustPressed(D3))
+		{
+			_hdrEnabled = !_hdrEnabled;
+		}
+
+		// Antialias edge detection toggles
+		if (kb.IsKeyJustPressed(NumPad1))
+		{
+			_aaPP.SetDepthDetectionEnabled(!_aaPP.GetDepthDetectionEnabled());
+		}
+		if (kb.IsKeyJustPressed(NumPad2))
+		{
+			_aaPP.SetNormalDetectionEnabled(!_aaPP.GetNormalDetectionEnabled());
+		}
+		if (kb.IsKeyJustPressed(NumPad3))
+		{
+			_aaPP.SetLuminanceDetectionEnabled(!_aaPP.GetLuminanceDetectionEnabled());
+		}
+
 		if (mouse.IsButtonDown(LeftButton))
 		{
 			const float mouseRotateSpeed = 0.002f;
@@ -74,7 +100,7 @@ void DeferredRenderer::OnFrameMove(double totalTime, float dt)
 			_camera.SetRotation(rotation);
 
 			// Set the mouse back one frame
-			MouseState::SetCursorPosition(200, 200, hwnd);
+			//MouseState::SetCursorPosition(mouse.GetX() - mouse.GetDX(), mouse.GetY() - mouse.GetDY(), hwnd);
 
 			XMFLOAT2 moveDir = XMFLOAT2(0.0f, 0.0f);
 			if (kb.IsKeyDown(W) || kb.IsKeyDown(Up))
@@ -157,9 +183,18 @@ HRESULT DeferredRenderer::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11Dev
 	}
 
 	_renderer.AddPostProcess(&_skyPP);
+
+	if (_aaEnabled)
+	{
+		_renderer.AddPostProcess(&_aaPP);
+	}
+	
 	//_renderer.AddPostProcess(&_dofPP);
-	_renderer.AddPostProcess(&_hdrPP);
-	//_renderer.AddPostProcess(&_aaPP);
+
+	if (_hdrEnabled)
+	{
+		_renderer.AddPostProcess(&_hdrPP);	
+	}
 
 	V_RETURN(_renderer.End(pd3dDevice, pd3dImmediateContext, &_camera));
 
