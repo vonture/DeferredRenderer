@@ -15,11 +15,6 @@ DeviceManager::DeviceManager()
 
 DeviceManager::~DeviceManager()
 {
-	if (_immediateContext)
-    {
-		_immediateContext->ClearState();
-        _immediateContext->Flush();
-    }
 }
 
 HRESULT DeviceManager::Initialize(HWND outputWindow)
@@ -66,6 +61,30 @@ HRESULT DeviceManager::Initialize(HWND outputWindow)
     V_RETURN(afterReset());
 
 	return S_OK;
+}
+
+void DeviceManager::Destroy()
+{
+	if (_immediateContext)
+	{
+		_immediateContext->ClearState();
+		_immediateContext->Flush();
+	}
+
+	SAFE_RELEASE(_factory);
+	SAFE_RELEASE(_adapter);
+	SAFE_RELEASE(_output);
+
+	SAFE_RELEASE(_device);
+	SAFE_RELEASE(_immediateContext);
+	SAFE_RELEASE(_swapChain);
+
+	SAFE_RELEASE(_backBufferTexture);
+	SAFE_RELEASE(_backBufferRTV);
+
+	SAFE_RELEASE(_autoDSTexture);
+	SAFE_RELEASE(_autoDSView);
+	SAFE_RELEASE(_autoDSSRView);
 }
 
 HRESULT DeviceManager::Reset()

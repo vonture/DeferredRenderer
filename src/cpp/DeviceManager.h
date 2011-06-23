@@ -22,11 +22,13 @@ private:
 	UINT _backBufferHeight;
 	UINT _msCount;
 	UINT _msQuality;
+
 	bool _enableAutoDS;
 	ID3D11Texture2D* _autoDSTexture;
     ID3D11DepthStencilView* _autoDSView;
 	DXGI_FORMAT _autoDSFormat;
     ID3D11ShaderResourceView* _autoDSSRView;
+
     bool _useAutoDSAsSR;
 	bool _fullScreen;
 	bool _vsync;
@@ -45,6 +47,8 @@ public:
 	HRESULT Initialize(HWND outputWindow);
 	HRESULT Reset();
 	HRESULT Present();
+
+	void Destroy();
 
 	ID3D11Device* GetDevice() const { return _device; }
 	ID3D11DeviceContext* GetImmediateContext() const { return _immediateContext; }
