@@ -142,11 +142,11 @@ float Blur(float2 texCoord, int2 direction)
 // Horizontal gaussian blur
 float4 PS_BlurHorizontal(PS_In_Quad input) : SV_TARGET0
 {
-    return float4(Blur(input.vTexCoord, int2(1, 0)), 0.0f, 0.0f, 1.0f);
+    return float4(Blur(input.vTexCoord, int2(2, 0)), 0.0f, 0.0f, 1.0f);
 }
 
 // Vertical gaussian blur
 float4 PS_BlurVertical(PS_In_Quad input) : SV_TARGET0
 {
-	return float4(Blur(input.vTexCoord, int2(0, 1)), 0.0f, 0.0f, 1.0f);
+	return float4(Blur(input.vTexCoord, int2(0, 2)), 0.0f, 0.0f, 1.0f);
 }
