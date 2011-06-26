@@ -1,7 +1,7 @@
 #include "DirectionalLightRenderer.h"
 
 const float DirectionalLightRenderer::CASCADE_SPLITS[NUM_CASCADES] = { 0.125f, 0.25f, 0.5f, 1.0f };
-const float DirectionalLightRenderer::BACKUP = 20.0f;
+const float DirectionalLightRenderer::BACKUP = 0.1f;
 const float DirectionalLightRenderer::BIAS = 0.002f;
 
 DirectionalLightRenderer::DirectionalLightRenderer()
@@ -328,14 +328,8 @@ void DirectionalLightRenderer::ComputeNearAndFar( FLOAT& fNearPlane,
                 for( int vertind = 0; vertind < 3; ++ vertind ) 
                 {
                     float fTriangleCoordZ = XMVectorGetZ( triangleList[index].pt[vertind] );
-                    if( fNearPlane > fTriangleCoordZ ) 
-                    {
-                        fNearPlane = fTriangleCoordZ;
-                    }
-                    if( fFarPlane  <fTriangleCoordZ ) 
-                    {
-                        fFarPlane = fTriangleCoordZ;
-                    }
+					fNearPlane = min(fNearPlane, fTriangleCoordZ);
+					fFarPlane = max(fFarPlane, fTriangleCoordZ);
                 }
             }
         }
@@ -421,10 +415,10 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 
 	// Calculate the scene aabb in light space
 	XMVECTOR lightDir = XMLoadFloat3(&dlight->Direction);
-	XMVECTOR origin = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+	XMFLOAT3 lightOrigin = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
 
-	XMMATRIX lightSpaceTransform = XMMatrixLookToLH(origin, -lightDir, up);
+	XMMATRIX lightSpaceTransform = XMMatrixLookToLH(XMLoadFloat3(&lightOrigin), -lightDir, up);
 
 	XMVECTOR sceneAABBcorners[8];
 	Collision::ComputeAxisAlignedBoxCorners(sceneBounds, &sceneAABBcorners[0], &sceneAABBcorners[1],
@@ -535,7 +529,7 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
         FLOAT fFarPlane = 10000.0f;
 		ComputeNearAndFar( fNearPlane, fFarPlane, vLightCameraOrthographicMin, 
                 vLightCameraOrthographicMax, sceneAABBcorners);
-
+		
 		// Craete the orthographic projection for this cascade.
 		XMMATRIX shadowProj = XMMatrixOrthographicOffCenterLH(
 			XMVectorGetX(vLightCameraOrthographicMin), XMVectorGetX(vLightCameraOrthographicMax), 
@@ -547,7 +541,7 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 		// Create the shadow frustum for intersection tests
 		Frustum shadowFrust;
 		Collision::ComputeFrustumFromProjection(&shadowFrust, &shadowProj);
-		shadowFrust.Origin = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		shadowFrust.Origin = lightOrigin;
 		XMStoreFloat4(&shadowFrust.Orientation, XMQuaternionNormalize(-lightDir));
 		
 		// Render the depth of all the models in the scene
