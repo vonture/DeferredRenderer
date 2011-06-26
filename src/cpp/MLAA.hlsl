@@ -290,6 +290,8 @@ float4 PS_NeighborhoodBlend(PS_In_Quad input) : SV_TARGET0
 
     // There is some blending weight with a value greater than 0.0?
     float sum = dot(w, 1.0f);
+
+	[branch]
     if (sum < EPSILON)
 	{
         discard;
