@@ -14,9 +14,9 @@ AmbientOcclusionPostProcess::AmbientOcclusionPostProcess()
 	}
 	
 	// Initialize some parameters to default values
-	_sampleRadius = 0.8f;
+	_sampleRadius = 0.5f;
 	_blurSigma = 0.8f;
-	_samplePower = 2.5f;
+	_samplePower = 3.5f;
 }
 
 AmbientOcclusionPostProcess::~AmbientOcclusionPostProcess()
@@ -153,6 +153,22 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _vBlurPS));
 	DXUT_EndPerfEvent();
 
+	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL1);
+	
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Blur horizontal");
+	pd3dImmediateContext->OMSetRenderTargets(1, &_blurTempRTV, NULL);
+	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[1]);
+	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _hBlurPS));
+	DXUT_EndPerfEvent();
+
+	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL1);
+
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Blur vertical");
+	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[1], NULL);
+	pd3dImmediateContext->PSSetShaderResources(0, 1, &_blurTempSRV);
+	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _vBlurPS));
+	DXUT_EndPerfEvent();
+	
 	// Upscale to 1/4
 	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Up scale");
 
