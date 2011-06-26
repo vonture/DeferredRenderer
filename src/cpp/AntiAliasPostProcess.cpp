@@ -117,6 +117,7 @@ HRESULT AntiAliasPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, 
 	}
 
 	pd3dImmediateContext->OMSetRenderTargets(1, &_blendWeightRTV, _dsv);
+	pd3dImmediateContext->ClearRenderTargetView(_blendWeightRTV, clearColor);
 
 	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetStencilEqual(), 0xFFFFFFFF);
 
