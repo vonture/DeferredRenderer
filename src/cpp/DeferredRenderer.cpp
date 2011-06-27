@@ -164,7 +164,7 @@ HRESULT DeferredRenderer::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11Dev
 	};
 	_renderer.AddLight(&sun, true);
 	
-	float ambientIntesity = 0.4f;
+	float ambientIntesity = 1.3f;
 	AmbientLight ambientLight = 
 	{
 		XMFLOAT3(ambientIntesity, ambientIntesity, ambientIntesity)
