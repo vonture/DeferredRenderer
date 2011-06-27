@@ -7,7 +7,7 @@
 struct CB_HDR_PROPERTIES
 {
 	float Tau;
-	float KeyValue;
+	float WhiteLuminancePercentage;
 	float TimeDelta;
 	UINT MipLevels;
 	float BloomThreshold;
@@ -21,7 +21,7 @@ class HDRPostProcess : public PostProcess
 private:
 	float _timeDelta;
 	float _tau;
-	float _keyValue;
+	float _lumWhite;
 	float _bloomThreshold;
 	float _bloomMagnitude;
 	float _bloomBlurSigma;
@@ -65,13 +65,13 @@ public:
 	void SetTimeDelta(float dt) { _timeDelta = max(dt, 0.0f); }
 
 	float GetTau() const { return _tau; }
-	void SetTau(float tau) { _tau = clamp(tau, 0.0f, 1.0f); }
+	void SetTau(float tau) { _tau = saturate(tau); }
 
-	float GetKeyValue() const { return _keyValue; }
-	void SetKeyValue(float key) { _keyValue = max(key, 0.0f); }
+	float GetWhiteLuminancePercentage() const { return _lumWhite; }
+	void SetWhiteLuminancePercentage(float lumWhite) { _lumWhite = max(lumWhite, 0.0f); }
 
 	float GetBloomThreshold() const { return _bloomThreshold; }
-	void SetBloomThreshold(float thresh) { _bloomThreshold = clamp(thresh, 0.0f, 1.0f); }
+	void SetBloomThreshold(float thresh) { _bloomThreshold = saturate(thresh); }
 
 	float GetBloomMagnitude() const { return _bloomMagnitude; }
 	void SetBloomMagnitude(float mag) { _bloomMagnitude = max(mag, 0.0f); }

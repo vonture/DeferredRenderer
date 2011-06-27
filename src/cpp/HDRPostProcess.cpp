@@ -7,8 +7,8 @@ HDRPostProcess::HDRPostProcess()
 {
 	// Load some default values for the parameters
 	_tau = 0.8f;
-	_keyValue = 1.5f;
-	_bloomThreshold = 0.5f;
+	_lumWhite = 2.5f;
+	_bloomThreshold = 0.75f;
 	_bloomMagnitude = 1.0f;
 	_bloomBlurSigma = 0.8f;
 
@@ -55,7 +55,7 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	CB_HDR_PROPERTIES* hdrProperties = (CB_HDR_PROPERTIES*)mappedResource.pData;
 
 	hdrProperties->TimeDelta = _timeDelta;
-	hdrProperties->KeyValue = _keyValue;
+	hdrProperties->WhiteLuminancePercentage = _lumWhite;
 	hdrProperties->MipLevels = _mipLevels;
 	hdrProperties->Tau = _tau;	
 	hdrProperties->BloomThreshold = _bloomThreshold;

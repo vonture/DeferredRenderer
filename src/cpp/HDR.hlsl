@@ -13,7 +13,7 @@
 cbuffer cbHDRProperties : register(b0)
 {
 	float Tau;
-	float KeyValue;
+	float LuminanceWhitePerc;
 	float TimeDelta;
 	uint MipLevels;
 	float BloomThreshold;
@@ -39,14 +39,15 @@ struct PS_In_Quad
 
 float CalcLuminance(float3 color)
 {
-	float3 CIE_XYZ = mul(RGB_TO_CIEXYZ, color);
+	//float3 CIE_XYZ = mul(RGB_TO_CIEXYZ, color);
 
-	return max(CIE_XYZ.y / (CIE_XYZ.x + CIE_XYZ.y + CIE_XYZ.z), EPSILON);
+	//return max(CIE_XYZ.y / (CIE_XYZ.x + CIE_XYZ.y + CIE_XYZ.z), EPSILON);
+	return max(dot(color, GREY), EPSILON);
 }
 
 float4 PS_LuminanceMap(PS_In_Quad input) : SV_TARGET0
 {
-    float3 vSceneColor = Texture0.Sample(LinearSampler, input.vTexCoord).rgb;
+    float3 vSceneColor = Texture0.SampleLevel(LinearSampler, input.vTexCoord, 0).rgb;
 	float fCurLum = CalcLuminance(vSceneColor);
 
 	float fPrevLum = exp(Texture1.SampleLevel(PointSampler, input.vTexCoord, MipLevels).x);
@@ -66,9 +67,9 @@ float CalculateScaledLuminance(float3 vSceneColor, float fAvgLum)
 	return (fLumScene * fLumGrey) / fAvgLum;
 }
 
-float CalculateCompressedLuminance(float fScaledLum, float fThreshold, float fOffset)
+float CalculateCompressedLuminance(float fAvgLum, float fScaledLum, float fThreshold, float fOffset)
 {
-	float fLumWhite = KeyValue;
+	float fLumWhite = fAvgLum * LuminanceWhitePerc;
 
 	float fNumerator = max(fScaledLum * (1.0f + (fScaledLum / (fLumWhite * fLumWhite))) - fThreshold, 0.0f);
 	float fDenominator = fOffset + fScaledLum;
@@ -81,16 +82,14 @@ float CalculateCompressedLuminance(float fScaledLum, float fThreshold, float fOf
 float3 ToneMap(float3 vSceneColor, float fAvgLum, float fThreshold, float fOffset)
 {
 	float fScaledLum = CalculateScaledLuminance(vSceneColor, fAvgLum);
-	float fCompressedLum = CalculateCompressedLuminance(fScaledLum, fThreshold, fOffset);
+	float fCompressedLum = CalculateCompressedLuminance(fAvgLum, fScaledLum, fThreshold, fOffset);
 
 	return float3(fCompressedLum * vSceneColor);	
 }
 
 float3 ColorGrade(float3 vSceneColor)
 {
-	float3 vGradedColor = Texture3.Sample(LinearSampler, vSceneColor).rgb;
-
-	return vGradedColor;
+	return Texture3.SampleLevel(LinearSampler, vSceneColor, 0).rgb;
 }
 
 // Applies exposure and tone mapping to the input, and combines it with the
@@ -98,10 +97,10 @@ float3 ColorGrade(float3 vSceneColor)
 float4 PS_ToneMap(PS_In_Quad input) : SV_TARGET0
 {	
     // Tone map the primary input
-	float3 vSceneColor = Texture0.Sample(PointSampler, input.vTexCoord).rgb;
+	float3 vSceneColor = Texture0.SampleLevel(PointSampler, input.vTexCoord, 0).rgb;
     float fAvgLum = exp(Texture1.SampleLevel(PointSampler, input.vTexCoord, MipLevels).x);    
     	
-	float3 vBloomColor = Texture2.Sample(LinearSampler, input.vTexCoord).rgb * BloomMagnitude;
+	float3 vBloomColor = Texture2.SampleLevel(LinearSampler, input.vTexCoord, 0).rgb * BloomMagnitude;
 	float3 vToneMappedColor = ToneMap(vSceneColor, fAvgLum, 0.0f, 1.0f) + vBloomColor;	
 	float3 vGradedColor = ColorGrade(vToneMappedColor);
 
@@ -110,7 +109,7 @@ float4 PS_ToneMap(PS_In_Quad input) : SV_TARGET0
 
 float4 PS_Threshold(PS_In_Quad input) : SV_TARGET0
 {
-    float3 vSceneColor = Texture0.Sample(LinearSampler, input.vTexCoord).rgb;
+    float3 vSceneColor = Texture0.SampleLevel(LinearSampler, input.vTexCoord, 0).rgb;
 	float fAvgLum = exp(Texture1.SampleLevel(PointSampler, input.vTexCoord, MipLevels).x);
 		
     float3 vFinalColor = ToneMap(vSceneColor, fAvgLum, BloomThreshold, 1.0f);
@@ -120,7 +119,7 @@ float4 PS_Threshold(PS_In_Quad input) : SV_TARGET0
 
 float4 PS_Scale(PS_In_Quad input) : SV_TARGET0
 {
-	return Texture0.Sample(LinearSampler, input.vTexCoord);
+	return Texture0.SampleLevel(LinearSampler, input.vTexCoord, 0);
 }
 
 // Calculates the gaussian blur weight for a given distance and sigmas
@@ -136,7 +135,7 @@ float4 Blur(float2 texCoord, int2 direction, float sigma)
     for (int i = -BLUR_RADIUS; i < BLUR_RADIUS; i++)
     {
 		float weight = CalcGaussianWeight(i, sigma);
-		float4 sample = Texture0.Sample(PointSampler, texCoord, direction * i);
+		float4 sample = Texture0.SampleLevel(PointSampler, texCoord, 0, direction * i);
 		color += sample * weight;
     }
 
