@@ -5,7 +5,13 @@ const float PiOver2 = Pi / 2.0f;
 const float PiOver4 = Pi / 4.0f;
 const float PiOver8 = Pi / 8.0f;
 
+#ifndef clamp
 #define clamp(val, min, max) (((val) < (min)) ? (min) : (((val) > (max)) ? (max) : (val)))
+#endif
+
+#ifndef saturate
+#define saturate(val) clamp((val), 0, 1)
+#endif
 
 #define SET_DEBUG_NAME(obj, name) ((obj)->SetPrivateData(WKPDID_D3DDebugObjectName, lstrlenA(name), (name)))
 
