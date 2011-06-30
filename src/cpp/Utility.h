@@ -13,6 +13,29 @@ const float PiOver8 = Pi / 8.0f;
 #define saturate(val) clamp((val), 0, 1)
 #endif
 
+inline int AnsiToWString(const char* ansiString, WCHAR* output, UINT outputLength)
+{
+    return MultiByteToWideChar(CP_ACP, 0, ansiString, -1, output, outputLength);
+}
+
+inline int GetDirectoryFromFileName(const WCHAR* fileName, WCHAR* output, UINT outputLength)
+{
+    _ASSERT(fileName);
+
+    std::wstring filePath(fileName);
+    size_t idx = filePath.rfind(L'\\');
+    if (idx != std::wstring::npos)
+	{
+		wcsncpy_s(output, outputLength, filePath.substr(0, idx + 1).c_str(), outputLength);
+	}
+    else
+	{
+        wcsncpy_s(output, outputLength, L"", outputLength);
+	}
+
+	return 1;
+}
+
 #define SET_DEBUG_NAME(obj, name) ((obj)->SetPrivateData(WKPDID_D3DDebugObjectName, lstrlenA(name), (name)))
 
 #if defined(DEBUG) || defined(_DEBUG)
