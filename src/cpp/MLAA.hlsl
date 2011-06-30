@@ -16,9 +16,7 @@
 #define EDGE_DETECT_COLOR 0
 #endif
 
-#define RGB_TO_CIEXYZ float3x3(0.4124f, 0.3576f, 0.1805f, \
-                               0.2126f, 0.7152f, 0.0722f, \
-							   0.0193f, 0.1192f, 0.9505f)
+#define GREY float3(0.212671f, 0.715160f, 0.072169f)
 
 cbuffer cbMLAAProperties : register(cb0)
 {
@@ -53,9 +51,7 @@ float GetLinearDepth(float nonLinearDepth, float nearClip, float farClip)
 
 float CalcLuminance(float3 color)
 {
-	float3 CIE_XYZ = mul(RGB_TO_CIEXYZ, color);
-
-	return max(CIE_XYZ.y / (CIE_XYZ.x + CIE_XYZ.y + CIE_XYZ.z), EPSILON);
+	return max(dot(color, GREY), EPSILON);
 }
 
 float4 PS_EdgeDetect(PS_In_Quad input) : SV_TARGET0
