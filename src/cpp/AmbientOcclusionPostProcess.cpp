@@ -26,7 +26,7 @@ AmbientOcclusionPostProcess::~AmbientOcclusionPostProcess()
 HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"SSAO");
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"SSAO");
 
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -108,7 +108,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	DXUT_EndPerfEvent();
 
 	// Down scale to 1/4
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Down scale");
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Down scale to 1/4");
 
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[0], NULL);
 
@@ -124,7 +124,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	DXUT_EndPerfEvent();
 
 	// Down scale to 1/8
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Down scale");
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Down scale to 1/8");
 
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[1], NULL);	
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[0]);
@@ -138,7 +138,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	DXUT_EndPerfEvent();
 
 	// Blur
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Blur horizontal");
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Blur horizontal 1");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_blurTempRTV, NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[1]);
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _hBlurPS));
@@ -147,7 +147,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	ID3D11ShaderResourceView* ppSRVNULL1[1] = { NULL };
 	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL1);
 
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Blur vertical");
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Blur vertical 1");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[1], NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_blurTempSRV);
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _vBlurPS));
@@ -155,7 +155,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 
 	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL1);
 	
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Blur horizontal");
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Blur horizontal 2");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_blurTempRTV, NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[1]);
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _hBlurPS));
@@ -163,14 +163,14 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 
 	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL1);
 
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Blur vertical");
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Blur vertical 2");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[1], NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_blurTempSRV);
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _vBlurPS));
 	DXUT_EndPerfEvent();
 	
 	// Upscale to 1/4
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Up scale");
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Upscale to 1/4");
 
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[0], NULL);	
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[1]);
@@ -184,7 +184,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	DXUT_EndPerfEvent();
 
 	// Upscale to 1/2
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Up scale");
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Upscale to 1/2");
 
 	pd3dImmediateContext->OMSetRenderTargets(1, &_aoRTV, NULL);	
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[0]);
