@@ -1,3 +1,5 @@
+#define EPSILON 1e-5
+
 cbuffer cbCameraProperties : register(b0)
 {
 	float4x4 InverseViewProjection	: packoffset(c0);
@@ -92,7 +94,7 @@ float4 PS_PointLightCommon(VS_Out_PointLight input, float4 vPositionWS, float2 v
 	float3 R = normalize(V - 2 * dot(N, V) * N);
 
     float fDiffuseTerm = saturate(dot(N, L));
-	float fSpecularTerm = fSpecularIntensity * pow(saturate(dot(R, L)), fSpecularPower);
+	float fSpecularTerm = fSpecularIntensity * pow(clamp(dot(R, L), EPSILON, 1.0f), fSpecularPower);
 
 	return fAttenuation * float4(fDiffuseTerm * LightColor, fSpecularTerm);
 }
