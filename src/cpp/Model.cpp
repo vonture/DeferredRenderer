@@ -1,5 +1,6 @@
 #include "Model.h"
 #include "SDKmesh.h"
+#include "SDKmisc.h"
 
 Model::Model()
 	: _meshes(NULL), _meshCount(0), _materials(NULL), _materialCount(0)
@@ -10,27 +11,68 @@ Model::~Model()
 {
 }
 
+IDirect3DDevice9* createD3D9Device()
+{
+	HRESULT hr;
+
+    // Create a D3D9 device (would make it NULL, but PIX doesn't seem to like that)
+    IDirect3D9* d3d9;
+    d3d9 = Direct3DCreate9(D3D_SDK_VERSION);
+
+    D3DPRESENT_PARAMETERS pp;
+    pp.BackBufferWidth = 1;
+    pp.BackBufferHeight = 1;
+    pp.BackBufferFormat = D3DFMT_X8R8G8B8;
+    pp.BackBufferCount = 1;
+    pp.MultiSampleType = D3DMULTISAMPLE_NONE;
+    pp.MultiSampleQuality = 0;
+    pp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+    pp.hDeviceWindow = GetDesktopWindow();
+    pp.Windowed = true;
+    pp.Flags = 0;
+    pp.FullScreen_RefreshRateInHz = 0;
+    pp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+    pp.EnableAutoDepthStencil = false;
+
+    IDirect3DDevice9* d3d9Device = NULL;
+    V(d3d9->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, NULL,
+        D3DCREATE_HARDWARE_VERTEXPROCESSING, &pp, &d3d9Device));
+
+    return d3d9Device;
+}
+
 HRESULT Model::CreateFromSDKMeshFile(ID3D11Device* device, LPCWSTR fileName)
 {
 	HRESULT hr;
-	CDXUTSDKMesh sdkMesh;
-    sdkMesh.Create(device, fileName);
+	SDKMesh sdkMesh;
+
+	WCHAR resolvedPath[MAX_PATH];
+	V_RETURN(DXUTFindDXSDKMediaFileCch(resolvedPath, MAX_PATH, fileName));
+    V_RETURN(sdkMesh.Create(resolvedPath));
+
+	WCHAR directory[MAX_PATH];
+	GetDirectoryFromFileName(resolvedPath, directory, MAX_PATH);
 	
 	// Make materials
     _materialCount = sdkMesh.GetNumMaterials();
 	_materials = new Material[_materialCount];
     for (UINT i = 0; i < _materialCount; i++)
     {
-        V_RETURN(_materials[i].CreateFromSDKMeshMaterial(device, &sdkMesh, i));
+        V_RETURN(_materials[i].CreateFromSDKMeshMaterial(device, directory, &sdkMesh, i));
     }
 	
+	// Create a d3d9 device for loading the meshes
+	IDirect3DDevice9* d3d9device = createD3D9Device();
+
 	// Copy the meshes
 	_meshCount = sdkMesh.GetNumMeshes();
 	_meshes = new Mesh[_meshCount];
     for (UINT i = 0; i < _meshCount; i++)
 	{
-		V_RETURN(_meshes[i].CreateFromSDKMeshMesh(device, &sdkMesh, i));
+		V_RETURN(_meshes[i].CreateFromSDKMeshMesh(device, d3d9device, directory, &sdkMesh, i));
 	}
+
+	SAFE_RELEASE(d3d9device);
 
 	// Done with the sdk mesh, free all it's resources
 	sdkMesh.Destroy();
@@ -84,9 +126,11 @@ HRESULT Model::Render(ID3D11DeviceContext* context,  UINT materialBufferSlot, UI
 HRESULT Model::RenderMesh(ID3D11DeviceContext* context, UINT meshIdx, UINT materialBufferSlot,
 	UINT diffuseSlot, UINT normalSlot, UINT specularSlot)
 {
-	context->IASetVertexBuffers(0, _meshes[meshIdx].GetVertexBufferCount(), 
-		_meshes[meshIdx].GetVertexBuffers(), _meshes[meshIdx].GetVertexStrides(),
-		_meshes[meshIdx].GetOffsets());
+	ID3D11Buffer* vertexBuffers[1] = { _meshes[meshIdx].GetVertexBuffer() };
+	UINT strides[1] = { _meshes[meshIdx].GetVertexStride() };
+	UINT offsets[1] = { 0 };
+
+	context->IASetVertexBuffers(0, 1, vertexBuffers, strides, offsets);
 	context->IASetIndexBuffer(_meshes[meshIdx].GetIndexBuffer(), _meshes[meshIdx].GetIndexBufferFormat(), 0);
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	

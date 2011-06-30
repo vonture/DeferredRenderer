@@ -1,10 +1,10 @@
 //--------------------------------------------------------------------------------------
 // File: SDKMesh.h
 //
-// Disclaimer:  
-//   The SDK Mesh format (.sdkmesh) is not a recommended file format for shipping titles.  
-//   It was designed to meet the specific needs of the SDK samples.  Any real-world 
-//   applications should avoid this file format in favor of a destination format that 
+// Disclaimer:
+//   The SDK Mesh format (.sdkmesh) is not a recommended file format for shipping titles.
+//   It was designed to meet the specific needs of the SDK samples.  Any real-world
+//   applications should avoid this file format in favor of a destination format that
 //   meets the specific needs of the application.
 //
 // Copyright (c) Microsoft Corporation. All rights reserved.
@@ -12,6 +12,8 @@
 #pragma once
 #ifndef _SDKMESH_
 #define _SDKMESH_
+
+#include <vector>
 
 //--------------------------------------------------------------------------------------
 // Hard Defines for the various structures
@@ -107,7 +109,6 @@ struct SDKMESH_VERTEX_BUFFER_HEADER
     union
     {
         UINT64 DataOffset;				//(This also forces the union to 64bits)
-        IDirect3DVertexBuffer9* pVB9;
         ID3D11Buffer* pVB11;
     };
 };
@@ -120,7 +121,6 @@ struct SDKMESH_INDEX_BUFFER_HEADER
     union
     {
         UINT64 DataOffset;				//(This also forces the union to 64bits)
-        IDirect3DIndexBuffer9* pIB9;
         ID3D11Buffer* pIB11;
     };
 };
@@ -258,43 +258,9 @@ struct SDKANIMATION_FRAME_DATA
 #ifndef _CONVERTER_APP_
 
 //--------------------------------------------------------------------------------------
-// AsyncLoading callbacks
-//--------------------------------------------------------------------------------------
-typedef void ( CALLBACK*LPCREATETEXTUREFROMFILE9 )( IDirect3DDevice9* pDev, char* szFileName,
-                                                    IDirect3DTexture9** ppTexture, void* pContext );
-typedef void ( CALLBACK*LPCREATEVERTEXBUFFER9 )( IDirect3DDevice9* pDev, IDirect3DVertexBuffer9** ppBuffer,
-                                                 UINT iSizeBytes, DWORD Usage, DWORD FVF, D3DPOOL Pool, void* pData,
-                                                 void* pContext );
-typedef void ( CALLBACK*LPCREATEINDEXBUFFER9 )( IDirect3DDevice9* pDev, IDirect3DIndexBuffer9** ppBuffer,
-                                                UINT iSizeBytes, DWORD Usage, D3DFORMAT ibFormat, D3DPOOL Pool,
-                                                void* pData, void* pContext );
-struct SDKMESH_CALLBACKS9
-{
-    LPCREATETEXTUREFROMFILE9 pCreateTextureFromFile;
-    LPCREATEVERTEXBUFFER9 pCreateVertexBuffer;
-    LPCREATEINDEXBUFFER9 pCreateIndexBuffer;
-    void* pContext;
-};
-
-
-typedef void ( CALLBACK*LPCREATETEXTUREFROMFILE11 )( ID3D11Device* pDev, char* szFileName,
-                                                     ID3D11ShaderResourceView** ppRV, void* pContext );
-typedef void ( CALLBACK*LPCREATEVERTEXBUFFER11 )( ID3D11Device* pDev, ID3D11Buffer** ppBuffer,
-                                                  D3D11_BUFFER_DESC BufferDesc, void* pData, void* pContext );
-typedef void ( CALLBACK*LPCREATEINDEXBUFFER11 )( ID3D11Device* pDev, ID3D11Buffer** ppBuffer,
-                                                 D3D11_BUFFER_DESC BufferDesc, void* pData, void* pContext );
-struct SDKMESH_CALLBACKS11
-{
-    LPCREATETEXTUREFROMFILE11 pCreateTextureFromFile;
-    LPCREATEVERTEXBUFFER11 pCreateVertexBuffer;
-    LPCREATEINDEXBUFFER11 pCreateIndexBuffer;
-    void* pContext;
-};
-
-//--------------------------------------------------------------------------------------
 // CDXUTSDKMesh class.  This class reads the sdkmesh file format for use by the samples
 //--------------------------------------------------------------------------------------
-class CDXUTSDKMesh
+class SDKMesh
 {
 private:
     UINT m_NumOutstandingResources;
@@ -302,10 +268,7 @@ private:
     //BYTE*                         m_pBufferData;
     HANDLE m_hFile;
     HANDLE m_hFileMappingObject;
-    CGrowableArray <BYTE*> m_MappedPointers;
-    IDirect3DDevice9* m_pDev9;
-    ID3D11Device* m_pDev11;
-    ID3D11DeviceContext* m_pDevContext11;
+    std::vector<BYTE*> m_MappedPointers;
 
 protected:
     //These are the pointers to the two chunks of data loaded in from the mesh file
@@ -314,10 +277,6 @@ protected:
     BYTE* m_pAnimationData;
     BYTE** m_ppVertices;
     BYTE** m_ppIndices;
-
-    //Keep track of the path
-    WCHAR                           m_strPathW[MAX_PATH];
-    char                            m_strPath[MAX_PATH];
 
     //General mesh info
     SDKMESH_HEADER* m_pMeshHeader;
@@ -339,149 +298,33 @@ protected:
     D3DXMATRIX* m_pWorldPoseFrameMatrices;
 
 protected:
-    void                            LoadMaterials( ID3D11Device* pd3dDevice, SDKMESH_MATERIAL* pMaterials,
-                                                   UINT NumMaterials, SDKMESH_CALLBACKS11* pLoaderCallbacks=NULL );
+    virtual HRESULT                 CreateFromFile( LPCWSTR szFileName,
+                                                    bool bCreateAdjacencyIndices);
 
-    void                            LoadMaterials( IDirect3DDevice9* pd3dDevice, SDKMESH_MATERIAL* pMaterials,
-                                                   UINT NumMaterials, SDKMESH_CALLBACKS9* pLoaderCallbacks=NULL );
-
-    HRESULT                         CreateVertexBuffer( ID3D11Device* pd3dDevice,
-                                                        SDKMESH_VERTEX_BUFFER_HEADER* pHeader, void* pVertices,
-                                                        SDKMESH_CALLBACKS11* pLoaderCallbacks=NULL );
-    HRESULT                         CreateVertexBuffer( IDirect3DDevice9* pd3dDevice,
-                                                        SDKMESH_VERTEX_BUFFER_HEADER* pHeader, void* pVertices,
-                                                        SDKMESH_CALLBACKS9* pLoaderCallbacks=NULL );
-
-    HRESULT                         CreateIndexBuffer( ID3D11Device* pd3dDevice, SDKMESH_INDEX_BUFFER_HEADER* pHeader,
-                                                       void* pIndices, SDKMESH_CALLBACKS11* pLoaderCallbacks=NULL );
-    HRESULT                         CreateIndexBuffer( IDirect3DDevice9* pd3dDevice,
-                                                       SDKMESH_INDEX_BUFFER_HEADER* pHeader, void* pIndices,
-                                                       SDKMESH_CALLBACKS9* pLoaderCallbacks=NULL );
-
-    virtual HRESULT                 CreateFromFile( ID3D11Device* pDev11,
-                                                    IDirect3DDevice9* pDev9,
-                                                    LPCTSTR szFileName,
-                                                    bool bCreateAdjacencyIndices,
-                                                    SDKMESH_CALLBACKS11* pLoaderCallbacks11 = NULL,
-                                                    SDKMESH_CALLBACKS9* pLoaderCallbacks9 = NULL );
-
-    virtual HRESULT                 CreateFromMemory( ID3D11Device* pDev11,
-                                                      IDirect3DDevice9* pDev9,
-                                                      BYTE* pData,
+    virtual HRESULT                 CreateFromMemory( BYTE* pData,
                                                       UINT DataBytes,
                                                       bool bCreateAdjacencyIndices,
-                                                      bool bCopyStatic,
-                                                      SDKMESH_CALLBACKS11* pLoaderCallbacks11 = NULL,
-                                                      SDKMESH_CALLBACKS9* pLoaderCallbacks9 = NULL );
-
-    //frame manipulation
-    void                            TransformBindPoseFrame( UINT iFrame, D3DXMATRIX* pParentWorld );
-    void                            TransformFrame( UINT iFrame, D3DXMATRIX* pParentWorld, double fTime );
-    void                            TransformFrameAbsolute( UINT iFrame, double fTime );
-
-    //Direct3D 11 rendering helpers
-    void                            RenderMesh( UINT iMesh,
-                                                bool bAdjacent,
-                                                ID3D11DeviceContext* pd3dDeviceContext,
-                                                UINT iDiffuseSlot,
-                                                UINT iNormalSlot,
-                                                UINT iSpecularSlot );
-    void                            RenderFrame( UINT iFrame,
-                                                 bool bAdjacent,
-                                                 ID3D11DeviceContext* pd3dDeviceContext,
-                                                 UINT iDiffuseSlot,
-                                                 UINT iNormalSlot,
-                                                 UINT iSpecularSlot );
-
-
-    //Direct3D 9 rendering helpers
-    void                            RenderMesh( UINT iMesh,
-                                                LPDIRECT3DDEVICE9 pd3dDevice,
-                                                LPD3DXEFFECT pEffect,
-                                                D3DXHANDLE hTechnique,
-                                                D3DXHANDLE htxDiffuse,
-                                                D3DXHANDLE htxNormal,
-                                                D3DXHANDLE htxSpecular );
-    void                            RenderFrame( UINT iFrame,
-                                                 LPDIRECT3DDEVICE9 pd3dDevice,
-                                                 LPD3DXEFFECT pEffect,
-                                                 D3DXHANDLE hTechnique,
-                                                 D3DXHANDLE htxDiffuse,
-                                                 D3DXHANDLE htxNormal,
-                                                 D3DXHANDLE htxSpecular );
-
+                                                      bool bCopyStatic );
 public:
-                                    CDXUTSDKMesh();
-    virtual                         ~CDXUTSDKMesh();
+                                    SDKMesh();
+    virtual                         ~SDKMesh();
 
-    virtual HRESULT                 Create( ID3D11Device* pDev11, LPCTSTR szFileName, bool bCreateAdjacencyIndices=
-                                            false, SDKMESH_CALLBACKS11* pLoaderCallbacks=NULL );
-    virtual HRESULT                 Create( IDirect3DDevice9* pDev9, LPCTSTR szFileName, bool bCreateAdjacencyIndices=
-                                            false, SDKMESH_CALLBACKS9* pLoaderCallbacks=NULL );
-    virtual HRESULT                 Create( ID3D11Device* pDev11, BYTE* pData, UINT DataBytes,
-                                            bool bCreateAdjacencyIndices=false, bool bCopyStatic=false,
-                                            SDKMESH_CALLBACKS11* pLoaderCallbacks=NULL );
-    virtual HRESULT                 Create( IDirect3DDevice9* pDev9, BYTE* pData, UINT DataBytes,
-                                            bool bCreateAdjacencyIndices=false, bool bCopyStatic=false,
-                                            SDKMESH_CALLBACKS9* pLoaderCallbacks=NULL );
-    virtual HRESULT                 LoadAnimation( WCHAR* szFileName );
+    virtual HRESULT                 Create( LPCWSTR szFileName, bool bCreateAdjacencyIndices = false );
+    virtual HRESULT                 Create( BYTE* pData, UINT DataBytes,
+                                            bool bCreateAdjacencyIndices = false, bool bCopyStatic = false );
     virtual void                    Destroy();
 
-    //Frame manipulation
-    void                            TransformBindPose( D3DXMATRIX* pWorld );
-    void                            TransformMesh( D3DXMATRIX* pWorld, double fTime );
-
-
-    //Direct3D 11 Rendering
-    virtual void                    Render( ID3D11DeviceContext* pd3dDeviceContext,
-                                            UINT iDiffuseSlot = INVALID_SAMPLER_SLOT,
-                                            UINT iNormalSlot = INVALID_SAMPLER_SLOT,
-                                            UINT iSpecularSlot = INVALID_SAMPLER_SLOT );
-    virtual void                    RenderAdjacent( ID3D11DeviceContext* pd3dDeviceContext,
-                                                    UINT iDiffuseSlot = INVALID_SAMPLER_SLOT,
-                                                    UINT iNormalSlot = INVALID_SAMPLER_SLOT,
-                                                    UINT iSpecularSlot = INVALID_SAMPLER_SLOT );
-
-    //Direct3D 9 Rendering
-    virtual void                    Render( LPDIRECT3DDEVICE9 pd3dDevice,
-                                            LPD3DXEFFECT pEffect,
-                                            D3DXHANDLE hTechnique,
-                                            D3DXHANDLE htxDiffuse = 0,
-                                            D3DXHANDLE htxNormal = 0,
-                                            D3DXHANDLE htxSpecular = 0 );
 
     //Helpers (D3D11 specific)
     static D3D11_PRIMITIVE_TOPOLOGY GetPrimitiveType11( SDKMESH_PRIMITIVE_TYPE PrimType );
     DXGI_FORMAT                     GetIBFormat11( UINT iMesh );
-    ID3D11Buffer* GetVB11( UINT iMesh, UINT iVB );
-    ID3D11Buffer* GetIB11( UINT iMesh );
-    SDKMESH_INDEX_TYPE GetIndexType( UINT iMesh ); 
-
-    ID3D11Buffer* GetAdjIB11( UINT iMesh );
-
-    //Helpers (D3D9 specific)
-    static D3DPRIMITIVETYPE         GetPrimitiveType9( SDKMESH_PRIMITIVE_TYPE PrimType );
-    D3DFORMAT                       GetIBFormat9( UINT iMesh );
-    IDirect3DVertexBuffer9* GetVB9( UINT iMesh, UINT iVB );
-    IDirect3DIndexBuffer9* GetIB9( UINT iMesh );
+    SDKMESH_INDEX_TYPE              GetIndexType( UINT iMesh );
 
     //Helpers (general)
-    char* GetMeshPathA();
-    WCHAR* GetMeshPathW();
     UINT                            GetNumMeshes();
     UINT                            GetNumMaterials();
     UINT                            GetNumVBs();
     UINT                            GetNumIBs();
-
-	SDKMESH_VERTEX_BUFFER_HEADER* GetVBHeader( UINT iVB );
-	SDKMESH_VERTEX_BUFFER_HEADER* GetVBHeader( UINT iMesh, UINT iVB );
-	SDKMESH_INDEX_BUFFER_HEADER* GetIBHeader( UINT iIB );
-
-    ID3D11Buffer* GetVB11At( UINT iVB );
-    ID3D11Buffer* GetIB11At( UINT iIB );
-
-    IDirect3DVertexBuffer9* GetVB9At( UINT iVB );
-    IDirect3DIndexBuffer9* GetIB9At( UINT iIB );
 
     BYTE* GetRawVerticesAt( UINT iVB );
     BYTE* GetRawIndicesAt( UINT iIB );
@@ -495,95 +338,8 @@ public:
     SDKMESH_FRAME*                  FindFrame( char* pszName );
     UINT64                          GetNumVertices( UINT iMesh, UINT iVB );
     UINT64                          GetNumIndices( UINT iMesh );
-    D3DXVECTOR3                     GetMeshBBoxCenter( UINT iMesh );
-    D3DXVECTOR3                     GetMeshBBoxExtents( UINT iMesh );
-    UINT                            GetOutstandingResources();
-    UINT                            GetOutstandingBufferResources();
-    bool                            CheckLoadDone();
-    bool                            IsLoaded();
-    bool                            IsLoading();
-    void                            SetLoading( bool bLoading );
-    BOOL                            HadLoadingError();
 
-    //Animation
-    UINT                            GetNumInfluences( UINT iMesh );
-    const D3DXMATRIX*               GetMeshInfluenceMatrix( UINT iMesh, UINT iInfluence );
-    UINT                            GetAnimationKeyFromTime( double fTime );
-    const D3DXMATRIX*               GetWorldMatrix( UINT iFrameIndex );
-    const D3DXMATRIX*               GetInfluenceMatrix( UINT iFrameIndex );
-    bool                            GetAnimationProperties( UINT* pNumKeys, FLOAT* pFrameTime );
-};
-
-//-----------------------------------------------------------------------------
-// Name: class CDXUTXFileMesh
-// Desc: Class for loading and rendering file-based meshes
-//-----------------------------------------------------------------------------
-class CDXUTXFileMesh
-{
-public:
-    WCHAR       m_strName[512];
-    LPD3DXMESH m_pMesh;   // Managed mesh
-
-    // Cache of data in m_pMesh for easy access
-    IDirect3DVertexBuffer9* m_pVB;
-    IDirect3DIndexBuffer9* m_pIB;
-    IDirect3DVertexDeclaration9* m_pDecl;
-    DWORD m_dwNumVertices;
-    DWORD m_dwNumFaces;
-    DWORD m_dwBytesPerVertex;
-
-    DWORD m_dwNumMaterials; // Materials for the mesh
-    D3DMATERIAL9* m_pMaterials;
-    CHAR        (*m_strMaterials )[MAX_PATH];
-    IDirect3DBaseTexture9** m_pTextures;
-    bool m_bUseMaterials;
-
-public:
-    // Rendering
-    HRESULT     Render( LPDIRECT3DDEVICE9 pd3dDevice,
-                        bool bDrawOpaqueSubsets = true,
-                        bool bDrawAlphaSubsets = true );
-    HRESULT     Render( ID3DXEffect* pEffect,
-                        D3DXHANDLE hTexture = NULL,
-                        D3DXHANDLE hDiffuse = NULL,
-                        D3DXHANDLE hAmbient = NULL,
-                        D3DXHANDLE hSpecular = NULL,
-                        D3DXHANDLE hEmissive = NULL,
-                        D3DXHANDLE hPower = NULL,
-                        bool bDrawOpaqueSubsets = true,
-                        bool bDrawAlphaSubsets = true );
-
-    // Mesh access
-    LPD3DXMESH  GetMesh()
-    {
-        return m_pMesh;
-    }
-
-    // Rendering options
-    void        UseMeshMaterials( bool bFlag )
-    {
-        m_bUseMaterials = bFlag;
-    }
-    HRESULT     SetFVF( LPDIRECT3DDEVICE9 pd3dDevice, DWORD dwFVF );
-    HRESULT     SetVertexDecl( LPDIRECT3DDEVICE9 pd3dDevice, const D3DVERTEXELEMENT9* pDecl,
-                               bool bAutoComputeNormals = true, bool bAutoComputeTangents = true,
-                               bool bSplitVertexForOptimalTangents = false );
-
-    // Initializing
-    HRESULT     RestoreDeviceObjects( LPDIRECT3DDEVICE9 pd3dDevice );
-    HRESULT     InvalidateDeviceObjects();
-
-    // Creation/destruction
-    HRESULT     Create( LPDIRECT3DDEVICE9 pd3dDevice, LPCWSTR strFilename );
-    HRESULT     Create( LPDIRECT3DDEVICE9 pd3dDevice, LPD3DXFILEDATA pFileData );
-    HRESULT     Create( LPDIRECT3DDEVICE9 pd3dDevice, ID3DXMesh* pInMesh, D3DXMATERIAL* pd3dxMaterials,
-                        DWORD dwMaterials );
-    HRESULT     CreateMaterials( LPCWSTR strPath, IDirect3DDevice9* pd3dDevice, D3DXMATERIAL* d3dxMtrls,
-                                 DWORD dwNumMaterials );
-    HRESULT     Destroy();
-
-                CDXUTXFileMesh( LPCWSTR strName = L"CDXUTXMeshFile_Mesh" );
-    virtual     ~CDXUTXFileMesh();
+    const D3DVERTEXELEMENT9*        VBElements( UINT iVB ) { return m_pVertexBufferArray[0].Decl; }
 };
 
 

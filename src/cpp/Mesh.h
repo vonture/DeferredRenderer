@@ -16,21 +16,22 @@ class Mesh
 {
 private:
 	ID3D11Buffer* _indexBuffer;
+	UINT _indexCount;
 	DXGI_FORMAT _indexBufferFormat;
 
-	ID3D11Buffer** _vertexBuffers;
-	UINT64* _vertexCounts;
-	UINT* _vertexStrides;
-	UINT* _offsets;
-	UINT _vertexBufferCount;
+	ID3D11Buffer* _vertexBuffer;
+	UINT _vertexCount;
+	UINT _vertexStride;
 	
 	MeshPart* _meshParts;
 	UINT _meshPartCount;
 
-	D3D11_INPUT_ELEMENT_DESC** _inputElements;
-	UINT* _inputElementCounts;
+	D3D11_INPUT_ELEMENT_DESC* _inputElements;
+	UINT _inputElementCount;
 
 	AxisAlignedBox _boundingBox;
+
+	void CreateInputElements(D3DVERTEXELEMENT9* declaration);
 
 public:
 	Mesh();
@@ -39,25 +40,19 @@ public:
 	const MeshPart& GetMeshPart(UINT idx) const { return _meshParts[idx]; }
 	UINT GetMeshPartCount() const { return _meshPartCount; }
 
-	ID3D11Buffer*const* GetVertexBuffers() const { return _vertexBuffers; }
-	const ID3D11Buffer* GetVertexBuffer(UINT idx) const { return _vertexBuffers[idx]; }
+	ID3D11Buffer* GetVertexBuffer() const { return _vertexBuffer; }
+
+	const UINT GetVertexStride() const { return _vertexStride; }
 	
-	const UINT* GetVertexStrides() const { return _vertexStrides; }
-	UINT GetVertexStride(UINT idx) const { return _vertexStrides[idx]; }
-
-	const UINT* GetOffsets() const { return _offsets; }
-	UINT GetOffset(UINT idx) const { return _offsets[idx]; }
-
-	UINT GetVertexBufferCount() const { return _vertexBufferCount; }
-
 	DXGI_FORMAT GetIndexBufferFormat() const { return _indexBufferFormat; }
 	ID3D11Buffer* GetIndexBuffer() const { return _indexBuffer; }
 
-	const D3D11_INPUT_ELEMENT_DESC* GetInputLayout(UINT vbIdx) const { return _inputElements[vbIdx]; }
-	UINT GetInputElementCount(UINT vbIdx) const { return _inputElementCounts[vbIdx]; }
+	const D3D11_INPUT_ELEMENT_DESC* GetInputLayout() const { return _inputElements; }
+	UINT GetInputElementCount() const { return _inputElementCount; }
 
 	const AxisAlignedBox& GetAxisAlignedBox() const { return _boundingBox; }
 	
-	HRESULT CreateFromSDKMeshMesh(ID3D11Device* device, CDXUTSDKMesh* model, UINT meshIdx);
+	HRESULT CreateFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d9Device, 
+		const WCHAR* modelPath, SDKMesh* model,	UINT meshIdx);
 	void Destroy();
 };

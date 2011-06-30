@@ -11,7 +11,25 @@ Material::~Material()
 {
 }
 
-HRESULT Material::CreateFromSDKMeshMaterial(ID3D11Device* device, CDXUTSDKMesh* model, UINT materialIdx)
+HRESULT loadMaterialTexture(ID3D11Device* device, const WCHAR* modelDir, const CHAR* texturePath,
+	ID3D11ShaderResourceView** outSRV)
+{
+	WCHAR wtexturePath[MAX_PATH];
+	if (!AnsiToWString(texturePath, wtexturePath, MAX_PATH))
+	{
+		return E_FAIL;
+	}
+
+	WCHAR fullPath[MAX_PATH];
+	wcsncpy_s(fullPath, modelDir, MAX_PATH);
+	wcsncat_s(fullPath, L"\\", MAX_PATH);
+	wcsncat_s(fullPath, wtexturePath, MAX_PATH);
+
+	return D3DX11CreateShaderResourceViewFromFile(device, fullPath, NULL, NULL, outSRV, NULL);
+}
+
+HRESULT Material::CreateFromSDKMeshMaterial(ID3D11Device* device, const WCHAR* modelDir, 
+	SDKMesh* model, UINT materialIdx)
 {
 	HRESULT hr;
 
@@ -23,24 +41,23 @@ HRESULT Material::CreateFromSDKMeshMaterial(ID3D11Device* device, CDXUTSDKMesh* 
 	_emissiveColor = XMFLOAT3(sdkmat->Emissive.x, sdkmat->Emissive.y, sdkmat->Emissive.z);
     _alpha = sdkmat->Diffuse.w;
     _specularPower = sdkmat->Power;
-
-	// Not sure why the pointers point to 1 when the srv's fail to load
-	if (sdkmat->pDiffuseRV11 != NULL && sdkmat->Force64_4 != 1)
+	
+	if (strlen(sdkmat->DiffuseTexture) > 0 && 
+		FAILED(loadMaterialTexture(device, modelDir, sdkmat->DiffuseTexture, &_diffuseSRV)))
 	{
-		_diffuseSRV = sdkmat->pDiffuseRV11;			
-		_diffuseSRV->AddRef();
+		_diffuseSRV = NULL;		
 	}
 
-	if (sdkmat->pNormalRV11 && sdkmat->Force64_5 != 1)
+	if (strlen(sdkmat->NormalTexture) > 0 && 
+		FAILED(loadMaterialTexture(device, modelDir, sdkmat->NormalTexture, &_normalSRV)))
 	{
-		_normalSRV = sdkmat->pNormalRV11;			
-		_normalSRV->AddRef();
+		_normalSRV = NULL;		
 	}
 
-	if (sdkmat->pSpecularRV11 && sdkmat->Force64_6 != 1)
+	if (strlen(sdkmat->SpecularTexture) > 0 && 
+		FAILED(loadMaterialTexture(device, modelDir, sdkmat->SpecularTexture, &_specularSRV)))
 	{
-		_specularSRV = sdkmat->pSpecularRV11;			
-		_specularSRV->AddRef();
+		_specularSRV = NULL;		
 	}
 
 	// Create the buffer

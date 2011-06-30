@@ -48,6 +48,7 @@ public:
 
 	ID3D11Buffer* GetPropertiesBuffer() const { return _propertiesBuffer; }
 
-	HRESULT CreateFromSDKMeshMaterial(ID3D11Device* device, CDXUTSDKMesh* model, UINT materialIdx);
+	HRESULT CreateFromSDKMeshMaterial(ID3D11Device* device, const WCHAR* modelPath, SDKMesh* model,
+		UINT materialIdx);
 	void Destroy();
 };
