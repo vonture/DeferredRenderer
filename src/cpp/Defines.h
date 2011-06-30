@@ -2,6 +2,8 @@
 
 // Namespace usings
 using namespace std;
+#include <map>
+#include <vector>
 
 #include "DXUT.h"
 
