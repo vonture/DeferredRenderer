@@ -24,7 +24,6 @@ Window::Window(HINSTANCE hinstance, const WCHAR* name, const WCHAR* iconResource
 		if (!_acceleratorTable)
 		{
 			// ERROR
-			_acceleratorTable = NULL;
 		}
 	}
 }
