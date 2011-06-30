@@ -20,7 +20,7 @@ void SkyPostProcess::SetSunDirection(const XMFLOAT3& sunDir)
 HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Sky");
+	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Sky");
 
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;	
