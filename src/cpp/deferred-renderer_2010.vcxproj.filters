@@ -152,6 +152,9 @@
     <None Include="MLAA.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="DoF.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ModelInstance.cpp">

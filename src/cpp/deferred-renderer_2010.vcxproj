@@ -446,6 +446,7 @@
     <None Include="BoundingObject.hlsl" />
     <None Include="Depth.hlsl" />
     <None Include="DirectionalLight.hlsl" />
+    <None Include="DoF.hlsl" />
     <None Include="DualParaboloidDepth.hlsl" />
     <None Include="DXUT\Optional\directx.ico" />
     <ClInclude Include="DeferredBuffer.h" />
