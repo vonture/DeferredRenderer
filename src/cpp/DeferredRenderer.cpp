@@ -3,9 +3,11 @@
 DeferredRenderer::DeferredRenderer()
 	: Application(L"Deferred Renderer", NULL),
       _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f),
+	  //_scene(L"\\models\\squidroom\\SquidRoom.sdkmesh")
 	  _scene(L"\\models\\tankscene\\tankscene.sdkmesh")
 	  //_scene(L"\\models\\sponza\\sponzanoflag.sdkmesh")
 {
+	//_scene.SetScale(0.02f);
 	_scene.SetScale(1.0f);
 	_scene.SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	//_scene.SetOrientation(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f));
@@ -147,13 +149,13 @@ HRESULT DeferredRenderer::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11Dev
 
 	_renderer.AddModel(&_scene);	
 	
-	/*PointLight greenLight = 
+	PointLight greenLight = 
 	{
-		XMFLOAT3(3.0f, 3.0f, -4.0f),
+		XMFLOAT3(0.3f, 4.5f, 0.4f),
 		10.0f,
-		XMFLOAT3(6.0f, 8.0f, 4.0f)
+		XMFLOAT3(1.5f, 3.0f, 1.0f)
 	};
-	_renderer.AddLight(&greenLight, true);*/
+	//_renderer.AddLight(&greenLight, true);
 
 	XMFLOAT3 sunColor = XMFLOAT3(1.0f, 0.8f, 0.5f);
 	float sunIntensity = 5.0f;
@@ -164,7 +166,7 @@ HRESULT DeferredRenderer::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11Dev
 	};
 	_renderer.AddLight(&sun, true);
 	
-	float ambientIntesity = 1.3f;
+	float ambientIntesity = 1.2f;
 	AmbientLight ambientLight = 
 	{
 		XMFLOAT3(ambientIntesity, ambientIntesity, ambientIntesity)
@@ -189,12 +191,12 @@ HRESULT DeferredRenderer::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11Dev
 		_renderer.AddPostProcess(&_aaPP);
 	}
 	
-	//_renderer.AddPostProcess(&_dofPP);
-
 	if (_hdrEnabled)
 	{
 		_renderer.AddPostProcess(&_hdrPP);	
 	}
+
+	//_renderer.AddPostProcess(&_dofPP);
 
 	V_RETURN(_renderer.End(pd3dDevice, pd3dImmediateContext, &_camera));
 
