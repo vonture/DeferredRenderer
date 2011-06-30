@@ -18,8 +18,14 @@ HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID
 	
 	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, NULL);
 
-	V_RETURN(gBuffer->PSSetShaderResources(pd3dImmediateContext, 0));
-	V_RETURN(lightBuffer->PSSetShaderResources(pd3dImmediateContext, 4));
+	ID3D11ShaderResourceView* combineSRVs[3] = 
+	{
+		gBuffer->GetShaderResourceView(0), // Diffuse
+		gBuffer->GetShaderResourceView(2), // Emissive
+		lightBuffer->GetShaderResourceView(0), // Light
+	};
+	
+	pd3dImmediateContext->PSSetShaderResources(0, 3, combineSRVs);
 
 	ID3D11SamplerState* sampler = GetSamplerStates()->GetPoint();
 	pd3dImmediateContext->PSSetSamplers(0, 1, &sampler);
@@ -31,8 +37,9 @@ HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID
 	
 	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _pixelShader));
 
-	V_RETURN(gBuffer->PSUnsetShaderResources(pd3dImmediateContext, 0));
-	V_RETURN(lightBuffer->PSUnsetShaderResources(pd3dImmediateContext, 4));
+	// Null the SRVs
+	ID3D11ShaderResourceView* NULLSRVs[3] = { NULL, NULL, NULL};
+	pd3dImmediateContext->PSSetShaderResources(0, 3, NULLSRVs);
 
 	DXUT_EndPerfEvent();
 

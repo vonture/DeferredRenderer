@@ -1,9 +1,6 @@
-Texture2D RT0 : register(t0);
-Texture2D RT1 : register(t1);
-Texture2D RT2 : register(t2);
-Texture2D RT3 : register(t3);
-
-Texture2D LightMap : register(t4);
+Texture2D Texture0 : register(t0); // Diffuse
+Texture2D Texture1 : register(t1); // Emissive
+Texture2D Texture2 : register(t2); // Light Buffer
 
 SamplerState PointSampler : register(s0);
 
@@ -16,21 +13,12 @@ struct PS_In_Combine
 
 float4 PS_Combine(PS_In_Combine input) : SV_TARGET0
 {
-	// RT0 =       Diffuse.r	| Diffuse.g		| Diffuse.b		| Specular Intensity
-    // RT1 =       Normal.x		| Normal.y		| Normal.z		| Specular Power
-    // RT2 =       Emissive.r	| Emissive.g	| Emissive.b	| Material ID
-    // RT3 =       Depth		|				|				|
-	float4 rt0Sample = RT0.Sample(PointSampler, input.vTexCoord);
-	float4 rt1Sample = RT1.Sample(PointSampler, input.vTexCoord);
-	float4 rt2Sample = RT2.Sample(PointSampler, input.vTexCoord);
-	float4 rt3Sample = RT3.Sample(PointSampler, input.vTexCoord);
-	float4 lightSample = LightMap.Sample(PointSampler, input.vTexCoord);
+	float3 vDiffuse = Texture0.Sample(PointSampler, input.vTexCoord).rgb;
+	float3 vEmissive = Texture1.Sample(PointSampler, input.vTexCoord).rgb;
 
-	float3 vDiffuse = rt0Sample.rgb;
-	float fAmbient = rt2Sample.a;
-	float3 vLightColor = lightSample.rgb;
-	float fSpecular = lightSample.a;
-	float3 vEmissive = rt2Sample.rgb;
+	float4 vLightData = Texture2.Sample(PointSampler, input.vTexCoord);
+	float3 vLightColor = vLightData.rgb;
+	float fSpecular = vLightData.a;
 
 	float3 vFinalColour = (vEmissive) +
 						  (vLightColor * vDiffuse) + 
