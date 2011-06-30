@@ -1,10 +1,4 @@
 #define GREY float3(0.212671f, 0.715160f, 0.072169f)
-#define RGB_TO_CIEXYZ float3x3(0.4124f, 0.3576f, 0.1805f, \
-                               0.2126f, 0.7152f, 0.0722f, \
-							   0.0193f, 0.1192f, 0.9505f)
-#define CIEXYZ_TO_RGB float3x3( 3.2405f, -1.5371f, -0.4985f, \
-                               -0.9693f,  1.8760f,  0.0416f, \
-							    0.0556f, -0.2040f,  1.0572f)
 #define ROE_RODS 0.2f
 #define ROE_CONES 0.4f
 #define EPSILON 0.0001f
@@ -14,12 +8,14 @@ cbuffer cbHDRProperties : register(b0)
 {
 	float Tau;
 	float LuminanceWhitePerc;
+	float ExposureKey;
 	float TimeDelta;
 	uint MipLevels;
 	float BloomThreshold;
 	float BloomMagnitude;
     float BloomBlurSigma;
 	float GaussianNumerator;
+	float3 Padding;
 }
 
 Texture2D Texture0 : register(t0);
@@ -39,9 +35,6 @@ struct PS_In_Quad
 
 float CalcLuminance(float3 color)
 {
-	//float3 CIE_XYZ = mul(RGB_TO_CIEXYZ, color);
-
-	//return max(CIE_XYZ.y / (CIE_XYZ.x + CIE_XYZ.y + CIE_XYZ.z), EPSILON);
 	return max(dot(color, GREY), EPSILON);
 }
 
@@ -59,30 +52,22 @@ float4 PS_LuminanceMap(PS_In_Quad input) : SV_TARGET0
     return float4(log(fAdaptedLum), 0.0f, 0.0f, 1.0f);
 }
 
-float CalculateScaledLuminance(float3 vSceneColor, float fAvgLum)
+float CalculateCompressedLuminance(float fAvgLum, float3 vSceneColor, float fThreshold, float fOffset)
 {
-	float fLumGrey = CalcLuminance(GREY);
-	float fLumScene = CalcLuminance(vSceneColor);
+	float fLumPixel = CalcLuminance(vSceneColor);
+	float fLumWhite = LuminanceWhitePerc * fAvgLum;
 
-	return (fLumScene * fLumGrey) / fAvgLum;
-}
+	float L = (ExposureKey / fAvgLum) * fLumPixel;
+	float Ld = max(L * (1.0f + (L / (fLumWhite * fLumWhite))) - fThreshold, 0.0f) / (fOffset + L);
 
-float CalculateCompressedLuminance(float fAvgLum, float fScaledLum, float fThreshold, float fOffset)
-{
-	float fLumWhite = fAvgLum * LuminanceWhitePerc;
-
-	float fNumerator = max(fScaledLum * (1.0f + (fScaledLum / (fLumWhite * fLumWhite))) - fThreshold, 0.0f);
-	float fDenominator = fOffset + fScaledLum;
-
-	return fNumerator / fDenominator;
+	return max(Ld, EPSILON);
 }
 
 // Applies exposure and tone mapping to the specific color, and applies
 // the threshold to the exposure value.
 float3 ToneMap(float3 vSceneColor, float fAvgLum, float fThreshold, float fOffset)
 {
-	float fScaledLum = CalculateScaledLuminance(vSceneColor, fAvgLum);
-	float fCompressedLum = CalculateCompressedLuminance(fAvgLum, fScaledLum, fThreshold, fOffset);
+	float fCompressedLum = CalculateCompressedLuminance(fAvgLum, vSceneColor, fThreshold, fOffset);
 
 	return float3(fCompressedLum * vSceneColor);	
 }
