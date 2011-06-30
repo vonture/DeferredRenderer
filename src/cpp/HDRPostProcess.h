@@ -8,12 +8,14 @@ struct CB_HDR_PROPERTIES
 {
 	float Tau;
 	float WhiteLuminancePercentage;
+	float ExposureKey;
 	float TimeDelta;
 	UINT MipLevels;
 	float BloomThreshold;
 	float BloomMagnitude;
 	float BloomBlurSigma;
-    float GaussianNumerator;	
+    float GaussianNumerator;
+	XMFLOAT3 Padding;
 };
 
 class HDRPostProcess : public PostProcess
@@ -22,6 +24,7 @@ private:
 	float _timeDelta;
 	float _tau;
 	float _lumWhite;
+	float _exposureKey;
 	float _bloomThreshold;
 	float _bloomMagnitude;
 	float _bloomBlurSigma;
