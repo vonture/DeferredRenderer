@@ -716,7 +716,7 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 			pd3dImmediateContext->PSSetConstantBuffers(1, 2, constantBuffers);
 
 			// Set the shadow map SRV
-			pd3dImmediateContext->PSSetShaderResources(5, 1, &_shadowMapSRVs[i]);
+			pd3dImmediateContext->PSSetShaderResources(4, 1, &_shadowMapSRVs[i]);
 
 			// Finally, render the quad
 			_fsQuad.Render(pd3dImmediateContext, _shadowedPS);
@@ -727,7 +727,7 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 		{
 			NULL,
 		};
-		pd3dImmediateContext->PSSetShaderResources(5, 1, nullSRV);
+		pd3dImmediateContext->PSSetShaderResources(4, 1, nullSRV);
 
 		DXUT_EndPerfEvent();
 	}
