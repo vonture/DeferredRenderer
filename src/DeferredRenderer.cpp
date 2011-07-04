@@ -151,11 +151,11 @@ HRESULT DeferredRenderer::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11Dev
 	
 	PointLight greenLight = 
 	{
-		XMFLOAT3(0.3f, 4.5f, 0.4f),
+		XMFLOAT3(-5.0f, 7.5f, 3.0f),
 		10.0f,
 		XMFLOAT3(1.5f, 3.0f, 1.0f)
 	};
-	//_renderer.AddLight(&greenLight, true);
+	_renderer.AddLight(&greenLight, true);
 
 	XMFLOAT3 sunColor = XMFLOAT3(1.0f, 0.8f, 0.5f);
 	float sunIntensity = 5.0f;
@@ -164,9 +164,9 @@ HRESULT DeferredRenderer::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11Dev
 		XMFLOAT3(0.5f, 0.6f, 0.5f),
 		XMFLOAT3(sunColor.x * sunIntensity, sunColor.y * sunIntensity, sunColor.z * sunIntensity)
 	};
-	_renderer.AddLight(&sun, true);
+	//_renderer.AddLight(&sun, true);
 	
-	float ambientIntesity = 1.2f;
+	float ambientIntesity = 0.2f;
 	AmbientLight ambientLight = 
 	{
 		XMFLOAT3(ambientIntesity, ambientIntesity, ambientIntesity)

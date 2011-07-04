@@ -627,7 +627,6 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 
 		XMVECTOR det;
 		XMMATRIX cameraInvViewProj = XMMatrixInverse(&det, XMLoadFloat4x4(&fCamViewProj));
-		//XMVECTOR cameraPos = camera->GetPosition();
 
 		// Set the global properties for all directional lights
 		ID3D11SamplerState* samplers[2] =
@@ -708,11 +707,7 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 			pd3dImmediateContext->Unmap(_shadowPropertiesBuffer, 0);
 
 			// Set both constant buffers back to the shader at once
-			ID3D11Buffer* constantBuffers[2] = 
-			{
-				_lightPropertiesBuffer,
-				_shadowPropertiesBuffer
-			};
+			ID3D11Buffer* constantBuffers[2] = { _lightPropertiesBuffer, _shadowPropertiesBuffer };
 			pd3dImmediateContext->PSSetConstantBuffers(1, 2, constantBuffers);
 
 			// Set the shadow map SRV
@@ -723,10 +718,7 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 		}
 
 		// Unset the shadow map SRV
-		ID3D11ShaderResourceView* nullSRV[1] = 
-		{
-			NULL,
-		};
+		ID3D11ShaderResourceView* nullSRV[1] = { NULL };
 		pd3dImmediateContext->PSSetShaderResources(4, 1, nullSRV);
 
 		DXUT_EndPerfEvent();
