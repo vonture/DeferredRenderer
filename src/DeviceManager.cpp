@@ -3,7 +3,7 @@
 DeviceManager::DeviceManager()
 	: _backBufferFormat(DXGI_FORMAT_R8G8B8A8_UNORM_SRGB), _backBufferWidth(1280),
 	  _backBufferHeight(720), _msCount(1), _msQuality(0), _enableAutoDS(true), _fullScreen(false),
-	  _featureLevel(D3D_FEATURE_LEVEL_11_0), _minFeatureLevel(D3D_FEATURE_LEVEL_10_0), 
+	  _featureLevel(D3D_FEATURE_LEVEL_10_1), _minFeatureLevel(D3D_FEATURE_LEVEL_10_0), 
 	  _autoDSFormat(DXGI_FORMAT_D24_UNORM_S8_UINT), _useAutoDSAsSR(false), _vsync(true),
 	  _device(NULL), _immediateContext(NULL), _swapChain(NULL), _backBufferTexture(NULL), _backBufferRTV(NULL),
 	  _autoDSTexture(NULL), _autoDSView(NULL), _autoDSSRView(NULL), _factory(NULL), _adapter(NULL),
