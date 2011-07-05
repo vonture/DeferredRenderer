@@ -24,25 +24,18 @@ struct PS_In_Quad
 	float2 vPosition2	: TEXCOORD1;
 };
 
-float GetLinearDepth(float nonLinearDepth, float nearClip, float farClip)
+float GetLinearDepth(float fNonLinearDepth)
 {
-	float fPercFar = farClip / (farClip - nearClip);
-	return ( -nearClip * fPercFar ) / ( nonLinearDepth - fPercFar);
+	float fPercFar = CameraFarClip / (CameraFarClip - CameraNearClip);
+	return ( -CameraNearClip * fPercFar ) / ( fNonLinearDepth - fPercFar);
 }
 
-float4 PS_CoCSize(PS_In_Quad input) : SV_TARGET0
+float GetCoCSize(float fLinearDepth)
 {
-	float fDepth = GetLinearDepth(Texture0.SampleLevel(PointSampler, input.vTexCoord, 0).x, CameraNearClip, CameraFarClip);
-		
-	float fDistFromFocalDepth = fDepth - FocalDistance;
-
+	float fDistFromFocalDepth = fLinearDepth - FocalDistance;
+	
 	float fBlurAmmount = max(abs(fDistFromFocalDepth) - FocalFalloffNear, 0.0f) / 
 						 (FocalFalloffFar - FocalFalloffNear);
 
 	return smoothstep(0.0f, 1.0f, fBlurAmmount) * sign(fDistFromFocalDepth);
-}
-
-float4 PS_DoFBlur(PS_In_Quad input) : SV_TARGET0
-{
-	return float4(1.0f, 0.0f, 0.0f, 1.0f);
 }

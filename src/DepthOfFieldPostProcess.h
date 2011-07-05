@@ -2,7 +2,6 @@
 
 #include "Defines.h"
 #include "PostProcess.h"
-#include "FullscreenQuad.h"
 
 struct CB_DOF_PROPERTIES
 {
@@ -17,20 +16,11 @@ struct CB_DOF_PROPERTIES
 
 class DepthOfFieldPostProcess : public PostProcess
 {
-private:
-	FullscreenQuad _fsQuad;
-	
+private:	
 	float _focalDistance;
 	float _falloffStart;
 	float _falloffEnd;
 	float _cocScale;
-
-	ID3D11Texture2D* _cocSizeTexture;
-	ID3D11RenderTargetView* _cocSizeRTV;
-	ID3D11ShaderResourceView* _cocSizeSRV;
-	
-	ID3D11PixelShader* _cocSizePS;
-	ID3D11PixelShader* _dofBlurPS;
 
 	ID3D11Buffer* _propertiesBuffer;
 
@@ -44,6 +34,9 @@ public:
 	float GetFocalFalloffStart() const { return _falloffStart; }
 	float GetFocalFalloffEnd() const { return _falloffEnd; }
 	float SetFocalFalloffs(float start, float end) { _falloffStart = max(start, 0.0f); _falloffEnd = max(end, _falloffStart); }
+
+	float GetCircleOfConfusionScale() const { return _cocScale; }
+	void SetCircleOfConfusionScale(float scale) { _cocScale = max(scale, 0.0f); }
 
 	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer);
