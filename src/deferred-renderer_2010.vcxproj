@@ -391,7 +391,7 @@
     <ClCompile Include="DirectionalLightRenderer.cpp" />
     <ClCompile Include="FirstPersonCamera.cpp" />
     <ClCompile Include="FullscreenQuad.cpp" />
-    <ClCompile Include="DeferredRenderer.cpp" />
+    <ClCompile Include="DeferredRendererApplication.cpp" />
     <ClCompile Include="GBuffer.cpp" />
     <ClCompile Include="HDRPostProcess.cpp" />
     <ClCompile Include="KeyboardState.cpp" />
@@ -401,6 +401,7 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelInstance.cpp" />
     <ClCompile Include="ModelRenderer.cpp" />
+    <ClCompile Include="MotionBlurPostProcess.cpp" />
     <ClCompile Include="MouseState.cpp" />
     <ClCompile Include="OrthographicCamera.cpp" />
     <ClCompile Include="PerspectiveCamera.cpp" />
@@ -433,6 +434,7 @@
     <ClInclude Include="Material.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
+    <ClInclude Include="MotionBlurPostProcess.h" />
     <ClInclude Include="MouseState.h" />
     <ClInclude Include="OrthographicCamera.h" />
     <ClInclude Include="PerspectiveCamera.h" />
@@ -486,7 +488,7 @@
     <None Include="SimpleSample.hlsl" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DeferredRenderer.h" />
+    <ClInclude Include="DeferredRendererApplication.h" />
     <ClInclude Include="GBuffer.h" />
     <ClInclude Include="IDrawable.h" />
     <ClInclude Include="IHasContent.h" />

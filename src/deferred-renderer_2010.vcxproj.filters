@@ -254,8 +254,11 @@
     <ClCompile Include="Application.cpp">
       <Filter>Application</Filter>
     </ClCompile>
-    <ClCompile Include="DeferredRenderer.cpp" />
     <ClCompile Include="DepthOfFieldPostProcess.cpp">
+      <Filter>Post Process</Filter>
+    </ClCompile>
+    <ClCompile Include="DeferredRendererApplication.cpp" />
+    <ClCompile Include="MotionBlurPostProcess.cpp">
       <Filter>Post Process</Filter>
     </ClCompile>
   </ItemGroup>
@@ -397,7 +400,10 @@
     <ClInclude Include="DeviceManager.h">
       <Filter>Graphics Helpers</Filter>
     </ClInclude>
-    <ClInclude Include="DeferredRenderer.h" />
+    <ClInclude Include="DeferredRendererApplication.h" />
+    <ClInclude Include="MotionBlurPostProcess.h">
+      <Filter>Post Process</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

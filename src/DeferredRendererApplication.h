@@ -12,8 +12,9 @@
 #include "AntiAliasPostProcess.h"
 #include "AmbientOcclusionPostProcess.h"
 #include "DepthOfFieldPostProcess.h"
+#include "MotionBlurPostProcess.h"
 
-class DeferredRenderer : public Application
+class DeferredRendererApplication : public Application
 {
 private:
 	Renderer _renderer;
@@ -26,6 +27,7 @@ private:
 	AntiAliasPostProcess _aaPP;
 	AmbientOcclusionPostProcess _aoPP;
 	DepthOfFieldPostProcess _dofPP;
+	MotionBlurPostProcess _motionBlurPP;
 
 	bool _aoEnabled;
 	bool _aaEnabled;
@@ -35,8 +37,8 @@ protected:
 	void OnPreparingDeviceSettings(DeviceManager* deviceManager);
 
 public:
-	DeferredRenderer();
-	~DeferredRenderer();
+	DeferredRendererApplication();
+	~DeferredRendererApplication();
 
 	void OnFrameMove(double totalTime, float dt);
 	HRESULT OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext);

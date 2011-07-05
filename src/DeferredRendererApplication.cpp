@@ -1,6 +1,6 @@
-#include "DeferredRenderer.h"
+#include "DeferredRendererApplication.h"
 
-DeferredRenderer::DeferredRenderer()
+DeferredRendererApplication::DeferredRendererApplication()
 	: Application(L"Deferred Renderer", NULL),
       _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f),
 	  _scene(L"\\models\\tankscene\\tankscene.sdkmesh")
@@ -16,11 +16,11 @@ DeferredRenderer::DeferredRenderer()
 	_hdrEnabled = true;
 }
 
-DeferredRenderer::~DeferredRenderer()
+DeferredRendererApplication::~DeferredRendererApplication()
 {
 }
 
-void DeferredRenderer::OnPreparingDeviceSettings(DeviceManager* deviceManager)
+void DeferredRendererApplication::OnPreparingDeviceSettings(DeviceManager* deviceManager)
 {
 	Application::OnPreparingDeviceSettings(deviceManager);
 
@@ -31,7 +31,7 @@ void DeferredRenderer::OnPreparingDeviceSettings(DeviceManager* deviceManager)
 	deviceManager->SetVSyncEnabled(false);
 }
 
-void DeferredRenderer::OnFrameMove(double totalTime, float dt)
+void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 {
 	HWND hwnd = GetHWND();
 	KeyboardState kb = KeyboardState::GetState();
@@ -137,7 +137,7 @@ void DeferredRenderer::OnFrameMove(double totalTime, float dt)
 	_hdrPP.SetTimeDelta(dt);
 }
 
-HRESULT DeferredRenderer::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext)
+HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext)
 {
 	HRESULT hr;
 
@@ -192,14 +192,16 @@ HRESULT DeferredRenderer::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11Dev
 		_renderer.AddPostProcess(&_hdrPP);	
 	}
 
+	// Unimplimented post processes
 	//_renderer.AddPostProcess(&_dofPP);
+	//_renderer.AddPostProcess(&_motionBlurPP);
 
 	V_RETURN(_renderer.End(pd3dDevice, pd3dImmediateContext, &_camera));
 
 	return S_OK;
 }
 
-HRESULT DeferredRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
@@ -211,12 +213,13 @@ HRESULT DeferredRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DX
 	V_RETURN(_aaPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_aoPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_dofPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_motionBlurPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_scene.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
 
-void DeferredRenderer::OnD3D11DestroyDevice()
+void DeferredRendererApplication::OnD3D11DestroyDevice()
 {
 	Application::OnD3D11DestroyDevice();
 
@@ -226,10 +229,11 @@ void DeferredRenderer::OnD3D11DestroyDevice()
 	_aaPP.OnD3D11DestroyDevice();
 	_aoPP.OnD3D11DestroyDevice();
 	_dofPP.OnD3D11DestroyDevice();
+	_motionBlurPP.OnD3D11DestroyDevice();
 	_scene.OnD3D11DestroyDevice();	
 }
 
-HRESULT DeferredRenderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+HRESULT DeferredRendererApplication::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
                         const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
@@ -245,11 +249,12 @@ HRESULT DeferredRenderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDX
 	V_RETURN(_aaPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_aoPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_dofPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_motionBlurPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_scene.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
-void DeferredRenderer::OnD3D11ReleasingSwapChain()
+void DeferredRendererApplication::OnD3D11ReleasingSwapChain()
 {
 	Application::OnD3D11ReleasingSwapChain();
 
@@ -259,11 +264,12 @@ void DeferredRenderer::OnD3D11ReleasingSwapChain()
 	_aaPP.OnD3D11ReleasingSwapChain();
 	_aoPP.OnD3D11ReleasingSwapChain();
 	_dofPP.OnD3D11ReleasingSwapChain();
+	_motionBlurPP.OnD3D11ReleasingSwapChain();
 	_scene.OnD3D11ReleasingSwapChain();
 }
 
 int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow )
 {
-	DeferredRenderer application;
-	application.Start();
+	DeferredRendererApplication app;
+	app.Start();
 }
