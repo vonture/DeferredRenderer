@@ -76,6 +76,8 @@ HRESULT AntiAliasPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, 
 	float blendFactor[4] = {0, 0, 0, 0};
 	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
 
+	Quad* fsQuad = GetFullScreenQuad();
+
 	// Render the edge detection
 	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Edge Detection");
 
@@ -99,7 +101,7 @@ HRESULT AntiAliasPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, 
 	pd3dImmediateContext->PSSetConstantBuffers(0, 1, &_mlaaPropertiesBuffer);
 
 	ID3D11PixelShader* _curEdgePS = _edgeDetectPSs[_depthDetect ? 1 : 0][_normalDetect ? 1 : 0][_luminanceDetect ? 1 : 0];
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _curEdgePS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _curEdgePS));
 	DXUT_EndPerfEvent();
 
 	// Render blend weights
@@ -129,7 +131,7 @@ HRESULT AntiAliasPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, 
 	};
 	pd3dImmediateContext->PSSetShaderResources(0, 3, ppSRVBlendWeight);
 
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _blendWeightPSs[weightTexIdx]));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _blendWeightPSs[weightTexIdx]));
 
 	DXUT_EndPerfEvent();
 
@@ -148,7 +150,7 @@ HRESULT AntiAliasPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, 
 
 	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVCopyAndNeighborhood);
 
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _copyBackgroundPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _copyBackgroundPS));
 	
 	DXUT_EndPerfEvent();
 
@@ -157,7 +159,7 @@ HRESULT AntiAliasPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, 
 	
 	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetStencilEqual(), 0xFFFFFFFF);
 
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _neighborhoodBlendPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _neighborhoodBlendPS));
 
 	DXUT_EndPerfEvent();
 	
@@ -175,7 +177,6 @@ HRESULT AntiAliasPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 	HRESULT hr;
 
 	V_RETURN(PostProcess::OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_fsQuad.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
 	// Load the shaders
 	ID3DBlob* pBlob = NULL;
@@ -271,8 +272,6 @@ void AntiAliasPostProcess::OnD3D11DestroyDevice()
 {
 	PostProcess::OnD3D11DestroyDevice();
 	
-	_fsQuad.OnD3D11DestroyDevice();
-
 	for (UINT i = 0; i < 2; i++)
 	{
 		for (UINT j = 0; j < 2; j++)
@@ -302,7 +301,6 @@ HRESULT AntiAliasPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice,
 	HRESULT hr;
 	
 	V_RETURN(PostProcess::OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));	
-	V_RETURN(_fsQuad.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 
 	_textureWidth = pBackBufferSurfaceDesc->Width;
 	_textureHeight = pBackBufferSurfaceDesc->Height;
@@ -427,9 +425,7 @@ HRESULT AntiAliasPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice,
 void AntiAliasPostProcess::OnD3D11ReleasingSwapChain()
 {
 	PostProcess::OnD3D11ReleasingSwapChain();
-
-	_fsQuad.OnD3D11ReleasingSwapChain();
-	
+		
 	SAFE_RELEASE(_dsTexture);
 	SAFE_RELEASE(_dsv);
 

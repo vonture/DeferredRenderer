@@ -2,7 +2,6 @@
 
 #include "Defines.h"
 #include "PostProcess.h"
-#include "FullscreenQuad.h"
 
 struct CB_HDR_PROPERTIES
 {
@@ -30,7 +29,6 @@ private:
 	float _bloomBlurSigma;
 
 	UINT _lumMapSize;
-
 	UINT _mipLevels;
 	
 	ID3D11Texture2D* _lumTextures[2];
@@ -55,8 +53,6 @@ private:
 	ID3D11PixelShader* _vBlurPS;
 
 	ID3D11Buffer* _hdrPropertiesBuffer;
-
-	FullscreenQuad _fsQuad;
 
 	void swapLuminanceBuffers();
 

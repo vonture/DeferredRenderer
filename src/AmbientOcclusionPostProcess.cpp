@@ -80,6 +80,8 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	float blendFactor[4] = {1, 1, 1, 1};
 	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
 		
+	Quad* fsQuad = GetFullScreenQuad();
+
 	D3D11_VIEWPORT vp;
 	vp.MinDepth = 0.0f;
 	vp.MaxDepth = 1.0f;
@@ -103,7 +105,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	};
 	pd3dImmediateContext->PSSetShaderResources(0, 3, ppSRVAO);	
 
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _aoPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _aoPS));
 
 	DXUT_EndPerfEvent();
 
@@ -119,7 +121,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	vp.Height = vpOld[0].Height / 4.0f;
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _scalePS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS));
 
 	DXUT_EndPerfEvent();
 
@@ -133,7 +135,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	vp.Height = vpOld[0].Height / 8.0f;
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _scalePS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS));
 
 	DXUT_EndPerfEvent();
 
@@ -141,7 +143,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Blur horizontal 1");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_blurTempRTV, NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[1]);
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _hBlurPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _hBlurPS));
 	DXUT_EndPerfEvent();
 
 	ID3D11ShaderResourceView* ppSRVNULL1[1] = { NULL };
@@ -150,7 +152,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Blur vertical 1");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[1], NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_blurTempSRV);
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _vBlurPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _vBlurPS));
 	DXUT_EndPerfEvent();
 
 	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL1);
@@ -158,7 +160,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Blur horizontal 2");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_blurTempRTV, NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[1]);
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _hBlurPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _hBlurPS));
 	DXUT_EndPerfEvent();
 
 	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL1);
@@ -166,7 +168,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Blur vertical 2");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[1], NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_blurTempSRV);
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _vBlurPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _vBlurPS));
 	DXUT_EndPerfEvent();
 	
 	// Upscale to 1/4
@@ -179,7 +181,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	vp.Height = vpOld[0].Height / 4.0f;	
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _scalePS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS));
 
 	DXUT_EndPerfEvent();
 
@@ -193,7 +195,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	vp.Height = vpOld[0].Height / 2.0f;	
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _scalePS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS));
 
 	DXUT_EndPerfEvent();
 
@@ -208,7 +210,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	ID3D11ShaderResourceView* ppSRVToneMap[2] = { src, _aoSRV };
 	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVToneMap);
 
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _compositePS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _compositePS));
 
 	DXUT_EndPerfEvent();
 
@@ -227,7 +229,6 @@ HRESULT AmbientOcclusionPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 	HRESULT hr;
 
 	V_RETURN(PostProcess::OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_fsQuad.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
 	// Load the shaders
 	ID3DBlob* pBlob = NULL;
@@ -357,8 +358,6 @@ void AmbientOcclusionPostProcess::OnD3D11DestroyDevice()
 
 	SAFE_RELEASE(_aoPropertiesBuffer);
 	SAFE_RELEASE(_sampleDirectionsBuffer);
-
-	_fsQuad.OnD3D11DestroyDevice();
 }
 
 HRESULT AmbientOcclusionPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice,
@@ -366,8 +365,7 @@ HRESULT AmbientOcclusionPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3d
 {
 	HRESULT hr;
 
-	V_RETURN(PostProcess::OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));	
-	V_RETURN(_fsQuad.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(PostProcess::OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 
 	// Create the AO texture components
 	D3D11_TEXTURE2D_DESC aoTextureDesc = 
@@ -480,6 +478,4 @@ void AmbientOcclusionPostProcess::OnD3D11ReleasingSwapChain()
 	SAFE_RELEASE(_blurTempTexture);
 	SAFE_RELEASE(_blurTempRTV);
 	SAFE_RELEASE(_blurTempSRV);
-
-	_fsQuad.OnD3D11ReleasingSwapChain();
 }

@@ -2,7 +2,6 @@
 
 #include "Defines.h"
 #include "PostProcess.h"
-#include "FullscreenQuad.h"
 
 #define SSAO_SAMPLE_COUNT 16
 
@@ -57,8 +56,6 @@ private:
 	
 	ID3D11Buffer* _aoPropertiesBuffer;
 	ID3D11Buffer* _sampleDirectionsBuffer;
-
-	FullscreenQuad _fsQuad;
 
 public:
 	AmbientOcclusionPostProcess();

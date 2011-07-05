@@ -2,7 +2,6 @@
 
 #include "Defines.h"
 #include "PostProcess.h"
-#include "FullscreenQuad.h"
 
 struct CB_SKY_PROPERTIES
 {
@@ -28,7 +27,6 @@ private:
 
 	ID3D11Buffer* _skyProperties;
 
-	FullscreenQuad _fsQuad;
 public:
 	SkyPostProcess();
 	~SkyPostProcess();

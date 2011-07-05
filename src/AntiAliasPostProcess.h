@@ -2,7 +2,6 @@
 
 #include "Defines.h"
 #include "PostProcess.h"
-#include "FullscreenQuad.h"
 
 struct CB_MLAA_PROPERTIES
 {
@@ -54,8 +53,6 @@ private:
 	ID3D11PixelShader* _neighborhoodBlendPS;
 
 	ID3D11Buffer* _mlaaPropertiesBuffer;
-
-	FullscreenQuad _fsQuad;
 
 public:
 	AntiAliasPostProcess();

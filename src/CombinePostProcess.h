@@ -2,13 +2,11 @@
 
 #include "Defines.h"
 #include "PostProcess.h"
-#include "FullscreenQuad.h"
 
 class CombinePostProcess : public PostProcess
 {
 private:
 	ID3D11PixelShader* _pixelShader;
-	FullscreenQuad _fsQuad;
 
 public:
 	CombinePostProcess();

@@ -81,6 +81,8 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	float blendFactor[4] = {1, 1, 1, 1};
 	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
 		
+	Quad* fsQuad = GetFullScreenQuad();
+
 	D3D11_VIEWPORT vp;
 	vp.MinDepth = 0.0f;
 	vp.MaxDepth = 1.0f;
@@ -100,7 +102,7 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 
 	pd3dImmediateContext->PSSetConstantBuffers(0, 1, &_hdrPropertiesBuffer);
 
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _luminanceMapPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _luminanceMapPS));
 	DXUT_EndPerfEvent();
 
 	// Generate the mips for the luminance map
@@ -119,7 +121,7 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	vp.Height = vpOld[0].Height / 2.0f;
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _thresholdPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _thresholdPS));
 	DXUT_EndPerfEvent();
 
 	// Downscale again to 1/4
@@ -133,7 +135,7 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	vp.Height = vpOld[0].Height / 4.0f;
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _scalePS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS));
 	DXUT_EndPerfEvent();
 
 	// Downscale again to 1/8
@@ -145,14 +147,14 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	vp.Height = vpOld[0].Height / 8.0f;
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _scalePS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS));
 	DXUT_EndPerfEvent();
 
 	// Blur the downscaled threshold image horizontally/vertically twice
 	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Blur horizontal 1");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_blurTempRTV, NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[2]);
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _hBlurPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _hBlurPS));
 	DXUT_EndPerfEvent();
 
 	ID3D11ShaderResourceView* ppSRVNULL1[1] = { NULL };
@@ -161,7 +163,7 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 		DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Blur vertical 1");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[2], NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_blurTempSRV);
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _vBlurPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _vBlurPS));
 	DXUT_EndPerfEvent();
 
 	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL1);
@@ -169,7 +171,7 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Blur horizontal 2");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_blurTempRTV, NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[2]);
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _hBlurPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _hBlurPS));
 	DXUT_EndPerfEvent();
 
 	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL1);
@@ -177,7 +179,7 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Blur vertical 2");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[2], NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_blurTempSRV);
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _vBlurPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _vBlurPS));
 	DXUT_EndPerfEvent();
 
 	// Upscale to 1/4
@@ -189,7 +191,7 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	vp.Height = vpOld[0].Height / 4.0f;	
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _scalePS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS));
 	DXUT_EndPerfEvent();
 
 	// Upscale to 1/2
@@ -201,7 +203,7 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	vp.Height = vpOld[0].Height / 2.0f;	
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _scalePS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS));
 	DXUT_EndPerfEvent();
 
 	// Re-apply the old viewport
@@ -214,7 +216,7 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	ID3D11ShaderResourceView* ppSRVToneMap[4] = { src, _lumSRVs[0], _downScaleSRVs[0], _colorGradeSRV };
 	pd3dImmediateContext->PSSetShaderResources(0, 4, ppSRVToneMap);
 	
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _toneMapPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _toneMapPS));
 	DXUT_EndPerfEvent();
 
 	// Unset the SRVs
@@ -303,8 +305,6 @@ HRESULT HDRPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI
 	V_RETURN(CreateDDSTexture3DFromFile(pd3dDevice, str, &_colorGradeSRV));
 	SET_DEBUG_NAME(_colorGradeSRV, "HDR Color Grade SRV");
 	
-	V_RETURN(_fsQuad.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	
 	return S_OK;
 }
 
@@ -322,8 +322,6 @@ void HDRPostProcess::OnD3D11DestroyDevice()
 	SAFE_RELEASE(_hdrPropertiesBuffer);
 
 	SAFE_RELEASE(_colorGradeSRV);
-
-	_fsQuad.OnD3D11DestroyDevice();
 }
 
 HRESULT HDRPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
@@ -332,8 +330,6 @@ HRESULT HDRPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGI
 	HRESULT hr;
 
 	V_RETURN(PostProcess::OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	
-	V_RETURN(_fsQuad.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	
 	// Create the luminance objects first
 
@@ -479,8 +475,6 @@ HRESULT HDRPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGI
 void HDRPostProcess::OnD3D11ReleasingSwapChain()
 {
 	PostProcess::OnD3D11ReleasingSwapChain();
-
-	_fsQuad.OnD3D11ReleasingSwapChain();
 
 	for (UINT i = 0; i < 2; i++)
 	{

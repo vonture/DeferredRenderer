@@ -35,7 +35,9 @@ HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID
 	float blendFactor[4] = {1, 1, 1, 1};
 	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
 	
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _pixelShader));
+	Quad* fsQuad = GetFullScreenQuad();
+
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _pixelShader));
 
 	// Null the SRVs
 	ID3D11ShaderResourceView* NULLSRVs[3] = { NULL, NULL, NULL};
@@ -58,8 +60,6 @@ HRESULT CombinePostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const 
     V_RETURN(pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_pixelShader));
 	SAFE_RELEASE(pBlob);
 
-	V_RETURN(_fsQuad.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-
 	return S_OK;
 }
 
@@ -68,8 +68,6 @@ void CombinePostProcess::OnD3D11DestroyDevice()
 	PostProcess::OnD3D11DestroyDevice();
 
 	SAFE_RELEASE(_pixelShader);
-
-	_fsQuad.OnD3D11DestroyDevice();
 }
 
 HRESULT CombinePostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
@@ -78,7 +76,6 @@ HRESULT CombinePostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, I
 	HRESULT hr;
 
 	V_RETURN(PostProcess::OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_fsQuad.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	
 	return S_OK;
 }
@@ -86,6 +83,4 @@ HRESULT CombinePostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, I
 void CombinePostProcess::OnD3D11ReleasingSwapChain()
 {
 	PostProcess::OnD3D11ReleasingSwapChain();
-
-	_fsQuad.OnD3D11ReleasingSwapChain();
 }

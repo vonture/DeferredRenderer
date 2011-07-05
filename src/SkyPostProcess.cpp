@@ -59,6 +59,8 @@ HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	float blendFactor[4] = {1, 1, 1, 1};
 	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
 
+	Quad* fsQuad = GetFullScreenQuad();
+
 	ID3D11SamplerState* sampler = GetSamplerStates()->GetPoint();
 	pd3dImmediateContext->PSSetSamplers(0, 1, &sampler);
 
@@ -67,7 +69,7 @@ HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVs);
 
 	// Render
-	V_RETURN(_fsQuad.Render(pd3dImmediateContext, _skyPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _skyPS));
 
 	// Null the SRVs
 	ID3D11ShaderResourceView* ppSRVNULL[2] = { NULL, NULL };
@@ -83,8 +85,6 @@ HRESULT SkyPostProcess:: OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXG
 	HRESULT hr;
 
 	V_RETURN(PostProcess::OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-
-	V_RETURN(_fsQuad.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
 	// Load the shaders
 	ID3DBlob* pBlob = NULL;
@@ -113,8 +113,6 @@ void SkyPostProcess::OnD3D11DestroyDevice()
 {
 	PostProcess::OnD3D11DestroyDevice();
 
-	_fsQuad.OnD3D11DestroyDevice();
-
 	SAFE_RELEASE(_skyPS);
 	SAFE_RELEASE(_skyProperties);
 }
@@ -125,8 +123,6 @@ HRESULT SkyPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGI
 	HRESULT hr;
 
 	V_RETURN(PostProcess::OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	
-	V_RETURN(_fsQuad.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
@@ -134,6 +130,4 @@ HRESULT SkyPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGI
 void SkyPostProcess::OnD3D11ReleasingSwapChain()
 {
 	PostProcess::OnD3D11ReleasingSwapChain();
-
-	_fsQuad.OnD3D11ReleasingSwapChain();
 }
