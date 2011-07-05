@@ -5,6 +5,7 @@
 #include "GBuffer.h"
 #include "LightBuffer.h"
 #include "DeviceStates.h"
+#include "FullscreenQuad.h"
 #include "Camera.h"
 
 class PostProcess : public IHasContent
@@ -14,24 +15,14 @@ private:
 	SamplerStates _samplerStates;
 	BlendStates _blendStates;
 	RasterizerStates _rasterStates;
+	FullscreenQuad _fsQuad;
 
 protected:
-	DepthStencilStates* GetDepthStencilStates()
-	{
-		return &_dsStates;
-	}
-	SamplerStates* GetSamplerStates()
-	{
-		return &_samplerStates;
-	}
-	BlendStates* GetBlendStates()
-	{
-		return &_blendStates;
-	}
-	RasterizerStates* GetRasterizerStates()
-	{
-		return &_rasterStates;
-	}
+	DepthStencilStates* GetDepthStencilStates()	{ return &_dsStates; }
+	SamplerStates* GetSamplerStates() { return &_samplerStates; }
+	BlendStates* GetBlendStates() { return &_blendStates; }
+	RasterizerStates* GetRasterizerStates() { return &_rasterStates; }
+	Quad* GetFullScreenQuad() { return &_fsQuad; }
 
 public:
 	virtual HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
