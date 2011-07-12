@@ -1,5 +1,10 @@
+#ifndef SSAO_SAMPLE_COUNT
 #define SSAO_SAMPLE_COUNT 16
+#endif
+
+#ifndef BLUR_RADIUS
 #define BLUR_RADIUS 4
+#endif
 
 cbuffer cbSSAOProperties : register(cb0)
 {
