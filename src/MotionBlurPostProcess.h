@@ -3,15 +3,15 @@
 #include "Defines.h"
 #include "PostProcess.h"
 
-struct CB_MOTIONBLUR_PROPERTIES
-{
-	XMFLOAT4 Padding;
-};
-
 class MotionBlurPostProcess : public PostProcess
 {
 private:
 	ID3D11Buffer* _propertiesBuffer;
+
+	struct CB_MOTIONBLUR_PROPERTIES
+	{
+		XMFLOAT4 Padding;
+	};
 
 public:
 	MotionBlurPostProcess();
