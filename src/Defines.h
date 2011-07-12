@@ -6,6 +6,7 @@ using namespace std;
 #include <vector>
 
 #include "DXUT.h"
+#include "SDKmisc.h"
 
 // XNA Math and collision
 #include <xnamath.h>
