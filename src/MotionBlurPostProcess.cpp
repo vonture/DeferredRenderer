@@ -16,7 +16,7 @@ HRESULT MotionBlurPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext,
 	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Motion blur");
 
 	DXUT_EndPerfEvent();
-	return E_FAIL;
+	return E_NOTIMPL;
 }
 
 HRESULT MotionBlurPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, 
