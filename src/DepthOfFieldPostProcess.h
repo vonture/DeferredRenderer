@@ -3,17 +3,6 @@
 #include "Defines.h"
 #include "PostProcess.h"
 
-struct CB_DOF_PROPERTIES
-{
-	float CameraNearClip;
-	float CameraFarClip;
-	float FocalDistance;
-	float FocalFalloffNear;
-	float FocalFalloffFar;
-	float CircleOfConfusionScale;
-	XMFLOAT2 Padding;
-};
-
 class DepthOfFieldPostProcess : public PostProcess
 {
 private:	
@@ -23,6 +12,17 @@ private:
 	float _cocScale;
 
 	ID3D11Buffer* _propertiesBuffer;
+
+	struct CB_DOF_PROPERTIES
+	{
+		float CameraNearClip;
+		float CameraFarClip;
+		float FocalDistance;
+		float FocalFalloffNear;
+		float FocalFalloffFar;
+		float CircleOfConfusionScale;
+		XMFLOAT2 Padding;
+	};
 
 public:
 	DepthOfFieldPostProcess();
