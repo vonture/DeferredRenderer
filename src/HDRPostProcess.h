@@ -3,20 +3,6 @@
 #include "Defines.h"
 #include "PostProcess.h"
 
-struct CB_HDR_PROPERTIES
-{
-	float Tau;
-	float WhiteLuminancePercentage;
-	float ExposureKey;
-	float TimeDelta;
-	UINT MipLevels;
-	float BloomThreshold;
-	float BloomMagnitude;
-	float BloomBlurSigma;
-    float GaussianNumerator;
-	XMFLOAT3 Padding;
-};
-
 class HDRPostProcess : public PostProcess
 {
 private:
@@ -53,6 +39,20 @@ private:
 	ID3D11PixelShader* _vBlurPS;
 
 	ID3D11Buffer* _hdrPropertiesBuffer;
+
+	struct CB_HDR_PROPERTIES
+	{
+		float Tau;
+		float WhiteLuminancePercentage;
+		float ExposureKey;
+		float TimeDelta;
+		UINT MipLevels;
+		float BloomThreshold;
+		float BloomMagnitude;
+		float BloomBlurSigma;
+		float GaussianNumerator;
+		XMFLOAT3 Padding;
+	};
 
 	void swapLuminanceBuffers();
 
