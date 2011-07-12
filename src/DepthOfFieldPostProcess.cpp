@@ -59,7 +59,7 @@ HRESULT DepthOfFieldPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContex
 	// Render DOF (not implimented yet)
 
 	DXUT_EndPerfEvent();
-	return E_FAIL;
+	return E_NOTIMPL;
 }
 
 HRESULT DepthOfFieldPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
