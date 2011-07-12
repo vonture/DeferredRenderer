@@ -3,17 +3,6 @@
 #include "Defines.h"
 #include "PostProcess.h"
 
-struct CB_MLAA_PROPERTIES
-{
-	XMFLOAT2 InverseSceneSize;
-	float DepthThreshold;
-	float NormalThreshold;
-	float LuminanceThreshold;
-	float CameraNearClip;
-	float CameraFarClip;
-	int MaxSearchSteps;
-};
-
 class AntiAliasPostProcess : public PostProcess
 {
 private:
@@ -53,6 +42,17 @@ private:
 	ID3D11PixelShader* _neighborhoodBlendPS;
 
 	ID3D11Buffer* _mlaaPropertiesBuffer;
+
+	struct CB_MLAA_PROPERTIES
+	{
+		XMFLOAT2 InverseSceneSize;
+		float DepthThreshold;
+		float NormalThreshold;
+		float LuminanceThreshold;
+		float CameraNearClip;
+		float CameraFarClip;
+		int MaxSearchSteps;
+	};
 
 public:
 	AntiAliasPostProcess();
