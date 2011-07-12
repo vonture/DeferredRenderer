@@ -3,17 +3,6 @@
 #include "Defines.h"
 #include "PostProcess.h"
 
-struct CB_SKY_PROPERTIES
-{
-	UINT SunEnabled;
-	float SunWidth;
-	_DECLSPEC_ALIGN_16_ XMFLOAT3 SkyColor;
-	_DECLSPEC_ALIGN_16_ XMFLOAT3 SunColor;	
-	_DECLSPEC_ALIGN_16_ XMFLOAT3 SunDirection;
-	_DECLSPEC_ALIGN_16_ XMFLOAT3 CameraPosition;	
-	_DECLSPEC_ALIGN_16_ XMFLOAT4X4 InverseViewProjection;
-};
-
 class SkyPostProcess : public PostProcess
 {
 private:
@@ -27,6 +16,17 @@ private:
 
 	ID3D11Buffer* _skyProperties;
 
+	struct CB_SKY_PROPERTIES
+	{
+		UINT SunEnabled;
+		float SunWidth;
+		_DECLSPEC_ALIGN_16_ XMFLOAT3 SkyColor;
+		_DECLSPEC_ALIGN_16_ XMFLOAT3 SunColor;	
+		_DECLSPEC_ALIGN_16_ XMFLOAT3 SunDirection;
+		_DECLSPEC_ALIGN_16_ XMFLOAT3 CameraPosition;	
+		_DECLSPEC_ALIGN_16_ XMFLOAT4X4 InverseViewProjection;
+	};
+	
 public:
 	SkyPostProcess();
 	~SkyPostProcess();
