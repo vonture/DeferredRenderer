@@ -390,6 +390,7 @@
     <ClCompile Include="DeviceStates.cpp" />
     <ClCompile Include="DirectionalLightRenderer.cpp" />
     <ClCompile Include="FirstPersonCamera.cpp" />
+    <ClCompile Include="FontRenderer.cpp" />
     <ClCompile Include="FullscreenQuad.cpp" />
     <ClCompile Include="DeferredRendererApplication.cpp" />
     <ClCompile Include="GBuffer.cpp" />
@@ -428,6 +429,7 @@
     <ClInclude Include="DeviceStates.h" />
     <ClInclude Include="DirectionalLightRenderer.h" />
     <ClInclude Include="FirstPersonCamera.h" />
+    <ClInclude Include="FontRenderer.h" />
     <ClInclude Include="FullscreenQuad.h" />
     <ClInclude Include="HDRPostProcess.h" />
     <ClInclude Include="KeyboardState.h" />
@@ -475,6 +477,7 @@
     <ClCompile Include="DXUT\Optional\DXUTsettingsdlg.cpp" />
     <ClCompile Include="DXUT\Optional\SDKmesh.cpp" />
     <ClCompile Include="DXUT\Optional\SDKmisc.cpp" />
+    <None Include="Font.hlsl" />
     <None Include="MLAA.hlsl" />
     <None Include="Sky.hlsl" />
     <None Include="SSAO.hlsl" />

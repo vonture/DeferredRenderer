@@ -51,6 +51,9 @@
     <Filter Include="Graphics Helpers">
       <UniqueIdentifier>{56872c66-41ce-48e6-9858-efaed604d5ef}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Text">
+      <UniqueIdentifier>{b552d8f5-19b3-40fd-9d4c-f09d06b74477}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="DXUT\Optional\directx.ico">
@@ -153,6 +156,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="DoF.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Font.hlsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
@@ -261,6 +267,9 @@
     <ClCompile Include="MotionBlurPostProcess.cpp">
       <Filter>Post Process</Filter>
     </ClCompile>
+    <ClCompile Include="FontRenderer.cpp">
+      <Filter>Text</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleSample.hlsl">
@@ -343,9 +352,6 @@
     <ClInclude Include="xnaCollision.h">
       <Filter>Collision</Filter>
     </ClInclude>
-    <ClInclude Include="SkyPostProcess.h">
-      <Filter>Post Process</Filter>
-    </ClInclude>
     <ClInclude Include="AntiAliasPostProcess.h">
       <Filter>Post Process</Filter>
     </ClInclude>
@@ -403,6 +409,12 @@
     <ClInclude Include="DeferredRendererApplication.h" />
     <ClInclude Include="MotionBlurPostProcess.h">
       <Filter>Post Process</Filter>
+    </ClInclude>
+    <ClInclude Include="FontRenderer.h">
+      <Filter>Text</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyPostProcess.h">
+      <Filter>Quads</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
