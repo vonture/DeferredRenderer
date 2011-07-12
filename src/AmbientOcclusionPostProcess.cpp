@@ -17,6 +17,7 @@ AmbientOcclusionPostProcess::AmbientOcclusionPostProcess()
 	_sampleRadius = 0.5f;
 	_blurSigma = 0.8f;
 	_samplePower = 3.5f;
+	_sampleCount = 16;
 }
 
 AmbientOcclusionPostProcess::~AmbientOcclusionPostProcess()
@@ -268,8 +269,8 @@ HRESULT AmbientOcclusionPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_aoPropertiesBuffer));
 	
 	// Create the random sample directions
-	XMFLOAT4 sampleDirections[SSAO_SAMPLE_COUNT];	
-	for (UINT i = 0; i < SSAO_SAMPLE_COUNT; i++)
+	XMFLOAT4 sampleDirections[SSAO_SAMPLE_COUNT_MAX];	
+	for (UINT i = 0; i < SSAO_SAMPLE_COUNT_MAX; i++)
 	{
 		float randPitch = (rand() / (float)RAND_MAX) * 2.0f * Pi;
 		float randYaw = (rand() / (float)RAND_MAX) * 2.0f * Pi;
