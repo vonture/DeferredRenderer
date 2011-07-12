@@ -1,7 +1,7 @@
 #include "Renderer.h"
 
 Renderer::Renderer() 
-	: _begun(false), _drawBoundingObjects(false)
+	: _begun(false), _drawBoundingObjects(false), _fontRenderer(L"UI//font.dds")
 {
 	_ambientLight.Color = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
@@ -54,14 +54,12 @@ void Renderer::AddPostProcess(PostProcess* postProcess)
 
 void Renderer::AddDebugText(WCHAR* text)
 {
-	if (text)
-	{
-		_debugText.push_back(text);
-	}
 }
 
 HRESULT Renderer::Begin()
 {
+	HRESULT hr;
+
 	if (_begun)
 	{
 		return E_FAIL;
@@ -71,6 +69,9 @@ HRESULT Renderer::Begin()
 	_models.clear();	
 	_directionalLightRenderer.Clear();
 	_pointLightRenderer.Clear();
+
+	V_RETURN(_fontRenderer.Begin());
+	_fontRenderer.AddTextScreenSpace(L"TEST", XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f), XMFLOAT2(100.0f, 100.0f), XMFLOAT2(3.0f, 3.0f));
 
 	_postProcesses.clear();
 	_postProcesses.push_back(&_combinePP);
@@ -84,14 +85,14 @@ HRESULT Renderer::Begin()
 
 HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 {
+	HRESULT hr;
+
 	if (!_begun)
 	{
 		return E_FAIL;
 	}
 	_begun = false;
 	
-	HRESULT hr;
-
 	ID3D11RenderTargetView* pOrigRTV = NULL;
     ID3D11DepthStencilView* pOrigDSV = NULL;
     pd3dImmediateContext->OMGetRenderTargets( 1, &pOrigRTV, &pOrigDSV );
@@ -216,6 +217,9 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 		DXUT_EndPerfEvent();
 	}
 
+	// Draw the debug text
+	V_RETURN(_fontRenderer.End(pd3dImmediateContext));
+
 	SAFE_RELEASE(pOrigRTV);
     SAFE_RELEASE(pOrigDSV);
 		
@@ -235,6 +239,7 @@ HRESULT Renderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFA
 	V_RETURN(_pointLightRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_spotLightRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_boRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_fontRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
@@ -249,6 +254,7 @@ void Renderer::OnD3D11DestroyDevice()
 	_pointLightRenderer.OnD3D11DestroyDevice();
 	_spotLightRenderer.OnD3D11DestroyDevice();
 	_boRenderer.OnD3D11DestroyDevice();
+	_fontRenderer.OnD3D11DestroyDevice();
 }
 
 HRESULT Renderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
@@ -308,6 +314,7 @@ HRESULT Renderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapCh
 	V_RETURN(_pointLightRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_spotLightRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_boRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_fontRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
@@ -329,4 +336,5 @@ void Renderer::OnD3D11ReleasingSwapChain()
 	_pointLightRenderer.OnD3D11ReleasingSwapChain();
 	_spotLightRenderer.OnD3D11ReleasingSwapChain();
 	_boRenderer.OnD3D11ReleasingSwapChain();
+	_fontRenderer.OnD3D11ReleasingSwapChain();
 }
