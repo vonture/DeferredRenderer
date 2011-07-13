@@ -18,7 +18,12 @@ inline int AnsiToWString(const char* ansiString, WCHAR* output, UINT outputLengt
     return MultiByteToWideChar(CP_ACP, 0, ansiString, -1, output, outputLength);
 }
 
-inline int GetDirectoryFromFileName(const WCHAR* fileName, WCHAR* output, UINT outputLength)
+inline int WStringToAnsi(const WCHAR* wString, char* output, UINT outputLength)
+{
+	return WideCharToMultiByte(CP_ACP, 0, wString, -1, output, outputLength, NULL, false);
+}
+
+inline int GetDirectoryFromFileNameW(const WCHAR* fileName, WCHAR* output, UINT outputLength)
 {
     _ASSERT(fileName);
 
@@ -31,6 +36,24 @@ inline int GetDirectoryFromFileName(const WCHAR* fileName, WCHAR* output, UINT o
     else
 	{
         wcsncpy_s(output, outputLength, L"", outputLength);
+	}
+
+	return 1;
+}
+
+inline int GetDirectoryFromFileNameS(const char* fileName, char* output, UINT outputLength)
+{
+    _ASSERT(fileName);
+
+    std::string filePath(fileName);
+    size_t idx = filePath.rfind(L'\\');
+    if (idx != std::wstring::npos)
+	{
+		strcpy_s(output, outputLength, filePath.substr(0, idx + 1).c_str());
+	}
+    else
+	{
+        strcpy_s(output, outputLength, "");
 	}
 
 	return 1;
