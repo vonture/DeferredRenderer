@@ -54,6 +54,12 @@
     <Filter Include="Text">
       <UniqueIdentifier>{b552d8f5-19b3-40fd-9d4c-f09d06b74477}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{eb496945-77d7-4ef4-a46a-919f7d679550}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="XML">
+      <UniqueIdentifier>{121446dc-35d0-46cb-99d7-3c7efb792bc1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="DXUT\Optional\directx.ico">
@@ -270,6 +276,18 @@
     <ClCompile Include="FontRenderer.cpp">
       <Filter>Text</Filter>
     </ClCompile>
+    <ClCompile Include="tinyxmlparser.cpp">
+      <Filter>XML</Filter>
+    </ClCompile>
+    <ClCompile Include="tinyxml.cpp">
+      <Filter>XML</Filter>
+    </ClCompile>
+    <ClCompile Include="tinyxmlerror.cpp">
+      <Filter>XML</Filter>
+    </ClCompile>
+    <ClCompile Include="Font.cpp">
+      <Filter>Text</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleSample.hlsl">
@@ -415,6 +433,12 @@
     </ClInclude>
     <ClInclude Include="SkyPostProcess.h">
       <Filter>Quads</Filter>
+    </ClInclude>
+    <ClInclude Include="tinyxml.h">
+      <Filter>XML</Filter>
+    </ClInclude>
+    <ClInclude Include="Font.h">
+      <Filter>Text</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
