@@ -167,6 +167,9 @@
     <None Include="Font.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="UIRenderer.h">
+      <Filter>UI</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ModelInstance.cpp">
