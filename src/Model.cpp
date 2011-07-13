@@ -51,7 +51,7 @@ HRESULT Model::CreateFromSDKMeshFile(ID3D11Device* device, LPCWSTR fileName)
     V_RETURN(sdkMesh.Create(resolvedPath));
 
 	WCHAR directory[MAX_PATH];
-	GetDirectoryFromFileName(resolvedPath, directory, MAX_PATH);
+	GetDirectoryFromFileNameW(resolvedPath, directory, MAX_PATH);
 	
 	// Make materials
     _materialCount = sdkMesh.GetNumMaterials();
