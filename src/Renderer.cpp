@@ -1,7 +1,7 @@
 #include "Renderer.h"
 
 Renderer::Renderer() 
-	: _begun(false), _drawBoundingObjects(false), _debugFont(L"UI\\arial_font.xml")
+	: _begun(false), _drawBoundingObjects(false)
 {
 	_ambientLight.Color = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
@@ -50,10 +50,6 @@ void Renderer::AddLight(SpotLight* light, bool shadowed)
 void Renderer::AddPostProcess(PostProcess* postProcess)
 {
 	_postProcesses.push_back(postProcess);
-}
-
-void Renderer::AddDebugText(WCHAR* text)
-{
 }
 
 HRESULT Renderer::Begin()
@@ -106,24 +102,24 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 	}
 
 	// render the shadow maps
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Shadow Maps");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Shadow Maps");
 	V_RETURN(_directionalLightRenderer.RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
 	V_RETURN(_pointLightRenderer.RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
 	V_RETURN(_spotLightRenderer.RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	// Render the scene to the gbuffer
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"G-Buffer");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"G-Buffer");
 	V_RETURN(_gBuffer.SetRenderTargetsAndDepthStencil(pd3dImmediateContext));
 	V_RETURN(_gBuffer.Clear(pd3dImmediateContext));
 
 	V_RETURN(_modelRenderer.RenderModels(pd3dImmediateContext, &_models, camera));
 
 	V_RETURN(_gBuffer.UnsetRenderTargetsAndDepthStencil(pd3dImmediateContext));
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	// render the lights
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Lights");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Lights");
 	V_RETURN(_lightBuffer.SetRenderTargets(pd3dImmediateContext, _gBuffer.GetReadOnlyDepthStencilView()));
 
 	_lightBuffer.SetAmbientColor(_ambientLight.Color);
@@ -132,11 +128,11 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 	V_RETURN(_directionalLightRenderer.RenderLights(pd3dImmediateContext, camera, &_gBuffer));
 	V_RETURN(_pointLightRenderer.RenderLights(pd3dImmediateContext, camera, &_gBuffer));
 	V_RETURN(_spotLightRenderer.RenderLights(pd3dImmediateContext, camera, &_gBuffer));
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	V_RETURN(_lightBuffer.UnsetRenderTargetsAndDepthStencil(pd3dImmediateContext));
 
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Post-Processes");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Post-Processes");
 	// render the post processes	
 	for (UINT i = 0; i < _postProcesses.size(); i++)
 	{
@@ -161,12 +157,12 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 		V_RETURN(_postProcesses[i]->Render(pd3dImmediateContext, srcSRV, dstRTV, camera,
 			&_gBuffer, &_lightBuffer));
 	}
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	// Render the bounding shapes
 	if (_drawBoundingObjects)
 	{
-		DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 1.0f, 1.0f), L"Bounding Objects");
+		D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 1.0f, 1.0f), L"Bounding Objects");
 		
 		for (UINT i = 0; i < _models.size(); i++)
 		{
@@ -209,12 +205,9 @@ HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmedia
 		_boRenderer.Add(cameraFrust);
 
 		_boRenderer.Render(pd3dImmediateContext, camera);
-		DXUT_EndPerfEvent();
+		D3DPERF_EndEvent();
 	}
 	
-	_fontRenderer.DrawTextScreenSpace(pd3dImmediateContext, &_debugFont, L"TEST\nABC\nffff",
-		XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f), XMFLOAT2(100.0f, 100.0f), XMFLOAT2(1.0f, 1.0f));
-
 	SAFE_RELEASE(pOrigRTV);
     SAFE_RELEASE(pOrigDSV);
 		
@@ -234,8 +227,6 @@ HRESULT Renderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFA
 	V_RETURN(_pointLightRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_spotLightRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_boRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_debugFont.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_fontRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
@@ -250,8 +241,6 @@ void Renderer::OnD3D11DestroyDevice()
 	_pointLightRenderer.OnD3D11DestroyDevice();
 	_spotLightRenderer.OnD3D11DestroyDevice();
 	_boRenderer.OnD3D11DestroyDevice();
-	_debugFont.OnD3D11DestroyDevice();
-	_fontRenderer.OnD3D11DestroyDevice();
 }
 
 HRESULT Renderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
@@ -276,7 +265,10 @@ HRESULT Renderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapCh
     };
 
 	V_RETURN(pd3dDevice->CreateTexture2D(&ppTextureDesc, NULL, &_ppTextures[0]));
+	SET_DEBUG_NAME(_ppTextures[0], "Renderer post process texture 0");
+
 	V_RETURN(pd3dDevice->CreateTexture2D(&ppTextureDesc, NULL, &_ppTextures[1]));
+	SET_DEBUG_NAME(_ppTextures[1], "Renderer post process texture 1");
 
 	// Create the shader resource views
 	D3D11_SHADER_RESOURCE_VIEW_DESC ppSRVDesc = 
@@ -289,7 +281,10 @@ HRESULT Renderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapCh
 	ppSRVDesc.Texture2D.MipLevels = 1;
 
 	V_RETURN(pd3dDevice->CreateShaderResourceView(_ppTextures[0], &ppSRVDesc, &_ppShaderResourceViews[0]));
+	SET_DEBUG_NAME(_ppShaderResourceViews[0], "Renderer post process SRV 0");
+
 	V_RETURN(pd3dDevice->CreateShaderResourceView(_ppTextures[1], &ppSRVDesc, &_ppShaderResourceViews[1]));
+	SET_DEBUG_NAME(_ppShaderResourceViews[1], "Renderer post process SRV 1");
 
 	// create the render target views
 	D3D11_RENDER_TARGET_VIEW_DESC ppRTVDesc = 
@@ -301,8 +296,11 @@ HRESULT Renderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapCh
     };
 
 	V_RETURN(pd3dDevice->CreateRenderTargetView(_ppTextures[0], &ppRTVDesc, &_ppRenderTargetViews[0]));
+	SET_DEBUG_NAME(_ppRenderTargetViews[0], "Renderer post process RTV 0");
+
 	V_RETURN(pd3dDevice->CreateRenderTargetView(_ppTextures[1], &ppRTVDesc, &_ppRenderTargetViews[1]));
-	
+	SET_DEBUG_NAME(_ppRenderTargetViews[1], "Renderer post process RTV 1");
+
 	V_RETURN(_gBuffer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_lightBuffer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_modelRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
@@ -311,8 +309,6 @@ HRESULT Renderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapCh
 	V_RETURN(_pointLightRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_spotLightRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_boRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_debugFont.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_fontRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
@@ -334,6 +330,4 @@ void Renderer::OnD3D11ReleasingSwapChain()
 	_pointLightRenderer.OnD3D11ReleasingSwapChain();
 	_spotLightRenderer.OnD3D11ReleasingSwapChain();
 	_boRenderer.OnD3D11ReleasingSwapChain();
-	_debugFont.OnD3D11ReleasingSwapChain();
-	_fontRenderer.OnD3D11ReleasingSwapChain();
 }

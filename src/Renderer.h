@@ -14,8 +14,6 @@
 #include "DirectionalLightRenderer.h"
 #include "SpotLightRenderer.h"
 #include "BoundingObjectRenderer.h"
-#include "Font.h"
-#include "FontRenderer.h"
 #include <vector>
 
 using namespace std;
@@ -30,9 +28,6 @@ private:
 	vector<PostProcess*> _postProcesses;
 	ModelRenderer _modelRenderer;
 	CombinePostProcess _combinePP;
-
-	Font _debugFont;
-	FontRenderer _fontRenderer;
 
 	bool _drawBoundingObjects;
 	BoundingObjectRenderer _boRenderer;
@@ -56,7 +51,6 @@ public:
 	void AddLight(PointLight* light, bool shadowed);
 	void AddLight(SpotLight* light, bool shadowed);
 	void AddPostProcess(PostProcess* postProcess);
-	void AddDebugText(WCHAR* text);
 
 	bool GetDrawBoundingObjects() const { return _drawBoundingObjects; }
 	void SetDrawBoundingObjects(bool draw) { _drawBoundingObjects = draw; }
