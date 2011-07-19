@@ -51,6 +51,9 @@ HRESULT DeviceManager::Initialize(HWND outputWindow)
 
 	V_RETURN(D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, flags,
 		NULL, 0, D3D11_SDK_VERSION, &desc, &_swapChain, &_device, NULL, &_immediateContext));
+	SET_DEBUG_NAME(_device, "Graphics device");
+	SET_DEBUG_NAME(_immediateContext, "Immediate context");
+	SET_DEBUG_NAME(_swapChain, "Swap chain");
 
     _featureLevel = _device->GetFeatureLevel();
     if (_featureLevel < _minFeatureLevel)
@@ -179,7 +182,10 @@ HRESULT DeviceManager::afterReset()
 	HRESULT hr;
 
 	V_RETURN(_swapChain->GetBuffer(0, __uuidof(_backBufferTexture), (void**)(&_backBufferTexture)));
+	SET_DEBUG_NAME(_backBufferTexture, "Back buffer texture");
+
     V_RETURN(_device->CreateRenderTargetView(_backBufferTexture, NULL, &_backBufferRTV));
+	SET_DEBUG_NAME(_backBufferRTV, "Back buffer RTV");
 
     // Create a default DepthStencil buffer
     if(_enableAutoDS)
@@ -226,6 +232,7 @@ HRESULT DeviceManager::afterReset()
         dsDesc.SampleDesc.Quality = _msQuality;
 
         V_RETURN(_device->CreateTexture2D(&dsDesc, NULL, &_autoDSTexture));
+		SET_DEBUG_NAME(_backBufferRTV, "Depth stecil texture");
 
         D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
         dsvDesc.Format = _autoDSFormat;
@@ -234,6 +241,7 @@ HRESULT DeviceManager::afterReset()
         dsvDesc.Flags = 0;
 
         V_RETURN(_device->CreateDepthStencilView(_autoDSTexture, &dsvDesc, &_autoDSView));
+		SET_DEBUG_NAME(_backBufferRTV, "Depth stecil DSV");
 
         if (_useAutoDSAsSR)
         {
@@ -254,6 +262,7 @@ HRESULT DeviceManager::afterReset()
             srvDesc.Texture2D.MipLevels = 1;
             srvDesc.Texture2D.MostDetailedMip = 0;
             V_RETURN(_device->CreateShaderResourceView(_autoDSTexture, &srvDesc, &_autoDSSRView));
+			SET_DEBUG_NAME(_backBufferRTV, "Depth stecil SRV");
         }
         else
 		{

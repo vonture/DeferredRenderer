@@ -22,7 +22,7 @@ HRESULT DirectionalLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImme
 {
 	if (GetCount(true) > 0)
 	{
-		DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Directional Light Shadow Maps");
+		D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Directional Light Shadow Maps");
 
 		// Save the old viewport
 		D3D11_VIEWPORT vpOld[D3D11_VIEWPORT_AND_SCISSORRECT_MAX_INDEX];
@@ -38,7 +38,7 @@ HRESULT DirectionalLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImme
 		// Re-apply the old viewport
 		pd3dImmediateContext->RSSetViewports(nViewPorts, vpOld);
 
-		DXUT_EndPerfEvent();
+		D3DPERF_EndEvent();
 	}
 	return S_OK;
 }
@@ -617,7 +617,7 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 {	
 	if (GetCount(true) + GetCount(false) > 0)
 	{
-		DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Directional Lights");
+		D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Directional Lights");
 
 		HRESULT hr;
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -721,7 +721,7 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 		ID3D11ShaderResourceView* nullSRV[1] = { NULL };
 		pd3dImmediateContext->PSSetShaderResources(4, 1, nullSRV);
 
-		DXUT_EndPerfEvent();
+		D3DPERF_EndEvent();
 	}
 
 	return S_OK;

@@ -22,7 +22,7 @@ HRESULT PointLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateC
 {
 	if (GetCount(true) > 0)
 	{
-		DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Point Light Shadow Maps");
+		D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Point Light Shadow Maps");
 
 		// Save the old viewport
 		D3D11_VIEWPORT vpOld[D3D11_VIEWPORT_AND_SCISSORRECT_MAX_INDEX];
@@ -38,7 +38,7 @@ HRESULT PointLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateC
 		// Re-apply the old viewport
 		pd3dImmediateContext->RSSetViewports(nViewPorts, vpOld);
 		
-		DXUT_EndPerfEvent();
+		D3DPERF_EndEvent();
 	}
 	return S_OK;
 }
@@ -190,7 +190,7 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 {
 	if (GetCount(true) + GetCount(false) > 0)
 	{
-		DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Point Lights");
+		D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Point Lights");
 
 		HRESULT hr;
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -419,7 +419,7 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 		pd3dImmediateContext->RSSetState(prevRS);
 		SAFE_RELEASE(prevRS);
 
-		DXUT_EndPerfEvent();
+		D3DPERF_EndEvent();
 	}
 	return S_OK;
 }

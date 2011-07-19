@@ -17,7 +17,7 @@ DepthOfFieldPostProcess::~DepthOfFieldPostProcess()
 HRESULT DepthOfFieldPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"DoF");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"DoF");
 
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -54,11 +54,11 @@ HRESULT DepthOfFieldPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContex
 	float blendFactor[4] = {1, 1, 1, 1};
 	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
 	
-	Quad* fsQuad = GetFullScreenQuad();
+	//Quad* fsQuad = GetFullScreenQuad();
 
 	// Render DOF (not implimented yet)
 
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 	return E_NOTIMPL;
 }
 
