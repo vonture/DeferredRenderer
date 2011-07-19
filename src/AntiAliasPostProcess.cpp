@@ -45,7 +45,7 @@ AntiAliasPostProcess::~AntiAliasPostProcess()
 HRESULT AntiAliasPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"MLAA");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"MLAA");
 	
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -79,7 +79,7 @@ HRESULT AntiAliasPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, 
 	Quad* fsQuad = GetFullScreenQuad();
 
 	// Render the edge detection
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Edge Detection");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Edge Detection");
 
 	pd3dImmediateContext->OMSetRenderTargets(1, &_edgeDetectRTV, _dsv);
 
@@ -102,10 +102,10 @@ HRESULT AntiAliasPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, 
 
 	ID3D11PixelShader* _curEdgePS = _edgeDetectPSs[_depthDetect ? 1 : 0][_normalDetect ? 1 : 0][_luminanceDetect ? 1 : 0];
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _curEdgePS));
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	// Render blend weights
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Calculate Blend Weights");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Calculate Blend Weights");
 
 	// Determine which pixel shader and weight texture to use, max search steps must be <= than
 	// (max_distance - 1) / 2
@@ -133,10 +133,10 @@ HRESULT AntiAliasPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, 
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _blendWeightPSs[weightTexIdx]));
 
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	// Copy src into dst	
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Background Copy");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Background Copy");
 
 	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, _dsv);
 
@@ -152,22 +152,22 @@ HRESULT AntiAliasPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, 
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _copyBackgroundPS));
 	
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	// Neighborhood blend	
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Neighborhood Blend");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Neighborhood Blend");
 	
 	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetStencilEqual(), 0xFFFFFFFF);
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _neighborhoodBlendPS));
 
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 	
 	// Clean up
 	ID3D11ShaderResourceView* ppSRVNULL[2] = { NULL, NULL };
 	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVNULL);
 
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 	return S_OK;
 }
 
