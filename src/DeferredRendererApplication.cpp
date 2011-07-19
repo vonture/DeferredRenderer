@@ -1,8 +1,9 @@
 #include "DeferredRendererApplication.h"
 
+#include "Gwen/Controls/Button.h"
+
 DeferredRendererApplication::DeferredRendererApplication()
-	: Application(L"Deferred Renderer", NULL),
-      _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f),
+	: Application(L"Deferred Renderer", NULL), _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f),
 	  _scene(L"\\models\\tankscene\\tankscene.sdkmesh")
 {
 	_scene.SetScale(1.0f);
@@ -18,6 +19,15 @@ DeferredRendererApplication::DeferredRendererApplication()
 
 DeferredRendererApplication::~DeferredRendererApplication()
 {
+}
+
+void DeferredRendererApplication::OnInitialize()
+{	
+	Gwen::Controls::Canvas* canvas = _uiPP.GetCanvas();
+
+	Gwen::Controls::Button* pButton = new Gwen::Controls::Button(canvas);
+	pButton->SetBounds(10, 10, 100, 100);
+    pButton->SetText("My First Button");
 }
 
 void DeferredRendererApplication::OnPreparingDeviceSettings(DeviceManager* deviceManager)
@@ -135,6 +145,16 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 	}
 
 	_hdrPP.SetTimeDelta(dt);
+	_uiPP.OnFrameMove(totalTime, dt);
+}
+
+LRESULT DeferredRendererApplication::OnMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	HRESULT hr;
+	
+	V_RETURN(_uiPP.OnMessage(hWnd, msg, wParam, lParam));
+
+	return Application::OnMessage(hWnd, msg, wParam, lParam);
 }
 
 HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext)
@@ -145,13 +165,15 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 
 	_renderer.AddModel(&_scene);	
 	
+	/*
 	PointLight greenLight = 
 	{
 		XMFLOAT3(-5.0f, 7.5f, 3.0f),
 		10.0f,
 		XMFLOAT3(1.5f, 3.0f, 1.0f)
 	};
-	//_renderer.AddLight(&greenLight, true);
+	_renderer.AddLight(&greenLight, true);
+	*/
 
 	XMFLOAT3 sunColor = XMFLOAT3(1.0f, 0.8f, 0.5f);
 	float sunIntensity = 5.0f;
@@ -190,11 +212,13 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 	if (_hdrEnabled)
 	{
 		_renderer.AddPostProcess(&_hdrPP);	
-	}
+	}	
 
 	// Unimplimented post processes
 	//_renderer.AddPostProcess(&_dofPP);
 	//_renderer.AddPostProcess(&_motionBlurPP);
+
+	_renderer.AddPostProcess(&_uiPP);
 
 	V_RETURN(_renderer.End(pd3dDevice, pd3dImmediateContext, &_camera));
 
@@ -214,8 +238,9 @@ HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 	V_RETURN(_aoPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_dofPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_motionBlurPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_uiPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_scene.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-
+	
 	return S_OK;
 }
 
@@ -230,6 +255,7 @@ void DeferredRendererApplication::OnD3D11DestroyDevice()
 	_aoPP.OnD3D11DestroyDevice();
 	_dofPP.OnD3D11DestroyDevice();
 	_motionBlurPP.OnD3D11DestroyDevice();
+	_uiPP.OnD3D11DestroyDevice();
 	_scene.OnD3D11DestroyDevice();	
 }
 
@@ -250,6 +276,7 @@ HRESULT DeferredRendererApplication::OnD3D11ResizedSwapChain( ID3D11Device* pd3d
 	V_RETURN(_aoPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_dofPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_motionBlurPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_uiPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_scene.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
@@ -265,10 +292,11 @@ void DeferredRendererApplication::OnD3D11ReleasingSwapChain()
 	_aoPP.OnD3D11ReleasingSwapChain();
 	_dofPP.OnD3D11ReleasingSwapChain();
 	_motionBlurPP.OnD3D11ReleasingSwapChain();
+	_uiPP.OnD3D11ReleasingSwapChain();
 	_scene.OnD3D11ReleasingSwapChain();
 }
 
-int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow )
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
 	DeferredRendererApplication app;
 	app.Start();

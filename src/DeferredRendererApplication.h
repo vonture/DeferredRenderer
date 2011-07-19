@@ -13,6 +13,9 @@
 #include "AmbientOcclusionPostProcess.h"
 #include "DepthOfFieldPostProcess.h"
 #include "MotionBlurPostProcess.h"
+#include "UIPostProcess.h"
+
+#include "Gwen/Controls/Canvas.h"
 
 class DeferredRendererApplication : public Application
 {
@@ -28,12 +31,14 @@ private:
 	AmbientOcclusionPostProcess _aoPP;
 	DepthOfFieldPostProcess _dofPP;
 	MotionBlurPostProcess _motionBlurPP;
-
+	UIPostProcess _uiPP;
+	
 	bool _aoEnabled;
 	bool _aaEnabled;
 	bool _hdrEnabled;
 
 protected:
+	void OnInitialize();
 	void OnPreparingDeviceSettings(DeviceManager* deviceManager);
 
 public:
@@ -41,6 +46,8 @@ public:
 	~DeferredRendererApplication();
 
 	void OnFrameMove(double totalTime, float dt);
+	LRESULT OnMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 	HRESULT OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
