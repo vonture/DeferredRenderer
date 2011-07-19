@@ -5,10 +5,10 @@
 
 struct MeshPart
 {
-	UINT64 VertexStart;
-    UINT64 VertexCount;
-    UINT64 IndexStart;
-    UINT64 IndexCount;
+	UINT VertexStart;
+    UINT VertexCount;
+    UINT IndexStart;
+    UINT IndexCount;
     UINT MaterialIndex;
 };
 
