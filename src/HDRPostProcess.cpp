@@ -41,7 +41,7 @@ HDRPostProcess::~HDRPostProcess()
 HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"HDR");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"HDR");
 	
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -94,7 +94,7 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 
 	// render the luminance
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Luminance map");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Luminance map");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_lumRTVs[0], NULL);
 
 	ID3D11ShaderResourceView* ppSRVLumMap[2] = { src, _lumSRVs[1] };
@@ -103,15 +103,15 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	pd3dImmediateContext->PSSetConstantBuffers(0, 1, &_hdrPropertiesBuffer);
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _luminanceMapPS));
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	// Generate the mips for the luminance map
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Generate MIPS");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Generate MIPS");
 	pd3dImmediateContext->GenerateMips(_lumSRVs[0]);
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	// bloom threshold and downscale to 1/2
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Bloom threshold");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Bloom threshold");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[0], NULL);
 
 	ID3D11ShaderResourceView* ppSRVThresh[2] = { src, _lumSRVs[0] };
@@ -122,10 +122,10 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _thresholdPS));
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	// Downscale again to 1/4
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Downscale to 1/4");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Downscale to 1/4");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[1], NULL);
 	
 	ID3D11ShaderResourceView* ppSRVDownScale1[2] = { _downScaleSRVs[0], NULL };
@@ -136,10 +136,10 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS));
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	// Downscale again to 1/8
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Downscale to 1/8");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Downscale to 1/8");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[2], NULL);	
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[1]);
 
@@ -148,42 +148,42 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS));
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	// Blur the downscaled threshold image horizontally/vertically twice
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Blur horizontal 1");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Blur horizontal 1");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_blurTempRTV, NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[2]);
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _hBlurPS));
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	ID3D11ShaderResourceView* ppSRVNULL1[1] = { NULL };
 	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL1);
 
-		DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Blur vertical 1");
+		D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Blur vertical 1");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[2], NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_blurTempSRV);
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _vBlurPS));
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL1);
 
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Blur horizontal 2");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Blur horizontal 2");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_blurTempRTV, NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[2]);
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _hBlurPS));
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL1);
 
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Blur vertical 2");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Blur vertical 2");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[2], NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_blurTempSRV);
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _vBlurPS));
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	// Upscale to 1/4
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Upscale to 1/4");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Upscale to 1/4");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[1], NULL);	
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[2]);
 
@@ -192,10 +192,10 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS));
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	// Upscale to 1/2
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Upscale to 1/2");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Upscale to 1/2");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[0], NULL);	
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[1]);
 
@@ -204,20 +204,20 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS));
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	// Re-apply the old viewport
 	pd3dImmediateContext->RSSetViewports(nViewPorts, vpOld);
 
 	// Tone map the final result
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Tone map and color grade");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Tone map and color grade");
 	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, NULL);
 
 	ID3D11ShaderResourceView* ppSRVToneMap[4] = { src, _lumSRVs[0], _downScaleSRVs[0], _colorGradeSRV };
 	pd3dImmediateContext->PSSetShaderResources(0, 4, ppSRVToneMap);
 	
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _toneMapPS));
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	// Unset the SRVs
 	ID3D11ShaderResourceView* ppSRVNULL4[4] = { NULL, NULL, NULL, NULL };
@@ -226,7 +226,7 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	// Swap the adapted luminance buffers from the previous render
 	swapLuminanceBuffers();
 	
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	return S_OK;
 }
