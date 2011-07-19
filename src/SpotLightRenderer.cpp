@@ -13,9 +13,9 @@ HRESULT SpotLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateCo
 {
 	if (GetCount(true) > 0)
 	{
-		DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Spot Light Shadow Maps");
+		D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Spot Light Shadow Maps");
 
-		DXUT_EndPerfEvent();
+		D3DPERF_EndEvent();
 		return E_FAIL;
 	}
 	return S_OK;
@@ -25,9 +25,9 @@ HRESULT SpotLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateContex
 {
 	if (GetCount(true) + GetCount(false) > 0)
 	{
-		DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Spot Lights");
+		D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Spot Lights");
 
-		DXUT_EndPerfEvent();
+		D3DPERF_EndEvent();
 		return E_FAIL;
 	}
 	return S_OK;

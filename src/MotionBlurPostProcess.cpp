@@ -13,9 +13,9 @@ HRESULT MotionBlurPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext,
 	ID3D11ShaderResourceView* src, ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer,
 	LightBuffer* lightBuffer)
 {
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Motion blur");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Motion blur");
 
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 	return E_NOTIMPL;
 }
 
@@ -38,6 +38,7 @@ HRESULT MotionBlurPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 	};
 
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_propertiesBuffer));
+	SET_DEBUG_NAME(_propertiesBuffer, "Motion blur properties buffer");
 
 	return S_OK;
 }

@@ -12,7 +12,7 @@ CombinePostProcess::~CombinePostProcess()
 HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Combine");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Combine");
 
 	HRESULT hr;
 	
@@ -43,7 +43,7 @@ HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID
 	ID3D11ShaderResourceView* NULLSRVs[3] = { NULL, NULL, NULL};
 	pd3dImmediateContext->PSSetShaderResources(0, 3, NULLSRVs);
 
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	return S_OK;
 }
@@ -59,6 +59,7 @@ HRESULT CombinePostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const 
 	V_RETURN(CompileShaderFromFile( L"GBufferCombine.hlsl", "PS_Combine", "ps_4_0", NULL, &pBlob ) );   
     V_RETURN(pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_pixelShader));
 	SAFE_RELEASE(pBlob);
+	SET_DEBUG_NAME(_pixelShader, "G-buffer combine pixel shader");
 
 	return S_OK;
 }
