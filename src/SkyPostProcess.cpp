@@ -16,11 +16,10 @@ void SkyPostProcess::SetSunDirection(const XMFLOAT3& sunDir)
 	XMStoreFloat3(&_sunDirection, XMVector3Normalize(dir));
 }
 
-
 HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
-	DXUT_BeginPerfEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Sky");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Sky");
 
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;	
@@ -75,7 +74,7 @@ HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	ID3D11ShaderResourceView* ppSRVNULL[2] = { NULL, NULL };
 	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVNULL);
 
-	DXUT_EndPerfEvent();
+	D3DPERF_EndEvent();
 
 	return S_OK;
 }
@@ -92,6 +91,7 @@ HRESULT SkyPostProcess:: OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXG
 	V_RETURN( CompileShaderFromFile( L"Sky.hlsl", "PS_Sky", "ps_4_0", NULL, &pBlob ) );   
     V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_skyPS));
 	SAFE_RELEASE(pBlob);
+	SET_DEBUG_NAME(_skyPS, "Sky post process pixel shader");
 
 	// Create the buffer
 	D3D11_BUFFER_DESC bufferDesc =
@@ -105,6 +105,7 @@ HRESULT SkyPostProcess:: OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXG
 	};
 
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_skyProperties));
+	SET_DEBUG_NAME(_skyProperties, "Sky post process properties buffer");
 
 	return S_OK;
 }
