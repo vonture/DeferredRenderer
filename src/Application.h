@@ -36,7 +36,7 @@ public:
 
 	HWND GetHWND() const;
 
-	LRESULT OnResized(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+	virtual LRESULT OnMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 	virtual void OnFrameMove(double totalTime, float dt) = 0;
 	virtual HRESULT OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext) = 0;

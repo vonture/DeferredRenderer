@@ -2,9 +2,9 @@
 
 Application* MainApplication;
 
-LRESULT OnMainApplicationResized(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT OnMainApplicationMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	return MainApplication->OnResized(hWnd, msg, wParam, lParam);
+	return MainApplication->OnMessage(hWnd, msg, wParam, lParam);
 }
 
 Application::Application(const WCHAR* title, const WCHAR* icon)
@@ -16,26 +16,32 @@ Application::~Application()
 {
 }
 
-LRESULT Application::OnResized(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT Application::OnMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	HRESULT hr;
 
-	if(!_deviceManager.GetFullScreen() && wParam != SIZE_MINIMIZED)
-    {
-        UINT width = _window.GetClientWidth();
-		UINT height = _window.GetClientHeight();
-			
-		if(width != _deviceManager.GetBackBufferWidth() || 
-		   height != _deviceManager.GetBackBufferHeight())
+	switch(msg)
+	{
+		case WM_SIZE:
 		{
-			OnD3D11ReleasingSwapChain();
+			if(!_deviceManager.GetFullScreen() && wParam != SIZE_MINIMIZED)
+			{
+				UINT width = _window.GetClientWidth();
+				UINT height = _window.GetClientHeight();
+			
+				if(width != _deviceManager.GetBackBufferWidth() || 
+				   height != _deviceManager.GetBackBufferHeight())
+				{
+					OnD3D11ReleasingSwapChain();
 
-			_deviceManager.SetBackBufferWidth(width);
-            _deviceManager.SetBackBufferHeight(height);
-            _deviceManager.Reset();
+					_deviceManager.SetBackBufferWidth(width);
+					_deviceManager.SetBackBufferHeight(height);
+					_deviceManager.Reset();
 
-			V_RETURN(OnD3D11ResizedSwapChain(_deviceManager.GetDevice(), _deviceManager.GetSwapChain(), 
-				_deviceManager.GetBackBufferSurfaceDesc()));
+					V_RETURN(OnD3D11ResizedSwapChain(_deviceManager.GetDevice(), _deviceManager.GetSwapChain(), 
+						_deviceManager.GetBackBufferSurfaceDesc()));
+				}
+			}
 		}
 	}
 
@@ -68,7 +74,7 @@ HRESULT Application::Start()
 		
 	// Register this application instance as the main one for callbacks
 	MainApplication = this;
-	_window.RegisterMessageFunction(WM_SIZE, &OnMainApplicationResized);
+	_window.RegisterMessageFunction(&OnMainApplicationMessage);
 
 	// Ask the application to apply settings and initialize the device
 	OnPreparingDeviceSettings(&_deviceManager);
