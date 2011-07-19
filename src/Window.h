@@ -19,6 +19,7 @@ private:
 	bool _maximized;
 
 	std::map<UINT, MessageFunction*> _messageFunctions;
+	MessageFunction* _allMessagesFunction;
 
 	void makeWindow(const WCHAR* name, const WCHAR* sIconResource, const WCHAR* sMenuResource);
 	static LRESULT WINAPI wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -60,4 +61,5 @@ public:
 	void MessageLoop();
 
 	void RegisterMessageFunction(UINT message, MessageFunction* function);
+	void RegisterMessageFunction(MessageFunction* function);
 };

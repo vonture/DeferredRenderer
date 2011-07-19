@@ -3,7 +3,7 @@
 Window::Window(HINSTANCE hinstance, const WCHAR* name, const WCHAR* iconResource, DWORD width,
 	DWORD height, DWORD style,	DWORD extendedStyle, const WCHAR* menuResource, const WCHAR* accelResource)
 	: _hwnd(NULL), _name(name), _hinstance(hinstance), _style(style), _extendedStyle(extendedStyle),
-	  _acceleratorTable(NULL), _maximized(false)
+	  _acceleratorTable(NULL), _maximized(false), _allMessagesFunction(NULL)
 {
 	if (!hinstance)
 	{
@@ -102,28 +102,34 @@ LRESULT WINAPI Window::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	}
 }
 
-LRESULT Window::MessageHandler( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
+LRESULT Window::MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	LRESULT hr;
+
 	if (_messageFunctions.find(uMsg) != _messageFunctions.end())
 	{
 		MessageFunction* msgFunction = _messageFunctions[uMsg];
-		return msgFunction(hWnd, uMsg, wParam, lParam);
+		V_RETURN(msgFunction(hWnd, uMsg, wParam, lParam));
 	}
-	else
+	
+	if (_allMessagesFunction)
 	{
-		switch (uMsg)
-		{
-			// Window is being destroyed
-			case WM_DESTROY:
-				PostQuitMessage(0);
-				return 0;
-
-			// Window is being closed
-			case WM_CLOSE:
-				Destroy();
-				return 0;
-		}	
+		V_RETURN(_allMessagesFunction(hWnd, uMsg, wParam, lParam));
 	}
+
+	switch (uMsg)
+	{
+		// Window is being destroyed
+		case WM_DESTROY:
+			PostQuitMessage(0);
+			return 0;
+
+		// Window is being closed
+		case WM_CLOSE:
+			Destroy();
+			return 0;
+	}	
+	
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
@@ -327,4 +333,9 @@ void Window::MessageLoop()
 void Window::RegisterMessageFunction(UINT message, MessageFunction* function)
 {
 	_messageFunctions[message] = function;
+}
+
+void Window::RegisterMessageFunction(MessageFunction* function)
+{
+	_allMessagesFunction = function;
 }
