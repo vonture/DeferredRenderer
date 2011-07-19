@@ -19,7 +19,7 @@ XMFLOAT2 Font::MeasureString(const WCHAR* text)
 {
 	UINT numChars = (int)wcslen(text);
 
-	XMFLOAT2 size = XMFLOAT2(0.0f, 0.0f);
+	XMFLOAT2 size = XMFLOAT2(0.0f, (float)_lineSpacing);
 	float rowLen = 0.0f;
 	for (UINT i = 0; i < numChars; i++)
 	{
@@ -114,11 +114,14 @@ HRESULT Font::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_D
 	wcsncat_s(fullPath, wTextureName, MAX_PATH);
 
 	V_RETURN(D3DX11CreateShaderResourceViewFromFile(pd3dDevice, fullPath, NULL, NULL, &_fontSRV, NULL));
-	
-	if (!root->Attribute("width", &_textureWidth) || !root->Attribute("height", &_textureHeight))
-	{
-		return E_FAIL;
-	}
+	char debugName[MAX_PATH];
+	sprintf_s(debugName, "%s font SRV", texName);
+	SET_DEBUG_NAME(_fontSRV, debugName);
+
+	D3DX11_IMAGE_INFO info;
+	V_RETURN(D3DX11GetImageInfoFromFile(fullPath, NULL, &info, NULL));
+	_textureWidth = info.Width;
+	_textureHeight = info.Height;
 
 	TiXmlElement* child = root->FirstChildElement("character");
 	while (child)
