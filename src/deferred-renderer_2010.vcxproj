@@ -391,7 +391,6 @@
     <ClCompile Include="DirectionalLightRenderer.cpp" />
     <ClCompile Include="FirstPersonCamera.cpp" />
     <ClCompile Include="Font.cpp" />
-    <ClCompile Include="FontRenderer.cpp" />
     <ClCompile Include="FullscreenQuad.cpp" />
     <ClCompile Include="DeferredRendererApplication.cpp" />
     <ClCompile Include="GBuffer.cpp" />
@@ -414,9 +413,12 @@
     <ClCompile Include="ShaderLoader.cpp" />
     <ClCompile Include="SkyPostProcess.cpp" />
     <ClCompile Include="SpotLightRenderer.cpp" />
+    <ClCompile Include="SpriteRenderer.cpp" />
     <ClCompile Include="tinyxml.cpp" />
     <ClCompile Include="tinyxmlerror.cpp" />
     <ClCompile Include="tinyxmlparser.cpp" />
+    <ClCompile Include="UIPostProcess.cpp" />
+    <ClCompile Include="UIRenderer.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="xnaCollision.cpp" />
     <ClInclude Include="AmbientOcclusionPostProcess.h" />
@@ -434,7 +436,6 @@
     <ClInclude Include="DirectionalLightRenderer.h" />
     <ClInclude Include="FirstPersonCamera.h" />
     <ClInclude Include="Font.h" />
-    <ClInclude Include="FontRenderer.h" />
     <ClInclude Include="FullscreenQuad.h" />
     <ClInclude Include="HDRPostProcess.h" />
     <ClInclude Include="KeyboardState.h" />
@@ -449,11 +450,14 @@
     <ClInclude Include="ShaderLoader.h" />
     <ClInclude Include="SkyPostProcess.h" />
     <ClInclude Include="SpotLightRenderer.h" />
+    <ClInclude Include="SpriteRenderer.h" />
     <ClInclude Include="tinyxml.h" />
+    <ClInclude Include="UIPostProcess.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="xnaCollision.h" />
     <None Include="BoundingObject.hlsl" />
+    <None Include="Copy.hlsl" />
     <None Include="Depth.hlsl" />
     <None Include="DirectionalLight.hlsl" />
     <None Include="DoF.hlsl" />
@@ -483,9 +487,9 @@
     <ClCompile Include="DXUT\Optional\DXUTsettingsdlg.cpp" />
     <ClCompile Include="DXUT\Optional\SDKmesh.cpp" />
     <ClCompile Include="DXUT\Optional\SDKmisc.cpp" />
-    <None Include="Font.hlsl" />
     <None Include="MLAA.hlsl" />
     <None Include="Sky.hlsl" />
+    <None Include="Sprite.hlsl" />
     <None Include="SSAO.hlsl" />
     <None Include="UIRenderer.h" />
   </ItemGroup>

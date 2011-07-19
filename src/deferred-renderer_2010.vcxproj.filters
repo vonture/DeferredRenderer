@@ -51,14 +51,14 @@
     <Filter Include="Graphics Helpers">
       <UniqueIdentifier>{56872c66-41ce-48e6-9858-efaed604d5ef}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Text">
-      <UniqueIdentifier>{b552d8f5-19b3-40fd-9d4c-f09d06b74477}</UniqueIdentifier>
-    </Filter>
     <Filter Include="UI">
       <UniqueIdentifier>{eb496945-77d7-4ef4-a46a-919f7d679550}</UniqueIdentifier>
     </Filter>
     <Filter Include="XML">
       <UniqueIdentifier>{121446dc-35d0-46cb-99d7-3c7efb792bc1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sprites">
+      <UniqueIdentifier>{eac99c23-503c-40bc-9249-f84d3af06b77}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -164,11 +164,14 @@
     <None Include="DoF.hlsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Font.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="UIRenderer.h">
       <Filter>UI</Filter>
+    </None>
+    <None Include="Sprite.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Copy.hlsl">
+      <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -276,9 +279,6 @@
     <ClCompile Include="MotionBlurPostProcess.cpp">
       <Filter>Post Process</Filter>
     </ClCompile>
-    <ClCompile Include="FontRenderer.cpp">
-      <Filter>Text</Filter>
-    </ClCompile>
     <ClCompile Include="tinyxmlparser.cpp">
       <Filter>XML</Filter>
     </ClCompile>
@@ -288,8 +288,17 @@
     <ClCompile Include="tinyxmlerror.cpp">
       <Filter>XML</Filter>
     </ClCompile>
+    <ClCompile Include="UIRenderer.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="SpriteRenderer.cpp">
+      <Filter>Sprites</Filter>
+    </ClCompile>
     <ClCompile Include="Font.cpp">
-      <Filter>Text</Filter>
+      <Filter>Sprites</Filter>
+    </ClCompile>
+    <ClCompile Include="UIPostProcess.cpp">
+      <Filter>Post Process</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -431,17 +440,20 @@
     <ClInclude Include="MotionBlurPostProcess.h">
       <Filter>Post Process</Filter>
     </ClInclude>
-    <ClInclude Include="FontRenderer.h">
-      <Filter>Text</Filter>
-    </ClInclude>
-    <ClInclude Include="SkyPostProcess.h">
-      <Filter>Quads</Filter>
-    </ClInclude>
     <ClInclude Include="tinyxml.h">
       <Filter>XML</Filter>
     </ClInclude>
+    <ClInclude Include="SpriteRenderer.h">
+      <Filter>Sprites</Filter>
+    </ClInclude>
     <ClInclude Include="Font.h">
-      <Filter>Text</Filter>
+      <Filter>Sprites</Filter>
+    </ClInclude>
+    <ClInclude Include="UIPostProcess.h">
+      <Filter>Post Process</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyPostProcess.h">
+      <Filter>Post Process</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
