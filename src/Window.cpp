@@ -10,10 +10,16 @@ Window::Window(HINSTANCE hinstance, const WCHAR* name, const WCHAR* iconResource
 		_hinstance = GetModuleHandle(NULL);
 	}
 
+	/*
 	INITCOMMONCONTROLSEX cce;
 	cce.dwSize = sizeof(INITCOMMONCONTROLSEX);
 	cce.dwICC = ICC_BAR_CLASSES|ICC_COOL_CLASSES|ICC_STANDARD_CLASSES;
-	InitCommonControlsEx(&cce);
+	
+	if (!InitCommonControlsEx(&cce))
+	{
+		MessageBoxEx(NULL, L"Unabled to init controls", L"Error", MB_OK, 0);
+	}
+	*/
 
 	makeWindow(name, iconResource, menuResource);
 	SetClientSize(width, height); 
@@ -36,6 +42,8 @@ Window::~Window()
 
 void Window::makeWindow(const WCHAR* name, const WCHAR* sIconResource, const WCHAR* sMenuResource)
 {
+	HRESULT hr;
+
 	HICON hIcon = NULL;
 	if (sIconResource)
 	{
@@ -61,10 +69,10 @@ void Window::makeWindow(const WCHAR* name, const WCHAR* sIconResource, const WCH
 		NULL,				//HICON       hIconSm;
 	};
 
-	if (!RegisterClassEx(&wc))
+	hr = RegisterClassEx(&wc);
+	if (FAILED(hr))
 	{
-		// ERROR
-		_ASSERT(false);
+		MessageBoxEx(NULL, L"Unabled to register class", L"Error", MB_OK, 0);
 	}
 
     // Create the application's window
@@ -73,19 +81,20 @@ void Window::makeWindow(const WCHAR* name, const WCHAR* sIconResource, const WCH
 
 	if (!_hwnd)
 	{
-		// ERROR
-		_ASSERT(false);
+		MessageBoxEx(NULL, L"Unable to create a window", L"Error", MB_OK, 0);
 	}
 }
 
 LRESULT WINAPI Window::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	LRESULT hr;
+
 	switch(uMsg)
     {
 		case WM_NCCREATE:
 		{
 			LPCREATESTRUCT pCreateStruct = (LPCREATESTRUCT)lParam;
-		    SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pCreateStruct->lpCreateParams);
+		    V_WIN_RETURN(SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pCreateStruct->lpCreateParams));
 			return DefWindowProc(hWnd, uMsg, wParam, lParam);
 		}
     }
@@ -104,17 +113,15 @@ LRESULT WINAPI Window::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 LRESULT Window::MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	LRESULT hr;
-
 	if (_messageFunctions.find(uMsg) != _messageFunctions.end())
 	{
 		MessageFunction* msgFunction = _messageFunctions[uMsg];
-		V_RETURN(msgFunction(hWnd, uMsg, wParam, lParam));
+		msgFunction(hWnd, uMsg, wParam, lParam);
 	}
 	
 	if (_allMessagesFunction)
 	{
-		V_RETURN(_allMessagesFunction(hWnd, uMsg, wParam, lParam));
+		_allMessagesFunction(hWnd, uMsg, wParam, lParam);
 	}
 
 	switch (uMsg)
@@ -150,6 +157,8 @@ bool Window::IsActive() const
 
 void Window::SetMaximized(bool maximized)
 {
+	HRESULT hr;
+
 	if (maximized != _maximized)
 	{
 		_maximized = maximized;
@@ -180,9 +189,9 @@ void Window::SetMaximized(bool maximized)
 			UINT height = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
 
 			// place the window
-			_ASSERT(SetWindowLong(_hwnd, GWL_STYLE, newStyle));
-			_ASSERT(SetWindowLong(_hwnd, GWL_EXSTYLE, newExStyle));
-			_ASSERT(SetWindowPos(_hwnd, HWND_TOP, x, y, width, height, SWP_FRAMECHANGED | SWP_SHOWWINDOW));
+			V_WIN(SetWindowLong(_hwnd, GWL_STYLE, newStyle));
+			V_WIN(SetWindowLong(_hwnd, GWL_EXSTYLE, newExStyle));
+			V_WIN(SetWindowPos(_hwnd, HWND_TOP, x, y, width, height, SWP_FRAMECHANGED | SWP_SHOWWINDOW));
 		}
 		else
 		{
@@ -192,9 +201,9 @@ void Window::SetMaximized(bool maximized)
 			UINT width = _unmaxedRect.right - _unmaxedRect.left;
 			UINT height = _unmaxedRect.bottom - _unmaxedRect.top;
 
-			_ASSERT(SetWindowLong(_hwnd, GWL_STYLE, _style));
-			_ASSERT(SetWindowLong(_hwnd, GWL_EXSTYLE, _extendedStyle));
-			_ASSERT(SetWindowPos(_hwnd, HWND_NOTOPMOST, x, y, width, height, SWP_FRAMECHANGED | SWP_SHOWWINDOW));
+			V_WIN(SetWindowLong(_hwnd, GWL_STYLE, _style));
+			V_WIN(SetWindowLong(_hwnd, GWL_EXSTYLE, _extendedStyle));
+			V_WIN(SetWindowPos(_hwnd, HWND_NOTOPMOST, x, y, width, height, SWP_FRAMECHANGED | SWP_SHOWWINDOW));
 		}
 	}
 }
@@ -206,101 +215,99 @@ bool Window::GetMaximized() const
 
 UINT Window::GetClientWidth() const
 {
+	HRESULT hr;
+
 	RECT clientRect;
-	if (!GetClientRect(_hwnd, &clientRect))
-	{
-		_ASSERT(false);
-	}
+	V_WIN(GetClientRect(_hwnd, &clientRect));
 
 	return clientRect.right;
 }
 
 UINT Window::GetClientHeight() const
 {
+	HRESULT hr;
+
 	RECT clientRect;
-	if (!GetClientRect(_hwnd, &clientRect))
-	{
-		_ASSERT(false);
-	}
+	V_WIN(GetClientRect(_hwnd, &clientRect));
 
 	return clientRect.bottom;
 }
 
 void Window::SetClientSize(UINT width, UINT height)
 {
+	HRESULT hr;
+	
 	RECT windowRect;
-	SetRect(&windowRect, 0, 0, width, height);
+	V_WIN(SetRect(&windowRect, 0, 0, width, height));
 
 	BOOL bIsMenu = (GetMenu() != NULL);
 
-	if (!AdjustWindowRectEx(&windowRect, _style, bIsMenu, _extendedStyle))
-	{
-		_ASSERT(false);
-	}
+	V_WIN(AdjustWindowRectEx(&windowRect, _style, bIsMenu, _extendedStyle));
 
-	if (!SetWindowPos(_hwnd, HWND_NOTOPMOST, 0, 0, windowRect.right - windowRect.left,
-			windowRect.bottom - windowRect.top, SWP_NOMOVE))
-	{
-		_ASSERT(false);
-	}
+	V_WIN(SetWindowPos(_hwnd, HWND_NOTOPMOST, 0, 0, windowRect.right - windowRect.left,
+			windowRect.bottom - windowRect.top, SWP_NOMOVE));
 }
 
 UINT Window::GetPositionX() const
 {
-	RECT windowRect;
-	if (!::GetWindowRect(_hwnd, &windowRect))
-	{
-		_ASSERT(false);
-	}
+	HRESULT hr;
 
+	RECT windowRect;
+	V_WIN(::GetWindowRect(_hwnd, &windowRect));
+	
 	return windowRect.left;
 }
 
 UINT Window::GetPositionY() const
 {
+	HRESULT hr;
+
 	RECT windowRect;
-	if (!::GetWindowRect(_hwnd, &windowRect))
-	{
-		_ASSERT(false);
-	}
+	V_WIN(::GetWindowRect(_hwnd, &windowRect));
 
 	return windowRect.top;
 }
 
 void Window::SetPosition(UINT x, UINT y)
 {
-	if (!SetWindowPos(_hwnd, HWND_NOTOPMOST, x, y, 0, 0, SWP_NOSIZE))
-	{
-		_ASSERT(false);
-	}	
+	HRESULT hr;
+
+	V_WIN(SetWindowPos(_hwnd, HWND_NOTOPMOST, x, y, 0, 0, SWP_NOSIZE));
 }
 
 void Window::SetTitle(const WCHAR* title)
 {
-	if (!SetWindowText(_hwnd, title))
-	{
-		_ASSERT(false);
-	}
+	HRESULT hr;
+
+	V_WIN(SetWindowText(_hwnd, title));
 }
 
 void Window::Show()
 {
-	ShowWindow(_hwnd, SW_SHOW);
+	HRESULT hr;
+
+	V_WIN(ShowWindow(_hwnd, SW_SHOW));
 }
 
 void Window::Hide()
 {
-	ShowWindow(_hwnd, SW_HIDE);
+	HRESULT hr;
+
+	V_WIN(ShowWindow(_hwnd, SW_HIDE));
 }
 
 void Window::Destroy()
 {
-	DestroyWindow(_hwnd);
-	UnregisterClass(_name, _hinstance);
+	HRESULT hr;
+
+	V_WIN(DestroyWindow(_hwnd));
+	V_WIN(UnregisterClass(_name, _hinstance));
 }
 
 void Window::MessageLoop()
 {
+	HRESULT hr;
+
 	// Main message loop:
 	MSG msg;
 
@@ -323,8 +330,8 @@ void Window::MessageLoop()
 		{
 			if (!_acceleratorTable || !TranslateAccelerator(msg.hwnd, _acceleratorTable, &msg))
 			{
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
+				V_WIN(TranslateMessage(&msg));
+				V_WIN(DispatchMessage(&msg));
 			}
 		}
 	}
