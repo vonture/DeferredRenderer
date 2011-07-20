@@ -384,6 +384,7 @@
     <ClCompile Include="BoundingObjectRenderer.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CombinePostProcess.cpp" />
+    <ClCompile Include="ConfigurationWindow.cpp" />
     <ClCompile Include="DDSTextureLoader.cpp" />
     <ClCompile Include="DepthOfFieldPostProcess.cpp" />
     <ClCompile Include="DeviceManager.cpp" />
@@ -394,6 +395,7 @@
     <ClCompile Include="FullscreenQuad.cpp" />
     <ClCompile Include="DeferredRendererApplication.cpp" />
     <ClCompile Include="GBuffer.cpp" />
+    <ClCompile Include="HDRConfigurationPane.cpp" />
     <ClCompile Include="HDRPostProcess.cpp" />
     <ClCompile Include="KeyboardState.cpp" />
     <ClCompile Include="LightBuffer.cpp" />
@@ -427,6 +429,9 @@
     <ClInclude Include="BoundingObjectRenderer.h" />
     <ClInclude Include="ButtonState.h" />
     <ClInclude Include="CombinePostProcess.h" />
+    <ClInclude Include="ConfigurationPane.h" />
+    <ClInclude Include="ConfigurationPaneBase.h" />
+    <ClInclude Include="ConfigurationWindow.h" />
     <ClInclude Include="DDS.h" />
     <ClInclude Include="DDSTextureLoader.h" />
     <ClInclude Include="Defines.h" />
@@ -437,6 +442,7 @@
     <ClInclude Include="FirstPersonCamera.h" />
     <ClInclude Include="Font.h" />
     <ClInclude Include="FullscreenQuad.h" />
+    <ClInclude Include="HDRConfigurationPane.h" />
     <ClInclude Include="HDRPostProcess.h" />
     <ClInclude Include="KeyboardState.h" />
     <ClInclude Include="Material.h" />

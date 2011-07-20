@@ -60,6 +60,9 @@
     <Filter Include="Sprites">
       <UniqueIdentifier>{eac99c23-503c-40bc-9249-f84d3af06b77}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Post Process\Configuration Panes">
+      <UniqueIdentifier>{de2c4305-8fba-4681-84a1-e0bb18cec684}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="DXUT\Optional\directx.ico">
@@ -300,6 +303,12 @@
     <ClCompile Include="UIPostProcess.cpp">
       <Filter>Post Process</Filter>
     </ClCompile>
+    <ClCompile Include="ConfigurationWindow.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="HDRConfigurationPane.cpp">
+      <Filter>Post Process\Configuration Panes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleSample.hlsl">
@@ -454,6 +463,18 @@
     </ClInclude>
     <ClInclude Include="SkyPostProcess.h">
       <Filter>Post Process</Filter>
+    </ClInclude>
+    <ClInclude Include="ConfigurationWindow.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="ConfigurationPaneBase.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="ConfigurationPane.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="HDRConfigurationPane.h">
+      <Filter>Post Process\Configuration Panes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
