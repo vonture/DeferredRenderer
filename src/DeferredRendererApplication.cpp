@@ -1,9 +1,8 @@
 #include "DeferredRendererApplication.h"
-
-#include "Gwen/Controls/Button.h"
+#include "HDRConfigurationPane.h"
 
 DeferredRendererApplication::DeferredRendererApplication()
-	: Application(L"Deferred Renderer", NULL), _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f),
+	: Application(L"Deferred Renderer", NULL), _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f), _configWindow(NULL),
 	  _scene(L"\\models\\tankscene\\tankscene.sdkmesh")
 {
 	_scene.SetScale(1.0f);
@@ -25,9 +24,11 @@ void DeferredRendererApplication::OnInitialize()
 {	
 	Gwen::Controls::Canvas* canvas = _uiPP.GetCanvas();
 
-	Gwen::Controls::Button* pButton = new Gwen::Controls::Button(canvas);
-	pButton->SetBounds(10, 10, 100, 100);
-    pButton->SetText("My First Button");
+	_configWindow = new ConfigurationWindow(canvas);
+	_configWindow->SetBounds(10, 10, 250, 600);
+
+	HDRConfigurationPane* hdrPane = new HDRConfigurationPane(_configWindow, &_hdrPP);
+	_configWindow->AddConfigPane(hdrPane);
 }
 
 void DeferredRendererApplication::OnPreparingDeviceSettings(DeviceManager* deviceManager)
@@ -146,6 +147,8 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 
 	_hdrPP.SetTimeDelta(dt);
 	_uiPP.OnFrameMove(totalTime, dt);
+
+	_configWindow->OnFrameMove(totalTime, dt);
 }
 
 LRESULT DeferredRendererApplication::OnMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)

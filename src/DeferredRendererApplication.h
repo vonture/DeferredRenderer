@@ -15,7 +15,7 @@
 #include "MotionBlurPostProcess.h"
 #include "UIPostProcess.h"
 
-#include "Gwen/Controls/Canvas.h"
+#include "ConfigurationWindow.h"
 
 class DeferredRendererApplication : public Application
 {
@@ -32,6 +32,8 @@ private:
 	DepthOfFieldPostProcess _dofPP;
 	MotionBlurPostProcess _motionBlurPP;
 	UIPostProcess _uiPP;
+
+	ConfigurationWindow* _configWindow;
 	
 	bool _aoEnabled;
 	bool _aaEnabled;
