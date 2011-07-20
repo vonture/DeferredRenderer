@@ -78,6 +78,9 @@ public:
 	float GetBloomBlurSigma() const { return _bloomBlurSigma; }
 	void SetBloomBlurSigma(float sigma) { _bloomBlurSigma = max(sigma, 0.0f); }
 
+	float GetExposureKey() const { return _exposureKey; }
+	void SetExposureKey(float key) { _exposureKey = clamp(key, 0.0f, 1.0f); }
+
 	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer);
 
