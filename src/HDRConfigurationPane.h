@@ -14,6 +14,7 @@ private:
 	Gwen::Controls::HorizontalSlider* _bloomMagnitudeSlider;
 	Gwen::Controls::HorizontalSlider* _bloomBlurSigmaSlider;
 	Gwen::Controls::HorizontalSlider* _exposureKeySlider;
+	Gwen::Controls::HorizontalSlider* _timeScaleSlider;
 
 	Gwen::Controls::Label* _tauLabel;
 	Gwen::Controls::Label* _whiteLumPercLabel;
@@ -21,6 +22,7 @@ private:
 	Gwen::Controls::Label* _bloomMagnitudeLabel;
 	Gwen::Controls::Label* _bloomBlurSigmaLabel;
 	Gwen::Controls::Label* _exposureKeyLabel;
+	Gwen::Controls::Label* _timeScaleLabel;
 
 public:
 	HDRConfigurationPane(Gwen::Controls::Base* parent, HDRPostProcess* pp);

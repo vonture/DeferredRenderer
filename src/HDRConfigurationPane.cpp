@@ -2,10 +2,11 @@
 
 HDRConfigurationPane::HDRConfigurationPane(Gwen::Controls::Base* parent, HDRPostProcess* pp)
 	: ConfigurationPane(parent, pp), _tauSlider(NULL), _whiteLumPercSlider(NULL), _bloomThresholdSlider(NULL),
-	  _bloomMagnitudeSlider(NULL), _bloomBlurSigmaSlider(NULL)
+	  _bloomMagnitudeSlider(NULL), _bloomBlurSigmaSlider(NULL), _timeScaleSlider(NULL), _tauLabel(NULL),
+	  _whiteLumPercLabel(NULL), _bloomThresholdLabel(NULL), _bloomMagnitudeLabel(NULL), _bloomBlurSigmaLabel(NULL),
+	  _exposureKeyLabel(NULL), _timeScaleLabel(NULL)
 {
 	SetName("HDR Post Process");
-	SetText("");
 
 	_tauLabel = new Gwen::Controls::Label(this);
 	_tauLabel->SetHeight(16);
@@ -78,6 +79,18 @@ HDRConfigurationPane::HDRConfigurationPane(Gwen::Controls::Base* parent, HDRPost
 	_exposureKeySlider->SetValue(pp->GetExposureKey());
 	_exposureKeySlider->SetHeight(16);
 	_exposureKeySlider->Dock(Gwen::Pos::Top);
+
+	_timeScaleLabel = new Gwen::Controls::Label(this);
+	_timeScaleLabel->SetHeight(16);
+	_timeScaleLabel->SetText("");
+	_timeScaleLabel->Dock(Gwen::Pos::Top);
+
+	_timeScaleSlider = new Gwen::Controls::HorizontalSlider(this);
+	_timeScaleSlider->SetClampToNotches(false);
+	_timeScaleSlider->SetRange(0.0f, 10.0f);
+	_timeScaleSlider->SetValue(1.0f);
+	_timeScaleSlider->SetHeight(16);
+	_timeScaleSlider->Dock(Gwen::Pos::Top);
 }
 
 HDRConfigurationPane::~HDRConfigurationPane()
@@ -88,7 +101,7 @@ void HDRConfigurationPane::OnFrameMove(double totalTime, float dt)
 {
 	HDRPostProcess* pp = GetConfiguredObject();
 	
-	pp->SetTau(_tauSlider->CalculateValue());
+	pp->SetTau(_tauSlider->GetValue());
 	_tauSlider->SetValue(pp->GetTau());
 	_tauLabel->SetText("Tau: " + Gwen::Utility::ToString(pp->GetTau()));
 
@@ -111,4 +124,7 @@ void HDRConfigurationPane::OnFrameMove(double totalTime, float dt)
 	pp->SetExposureKey(_exposureKeySlider->GetValue());
 	_exposureKeySlider->SetValue(pp->GetExposureKey());
 	_exposureKeyLabel->SetText("Exposure key: " + Gwen::Utility::ToString(pp->GetExposureKey()));
+
+	pp->SetTimeDelta(dt * _timeScaleSlider->GetValue());
+	_timeScaleLabel->SetText("Time scale: " + Gwen::Utility::ToString(_timeScaleSlider->GetValue()));
 }
