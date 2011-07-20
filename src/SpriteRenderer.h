@@ -67,14 +67,12 @@ public:
 	HRESULT Begin();
 	HRESULT End(ID3D11DeviceContext* pd3d11DeviceContext);
 
-	void AddTextScreenSpace(ID3D11DeviceContext* pd3d11DeviceContext, Font* font,
-		const WCHAR* text, SPRITE_DRAW_DATA& drawData);
+	void AddTextScreenSpace(Font* font, const WCHAR* text, SPRITE_DRAW_DATA& drawData);
 
-	void AddTexturedRectangles(ID3D11DeviceContext* pd3d11DeviceContext, ID3D11ShaderResourceView* texture,
-		SPRITE_DRAW_DATA* spriteData, UINT numSprites);
-
-	void AddColoredRectangles(ID3D11DeviceContext* pd3d11DeviceContext, SPRITE_DRAW_DATA* spriteData,
+	void AddTexturedRectangles(ID3D11ShaderResourceView* texture, SPRITE_DRAW_DATA* spriteData,
 		UINT numSprites);
+
+	void AddColoredRectangles(SPRITE_DRAW_DATA* spriteData, UINT numSprites);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
 	void OnD3D11DestroyDevice();

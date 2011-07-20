@@ -54,7 +54,7 @@ void UIRenderer::DrawFilledRect(Gwen::Rect rect)
 	spriteData.Size = XMFLOAT2(rect.w, rect.h);
 	spriteData.Color = _drawColor;
 
-	_spriteRenderer.AddColoredRectangles(_immediateContext, &spriteData, 1);
+	_spriteRenderer.AddColoredRectangles(&spriteData, 1);
 }
 
 void UIRenderer::LoadFont(Gwen::Font* pFont)
@@ -81,7 +81,7 @@ void UIRenderer::RenderText(Gwen::Font* pFont, Gwen::Point pos, const Gwen::Unic
 	spriteData.Size = XMFLOAT2(textSize.x, textSize.y);
 	spriteData.Color = _drawColor;
 
-	_spriteRenderer.AddTextScreenSpace(_immediateContext, font, text.c_str(), spriteData);
+	_spriteRenderer.AddTextScreenSpace(font, text.c_str(), spriteData);
 }
 
 Gwen::Point UIRenderer::MeasureText(Gwen::Font* pFont, const Gwen::UnicodeString& text)
@@ -121,7 +121,7 @@ void UIRenderer::DrawTexturedRect(Gwen::Texture* pTexture, Gwen::Rect pTargetRec
 	spriteData.SizeUV = XMFLOAT2(u2 - u1, v2 - v1);
 	spriteData.Color = _drawColor;
 
-	_spriteRenderer.AddTexturedRectangles(_immediateContext, srv, &spriteData, 1);
+	_spriteRenderer.AddTexturedRectangles(srv, &spriteData, 1);
 }
 
 void UIRenderer::LoadTexture(Gwen::Texture* pTexture)

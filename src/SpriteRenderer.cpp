@@ -24,6 +24,8 @@ HRESULT SpriteRenderer::Begin()
 
 	_nextSprite = 0;
 	_curTexture = -1;
+
+	return S_OK;
 }
 
 HRESULT SpriteRenderer::End(ID3D11DeviceContext* pd3d11DeviceContext)
@@ -100,8 +102,7 @@ HRESULT SpriteRenderer::End(ID3D11DeviceContext* pd3d11DeviceContext)
 	return S_OK;
 }
 
-void SpriteRenderer::AddTextScreenSpace(ID3D11DeviceContext* pd3d11DeviceContext, Font* font,
-	const WCHAR* text, SPRITE_DRAW_DATA& drawData)
+void SpriteRenderer::AddTextScreenSpace(Font* font, const WCHAR* text, SPRITE_DRAW_DATA& drawData)
 {
 	if (_nextSprite >= MAX_SPRITES)
 	{
@@ -197,8 +198,8 @@ void SpriteRenderer::AddTextScreenSpace(ID3D11DeviceContext* pd3d11DeviceContext
 	}
 }
 
-void SpriteRenderer::AddTexturedRectangles(ID3D11DeviceContext* pd3d11DeviceContext,
-	ID3D11ShaderResourceView* texture, SPRITE_DRAW_DATA* spriteData, UINT numSprites)
+void SpriteRenderer::AddTexturedRectangles( ID3D11ShaderResourceView* texture, SPRITE_DRAW_DATA* spriteData,
+	UINT numSprites)
 {
 	if (_nextSprite >= MAX_SPRITES)
 	{
@@ -256,10 +257,9 @@ void SpriteRenderer::AddTexturedRectangles(ID3D11DeviceContext* pd3d11DeviceCont
 	}
 }
 
-void SpriteRenderer::AddColoredRectangles(ID3D11DeviceContext* pd3d11DeviceContext, SPRITE_DRAW_DATA* spriteData,
-		UINT numSprites)
+void SpriteRenderer::AddColoredRectangles(SPRITE_DRAW_DATA* spriteData, UINT numSprites)
 {
-	AddTexturedRectangles(pd3d11DeviceContext, _blankSRV, spriteData, numSprites);
+	AddTexturedRectangles(_blankSRV, spriteData, numSprites);
 }
 
 HRESULT SpriteRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
