@@ -68,16 +68,18 @@ bool MouseState::IsButtonJustReleased(MouseButtons button)
 
 void MouseState::SetCursorPosition(int x, int y, HWND hwnd)
 {
+	HRESULT hr;
+
     POINT pos;
     pos.x = x;
     pos.y = y;
 
 	if (hwnd)
 	{
-		_ASSERT(ClientToScreen(hwnd, &pos));
+		V_WIN(ClientToScreen(hwnd, &pos));
 	}
 
-    _ASSERT(SetCursorPos(pos.x, pos.y));
+    V_WIN(SetCursorPos(pos.x, pos.y));
 
 	_prevState._x = x;
 	_prevState._y = y;
@@ -85,18 +87,22 @@ void MouseState::SetCursorPosition(int x, int y, HWND hwnd)
 
 void MouseState::SetCursorVisible(bool visible)
 {
-	_ASSERT(ShowCursor(visible));
+	HRESULT hr;
+
+	V_WIN(ShowCursor(visible));
 }
 
 MouseState MouseState::GetState(HWND hwnd)
 {
-	POINT pos;
-	_ASSERT(GetCursorPos(&pos));
+	HRESULT hr;
+
+	POINT pos;	
+	V_WIN(GetCursorPos(&pos));
 	
 	// If a window was supplied, transform the point to window space
 	if (hwnd)
 	{
-		_ASSERT(ScreenToClient(hwnd, &pos));
+		V_WIN(ScreenToClient(hwnd, &pos));
 	}
 
 	MouseState newState;
@@ -138,7 +144,7 @@ MouseState MouseState::GetState(HWND hwnd)
 	if (hwnd)
 	{
 		RECT clientArea;
-		_ASSERT(GetClientRect(hwnd, &clientArea));
+		V_WIN(GetClientRect(hwnd, &clientArea));
 
 		newState._overWindow = (pos.x >= 0 && pos.x < clientArea.right && pos.y >= 0 && pos.y < clientArea.bottom);
 	}
