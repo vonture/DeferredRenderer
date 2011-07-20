@@ -62,19 +62,33 @@ inline int GetDirectoryFromFileNameS(const char* fileName, char* output, UINT ou
 #define SET_DEBUG_NAME(obj, name) ((obj)->SetPrivateData(WKPDID_D3DDebugObjectName, lstrlenA(name), (name)))
 
 #if defined(DEBUG) || defined(_DEBUG)
-#ifndef V
-#define V(x)           { hr = (x); if( FAILED(hr) ) { DXUTTrace( __FILE__, (DWORD)__LINE__, hr, L#x, true ); } }
-#endif
-#ifndef V_RETURN
-#define V_RETURN(x)    { hr = (x); if( FAILED(hr) ) { return DXUTTrace( __FILE__, (DWORD)__LINE__, hr, L#x, true ); } }
-#endif
+	#ifndef V
+		#define V(x)           { hr = (x); if( FAILED(hr) ) { DXUTTrace( __FILE__, (DWORD)__LINE__, hr, L#x, true ); } }
+	#endif
+	#ifndef V_WIN
+		#define V_WIN(x) { if (!(x)) { hr = HRESULT_FROM_WIN32(GetLastError()); DXTrace( __FILE__, (DWORD)__LINE__, hr, L#x, true); } }
+	#endif
+
+	#ifndef V_RETURN
+		#define V_RETURN(x)    { hr = (x); if( FAILED(hr) ) { return DXUTTrace( __FILE__, (DWORD)__LINE__, hr, L#x, true ); } }
+	#endif
+	#ifndef V_WIN_RETURN
+		#define V_WIN_RETURN(x) { if (!(x)) { hr = HRESULT_FROM_WIN32(GetLastError()); return DXTrace( __FILE__, (DWORD)__LINE__, hr, L#x, true); } else { hr = S_OK; } }
+	#endif
 #else
-#ifndef V
-#define V(x)           { hr = (x); }
-#endif
-#ifndef V_RETURN
-#define V_RETURN(x)    { hr = (x); if( FAILED(hr) ) { return hr; } }
-#endif
+	#ifndef V
+		#define V(x)           { hr = (x); }
+	#endif
+	#ifndef V_WIN
+		#define V_WIN(x)       { if (!(x)) { hr = HRESULT_FROM_WIN32(GetLastError()); } else { hr = S_OK; } }
+	#endif
+
+	#ifndef V_RETURN
+		#define V_RETURN(x)    { hr = (x); if( FAILED(hr) ) { return hr; } }
+	#endif
+	#ifndef V_WIN_RETURN
+		#define V_WIN_RETURN(x) { if (!(x)) { hr = HRESULT_FROM_WIN32(GetLastError()); } else { hr = S_OK; } }
+	#endif
 #endif
 
 #ifndef SAFE_DELETE
