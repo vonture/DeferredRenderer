@@ -1,5 +1,7 @@
 #include "DeferredRendererApplication.h"
+
 #include "HDRConfigurationPane.h"
+#include "AntiAliasConfigurationPane.h"
 
 DeferredRendererApplication::DeferredRendererApplication()
 	: Application(L"Deferred Renderer", NULL), _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f), _configWindow(NULL),
@@ -27,8 +29,11 @@ void DeferredRendererApplication::OnInitialize()
 	_configWindow = new ConfigurationWindow(canvas);
 	_configWindow->SetBounds(10, 10, 250, 600);
 
+	AntiAliasConfigurationPane* aaPane = new AntiAliasConfigurationPane(_configWindow, &_aaPP);
+	_configWindow->AddConfigPane(aaPane);
+
 	HDRConfigurationPane* hdrPane = new HDRConfigurationPane(_configWindow, &_hdrPP);
-	_configWindow->AddConfigPane(hdrPane);
+	_configWindow->AddConfigPane(hdrPane);	
 }
 
 void DeferredRendererApplication::OnPreparingDeviceSettings(DeviceManager* deviceManager)
