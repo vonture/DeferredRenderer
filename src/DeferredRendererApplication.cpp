@@ -173,37 +173,53 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 
 	_renderer.AddModel(&_scene);	
 	
-	/*
+	
 	PointLight greenLight = 
 	{
-		XMFLOAT3(-5.0f, 7.5f, 3.0f),
+		XMFLOAT3(-8.5f, 9.5f, 9.2f),
 		10.0f,
 		XMFLOAT3(1.5f, 3.0f, 1.0f)
 	};
 	_renderer.AddLight(&greenLight, true);
-	*/
+
+	PointLight redLight = 
+	{
+		XMFLOAT3(-1.6f, 4.5f, -4.2f),
+		12.0f,
+		XMFLOAT3(2.5f, 1.0f, 1.0f)
+	};
+	_renderer.AddLight(&redLight, true);
+
+	PointLight purpleLight = 
+	{
+		XMFLOAT3(9.6f, 3.6f, 4.5f),
+		15.0f,
+		XMFLOAT3(1.5f, 0.0f, 3.0f)
+	};
+	_renderer.AddLight(&purpleLight, true);
+	
 
 	XMFLOAT3 sunColor = XMFLOAT3(1.0f, 0.8f, 0.5f);
-	float sunIntensity = 5.0f;
+	float sunIntensity = 1.0f;
 	DirectionalLight sun = 
 	{
-		XMFLOAT3(0.5f, 0.6f, 0.5f),
+		XMFLOAT3(0.0f, -1.0f, 0.0f),
 		XMFLOAT3(sunColor.x * sunIntensity, sunColor.y * sunIntensity, sunColor.z * sunIntensity)
 	};
-	_renderer.AddLight(&sun, true);
+	//_renderer.AddLight(&sun, true);
 	
-	float ambientIntesity = 1.2f;
+	float ambientIntesity = 0.6f;
 	AmbientLight ambientLight = 
 	{
 		XMFLOAT3(ambientIntesity, ambientIntesity, ambientIntesity)
 	};
 	_renderer.AddLight(&ambientLight);
 
-	_skyPP.SetSkyColor(XMFLOAT3(0.2f, 0.5f, 1.0f));	
+	_skyPP.SetSkyColor(XMFLOAT3(0.1f, 0.25f, 0.5f));	
 	_skyPP.SetSunColor(sun.Color);
 	_skyPP.SetSunDirection(sun.Direction);
 	_skyPP.SetSunWidth(0.05f);
-	_skyPP.SetSunEnabled(true);
+	_skyPP.SetSunEnabled(false);
 
 	if (_aoEnabled)
 	{
