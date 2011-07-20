@@ -5,7 +5,8 @@ const float SpriteRenderer::SPRITE_DEPTH = 0.5f;
 
 SpriteRenderer::SpriteRenderer()
 	: _bbWidth(1), _bbHeight(1), _nextSprite(0), _inputLayout(NULL), _indexBuffer(NULL),
-	  _vertexBuffer(NULL), _spriteVS(NULL), _spritePS(NULL), _blankTexture(NULL), _blankSRV(NULL)
+	  _vertexBuffer(NULL), _spriteVS(NULL), _spritePS(NULL), _blankTexture(NULL), _blankSRV(NULL),
+	  _begun(false)
 {
 }
 
@@ -13,31 +14,48 @@ SpriteRenderer::~SpriteRenderer()
 {
 }
 
-HRESULT SpriteRenderer::flush(ID3D11DeviceContext* pd3d11DeviceContext, ID3D11ShaderResourceView* srv)
+HRESULT SpriteRenderer::Begin()
+{
+	if (_begun)
+	{
+		return E_FAIL;
+	}
+	_begun = true;
+
+	_nextSprite = 0;
+	_curTexture = -1;
+}
+
+HRESULT SpriteRenderer::End(ID3D11DeviceContext* pd3d11DeviceContext)
 {
 	HRESULT hr;
+
+	if (!_begun)
+	{
+		return E_FAIL;
+	}
+	_begun = false;
 
 	if (_nextSprite == 0)
 	{
 		return S_OK;
 	}
 
-	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Text");
+	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Sprite");
 	
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	
+	// Map the vertex buffer
 	UINT vbSize = sizeof(SPRITE_VERTEX) * _nextSprite * 4;
 	V_RETURN(pd3d11DeviceContext->Map(_vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 	memcpy(mappedResource.pData, _vertices, vbSize);
 	pd3d11DeviceContext->Unmap(_vertexBuffer, 0);
 	
+	// Map the index buffer
 	UINT ibSize = sizeof(WORD) * _nextSprite * 6;
 	V_RETURN(pd3d11DeviceContext->Map(_indexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 	memcpy(mappedResource.pData, _indices, ibSize);
 	pd3d11DeviceContext->Unmap(_indexBuffer, 0);
-
-	// Set the texture
-	pd3d11DeviceContext->PSSetShaderResources(0, 1, &srv);
 
 	// Set the sampler
 	ID3D11SamplerState* samplers[1] = { _samplerStates.GetLinear() };
@@ -55,56 +73,69 @@ HRESULT SpriteRenderer::flush(ID3D11DeviceContext* pd3d11DeviceContext, ID3D11Sh
 	pd3d11DeviceContext->VSSetShader(_spriteVS, NULL, 0);
 	pd3d11DeviceContext->PSSetShader(_spritePS, NULL, 0);
 
-	// Draw
-    UINT stride = sizeof(SPRITE_VERTEX);
+	// Set the buffers
+	UINT stride = sizeof(SPRITE_VERTEX);
     UINT offset = 0;
 	
 	pd3d11DeviceContext->IASetVertexBuffers(0, 1, &_vertexBuffer, &stride, &offset);
 	pd3d11DeviceContext->IASetIndexBuffer(_indexBuffer, DXGI_FORMAT_R16_UINT, offset);
     pd3d11DeviceContext->IASetInputLayout(_inputLayout);
     pd3d11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	pd3d11DeviceContext->DrawIndexed(_nextSprite * 6, 0, 0);
+
+	for (int i = 0; i <= _curTexture; i++)
+	{
+		// Set the texture
+		pd3d11DeviceContext->PSSetShaderResources(0, 1, &_textures[i].Texture);
+
+		// Draw
+		pd3d11DeviceContext->DrawIndexed(_textures[i].SpriteCount * 6, _textures[i].StartSprite * 6, 0);
+	}
 
 	// Null the srv
 	ID3D11ShaderResourceView* nullSRV[1] = { NULL };
 	pd3d11DeviceContext->PSSetShaderResources(0, 1, nullSRV);
-	
-	D3DPERF_EndEvent();
 
-	_nextSprite = 0;
+	D3DPERF_EndEvent();
 
 	return S_OK;
 }
 
-HRESULT SpriteRenderer::DrawTextScreenSpace(ID3D11DeviceContext* pd3d11DeviceContext, Font* font,
+void SpriteRenderer::AddTextScreenSpace(ID3D11DeviceContext* pd3d11DeviceContext, Font* font,
 	const WCHAR* text, SPRITE_DRAW_DATA& drawData)
 {
+	if (_nextSprite >= MAX_SPRITES)
+	{
+		return;
+	}
+
 	if (!text)
 	{
-		return S_OK;
+		return;
 	}
-	
-	HRESULT hr;
-	
-	UINT lineSpacing = font->GetLineSpacing();
 
 	XMFLOAT2 textDrawSize = font->MeasureString(text);
 	if (textDrawSize.x <= 0.0f || textDrawSize.y <= 0.0f)
 	{
-		return S_OK;
+		return;
 	}
+		
+	ID3D11ShaderResourceView* fontSRV = font->GetFontShaderResourceView();
+	if (_curTexture < 0 || _textures[_curTexture].Texture != fontSRV)
+	{
+		_curTexture++;
+		_textures[_curTexture].StartSprite = _nextSprite;
+		_textures[_curTexture].SpriteCount = 0;
+		_textures[_curTexture].Texture = fontSRV;
+	}
+
+	UINT lineSpacing = font->GetLineSpacing();	
 
 	XMFLOAT2 scale = XMFLOAT2(drawData.Size.x / textDrawSize.x, drawData.Size.y / textDrawSize.y);
 
 	UINT numChars = wcslen(text);
 	XMFLOAT2 curPosition = drawData.TopLeft;
-	for (UINT i = 0; i < numChars; i++)
+	for (UINT i = 0; i < numChars && _nextSprite < MAX_SPRITES; i++)
 	{
-		if (_nextSprite >= MAX_SPRITES)
-		{
-			V_RETURN(flush(pd3d11DeviceContext, font->GetFontShaderResourceView()));
-		}
-
 		if(text[i] == '\n')
 		{
 			curPosition.x = drawData.TopLeft.x;
@@ -158,27 +189,32 @@ HRESULT SpriteRenderer::DrawTextScreenSpace(ID3D11DeviceContext* pd3d11DeviceCon
 		_indices[_nextSprite * 6 + 3] = _nextSprite * 4 + 1;
 		_indices[_nextSprite * 6 + 4] = _nextSprite * 4 + 3;
 		_indices[_nextSprite * 6 + 5] = _nextSprite * 4 + 2;
+		
+		curPosition.x += charWidth * scale.x;
 
 		_nextSprite++;
-		curPosition.x += charWidth * scale.x;
+		_textures[_curTexture].SpriteCount++;
 	}
-
-	return flush(pd3d11DeviceContext, font->GetFontShaderResourceView());
 }
 
-HRESULT SpriteRenderer::DrawTexturedRectangles(ID3D11DeviceContext* pd3d11DeviceContext,
+void SpriteRenderer::AddTexturedRectangles(ID3D11DeviceContext* pd3d11DeviceContext,
 	ID3D11ShaderResourceView* texture, SPRITE_DRAW_DATA* spriteData, UINT numSprites)
 {
-	HRESULT hr;
-	
-
-	for (WORD i = 0; i < numSprites; i++)
+	if (_nextSprite >= MAX_SPRITES)
 	{
-		if (_nextSprite >= MAX_SPRITES)
-		{
-			V_RETURN(flush(pd3d11DeviceContext, texture));
-		}
+		return;
+	}
 
+	if (_curTexture < 0 || _textures[_curTexture].Texture != texture)
+	{
+		_curTexture++;
+		_textures[_curTexture].StartSprite = _nextSprite;
+		_textures[_curTexture].SpriteCount = 0;
+		_textures[_curTexture].Texture = texture;
+	}
+
+	for (WORD i = 0; i < numSprites && _nextSprite < MAX_SPRITES; i++)
+	{
 		SPRITE_DRAW_DATA& data = spriteData[i];
 
 		float pLeft = (data.TopLeft.x / (_bbWidth * 0.5f)) - 1.0f;
@@ -216,15 +252,14 @@ HRESULT SpriteRenderer::DrawTexturedRectangles(ID3D11DeviceContext* pd3d11Device
 		_indices[_nextSprite * 6 + 5] = _nextSprite * 4 + 2;
 
 		_nextSprite++;
+		_textures[_curTexture].SpriteCount++;
 	}
-
-	return flush(pd3d11DeviceContext, texture);
 }
 
-HRESULT SpriteRenderer::DrawColoredRectangles(ID3D11DeviceContext* pd3d11DeviceContext, SPRITE_DRAW_DATA* spriteData,
+void SpriteRenderer::AddColoredRectangles(ID3D11DeviceContext* pd3d11DeviceContext, SPRITE_DRAW_DATA* spriteData,
 		UINT numSprites)
 {
-	return DrawTexturedRectangles(pd3d11DeviceContext, _blankSRV, spriteData, numSprites);
+	AddTexturedRectangles(pd3d11DeviceContext, _blankSRV, spriteData, numSprites);
 }
 
 HRESULT SpriteRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)

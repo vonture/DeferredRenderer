@@ -4,7 +4,7 @@
 #include "Gwen/Texture.h"
 
 UIRenderer::UIRenderer()
-	: _uiFont(L"UI\\arial_11_font.xml"), _graphicsDevice(NULL), _immediateContext(NULL), _swapChain(NULL)
+	: _uiFont(L"UI\\consolas_14_font.xml"), _graphicsDevice(NULL), _immediateContext(NULL), _swapChain(NULL)
 {
 }
 
@@ -19,10 +19,14 @@ void UIRenderer::SetImmediateContext(ID3D11DeviceContext* context)
 
 void UIRenderer::Begin()
 {
+	HRESULT hr;
+	V(_spriteRenderer.Begin());
 }
 
 void UIRenderer::End()
 {
+	HRESULT hr;
+	V(_spriteRenderer.End(_immediateContext));
 }
 
 void UIRenderer::Release()
@@ -43,8 +47,6 @@ void UIRenderer::DrawLine(int x, int y, int a, int b)
 
 void UIRenderer::DrawFilledRect(Gwen::Rect rect)
 {
-	HRESULT hr;
-
 	Translate(rect);
 
 	SPRITE_DRAW_DATA spriteData;
@@ -52,7 +54,7 @@ void UIRenderer::DrawFilledRect(Gwen::Rect rect)
 	spriteData.Size = XMFLOAT2(rect.w, rect.h);
 	spriteData.Color = _drawColor;
 
-	V(_spriteRenderer.DrawColoredRectangles(_immediateContext, &spriteData, 1));
+	_spriteRenderer.AddColoredRectangles(_immediateContext, &spriteData, 1);
 }
 
 void UIRenderer::LoadFont(Gwen::Font* pFont)
@@ -67,8 +69,6 @@ void UIRenderer::FreeFont(Gwen::Font* pFont)
 
 void UIRenderer::RenderText(Gwen::Font* pFont, Gwen::Point pos, const Gwen::UnicodeString& text)
 {	
-	HRESULT hr;
-
 	Font* font = &_uiFont;
 
 	Translate(pos.x, pos.y);
@@ -81,7 +81,7 @@ void UIRenderer::RenderText(Gwen::Font* pFont, Gwen::Point pos, const Gwen::Unic
 	spriteData.Size = XMFLOAT2(textSize.x, textSize.y);
 	spriteData.Color = _drawColor;
 
-	V(_spriteRenderer.DrawTextScreenSpace(_immediateContext, font, text.c_str(), spriteData));
+	_spriteRenderer.AddTextScreenSpace(_immediateContext, font, text.c_str(), spriteData);
 }
 
 Gwen::Point UIRenderer::MeasureText(Gwen::Font* pFont, const Gwen::UnicodeString& text)
@@ -110,8 +110,6 @@ void UIRenderer::EndClip()
 
 void UIRenderer::DrawTexturedRect(Gwen::Texture* pTexture, Gwen::Rect pTargetRect, float u1, float v1, float u2, float v2)
 {
-	HRESULT hr;
-
 	Translate(pTargetRect);
 
 	ID3D11ShaderResourceView* srv = (ID3D11ShaderResourceView*)pTexture->data;
@@ -123,7 +121,7 @@ void UIRenderer::DrawTexturedRect(Gwen::Texture* pTexture, Gwen::Rect pTargetRec
 	spriteData.SizeUV = XMFLOAT2(u2 - u1, v2 - v1);
 	spriteData.Color = _drawColor;
 
-	V(_spriteRenderer.DrawTexturedRectangles(_immediateContext, srv, &spriteData, 1));
+	_spriteRenderer.AddTexturedRectangles(_immediateContext, srv, &spriteData, 1);
 }
 
 void UIRenderer::LoadTexture(Gwen::Texture* pTexture)

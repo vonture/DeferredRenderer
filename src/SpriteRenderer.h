@@ -34,10 +34,19 @@ private:
 		XMFLOAT4 Color;
 	};
 
-	static const WORD MAX_SPRITES = 256;
+	static const WORD MAX_SPRITES = 1024;
 	WORD _indices[MAX_SPRITES * 6];
 	SPRITE_VERTEX _vertices[MAX_SPRITES * 4];
 	WORD _nextSprite;
+
+	struct TEXTURE_INDEX
+	{
+		WORD StartSprite;
+		WORD SpriteCount;
+		ID3D11ShaderResourceView* Texture;
+	};
+	TEXTURE_INDEX _textures[MAX_SPRITES];
+	int _curTexture;
 
 	ID3D11InputLayout* _inputLayout;
 	ID3D11Buffer* _indexBuffer;
@@ -49,19 +58,22 @@ private:
 	ID3D11Texture2D* _blankTexture;
 	ID3D11ShaderResourceView* _blankSRV;
 
-	HRESULT flush(ID3D11DeviceContext* pd3d11DeviceContext, ID3D11ShaderResourceView* srv);
+	bool _begun;
 
 public:
 	SpriteRenderer();
 	~SpriteRenderer();
 
-	HRESULT DrawTextScreenSpace(ID3D11DeviceContext* pd3d11DeviceContext, Font* font,
+	HRESULT Begin();
+	HRESULT End(ID3D11DeviceContext* pd3d11DeviceContext);
+
+	void AddTextScreenSpace(ID3D11DeviceContext* pd3d11DeviceContext, Font* font,
 		const WCHAR* text, SPRITE_DRAW_DATA& drawData);
 
-	HRESULT DrawTexturedRectangles(ID3D11DeviceContext* pd3d11DeviceContext, ID3D11ShaderResourceView* texture,
+	void AddTexturedRectangles(ID3D11DeviceContext* pd3d11DeviceContext, ID3D11ShaderResourceView* texture,
 		SPRITE_DRAW_DATA* spriteData, UINT numSprites);
 
-	HRESULT DrawColoredRectangles(ID3D11DeviceContext* pd3d11DeviceContext, SPRITE_DRAW_DATA* spriteData,
+	void AddColoredRectangles(ID3D11DeviceContext* pd3d11DeviceContext, SPRITE_DRAW_DATA* spriteData,
 		UINT numSprites);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
