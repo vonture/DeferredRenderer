@@ -309,6 +309,9 @@
     <ClCompile Include="HDRConfigurationPane.cpp">
       <Filter>Post Process\Configuration Panes</Filter>
     </ClCompile>
+    <ClCompile Include="AntiAliasConfigurationPane.cpp">
+      <Filter>Post Process\Configuration Panes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleSample.hlsl">
@@ -474,6 +477,9 @@
       <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="HDRConfigurationPane.h">
+      <Filter>Post Process\Configuration Panes</Filter>
+    </ClInclude>
+    <ClInclude Include="AntiAliasConfigurationPane.h">
       <Filter>Post Process\Configuration Panes</Filter>
     </ClInclude>
   </ItemGroup>

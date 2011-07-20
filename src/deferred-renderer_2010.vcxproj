@@ -379,6 +379,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AmbientOcclusionPostProcess.cpp" />
+    <ClCompile Include="AntiAliasConfigurationPane.cpp" />
     <ClCompile Include="AntiAliasPostProcess.cpp" />
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="BoundingObjectRenderer.cpp" />
@@ -424,6 +425,7 @@
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="xnaCollision.cpp" />
     <ClInclude Include="AmbientOcclusionPostProcess.h" />
+    <ClInclude Include="AntiAliasConfigurationPane.h" />
     <ClInclude Include="AntiAliasPostProcess.h" />
     <ClInclude Include="Application.h" />
     <ClInclude Include="BoundingObjectRenderer.h" />
