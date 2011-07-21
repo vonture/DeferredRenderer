@@ -4,7 +4,7 @@ HDRConfigurationPane::HDRConfigurationPane(Gwen::Controls::Base* parent, HDRPost
 	: ConfigurationPane(parent, pp), _tauSlider(NULL), _whiteLumPercSlider(NULL), _bloomThresholdSlider(NULL),
 	  _bloomMagnitudeSlider(NULL), _bloomBlurSigmaSlider(NULL), _timeScaleSlider(NULL), _tauLabel(NULL),
 	  _whiteLumPercLabel(NULL), _bloomThresholdLabel(NULL), _bloomMagnitudeLabel(NULL), _bloomBlurSigmaLabel(NULL),
-	  _exposureKeyLabel(NULL), _timeScaleLabel(NULL)
+	  _exposureKeyLabel(NULL), _timeScaleLabel(NULL), _timeScale(1.0f)
 {
 	SetName("HDR Post Process");
 
@@ -88,7 +88,7 @@ HDRConfigurationPane::HDRConfigurationPane(Gwen::Controls::Base* parent, HDRPost
 	_timeScaleSlider = new Gwen::Controls::HorizontalSlider(this);
 	_timeScaleSlider->SetClampToNotches(false);
 	_timeScaleSlider->SetRange(0.0f, 10.0f);
-	_timeScaleSlider->SetValue(1.0f);
+	_timeScaleSlider->SetValue(_timeScale);
 	_timeScaleSlider->SetHeight(16);
 	_timeScaleSlider->Dock(Gwen::Pos::Top);
 }
@@ -125,6 +125,8 @@ void HDRConfigurationPane::OnFrameMove(double totalTime, float dt)
 	_exposureKeySlider->SetValue(pp->GetExposureKey());
 	_exposureKeyLabel->SetText("Exposure key: " + Gwen::Utility::ToString(pp->GetExposureKey()));
 
-	pp->SetTimeDelta(dt * _timeScaleSlider->GetValue());
-	_timeScaleLabel->SetText("Time scale: " + Gwen::Utility::ToString(_timeScaleSlider->GetValue()));
+	_timeScale = _timeScaleSlider->GetValue();
+	_timeScaleSlider->SetValue(_timeScale);
+	pp->SetTimeDelta(dt * _timeScale);
+	_timeScaleLabel->SetText("Time scale: " + Gwen::Utility::ToString(_timeScale));
 }

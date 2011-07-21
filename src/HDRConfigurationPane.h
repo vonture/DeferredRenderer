@@ -24,6 +24,8 @@ private:
 	Gwen::Controls::Label* _exposureKeyLabel;
 	Gwen::Controls::Label* _timeScaleLabel;
 
+	float _timeScale;
+
 public:
 	HDRConfigurationPane(Gwen::Controls::Base* parent, HDRPostProcess* pp);
 	~HDRConfigurationPane();
