@@ -13,7 +13,7 @@ private:
 	Gwen::Controls::ComboBox* _configSelectComboBox;
 
 	ConfigurationPaneBase* _selectedPane;
-	std::map<Gwen::Controls::MenuItem*, ConfigurationPaneBase*> _paneMap;
+	std::map<Gwen::UnicodeString, ConfigurationPaneBase*> _paneMap;
 
 public:
 	ConfigurationWindow(Gwen::Controls::Base* parent);
@@ -21,8 +21,6 @@ public:
 
 	void AddConfigPane(ConfigurationPaneBase* newPane);
 	void RemoveConfigPane(ConfigurationPaneBase* removePane);
-
-	void OnSelectionChanged(Gwen::Controls::Base* pFromPanel);
-
+	
 	void OnFrameMove(double totalTime, float dt);
 };
