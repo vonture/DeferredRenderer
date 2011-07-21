@@ -2,6 +2,7 @@
 
 #include "HDRConfigurationPane.h"
 #include "AntiAliasConfigurationPane.h"
+#include "Gwen\UnitTest\UnitTest.h"
 
 DeferredRendererApplication::DeferredRendererApplication()
 	: Application(L"Deferred Renderer", NULL), _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f), _configWindow(NULL),
@@ -23,17 +24,7 @@ DeferredRendererApplication::~DeferredRendererApplication()
 }
 
 void DeferredRendererApplication::OnInitialize()
-{	
-	Gwen::Controls::Canvas* canvas = _uiPP.GetCanvas();
-
-	_configWindow = new ConfigurationWindow(canvas);
-	_configWindow->SetBounds(10, 10, 250, 600);
-
-	AntiAliasConfigurationPane* aaPane = new AntiAliasConfigurationPane(_configWindow, &_aaPP);
-	_configWindow->AddConfigPane(aaPane);
-
-	HDRConfigurationPane* hdrPane = new HDRConfigurationPane(_configWindow, &_hdrPP);
-	_configWindow->AddConfigPane(hdrPane);	
+{		
 }
 
 void DeferredRendererApplication::OnPreparingDeviceSettings(DeviceManager* deviceManager)
@@ -264,7 +255,18 @@ HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 	V_RETURN(_motionBlurPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_uiPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_scene.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	
+
+	Gwen::Controls::Canvas* canvas = _uiPP.GetCanvas();
+
+	_configWindow = new ConfigurationWindow(canvas);
+	_configWindow->SetBounds(10, 10, 250, 600);
+
+	AntiAliasConfigurationPane* aaPane = new AntiAliasConfigurationPane(_configWindow, &_aaPP);
+	_configWindow->AddConfigPane(aaPane);
+
+	HDRConfigurationPane* hdrPane = new HDRConfigurationPane(_configWindow, &_hdrPP);
+	_configWindow->AddConfigPane(hdrPane);
+		
 	return S_OK;
 }
 
