@@ -130,7 +130,6 @@ void UIRenderer::LoadTexture(Gwen::Texture* pTexture)
 	WCHAR str[MAX_PATH];
     V(DXUTFindDXSDKMediaFileCch(str, MAX_PATH, pTexture->name.GetUnicode().c_str()));	
 	
-
 	ID3D11ShaderResourceView* srv;
 	V(D3DX11CreateShaderResourceViewFromFile(_graphicsDevice, str, NULL, NULL, &srv, NULL));
 
