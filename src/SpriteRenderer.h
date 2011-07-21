@@ -34,7 +34,7 @@ private:
 		XMFLOAT4 Color;
 	};
 
-	static const WORD MAX_SPRITES = 1024;
+	static const WORD MAX_SPRITES = 4096;
 	WORD _indices[MAX_SPRITES * 6];
 	SPRITE_VERTEX _vertices[MAX_SPRITES * 4];
 	WORD _nextSprite;
