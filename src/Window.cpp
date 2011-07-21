@@ -87,14 +87,14 @@ void Window::makeWindow(const WCHAR* name, const WCHAR* sIconResource, const WCH
 
 LRESULT WINAPI Window::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	LRESULT hr;
+	HRESULT hr;
 
 	switch(uMsg)
     {
 		case WM_NCCREATE:
 		{
 			LPCREATESTRUCT pCreateStruct = (LPCREATESTRUCT)lParam;
-		    V_WIN_RETURN(SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pCreateStruct->lpCreateParams));
+		    SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pCreateStruct->lpCreateParams);
 			return DefWindowProc(hWnd, uMsg, wParam, lParam);
 		}
     }
@@ -284,16 +284,14 @@ void Window::SetTitle(const WCHAR* title)
 
 void Window::Show()
 {
-	HRESULT hr;
-
-	V_WIN(ShowWindow(_hwnd, SW_SHOW));
+	ShowWindow(_hwnd, SW_SHOW);
 }
 
 void Window::Hide()
 {
 	HRESULT hr;
 
-	V_WIN(ShowWindow(_hwnd, SW_HIDE));
+	ShowWindow(_hwnd, SW_HIDE);
 }
 
 void Window::Destroy()
@@ -306,8 +304,6 @@ void Window::Destroy()
 
 void Window::MessageLoop()
 {
-	HRESULT hr;
-
 	// Main message loop:
 	MSG msg;
 
@@ -330,8 +326,8 @@ void Window::MessageLoop()
 		{
 			if (!_acceleratorTable || !TranslateAccelerator(msg.hwnd, _acceleratorTable, &msg))
 			{
-				V_WIN(TranslateMessage(&msg));
-				V_WIN(DispatchMessage(&msg));
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
 			}
 		}
 	}
