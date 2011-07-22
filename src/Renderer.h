@@ -16,16 +16,14 @@
 #include "BoundingObjectRenderer.h"
 #include <vector>
 
-using namespace std;
-
 class Renderer : public IHasContent
 {
 private:
 	bool _begun;
 	GBuffer _gBuffer;
 	LightBuffer _lightBuffer;
-	vector<ModelInstance*> _models;
-	vector<PostProcess*> _postProcesses;
+	std::vector<ModelInstance*> _models;
+	std::vector<PostProcess*> _postProcesses;
 	ModelRenderer _modelRenderer;
 	CombinePostProcess _combinePP;
 
@@ -56,7 +54,7 @@ public:
 	void SetDrawBoundingObjects(bool draw) { _drawBoundingObjects = draw; }
 
 	HRESULT Begin();
-	HRESULT End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext, Camera* camera);
+	HRESULT End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
 	void OnD3D11DestroyDevice();

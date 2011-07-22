@@ -74,7 +74,7 @@ HRESULT Renderer::Begin()
 	return S_OK;
 }
 
-HRESULT Renderer::End(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
+HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 {
 	HRESULT hr;
 
