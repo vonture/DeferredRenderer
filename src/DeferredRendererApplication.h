@@ -3,7 +3,7 @@
 #include "Defines.h"
 #include "Application.h"
 #include "Renderer.h"
-#include "FirstPersonCamera.h"
+#include "TestingCamera.h"
 #include "KeyboardState.h"
 #include "MouseState.h"
 
@@ -21,7 +21,7 @@ class DeferredRendererApplication : public Application
 {
 private:
 	Renderer _renderer;
-	FirstPersonCamera _camera;
+	TestingCamera _camera;
 
 	ModelInstance _scene;
 

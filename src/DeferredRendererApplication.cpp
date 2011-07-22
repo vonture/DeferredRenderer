@@ -2,6 +2,8 @@
 
 #include "HDRConfigurationPane.h"
 #include "AntiAliasConfigurationPane.h"
+#include "CameraConfigurationPane.h"
+
 #include "Gwen\UnitTest\UnitTest.h"
 
 DeferredRendererApplication::DeferredRendererApplication()
@@ -95,9 +97,9 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 			_aaPP.SetLuminanceDetectionEnabled(!_aaPP.GetLuminanceDetectionEnabled());
 		}
 
-		if (mouse.IsButtonDown(LeftButton))
+		if (mouse.IsButtonDown(RightButton))
 		{
-			const float mouseRotateSpeed = 0.002f;
+			const float mouseRotateSpeed = _camera.GetRotationSpeed();
 		
 			XMFLOAT2 rotation = _camera.GetRotation();
 			rotation.x += mouse.GetDX() * mouseRotateSpeed;
@@ -125,7 +127,7 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 				moveDir.x++;
 			}
 				
-			const float cameraMoveSpeed = 5.0f;
+			const float cameraMoveSpeed = _camera.GetMovementSpeed();
 			XMFLOAT3 camPos = _camera.GetPosition();
 			XMFLOAT3 camForward = _camera.GetForward();
 			XMFLOAT3 camRight = _camera.GetRight();
@@ -235,7 +237,7 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 
 	_renderer.AddPostProcess(&_uiPP);
 
-	V_RETURN(_renderer.End(pd3dDevice, pd3dImmediateContext, &_camera));
+	V_RETURN(_renderer.End(pd3dImmediateContext, &_camera));
 
 	return S_OK;
 }
@@ -260,6 +262,9 @@ HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 
 	_configWindow = new ConfigurationWindow(canvas);
 	_configWindow->SetBounds(10, 10, 250, 600);
+
+	CameraConfigurationPane* cameraPane = new CameraConfigurationPane(_configWindow, &_camera);
+	_configWindow->AddConfigPane(cameraPane);
 
 	AntiAliasConfigurationPane* aaPane = new AntiAliasConfigurationPane(_configWindow, &_aaPP);
 	_configWindow->AddConfigPane(aaPane);
