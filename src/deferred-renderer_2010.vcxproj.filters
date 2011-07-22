@@ -63,6 +63,9 @@
     <Filter Include="Post Process\Configuration Panes">
       <UniqueIdentifier>{de2c4305-8fba-4681-84a1-e0bb18cec684}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Cameras\Configuration Panes">
+      <UniqueIdentifier>{cac029e3-4df9-487b-a45c-75390eb53342}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="DXUT\Optional\directx.ico">
@@ -312,6 +315,21 @@
     <ClCompile Include="AntiAliasConfigurationPane.cpp">
       <Filter>Post Process\Configuration Panes</Filter>
     </ClCompile>
+    <ClCompile Include="FloatUpDown.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Float3UpDown.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="CameraConfigurationPane.cpp">
+      <Filter>Cameras\Configuration Panes</Filter>
+    </ClCompile>
+    <ClCompile Include="Float2UpDown.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="TestingCamera.cpp">
+      <Filter>Cameras</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleSample.hlsl">
@@ -481,6 +499,21 @@
     </ClInclude>
     <ClInclude Include="AntiAliasConfigurationPane.h">
       <Filter>Post Process\Configuration Panes</Filter>
+    </ClInclude>
+    <ClInclude Include="FloatUpDown.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Float3UpDown.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraConfigurationPane.h">
+      <Filter>Cameras\Configuration Panes</Filter>
+    </ClInclude>
+    <ClInclude Include="Float2UpDown.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="TestingCamera.h">
+      <Filter>Cameras</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
