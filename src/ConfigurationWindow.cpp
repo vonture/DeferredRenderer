@@ -6,6 +6,7 @@ ConfigurationWindow::ConfigurationWindow(Gwen::Controls::Base* parent)
 	SetTitle(L"Configuration");
 	SetClosable(false);
 	SetMargin(Gwen::Margin(2, 2, 2, 2));
+	DisableResizing();
 
 	_configSelectComboBox = new Gwen::Controls::ComboBox(this);
 	_configSelectComboBox->SetPadding(Gwen::Padding(2, 2, 2, 2));
@@ -27,6 +28,7 @@ void ConfigurationWindow::AddConfigPane(ConfigurationPaneBase* newPane)
 	newPane->SetPadding(Gwen::Padding(2, 2, 2, 2));
 	newPane->SetMargin(Gwen::Margin(2, 2, 2, 2));
 	newPane->Dock(Gwen::Pos::Fill);
+	newPane->RestrictToParent(true);
 	newPane->Hide();
 }
 
