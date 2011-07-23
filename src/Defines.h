@@ -31,9 +31,11 @@ using namespace std;
 #ifdef _DEBUG
 #pragma comment(lib, "comsuppwd.lib")
 #pragma comment(lib, "d3dx9d.lib")
+#pragma comment(lib, "gwend_static.lib")
 #else
 #pragma comment(lib, "comsuppw.lib")
 #pragma comment(lib, "d3dx9.lib")
+#pragma comment(lib, "gwen_static.lib")
 #endif
 
 // Warning disables
