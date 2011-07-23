@@ -330,6 +330,12 @@
     <ClCompile Include="TestingCamera.cpp">
       <Filter>Cameras</Filter>
     </ClCompile>
+    <ClCompile Include="SkyConfigurationPane.cpp">
+      <Filter>Post Process\Configuration Panes</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectionSelector.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleSample.hlsl">
@@ -514,6 +520,12 @@
     </ClInclude>
     <ClInclude Include="TestingCamera.h">
       <Filter>Cameras</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyConfigurationPane.h">
+      <Filter>Post Process\Configuration Panes</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectionSelector.h">
+      <Filter>UI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

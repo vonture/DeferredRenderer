@@ -392,6 +392,7 @@
     <ClCompile Include="DeviceManager.cpp" />
     <ClCompile Include="DeviceStates.cpp" />
     <ClCompile Include="DirectionalLightRenderer.cpp" />
+    <ClCompile Include="DirectionSelector.cpp" />
     <ClCompile Include="FirstPersonCamera.cpp" />
     <ClCompile Include="Float2UpDown.cpp" />
     <ClCompile Include="Float3UpDown.cpp" />
@@ -418,6 +419,7 @@
     <ClCompile Include="Quad.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="ShaderLoader.cpp" />
+    <ClCompile Include="SkyConfigurationPane.cpp" />
     <ClCompile Include="SkyPostProcess.cpp" />
     <ClCompile Include="SpotLightRenderer.cpp" />
     <ClCompile Include="SpriteRenderer.cpp" />
@@ -446,6 +448,7 @@
     <ClInclude Include="DeviceManager.h" />
     <ClInclude Include="DeviceStates.h" />
     <ClInclude Include="DirectionalLightRenderer.h" />
+    <ClInclude Include="DirectionSelector.h" />
     <ClInclude Include="FirstPersonCamera.h" />
     <ClInclude Include="CameraConfigurationPane.h" />
     <ClInclude Include="Float2UpDown.h" />
@@ -465,6 +468,7 @@
     <ClInclude Include="PerspectiveCamera.h" />
     <ClInclude Include="PointLightRenderer.h" />
     <ClInclude Include="ShaderLoader.h" />
+    <ClInclude Include="SkyConfigurationPane.h" />
     <ClInclude Include="SkyPostProcess.h" />
     <ClInclude Include="SpotLightRenderer.h" />
     <ClInclude Include="SpriteRenderer.h" />
