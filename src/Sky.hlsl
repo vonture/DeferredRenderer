@@ -67,7 +67,7 @@ float3 CIEClearSky(float3 dir, float3 sunDir)
 	if (SunEnabled)
 	{
 		float sunGamma = AngleBetween(dir, sunDir);
-		finalSkyColor = lerp(SunColor * 150.0f, SkyColor, saturate(abs(sunGamma) / 0.05f));
+		finalSkyColor = lerp(SunColor * 150.0f, SkyColor, saturate(abs(sunGamma) / SunWidth));
 	}
 
 	return max(finalSkyColor * lum, 0.0f);
