@@ -1,9 +1,10 @@
 #include "SkyPostProcess.h"
 
 SkyPostProcess::SkyPostProcess()
-	: _skyColor(0.0f, 0.0f, 0.0f), _sunColor(0.0f, 0.0f, 0.0f), _sunDirection(0.0f, 0.0f, 0.0f),
-	  _sunWidth(0.0f), _enableSun(false), _skyPS(NULL), _skyProperties(NULL)
+	: _skyColor(0.2f, 0.5f, 1.0f), _sunColor(1.0f, 0.8f, 0.5f), _sunDirection(0.0f, 1.0f, 0.0f),
+	  _sunWidth(0.05f), _enableSun(true), _skyPS(NULL), _skyProperties(NULL)
 {
+	SetSunDirection(XMFLOAT3(0.4f, 0.9f, 0.2f));
 }
 
 SkyPostProcess::~SkyPostProcess()
