@@ -35,9 +35,7 @@ private:
 
 	ConfigurationWindow* _configWindow;
 	
-	bool _aoEnabled;
-	bool _aaEnabled;
-	bool _hdrEnabled;
+	bool _uiEnabled;
 
 protected:
 	void OnInitialize();

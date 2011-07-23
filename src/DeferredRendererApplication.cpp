@@ -2,9 +2,8 @@
 
 #include "HDRConfigurationPane.h"
 #include "AntiAliasConfigurationPane.h"
+#include "SkyConfigurationPane.h"
 #include "CameraConfigurationPane.h"
-
-#include "Gwen\UnitTest\UnitTest.h"
 
 DeferredRendererApplication::DeferredRendererApplication()
 	: Application(L"Deferred Renderer", NULL), _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f), _configWindow(NULL),
@@ -16,9 +15,7 @@ DeferredRendererApplication::DeferredRendererApplication()
 	_camera.SetPosition(XMFLOAT3(1.0f, 4.0f, -6.0f));
 	_camera.SetRotation(XMFLOAT2(-0.1f, 0.35f));
 
-	_aoEnabled = true;
-	_aaEnabled = true;
-	_hdrEnabled = true;
+	_uiEnabled = true;
 }
 
 DeferredRendererApplication::~DeferredRendererApplication()
@@ -68,33 +65,9 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 			SetMaximized(!GetMaximized());
 		}
 	
-		if (kb.IsKeyJustPressed(D1))
+		if (kb.IsKeyJustPressed(U))
 		{
-			_aoEnabled = !_aoEnabled;
-		}
-
-		if (kb.IsKeyJustPressed(D2))
-		{
-			_aaEnabled = !_aaEnabled;
-		}
-
-		if (kb.IsKeyJustPressed(D3))
-		{
-			_hdrEnabled = !_hdrEnabled;
-		}
-
-		// Antialias edge detection toggles
-		if (kb.IsKeyJustPressed(NumPad1))
-		{
-			_aaPP.SetDepthDetectionEnabled(!_aaPP.GetDepthDetectionEnabled());
-		}
-		if (kb.IsKeyJustPressed(NumPad2))
-		{
-			_aaPP.SetNormalDetectionEnabled(!_aaPP.GetNormalDetectionEnabled());
-		}
-		if (kb.IsKeyJustPressed(NumPad3))
-		{
-			_aaPP.SetLuminanceDetectionEnabled(!_aaPP.GetLuminanceDetectionEnabled());
+			_uiEnabled = !_uiEnabled;
 		}
 
 		if (mouse.IsButtonDown(RightButton))
@@ -143,9 +116,7 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 		}
 	}
 
-	_hdrPP.SetTimeDelta(dt);
 	_uiPP.OnFrameMove(totalTime, dt);
-
 	_configWindow->OnFrameMove(totalTime, dt);
 }
 
@@ -166,7 +137,7 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 
 	_renderer.AddModel(&_scene);	
 	
-	
+	/*
 	PointLight greenLight = 
 	{
 		XMFLOAT3(-8.5f, 9.5f, 9.2f),
@@ -190,52 +161,41 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 		XMFLOAT3(1.5f, 0.0f, 3.0f)
 	};
 	_renderer.AddLight(&purpleLight, true);
-	
+	*/
 
-	XMFLOAT3 sunColor = XMFLOAT3(1.0f, 0.8f, 0.5f);
-	float sunIntensity = 1.0f;
-	DirectionalLight sun = 
+	if (_skyPP.GetSunEnabled())
 	{
-		XMFLOAT3(0.0f, -1.0f, 0.0f),
-		XMFLOAT3(sunColor.x * sunIntensity, sunColor.y * sunIntensity, sunColor.z * sunIntensity)
-	};
-	//_renderer.AddLight(&sun, true);
+		const float sunIntensity = 3.0f;
+		const XMFLOAT3 sunColor = _skyPP.GetSunColor();
+		const XMFLOAT3 sunDir = _skyPP.GetSunDirection();
+		DirectionalLight sun = 
+		{
+			sunDir,
+			XMFLOAT3(sunColor.x * sunIntensity, sunColor.y * sunIntensity, sunColor.z * sunIntensity)
+		};
+		_renderer.AddLight(&sun, true);
+	}
 	
-	float ambientIntesity = 0.6f;
+	float ambientIntesity = 1.0f;
 	AmbientLight ambientLight = 
 	{
 		XMFLOAT3(ambientIntesity, ambientIntesity, ambientIntesity)
 	};
 	_renderer.AddLight(&ambientLight);
 
-	_skyPP.SetSkyColor(XMFLOAT3(0.1f, 0.25f, 0.5f));	
-	_skyPP.SetSunColor(sun.Color);
-	_skyPP.SetSunDirection(sun.Direction);
-	_skyPP.SetSunWidth(0.05f);
-	_skyPP.SetSunEnabled(false);
-
-	if (_aoEnabled)
-	{
-		_renderer.AddPostProcess(&_aoPP);
-	}
-
-	_renderer.AddPostProcess(&_skyPP);
-
-	if (_aaEnabled)
-	{
-		_renderer.AddPostProcess(&_aaPP);
-	}
-	
-	if (_hdrEnabled)
-	{
-		_renderer.AddPostProcess(&_hdrPP);	
-	}	
+	_renderer.AddPostProcess(&_aoPP);
+	_renderer.AddPostProcess(&_skyPP);	
+	_renderer.AddPostProcess(&_aaPP);
+	_renderer.AddPostProcess(&_hdrPP);
 
 	// Unimplimented post processes
 	//_renderer.AddPostProcess(&_dofPP);
 	//_renderer.AddPostProcess(&_motionBlurPP);
 
-	_renderer.AddPostProcess(&_uiPP);
+	if (_uiEnabled)
+	{
+		_renderer.AddPostProcess(&_uiPP);
+	}
 
 	V_RETURN(_renderer.End(pd3dImmediateContext, &_camera));
 
@@ -261,7 +221,7 @@ HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 	Gwen::Controls::Canvas* canvas = _uiPP.GetCanvas();
 
 	_configWindow = new ConfigurationWindow(canvas);
-	_configWindow->SetBounds(10, 10, 250, 600);
+	_configWindow->SetBounds(10, 10, 260, pBackBufferSurfaceDesc->Height - 20);
 
 	CameraConfigurationPane* cameraPane = new CameraConfigurationPane(_configWindow, &_camera);
 	_configWindow->AddConfigPane(cameraPane);
@@ -272,6 +232,9 @@ HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 	HDRConfigurationPane* hdrPane = new HDRConfigurationPane(_configWindow, &_hdrPP);
 	_configWindow->AddConfigPane(hdrPane);
 		
+	SkyConfigurationPane* skyPane = new SkyConfigurationPane(_configWindow, &_skyPP);
+	_configWindow->AddConfigPane(skyPane);
+
 	return S_OK;
 }
 
