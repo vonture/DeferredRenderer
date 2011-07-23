@@ -4,7 +4,7 @@
 #include "IUpdateable.h"
 #include "Gwen/Controls/ScrollControl.h"
 
-class ConfigurationPaneBase : public IUpdateable, public Gwen::Controls::ScrollControl
+class ConfigurationPaneBase : public Gwen::Controls::ScrollControl, public IUpdateable
 {
 public:
 	ConfigurationPaneBase(Gwen::Controls::Base* parent) 
