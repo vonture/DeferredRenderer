@@ -7,125 +7,151 @@ HDRConfigurationPane::HDRConfigurationPane(Gwen::Controls::Base* parent, HDRPost
 	  _exposureKeyLabel(NULL), _timeScaleLabel(NULL), _timeScale(1.0f)
 {
 	SetName("HDR Post Process");
+	
+	const int childWidth = 240;
+	const int labelHight = 20;
+	const int sliderHeight = 14;
+	const int spacing = 3;
 
 	_tauLabel = new Gwen::Controls::Label(this);
-	_tauLabel->SetHeight(16);
 	_tauLabel->SetText("");
-	_tauLabel->Dock(Gwen::Pos::Top);
+	_tauLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
+	_tauLabel->SetBounds(0, 0, childWidth, labelHight);
 
 	_tauSlider = new Gwen::Controls::HorizontalSlider(this);
 	_tauSlider->SetClampToNotches(false);
 	_tauSlider->SetRange(0.0f, 1.0f);
 	_tauSlider->SetValue(pp->GetTau());
-	_tauSlider->SetHeight(16);
-	_tauSlider->Dock(Gwen::Pos::Top);	
+	_tauSlider->SetBounds(0, _tauLabel->Bottom(), childWidth, sliderHeight);
+	_tauSlider->onValueChanged.Add(this, &HDRConfigurationPane::OnValueChanged);
 
 	_whiteLumPercLabel = new Gwen::Controls::Label(this);
-	_whiteLumPercLabel->SetHeight(16);
-	_whiteLumPercLabel->SetText("");
-	_whiteLumPercLabel->Dock(Gwen::Pos::Top);
+	_whiteLumPercLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
+	_whiteLumPercLabel->SetBounds(0, _tauSlider->Bottom() + spacing, childWidth, labelHight);
 
 	_whiteLumPercSlider = new Gwen::Controls::HorizontalSlider(this);
 	_whiteLumPercSlider->SetClampToNotches(false);
 	_whiteLumPercSlider->SetRange(0.0f, 10.0f);
 	_whiteLumPercSlider->SetValue(pp->GetWhiteLuminancePercentage());
-	_whiteLumPercSlider->SetHeight(16);
-	_whiteLumPercSlider->Dock(Gwen::Pos::Top);
+	_whiteLumPercSlider->SetBounds(0, _whiteLumPercLabel->Bottom(), childWidth, sliderHeight);
+	_whiteLumPercSlider->onValueChanged.Add(this, &HDRConfigurationPane::OnValueChanged);
 
 	_bloomThresholdLabel = new Gwen::Controls::Label(this);
-	_bloomThresholdLabel->SetHeight(16);
-	_bloomThresholdLabel->SetText("");
-	_bloomThresholdLabel->Dock(Gwen::Pos::Top);
+	_bloomThresholdLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
+	_bloomThresholdLabel->SetBounds(0, _whiteLumPercSlider->Bottom() + spacing, childWidth, labelHight);
 
 	_bloomThresholdSlider = new Gwen::Controls::HorizontalSlider(this);
 	_bloomThresholdSlider->SetClampToNotches(false);
 	_bloomThresholdSlider->SetRange(0.0f, 1.0f);
 	_bloomThresholdSlider->SetValue(pp->GetBloomThreshold());
-	_bloomThresholdSlider->SetHeight(16);
-	_bloomThresholdSlider->Dock(Gwen::Pos::Top);
+	_bloomThresholdSlider->SetBounds(0, _bloomThresholdLabel->Bottom(), childWidth, sliderHeight);
+	_bloomThresholdSlider->onValueChanged.Add(this, &HDRConfigurationPane::OnValueChanged);
 
 	_bloomMagnitudeLabel = new Gwen::Controls::Label(this);
-	_bloomMagnitudeLabel->SetHeight(16);
-	_bloomMagnitudeLabel->SetText("");
-	_bloomMagnitudeLabel->Dock(Gwen::Pos::Top);
+	_bloomMagnitudeLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
+	_bloomMagnitudeLabel->SetBounds(0, _bloomThresholdSlider->Bottom() + spacing, childWidth, labelHight);
 
 	_bloomMagnitudeSlider = new Gwen::Controls::HorizontalSlider(this);
 	_bloomMagnitudeSlider->SetClampToNotches(false);
 	_bloomMagnitudeSlider->SetRange(0.0f, 5.0f);
 	_bloomMagnitudeSlider->SetValue(pp->GetBloomMagnitude());
-	_bloomMagnitudeSlider->SetHeight(16);
-	_bloomMagnitudeSlider->Dock(Gwen::Pos::Top);
+	_bloomMagnitudeSlider->SetBounds(0, _bloomMagnitudeLabel->Bottom(), childWidth, sliderHeight);
+	_bloomMagnitudeSlider->onValueChanged.Add(this, &HDRConfigurationPane::OnValueChanged);
 
 	_bloomBlurSigmaLabel = new Gwen::Controls::Label(this);
-	_bloomBlurSigmaLabel->SetHeight(16);
-	_bloomBlurSigmaLabel->SetText("");
-	_bloomBlurSigmaLabel->Dock(Gwen::Pos::Top);
+	_bloomBlurSigmaLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
+	_bloomBlurSigmaLabel->SetBounds(0, _bloomMagnitudeSlider->Bottom() + spacing, childWidth, labelHight);
 
 	_bloomBlurSigmaSlider = new Gwen::Controls::HorizontalSlider(this);
 	_bloomBlurSigmaSlider->SetClampToNotches(false);
 	_bloomBlurSigmaSlider->SetRange(0.0f, 4.0f);
 	_bloomBlurSigmaSlider->SetValue(pp->GetBloomBlurSigma());
-	_bloomBlurSigmaSlider->SetHeight(16);
-	_bloomBlurSigmaSlider->Dock(Gwen::Pos::Top);
+	_bloomBlurSigmaSlider->SetBounds(0, _bloomBlurSigmaLabel->Bottom(), childWidth, sliderHeight);
+	_bloomBlurSigmaSlider->onValueChanged.Add(this, &HDRConfigurationPane::OnValueChanged);
 
 	_exposureKeyLabel = new Gwen::Controls::Label(this);
-	_exposureKeyLabel->SetHeight(16);
-	_exposureKeyLabel->SetText("");
-	_exposureKeyLabel->Dock(Gwen::Pos::Top);
+	_exposureKeyLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
+	_exposureKeyLabel->SetBounds(0, _bloomBlurSigmaSlider->Bottom() + spacing, childWidth, labelHight);
 
 	_exposureKeySlider = new Gwen::Controls::HorizontalSlider(this);
 	_exposureKeySlider->SetClampToNotches(false);
 	_exposureKeySlider->SetRange(0.0f, 1.0f);
 	_exposureKeySlider->SetValue(pp->GetExposureKey());
-	_exposureKeySlider->SetHeight(16);
-	_exposureKeySlider->Dock(Gwen::Pos::Top);
+	_exposureKeySlider->SetBounds(0, _exposureKeyLabel->Bottom(), childWidth, sliderHeight);
+	_exposureKeySlider->onValueChanged.Add(this, &HDRConfigurationPane::OnValueChanged);
 
 	_timeScaleLabel = new Gwen::Controls::Label(this);
-	_timeScaleLabel->SetHeight(16);
-	_timeScaleLabel->SetText("");
-	_timeScaleLabel->Dock(Gwen::Pos::Top);
+	_timeScaleLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
+	_timeScaleLabel->SetBounds(0, _exposureKeySlider->Bottom() + spacing, childWidth, labelHight);
 
 	_timeScaleSlider = new Gwen::Controls::HorizontalSlider(this);
 	_timeScaleSlider->SetClampToNotches(false);
 	_timeScaleSlider->SetRange(0.0f, 10.0f);
 	_timeScaleSlider->SetValue(_timeScale);
-	_timeScaleSlider->SetHeight(16);
-	_timeScaleSlider->Dock(Gwen::Pos::Top);
+	_timeScaleSlider->SetBounds(0, _timeScaleLabel->Bottom(), childWidth, sliderHeight);
+	_timeScaleSlider->onValueChanged.Add(this, &HDRConfigurationPane::OnValueChanged);
 }
 
 HDRConfigurationPane::~HDRConfigurationPane()
 {
 }
 
+void HDRConfigurationPane::OnValueChanged(Gwen::Controls::Base *control)
+{
+	HDRPostProcess* pp = GetConfiguredObject();
+
+	if (control == _tauSlider)
+	{
+		pp->SetTau(_tauSlider->GetValue());
+	}
+	else if (control == _whiteLumPercSlider)
+	{
+		pp->SetWhiteLuminancePercentage(_whiteLumPercSlider->GetValue());
+	}
+	else if (control == _bloomThresholdSlider)
+	{
+		pp->SetBloomThreshold(_bloomThresholdSlider->GetValue());
+	}
+	else if (control == _bloomMagnitudeSlider)
+	{
+		pp->SetBloomMagnitude(_bloomMagnitudeSlider->GetValue());
+	}
+	else if (control == _bloomBlurSigmaSlider)
+	{
+		pp->SetBloomBlurSigma(_bloomBlurSigmaSlider->GetValue());
+	}
+	else if (control == _exposureKeySlider)
+	{
+		pp->SetExposureKey(_exposureKeySlider->GetValue());
+	}
+	else if (control == _timeScaleSlider)
+	{
+		_timeScale = _timeScaleSlider->GetValue();
+	}
+}
+
 void HDRConfigurationPane::OnFrameMove(double totalTime, float dt)
 {
 	HDRPostProcess* pp = GetConfiguredObject();
 	
-	pp->SetTau(_tauSlider->GetValue());
 	_tauSlider->SetValue(pp->GetTau());
 	_tauLabel->SetText("Tau: " + Gwen::Utility::ToString(pp->GetTau()));
 
-	pp->SetWhiteLuminancePercentage(_whiteLumPercSlider->GetValue());
 	_whiteLumPercSlider->SetValue(pp->GetWhiteLuminancePercentage());
 	_whiteLumPercLabel->SetText("White luminance percentage: " + Gwen::Utility::ToString(pp->GetWhiteLuminancePercentage()));
 
-	pp->SetBloomThreshold(_bloomThresholdSlider->GetValue());
 	_bloomThresholdSlider->SetValue(pp->GetBloomThreshold());
 	_bloomThresholdLabel->SetText("Bloom threshold: " + Gwen::Utility::ToString(pp->GetBloomThreshold()));
 
-	pp->SetBloomMagnitude(_bloomMagnitudeSlider->GetValue());
 	_bloomMagnitudeSlider->SetValue(pp->GetBloomMagnitude());
 	_bloomMagnitudeLabel->SetText("Bloom magnitude: " + Gwen::Utility::ToString(pp->GetBloomMagnitude()));
 	
-	pp->SetBloomBlurSigma(_bloomBlurSigmaSlider->GetValue());
 	_bloomBlurSigmaSlider->SetValue(pp->GetBloomBlurSigma());
 	_bloomBlurSigmaLabel->SetText("Bloom blur sigma: " + Gwen::Utility::ToString(pp->GetBloomBlurSigma()));
 
-	pp->SetExposureKey(_exposureKeySlider->GetValue());
 	_exposureKeySlider->SetValue(pp->GetExposureKey());
 	_exposureKeyLabel->SetText("Exposure key: " + Gwen::Utility::ToString(pp->GetExposureKey()));
 
-	_timeScale = _timeScaleSlider->GetValue();
 	_timeScaleSlider->SetValue(_timeScale);
 	pp->SetTimeDelta(dt * _timeScale);
 	_timeScaleLabel->SetText("Time scale: " + Gwen::Utility::ToString(_timeScale));

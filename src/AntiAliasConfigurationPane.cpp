@@ -8,110 +8,140 @@ AntiAliasConfigurationPane::AntiAliasConfigurationPane(Gwen::Controls::Base* par
 {
 	SetName("Anti-Alias Post Process");
 
+	const int childWidth = 240;
+	const int labelHight = 20;
+	const int sliderHeight = 14;
+	const int spacing = 3;
+
 	// Depth settings
 	_depthDetectionCheckBox = new Gwen::Controls::CheckBoxWithLabel(this);
-	_depthDetectionCheckBox->SetHeight(20);
 	_depthDetectionCheckBox->Label()->SetText("Depth detection enabled");
 	_depthDetectionCheckBox->Checkbox()->SetChecked(pp->GetDepthDetectionEnabled());
-	_depthDetectionCheckBox->Dock(Gwen::Pos::Top);
+	_depthDetectionCheckBox->SetBounds(0, 0, childWidth, labelHight);
+	_depthDetectionCheckBox->Checkbox()->onCheckChanged.Add(this, &AntiAliasConfigurationPane::OnValueChanged);
 
 	_depthThresholdLabel = new Gwen::Controls::Label(this);
-	_depthThresholdLabel->SetHeight(16);
 	_depthThresholdLabel->SetText("");
-	_depthThresholdLabel->Dock(Gwen::Pos::Top);
+	_depthThresholdLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
+	_depthThresholdLabel->SetBounds(0, _depthDetectionCheckBox->Bottom(), childWidth, labelHight);
 
 	_depthThresholdSlider = new Gwen::Controls::HorizontalSlider(this);
 	_depthThresholdSlider->SetClampToNotches(false);
 	_depthThresholdSlider->SetRange(0.0001f, 2.0f);
 	_depthThresholdSlider->SetValue(pp->GetDepthThreshold());
-	_depthThresholdSlider->SetHeight(16);
-	_depthThresholdSlider->Dock(Gwen::Pos::Top);
+	_depthThresholdSlider->SetBounds(0, _depthThresholdLabel->Bottom(), childWidth, sliderHeight);
+	_depthThresholdSlider->onValueChanged.Add(this, &AntiAliasConfigurationPane::OnValueChanged);
 
 	// Normal settings
 	_normalDetectionCheckBox = new Gwen::Controls::CheckBoxWithLabel(this);
-	_normalDetectionCheckBox->SetHeight(20);
 	_normalDetectionCheckBox->Label()->SetText("Normal detection enabled");
 	_normalDetectionCheckBox->Checkbox()->SetChecked(pp->GetNormalDetectionEnabled());
-	_normalDetectionCheckBox->Dock(Gwen::Pos::Top);
+	_normalDetectionCheckBox->SetBounds(0, _depthThresholdSlider->Bottom() + spacing, childWidth, labelHight);
+	_normalDetectionCheckBox->Checkbox()->onCheckChanged.Add(this, &AntiAliasConfigurationPane::OnValueChanged);
 
 	_normalThresholdLabel = new Gwen::Controls::Label(this);
-	_normalThresholdLabel->SetHeight(16);
 	_normalThresholdLabel->SetText("");
-	_normalThresholdLabel->Dock(Gwen::Pos::Top);
+	_normalThresholdLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
+	_normalThresholdLabel->SetBounds(0, _normalDetectionCheckBox->Bottom(), childWidth, labelHight);
 
 	_normalThresholdSlider = new Gwen::Controls::HorizontalSlider(this);
 	_normalThresholdSlider->SetClampToNotches(false);
 	_normalThresholdSlider->SetRange(0.0001f, 0.5f);
 	_normalThresholdSlider->SetValue(pp->GetNormalThreshold());
-	_normalThresholdSlider->SetHeight(16);
-	_normalThresholdSlider->Dock(Gwen::Pos::Top);
+	_normalThresholdSlider->SetBounds(0, _normalThresholdLabel->Bottom(), childWidth, sliderHeight);
+	_normalThresholdSlider->onValueChanged.Add(this, &AntiAliasConfigurationPane::OnValueChanged);
 
 	// Luminance settings
 	_lumDetectionCheckBox = new Gwen::Controls::CheckBoxWithLabel(this);
-	_lumDetectionCheckBox->SetHeight(20);
 	_lumDetectionCheckBox->Label()->SetText("Luminance detection enabled");
 	_lumDetectionCheckBox->Checkbox()->SetChecked(pp->GetLuminanceDetectionEnabled());
-	_lumDetectionCheckBox->Dock(Gwen::Pos::Top);
+	_lumDetectionCheckBox->SetBounds(0, _normalThresholdSlider->Bottom() + spacing, childWidth, labelHight);
+	_lumDetectionCheckBox->Checkbox()->onCheckChanged.Add(this, &AntiAliasConfigurationPane::OnValueChanged);
 
 	_lumThresholdLabel = new Gwen::Controls::Label(this);
-	_lumThresholdLabel->SetHeight(16);
 	_lumThresholdLabel->SetText("");
-	_lumThresholdLabel->Dock(Gwen::Pos::Top);
+	_lumThresholdLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
+	_lumThresholdLabel->SetBounds(0, _lumDetectionCheckBox->Bottom(), childWidth, labelHight);
 
 	_lumThresholdSlider = new Gwen::Controls::HorizontalSlider(this);
 	_lumThresholdSlider->SetClampToNotches(false);
 	_lumThresholdSlider->SetRange(0.0001f, 0.5f);
-	_lumThresholdSlider->SetValue(pp->GetLuminanceThreshold());
-	_lumThresholdSlider->SetHeight(16);
-	_lumThresholdSlider->Dock(Gwen::Pos::Top);
+	_lumThresholdSlider->SetValue(pp->GetLuminanceThreshold());	
+	_lumThresholdSlider->SetBounds(0, _lumThresholdLabel->Bottom(), childWidth, sliderHeight);
+	_lumThresholdSlider->onValueChanged.Add(this, &AntiAliasConfigurationPane::OnValueChanged);
 
 	// Search stesps setting
 	_maxSearchStepsLabel = new Gwen::Controls::Label(this);
-	_maxSearchStepsLabel->SetHeight(16);
 	_maxSearchStepsLabel->SetText("");
-	_maxSearchStepsLabel->Dock(Gwen::Pos::Top);
+	_maxSearchStepsLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
+	_maxSearchStepsLabel->SetBounds(0, _lumThresholdSlider->Bottom() + spacing, childWidth, labelHight);
 
 	_maxSearchStepsSlider = new Gwen::Controls::HorizontalSlider(this);
 	_maxSearchStepsSlider->SetClampToNotches(true);
 	_maxSearchStepsSlider->SetRange(4.0f, 64.0f);
 	_maxSearchStepsSlider->SetNotchCount(64 - 4 + 1);
 	_maxSearchStepsSlider->SetValue(pp->GetMaxSearchSteps());
-	_maxSearchStepsSlider->SetHeight(16);
-	_maxSearchStepsSlider->Dock(Gwen::Pos::Top);
+	_maxSearchStepsSlider->SetBounds(0, _maxSearchStepsLabel->Bottom() + spacing, childWidth, sliderHeight);
+	_maxSearchStepsSlider->onValueChanged.Add(this, &AntiAliasConfigurationPane::OnValueChanged);
 }
 
 AntiAliasConfigurationPane::~AntiAliasConfigurationPane()
 {
 }
 
+void AntiAliasConfigurationPane::OnValueChanged(Gwen::Controls::Base *control)
+{
+	AntiAliasPostProcess* pp = GetConfiguredObject();
+
+	if (control == _depthDetectionCheckBox->Checkbox())
+	{
+		pp->SetDepthDetectionEnabled(_depthDetectionCheckBox->Checkbox()->IsChecked());
+	}
+	else if (control == _depthThresholdSlider)
+	{
+		pp->SetDepthThreshold(_depthThresholdSlider->GetValue());
+	}
+	else if (control == _normalDetectionCheckBox->Checkbox())
+	{
+		pp->SetNormalDetectionEnabled(_normalDetectionCheckBox->Checkbox()->IsChecked());
+	}
+	else if (control == _normalThresholdSlider)
+	{
+		pp->SetNormalThreshold(_normalThresholdSlider->GetValue());
+	}
+	else if (control == _lumDetectionCheckBox->Checkbox())
+	{
+		pp->SetLuminanceDetectionEnabled(_lumDetectionCheckBox->Checkbox()->IsChecked());
+	}
+	else if (control == _lumThresholdSlider)
+	{
+		pp->SetNormalThreshold(_lumThresholdSlider->GetValue());
+	}
+	else if (control == _maxSearchStepsSlider)
+	{
+		pp->SetMaxSearchSteps(floor(_maxSearchStepsSlider->GetValue() + 0.5f));
+	}
+}
+
 void AntiAliasConfigurationPane::OnFrameMove(double totalTime, float dt)
 {
 	AntiAliasPostProcess* pp = GetConfiguredObject();
 
-	pp->SetDepthDetectionEnabled(_depthDetectionCheckBox->Checkbox()->IsChecked());
 	_depthDetectionCheckBox->Checkbox()->SetChecked(pp->GetDepthDetectionEnabled());
 
-	pp->SetDepthThreshold(_depthThresholdSlider->GetValue());
 	_depthThresholdSlider->SetValue(pp->GetDepthThreshold());
 	_depthThresholdLabel->SetText("Depth threshold: " + Gwen::Utility::ToString(pp->GetDepthThreshold()));
 
-
-	pp->SetNormalDetectionEnabled(_normalDetectionCheckBox->Checkbox()->IsChecked());
 	_normalDetectionCheckBox->Checkbox()->SetChecked(pp->GetNormalDetectionEnabled());
 
-	pp->SetNormalThreshold(_normalThresholdSlider->GetValue());
 	_normalThresholdSlider->SetValue(pp->GetNormalThreshold());
 	_normalThresholdLabel->SetText("Normal threshold: " + Gwen::Utility::ToString(pp->GetNormalThreshold()));
 
-
-	pp->SetLuminanceDetectionEnabled(_lumDetectionCheckBox->Checkbox()->IsChecked());
 	_lumDetectionCheckBox->Checkbox()->SetChecked(pp->GetLuminanceDetectionEnabled());
 
-	pp->SetLuminanceThreshold(_lumThresholdSlider->GetValue());
 	_lumThresholdSlider->SetValue(pp->GetLuminanceThreshold());
 	_lumThresholdLabel->SetText("Luminance threshold: " + Gwen::Utility::ToString(pp->GetLuminanceThreshold()));
 
-	pp->SetMaxSearchSteps(floor(_maxSearchStepsSlider->GetValue() + 0.5f));
 	_maxSearchStepsSlider->SetValue(pp->GetMaxSearchSteps());
 	_maxSearchStepsLabel->SetText("Max search steps: " + Gwen::Utility::ToString(pp->GetMaxSearchSteps()));
 }

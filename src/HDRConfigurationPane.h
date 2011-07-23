@@ -24,6 +24,8 @@ private:
 	Gwen::Controls::Label* _exposureKeyLabel;
 	Gwen::Controls::Label* _timeScaleLabel;
 
+	virtual void OnValueChanged(Gwen::Controls::Base *control);
+
 	float _timeScale;
 
 public:

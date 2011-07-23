@@ -24,6 +24,8 @@ private:
 	Gwen::Controls::HorizontalSlider* _maxSearchStepsSlider;
 	Gwen::Controls::Label* _maxSearchStepsLabel;
 
+	virtual void OnValueChanged(Gwen::Controls::Base *control);
+
 public:
 	AntiAliasConfigurationPane(Gwen::Controls::Base* parent, AntiAliasPostProcess* pp);
 	~AntiAliasConfigurationPane();

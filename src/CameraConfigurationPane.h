@@ -3,8 +3,6 @@
 #include "Defines.h"
 #include "ConfigurationPane.h"
 #include "TestingCamera.h"
-#include "Float2UpDown.h"
-#include "Float3UpDown.h"
 #include "Gwen/Controls/HorizontalSlider.h"
 
 class CameraConfigurationPane : public ConfigurationPane<TestingCamera>

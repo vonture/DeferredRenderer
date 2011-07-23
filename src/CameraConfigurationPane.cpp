@@ -5,82 +5,82 @@ CameraConfigurationPane::CameraConfigurationPane(Gwen::Controls::Base* parent, T
 {
 	SetName("Camera");
 	
+	const int childWidth = 240;
+	const int labelHight = 20;
+	const int sliderHeight = 14;
+	const int spacing = 3;
+
 	// Position
 	_cameraPositionLabel = new Gwen::Controls::Label(this);
-	_cameraPositionLabel->SetHeight(16);
+	_cameraPositionLabel->SetBounds(0, 0, childWidth, labelHight);
+	_cameraPositionLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
 	_cameraPositionLabel->SetText("Camera position:");
-	_cameraPositionLabel->Dock(Gwen::Pos::Top);
 
 	// Rotation
 	_cameraRotationLabel = new Gwen::Controls::Label(this);
-	_cameraRotationLabel->SetHeight(16);
+	_cameraRotationLabel->SetBounds(0, _cameraPositionLabel->Bottom() + spacing, childWidth, labelHight);
+	_cameraRotationLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
 	_cameraRotationLabel->SetText("Camera rotation:");
-	_cameraRotationLabel->Dock(Gwen::Pos::Top);
 
 	// fov
 	_cameraFovLabel = new Gwen::Controls::Label(this);
-	_cameraFovLabel->SetHeight(16);
+	_cameraFovLabel->SetBounds(0, _cameraRotationLabel->Bottom() + spacing, childWidth, labelHight);
+	_cameraFovLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
 	_cameraFovLabel->SetText("");
-	_cameraFovLabel->Dock(Gwen::Pos::Top);
 
 	_cameraFovSlider = new Gwen::Controls::HorizontalSlider(this);
 	_cameraFovSlider->SetClampToNotches(false);
 	_cameraFovSlider->SetRange(0.0001f, Pi - 0.0001f);
 	_cameraFovSlider->SetValue(cam->GetFieldOfView());
-	_cameraFovSlider->SetHeight(16);
-	_cameraFovSlider->Dock(Gwen::Pos::Top);	
+	_cameraFovSlider->SetBounds(0, _cameraFovLabel->Bottom(), childWidth, sliderHeight);
 
 	// near
 	_cameraNearClipLabel = new Gwen::Controls::Label(this);
-	_cameraNearClipLabel->SetHeight(16);
+	_cameraNearClipLabel->SetBounds(0, _cameraFovSlider->Bottom() + spacing, childWidth, labelHight);
+	_cameraNearClipLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
 	_cameraNearClipLabel->SetText("");
-	_cameraNearClipLabel->Dock(Gwen::Pos::Top);
 
 	_cameraNearClipSlider = new Gwen::Controls::HorizontalSlider(this);
 	_cameraNearClipSlider->SetClampToNotches(false);
-	_cameraNearClipSlider->SetRange(0.0f, 100.0f);
+	_cameraNearClipSlider->SetRange(0.00001f, 100.0f);
 	_cameraNearClipSlider->SetValue(cam->GetNearClip());
-	_cameraNearClipSlider->SetHeight(16);
-	_cameraNearClipSlider->Dock(Gwen::Pos::Top);	
+	_cameraNearClipSlider->SetBounds(0, _cameraNearClipLabel->Bottom(), childWidth, sliderHeight);
 
 	// far
 	_cameraFarClipLabel = new Gwen::Controls::Label(this);
-	_cameraFarClipLabel->SetHeight(16);
+	_cameraFarClipLabel->SetBounds(0, _cameraNearClipSlider->Bottom() + spacing, childWidth, labelHight);
+	_cameraFarClipLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
 	_cameraFarClipLabel->SetText("");
-	_cameraFarClipLabel->Dock(Gwen::Pos::Top);
 
 	_cameraFarClipSlider = new Gwen::Controls::HorizontalSlider(this);
 	_cameraFarClipSlider->SetClampToNotches(false);
-	_cameraFarClipSlider->SetRange(0.0f, 100.0f);
+	_cameraFarClipSlider->SetRange(0.00001f, 100.0f);
 	_cameraFarClipSlider->SetValue(cam->GetFarClip());
-	_cameraFarClipSlider->SetHeight(16);
-	_cameraFarClipSlider->Dock(Gwen::Pos::Top);	
+	_cameraFarClipSlider->SetBounds(0, _cameraFarClipLabel->Bottom(), childWidth, sliderHeight);
 
 	// move speed
 	_cameraMoveSpeedLabel = new Gwen::Controls::Label(this);
-	_cameraMoveSpeedLabel->SetHeight(16);
+	_cameraMoveSpeedLabel->SetBounds(0, _cameraFarClipSlider->Bottom() + spacing, childWidth, labelHight);
+	_cameraMoveSpeedLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
 	_cameraMoveSpeedLabel->SetText("");
-	_cameraMoveSpeedLabel->Dock(Gwen::Pos::Top);
 
 	_cameraMoveSpeedSlider = new Gwen::Controls::HorizontalSlider(this);
 	_cameraMoveSpeedSlider->SetClampToNotches(false);
 	_cameraMoveSpeedSlider->SetRange(0.0f, 100.0f);
 	_cameraMoveSpeedSlider->SetValue(cam->GetMovementSpeed());
-	_cameraMoveSpeedSlider->SetHeight(16);
-	_cameraMoveSpeedSlider->Dock(Gwen::Pos::Top);	
+	_cameraMoveSpeedSlider->SetBounds(0, _cameraMoveSpeedLabel->Bottom(), childWidth, sliderHeight);
 
 	// rot speed
 	_cameraRotSpeedLabel = new Gwen::Controls::Label(this);
-	_cameraRotSpeedLabel->SetHeight(16);
+	_cameraRotSpeedLabel->SetBounds(0, _cameraMoveSpeedSlider->Bottom() + spacing, childWidth, labelHight);
+	_cameraRotSpeedLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
 	_cameraRotSpeedLabel->SetText("");
-	_cameraRotSpeedLabel->Dock(Gwen::Pos::Top);
 
 	_cameraRotSpeedSlider = new Gwen::Controls::HorizontalSlider(this);
 	_cameraRotSpeedSlider->SetClampToNotches(false);
 	_cameraRotSpeedSlider->SetRange(0.0f, 0.01f);
 	_cameraRotSpeedSlider->SetValue(cam->GetRotationSpeed());
-	_cameraRotSpeedSlider->SetHeight(16);
-	_cameraRotSpeedSlider->Dock(Gwen::Pos::Top);	
+	_cameraRotSpeedSlider->SetBounds(0, _cameraRotSpeedLabel->Bottom(), childWidth, sliderHeight);
 }
 
 CameraConfigurationPane::~CameraConfigurationPane()
