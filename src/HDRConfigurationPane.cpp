@@ -6,7 +6,7 @@ HDRConfigurationPane::HDRConfigurationPane(Gwen::Controls::Base* parent, HDRPost
 	  _whiteLumPercLabel(NULL), _bloomThresholdLabel(NULL), _bloomMagnitudeLabel(NULL), _bloomBlurSigmaLabel(NULL),
 	  _exposureKeyLabel(NULL), _timeScaleLabel(NULL), _timeScale(1.0f)
 {
-	SetName("HDR Post Process");
+	SetName("HDR");
 	
 	const int childWidth = 240;
 	const int labelHight = 20;
