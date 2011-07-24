@@ -165,7 +165,7 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 
 	if (_skyPP.GetSunEnabled())
 	{
-		const float sunIntensity = 3.0f;
+		const float sunIntensity = _skyPP.GetSunIntensity();
 		const XMFLOAT3 sunColor = _skyPP.GetSunColor();
 		const XMFLOAT3 sunDir = _skyPP.GetSunDirection();
 		DirectionalLight sun = 
