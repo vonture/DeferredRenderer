@@ -408,12 +408,9 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 			model->Render(pd3dImmediateContext);
 		}
 
-		// Unset the shadow map SRV
-		ID3D11ShaderResourceView* nullSRV[1] = 
-		{
-			NULL,
-		};
-		pd3dImmediateContext->PSSetShaderResources(5, 1, nullSRV);
+		// Null all the SRVs
+		ID3D11ShaderResourceView* nullSRV[5] = { NULL, NULL, NULL, NULL, NULL };
+		pd3dImmediateContext->PSSetShaderResources(0, 5, nullSRV);
 
 		// Reset the raster state
 		pd3dImmediateContext->RSSetState(prevRS);

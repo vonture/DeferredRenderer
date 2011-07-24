@@ -717,9 +717,9 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 			_fsQuad.Render(pd3dImmediateContext, _shadowedPS);
 		}
 
-		// Unset the shadow map SRV
-		ID3D11ShaderResourceView* nullSRV[1] = { NULL };
-		pd3dImmediateContext->PSSetShaderResources(4, 1, nullSRV);
+		// Null all the SRVs
+		ID3D11ShaderResourceView* nullSRV[5] = { NULL, NULL, NULL, NULL, NULL };
+		pd3dImmediateContext->PSSetShaderResources(0, 5, nullSRV);
 
 		D3DPERF_EndEvent();
 	}
