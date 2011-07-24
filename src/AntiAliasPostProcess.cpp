@@ -9,6 +9,8 @@ AntiAliasPostProcess::AntiAliasPostProcess()
 	  _copyBackgroundPS(NULL), _neighborhoodBlendPS(NULL),  _mlaaPropertiesBuffer(NULL),\
 	  _dsTexture(NULL), _dsv(NULL), _textureWidth(1), _textureHeight(1)
 {
+	SetIsAdditive(false);
+
 	for (UINT i = 0; i < 2; i++)
 	{
 		for (UINT j = 0; j < 2; j++)
@@ -27,13 +29,13 @@ AntiAliasPostProcess::AntiAliasPostProcess()
 	}
 
 	// Define some default values for the properties
-	_depthThreshold = 0.25f;
-	_normalThreshold = 0.07f;
-	_luminanceThreshold = 0.008f;
+	SetDepthThreshold(0.25f);
+	SetNormalThreshold(0.07f);
+	SetLuminanceThreshold(0.008f);
 
-	_depthDetect = true;
-	_normalDetect = true;
-	_luminanceDetect = false;
+	SetDepthDetectionEnabled(true);
+	SetNormalDetectionEnabled(true);
+	SetLuminanceDetectionEnabled(false);
 
 	SetMaxSearchSteps(16);
 }
