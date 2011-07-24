@@ -6,6 +6,8 @@ AmbientOcclusionPostProcess::AmbientOcclusionPostProcess()
 	  _aoPropertiesBuffer(NULL), _randomTexture(NULL), _randomSRV(NULL), _sampleDirectionsBuffer(NULL),
 	  _compositePS(NULL)
 {
+	SetIsAdditive(false);
+
 	for (UINT i = 0; i < 2; i++)
 	{
 		_downScaleTextures[i] = NULL;
@@ -14,10 +16,10 @@ AmbientOcclusionPostProcess::AmbientOcclusionPostProcess()
 	}
 	
 	// Initialize some parameters to default values
-	_sampleRadius = 0.5f;
-	_blurSigma = 0.8f;
-	_samplePower = 3.5f;
-	_sampleCount = 16;
+	SetSampleRadius(0.5f);
+	SetBlurSigma(0.8f);
+	SetSamplePower(3.5f);
+	SetSampleCount(16);
 }
 
 AmbientOcclusionPostProcess::~AmbientOcclusionPostProcess()

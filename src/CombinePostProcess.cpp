@@ -3,6 +3,7 @@
 CombinePostProcess::CombinePostProcess()
 	: _pixelShader(NULL)
 {
+	SetIsAdditive(false);
 }
 
 CombinePostProcess::~CombinePostProcess()

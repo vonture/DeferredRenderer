@@ -5,13 +5,15 @@ HDRPostProcess::HDRPostProcess()
 	: _timeDelta(0.0f), _lumMapSize(0), _mipLevels(0), _luminanceMapPS(NULL), _toneMapPS(NULL), 
 	  _scalePS(NULL), _thresholdPS(NULL), _hBlurPS(NULL), _vBlurPS(NULL)
 {
+	SetIsAdditive(false);
+
 	// Load some default values for the parameters
-	_tau = 0.8f;
-	_lumWhite = 2.5f;
-	_bloomThreshold = 0.75f;
-	_bloomMagnitude = 1.0f;
-	_bloomBlurSigma = 0.8f;
-	_exposureKey = 0.60f;
+	SetTau(0.8f);
+	SetWhiteLuminancePercentage(2.5f);
+	SetBloomThreshold(0.75f);
+	SetBloomMagnitude(1.0f);
+	SetBloomBlurSigma(0.8f);
+	SetExposureKey(0.6f);
 
 	for (UINT i = 0; i < 2; i++)
 	{

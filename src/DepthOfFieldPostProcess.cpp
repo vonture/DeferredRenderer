@@ -3,11 +3,12 @@
 DepthOfFieldPostProcess::DepthOfFieldPostProcess()
 	: _propertiesBuffer(NULL)
 {
+	SetIsAdditive(false);
+
 	// default parameters
-	_focalDistance = 11.0f;
-	_falloffStart = 4.0f;
-	_falloffEnd = 8.0f;
-	_cocScale = 0.05f;
+	SetFocalDistance(11.0f);
+	SetFocalFalloffs(4.0f, 8.0f);
+	SetCircleOfConfusionScale(0.05f);
 }
 
 DepthOfFieldPostProcess::~DepthOfFieldPostProcess()

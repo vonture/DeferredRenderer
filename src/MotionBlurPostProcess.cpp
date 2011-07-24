@@ -3,6 +3,7 @@
 MotionBlurPostProcess::MotionBlurPostProcess()
 	: _propertiesBuffer(NULL)
 {
+	SetIsAdditive(false);
 }
 
 MotionBlurPostProcess::~MotionBlurPostProcess()
