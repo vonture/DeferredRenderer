@@ -2,6 +2,10 @@
 #define SSAO_SAMPLE_COUNT 16
 #endif
 
+#ifndef SSAO_SAMPLE_COUNT_MAX
+#define SSAO_SAMPLE_COUNT_MAX 64
+#endif
+
 #ifndef BLUR_RADIUS
 #define BLUR_RADIUS 4
 #endif
@@ -21,7 +25,7 @@ cbuffer cbSSAOProperties : register(cb0)
 
 cbuffer cbSSAOSampleDirections : register(cb1)
 {	
-	float4 SampleDirections[SSAO_SAMPLE_COUNT]	: packoffset(c0.x);
+	float4 SampleDirections[SSAO_SAMPLE_COUNT_MAX]	: packoffset(c0.x);
 }
 
 Texture2D Texture0 : register(t0);
