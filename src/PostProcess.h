@@ -16,6 +16,7 @@ private:
 	BlendStates _blendStates;
 	RasterizerStates _rasterStates;
 	FullscreenQuad _fsQuad;
+	bool _isAdditive;
 
 protected:
 	DepthStencilStates* GetDepthStencilStates()	{ return &_dsStates; }
@@ -24,7 +25,14 @@ protected:
 	RasterizerStates* GetRasterizerStates() { return &_rasterStates; }
 	Quad* GetFullScreenQuad() { return &_fsQuad; }
 
+	void SetIsAdditive(bool additive) { _isAdditive = additive; }
+
 public:
+	PostProcess() : _isAdditive(false) { }
+	~PostProcess() { }
+
+	bool GetIsAdditive() const { return _isAdditive; }
+
 	virtual HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 		ID3D11RenderTargetView* dst, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer) = 0;
 
