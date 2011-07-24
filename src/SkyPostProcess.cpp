@@ -1,10 +1,16 @@
 #include "SkyPostProcess.h"
 
 SkyPostProcess::SkyPostProcess()
-	: _skyColor(0.2f, 0.5f, 1.0f), _sunColor(1.0f, 0.8f, 0.5f), _sunDirection(0.0f, 1.0f, 0.0f),
-	  _sunWidth(0.05f), _enableSun(true), _skyPS(NULL), _skyProperties(NULL)
+	: _sunDisabledPS(NULL), _sunEnabledPS(NULL), _skyProperties(NULL)
 {
+	SetIsAdditive(false);
+
+	SetSunColor(XMFLOAT3(1.0f, 0.8f, 0.5f));
+	SetSkyColor(XMFLOAT3(0.2f, 0.5f, 1.0f));
 	SetSunDirection(XMFLOAT3(0.4f, 0.9f, 0.2f));
+	SetSunWidth(0.05f);
+	SetSunEnabled(true);
+	SetSunIntensity(4.0f);
 }
 
 SkyPostProcess::~SkyPostProcess()
@@ -42,7 +48,7 @@ HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	skyProperties->SunColor = _sunColor;
 	skyProperties->SunDirection = _sunDirection;
 	skyProperties->SunWidth = _sunWidth;
-	skyProperties->SunEnabled = _enableSun ? 1 : 0;
+	skyProperties->SunIntensity = _sunIntensity;
 	skyProperties->CameraPosition = camera->GetPosition();
 	XMStoreFloat4x4(&skyProperties->InverseViewProjection, XMMatrixTranspose(invViewProj));
 
@@ -51,29 +57,22 @@ HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	pd3dImmediateContext->PSSetConstantBuffers(0, 1, &_skyProperties);
 
 	// Set the render targets
-	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, NULL);
+	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, gBuffer->GetReadOnlyDepthStencilView());
 
 	// Prepare the blend, depth and sampler
-	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthDisabled(), 0);
+	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthEnabled(), 0);
 
 	float blendFactor[4] = {1, 1, 1, 1};
 	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
 
 	Quad* fsQuad = GetFullScreenQuad();
-
-	ID3D11SamplerState* sampler = GetSamplerStates()->GetPoint();
-	pd3dImmediateContext->PSSetSamplers(0, 1, &sampler);
-
-	// Prepare the SRVs
-	ID3D11ShaderResourceView* ppSRVs[2] = { src, gBuffer->GetShaderResourceView(3) };
-	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVs);
-
+	
 	// Render
-	V_RETURN(fsQuad->Render(pd3dImmediateContext, _skyPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _enableSun ? _sunEnabledPS : _sunDisabledPS));
 
 	// Null the SRVs
-	ID3D11ShaderResourceView* ppSRVNULL[2] = { NULL, NULL };
-	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVNULL);
+	ID3D11ShaderResourceView* ppSRVNULL[1] = { NULL };
+	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL);
 
 	D3DPERF_EndEvent();
 
@@ -89,10 +88,23 @@ HRESULT SkyPostProcess:: OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXG
 	// Load the shaders
 	ID3DBlob* pBlob = NULL;
 
-	V_RETURN( CompileShaderFromFile( L"Sky.hlsl", "PS_Sky", "ps_4_0", NULL, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_skyPS));
+	D3D_SHADER_MACRO skyMacros[] = 
+	{
+		{ "SUN_ENABLED", "" },
+		NULL,
+	};
+
+	skyMacros[0].Definition = "0";
+	V_RETURN( CompileShaderFromFile( L"Sky.hlsl", "PS_Sky", "ps_4_0", skyMacros, &pBlob ) );   
+    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_sunDisabledPS));
 	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_skyPS, "Sky post process pixel shader");
+	SET_DEBUG_NAME(_sunDisabledPS, "Sky post process (sun disabled) pixel shader");
+
+	skyMacros[0].Definition = "1";
+	V_RETURN( CompileShaderFromFile( L"Sky.hlsl", "PS_Sky", "ps_4_0", skyMacros, &pBlob ) );   
+    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_sunEnabledPS));
+	SAFE_RELEASE(pBlob);
+	SET_DEBUG_NAME(_sunEnabledPS, "Sky post process (sun enabled) pixel shader");
 
 	// Create the buffer
 	D3D11_BUFFER_DESC bufferDesc =
@@ -115,7 +127,8 @@ void SkyPostProcess::OnD3D11DestroyDevice()
 {
 	PostProcess::OnD3D11DestroyDevice();
 
-	SAFE_RELEASE(_skyPS);
+	SAFE_RELEASE(_sunEnabledPS);
+	SAFE_RELEASE(_sunDisabledPS);
 	SAFE_RELEASE(_skyProperties);
 }
 

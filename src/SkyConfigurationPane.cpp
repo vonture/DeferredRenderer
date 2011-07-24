@@ -37,12 +37,23 @@ SkyConfigurationPane::SkyConfigurationPane(Gwen::Controls::Base* parent, SkyPost
 	_sunColorPicker->SetColor(vectorToGwenColor(pp->GetSkyColor()));
 	_sunColorPicker->SetBounds(0, _sunColorLabel->Bottom(), childWidth, colorPickerHeight);
 	_sunColorPicker->onColorChanged.Add(this, &SkyConfigurationPane::OnValueChanged);
+	
+	_sunIntensityLabel = new Gwen::Controls::Label(this);
+	_sunIntensityLabel->SetText("");
+	_sunIntensityLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
+	_sunIntensityLabel->SetBounds(0, _sunColorPicker->Bottom(), childWidth, labelHight);
 
+	_sunIntensitySlider = new Gwen::Controls::HorizontalSlider(this);
+	_sunIntensitySlider->SetClampToNotches(false);
+	_sunIntensitySlider->SetRange(0.0f, 25.0f);
+	_sunIntensitySlider->SetValue(pp->GetSunIntensity());	
+	_sunIntensitySlider->SetBounds(0, _sunIntensityLabel->Bottom(), childWidth, sliderHeight);
+	_sunIntensitySlider->onValueChanged.Add(this, &SkyConfigurationPane::OnValueChanged);
 
 	_sunDirLabel = new Gwen::Controls::Label(this);
 	_sunDirLabel->SetText("");
 	_sunDirLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
-	_sunDirLabel->SetBounds(0, _sunColorPicker->Bottom(), childWidth, labelHight);
+	_sunDirLabel->SetBounds(0, _sunIntensitySlider->Bottom(), childWidth, labelHight);
 
 	_sunDirSelector = new DirectionSelector(this);
 	XMFLOAT3 sunDir = pp->GetSunDirection();
@@ -97,6 +108,10 @@ void SkyConfigurationPane::OnValueChanged(Gwen::Controls::Base *control)
 	{
 		pp->SetSunWidth(_sunWidthSlider->GetValue());
 	}
+	else if (control == _sunIntensitySlider)
+	{
+		pp->SetSunIntensity(_sunIntensitySlider->GetValue());
+	}
 	else if (control == _sunDirSelector)
 	{
 		XMFLOAT2 dir = _sunDirSelector->GetDirection();
@@ -113,8 +128,11 @@ void SkyConfigurationPane::OnFrameMove(double totalTime, float dt)
 	_sunEnabledCheckBox->Checkbox()->SetChecked(pp->GetSunEnabled());
 	_sunColorPicker->SetColor(vectorToGwenColor(pp->GetSunColor()));
 
+	_sunIntensitySlider->SetValue(pp->GetSunIntensity());
+	_sunIntensityLabel->SetText("Sun Intensity: " + Gwen::Utility::ToString(pp->GetSunIntensity()));
+
 	_sunWidthSlider->SetValue(pp->GetSunWidth());
-	_sunWidthLabel->SetText("Sun width: " +  Gwen::Utility::ToString(pp->GetSunWidth()));
+	_sunWidthLabel->SetText("Sun width: " + Gwen::Utility::ToString(pp->GetSunWidth()));
 
 	XMFLOAT3 sunDir = pp->GetSunDirection();
 	_sunDirSelector->SetDirection(XMFLOAT2(sunDir.x, sunDir.z));

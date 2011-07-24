@@ -1,7 +1,37 @@
+#ifndef SUN_ENABLED
+#define SUN_ENABLED 0
+#endif
+
+#define PI_OVER_TWO 1.57079633f
+
+#ifndef UP
+#define UP float3(0.0f, 1.0f, 0.0f)
+#endif
+
+#ifndef A
+#define A -1.0f
+#endif
+
+#ifndef B
+#define B -0.32f
+#endif
+
+#ifndef C
+#define C 10.0f
+#endif
+
+#ifndef D
+#define D -3.0f
+#endif
+
+#ifndef E
+#define E 0.45f
+#endif
+
 cbuffer cbSkyProperties : register(cb0)
 {
-	uint SunEnabled					: packoffset(c0.x);
-	float SunWidth					: packoffset(c0.y);
+	float SunWidth					: packoffset(c0.x);
+	float SunIntensity				: packoffset(c0.y);
 	float3 SkyColor					: packoffset(c1.x);
 	float3 SunColor					: packoffset(c2.x);
 	float3 SunDirection				: packoffset(c3.x);	
@@ -15,11 +45,6 @@ struct PS_In_Quad
     float2 vTexCoord	: TEXCOORD0;
 	float2 vPosition2	: TEXCOORD1;
 };
-
-Texture2D SceneTexture : register(t0);
-Texture2D SceneDepth : register(t1);
-
-SamplerState PointSampler : register(s0);
 
 float4 GetPositionWS(float2 vPositionCS, float fDepth)
 {
@@ -38,58 +63,42 @@ float AngleBetween(float3 dirA, float3 dirB)
 //-------------------------------------------------------------------------------------------------
 // Uses the CIE Clear Sky model to compute a color for a pixel, given a direction + sun direction
 //-------------------------------------------------------------------------------------------------
+float Phi(float theta)
+{
+	return 1.0f + (A * exp(B / cos(theta)));
+}
+
+float F(float gamma)
+{
+	float cosGamma = cos(gamma);
+	return 1.0f + (C * (exp(D * gamma) - exp(D * PI_OVER_TWO))) + (E * cosGamma * cosGamma);
+}
+
 float3 CIEClearSky(float3 dir, float3 sunDir)
 {
-	const float3 vUp = float3(0.0f, 1.0f, 0.0f);
-
 	float3 skyDir = float3(dir.x, abs(dir.y), dir.z);
 	float gamma = AngleBetween(skyDir, sunDir);
-	float S = AngleBetween(sunDir, vUp);
-	float theta = AngleBetween(skyDir, vUp);
+	float S = AngleBetween(sunDir, UP);
+	float theta = AngleBetween(skyDir, UP);
 
-	float cosTheta = cos(theta);
-	float cosS = cos(S);
-	float cosGamma = cos(gamma);
+	float sunContribution = F(gamma) / F(S);
+	float zenithContribution = Phi(theta) / Phi(0.0f);
+		
+	// Slightly deviates from the model so that the color of the sun lights the sky around it
+	float3 color = max((sunContribution * SunColor) + (zenithContribution * SkyColor), 0.0f);
 
-	const float b = -0.32f;
-	const float c = 10.0f;
-	const float d = -3.0f;
-	const float e = 0.45f;
-
-	float num = (1.0f + c * exp(d * gamma) + e * cosGamma * cosGamma) * (1 - exp(b / cosTheta));
-	float denom = (1.0f + c * exp(d * S) + e * cosS * cosS) * (1 - exp(b));
-
-	float lum = num / denom;
-
-	float3 finalSkyColor = SkyColor;
-
-	[flatten]
-	if (SunEnabled)
-	{
-		float sunGamma = AngleBetween(dir, sunDir);
-		finalSkyColor = lerp(SunColor * 150.0f, SkyColor, saturate(abs(sunGamma) / SunWidth));
-	}
-
-	return max(finalSkyColor * lum, 0.0f);
+#if SUN_ENABLED
+	float sunGamma = AngleBetween(dir, sunDir);
+	return lerp(SunColor * SunIntensity, color, saturate(abs(sunGamma) / SunWidth));
+#else
+	return color;
+#endif
 }
 
 float4 PS_Sky(PS_In_Quad input) : SV_TARGET0
 {
-	float fDepth = SceneDepth.Sample(PointSampler, input.vTexCoord).x;
+	float3 vSkyDirection = normalize(GetPositionWS(input.vPosition2, 1.0f).xyz - CameraPosition);
+	float3 CIESkyColor = CIEClearSky(vSkyDirection, SunDirection);
 
-	[branch]
-	if (fDepth < 1.0f) // Scene
-	{		
-		float3 sceneColor = SceneTexture.Sample(PointSampler, input.vTexCoord).rgb;
-		return float4(sceneColor, 1.0f);
-	}
-	else // Sky
-	{
-		float4 vPositionWS = GetPositionWS(input.vPosition2, 1.0f);
-		float3 vSkyDirection = normalize(vPositionWS.xyz - CameraPosition.xyz);
-
-		float3 CIESkyColor = CIEClearSky(vSkyDirection, SunDirection.xyz);
-
-		return float4(CIESkyColor, 1.0f);
-	}	
+	return float4(CIESkyColor, 1.0f);
 }

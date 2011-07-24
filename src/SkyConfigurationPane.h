@@ -19,6 +19,9 @@ private:
 	Gwen::Controls::Label* _sunColorLabel;
 	Gwen::Controls::ColorPicker* _sunColorPicker;
 
+	Gwen::Controls::Label* _sunIntensityLabel;
+	Gwen::Controls::HorizontalSlider* _sunIntensitySlider;
+
 	Gwen::Controls::Label* _sunWidthLabel;
 	Gwen::Controls::HorizontalSlider* _sunWidthSlider;
 	
