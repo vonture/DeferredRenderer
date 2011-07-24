@@ -3,7 +3,7 @@
 SkyConfigurationPane::SkyConfigurationPane(Gwen::Controls::Base* parent, SkyPostProcess* pp)
 	: ConfigurationPane(parent, pp)
 {
-	SetName("Sky Post Process");
+	SetName("Sky");
 
 	const int childWidth = 240;
 	const int labelHight = 20;
@@ -68,7 +68,7 @@ SkyConfigurationPane::SkyConfigurationPane(Gwen::Controls::Base* parent, SkyPost
 
 	_sunWidthSlider = new Gwen::Controls::HorizontalSlider(this);
 	_sunWidthSlider->SetClampToNotches(false);
-	_sunWidthSlider->SetRange(0.0001f, 0.5f);
+	_sunWidthSlider->SetRange(EPSILON, 0.5f);
 	_sunWidthSlider->SetValue(pp->GetSunWidth());	
 	_sunWidthSlider->SetBounds(0, _sunWidthLabel->Bottom(), childWidth, sliderHeight);
 	_sunWidthSlider->onValueChanged.Add(this, &SkyConfigurationPane::OnValueChanged);

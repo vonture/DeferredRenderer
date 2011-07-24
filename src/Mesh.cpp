@@ -12,7 +12,7 @@ Mesh::~Mesh()
 
 static D3DXVECTOR3 Perpendicular(const D3DXVECTOR3& vec)
 {
-    _ASSERT(D3DXVec3Length(&vec) >= 0.00001f);
+    _ASSERT(D3DXVec3Length(&vec) >= EPSILON);
 
     D3DXVECTOR3 perp;
 
@@ -173,9 +173,9 @@ ID3DXMesh* GenerateTangentFrame(ID3DXMesh* mesh, UINT numVertices, UINT numIndic
         // Gram-Schmidt orthogonalize
         D3DXVECTOR3 tangent = (t - n * D3DXVec3Dot(&n, &t));
         bool zeroTangent = false;
-        if(D3DXVec3Length(&tangent) > 0.00001f)
+        if(D3DXVec3Length(&tangent) > EPSILON)
             D3DXVec3Normalize(&tangent, &tangent);
-        else if(D3DXVec3Length(&n) > 0.00001f)
+        else if(D3DXVec3Length(&n) > EPSILON)
         {
             tangent = Perpendicular(n);
             zeroTangent = true;

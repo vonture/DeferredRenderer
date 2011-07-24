@@ -30,7 +30,7 @@ CameraConfigurationPane::CameraConfigurationPane(Gwen::Controls::Base* parent, T
 
 	_cameraFovSlider = new Gwen::Controls::HorizontalSlider(this);
 	_cameraFovSlider->SetClampToNotches(false);
-	_cameraFovSlider->SetRange(0.0001f, Pi - 0.0001f);
+	_cameraFovSlider->SetRange(EPSILON, Pi - EPSILON);
 	_cameraFovSlider->SetValue(cam->GetFieldOfView());
 	_cameraFovSlider->SetBounds(0, _cameraFovLabel->Bottom(), childWidth, sliderHeight);
 
@@ -42,7 +42,7 @@ CameraConfigurationPane::CameraConfigurationPane(Gwen::Controls::Base* parent, T
 
 	_cameraNearClipSlider = new Gwen::Controls::HorizontalSlider(this);
 	_cameraNearClipSlider->SetClampToNotches(false);
-	_cameraNearClipSlider->SetRange(0.00001f, 100.0f);
+	_cameraNearClipSlider->SetRange(EPSILON, 100.0f);
 	_cameraNearClipSlider->SetValue(cam->GetNearClip());
 	_cameraNearClipSlider->SetBounds(0, _cameraNearClipLabel->Bottom(), childWidth, sliderHeight);
 
@@ -54,7 +54,7 @@ CameraConfigurationPane::CameraConfigurationPane(Gwen::Controls::Base* parent, T
 
 	_cameraFarClipSlider = new Gwen::Controls::HorizontalSlider(this);
 	_cameraFarClipSlider->SetClampToNotches(false);
-	_cameraFarClipSlider->SetRange(0.00001f, 100.0f);
+	_cameraFarClipSlider->SetRange(EPSILON, 100.0f);
 	_cameraFarClipSlider->SetValue(cam->GetFarClip());
 	_cameraFarClipSlider->SetBounds(0, _cameraFarClipLabel->Bottom(), childWidth, sliderHeight);
 
