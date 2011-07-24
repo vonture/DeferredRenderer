@@ -39,6 +39,8 @@ private:
 	DirectionalLightRenderer _directionalLightRenderer;
 	SpotLightRenderer _spotLightRenderer;
 
+	void swapPPBuffers();
+
 public:
 	Renderer();
 	~Renderer();

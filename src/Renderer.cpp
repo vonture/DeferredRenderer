@@ -17,6 +17,21 @@ Renderer::~Renderer()
 {
 }
 
+void Renderer::swapPPBuffers()
+{
+	ID3D11Texture2D* tmpTex = _ppTextures[0];
+	ID3D11ShaderResourceView* tmpSRV = _ppShaderResourceViews[0];
+	ID3D11RenderTargetView* tmpRTV = _ppRenderTargetViews[0];
+
+	_ppTextures[0] = _ppTextures[1];
+	_ppShaderResourceViews[0] = _ppShaderResourceViews[1];
+	_ppRenderTargetViews[0] = _ppRenderTargetViews[1];
+
+	_ppTextures[1] = tmpTex;
+	_ppShaderResourceViews[1] = tmpSRV;
+	_ppRenderTargetViews[1] = tmpRTV;
+}
+
 void Renderer::AddModel(ModelInstance* model)
 {
 	if (model && _begun)
@@ -133,29 +148,49 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 	V_RETURN(_lightBuffer.UnsetRenderTargetsAndDepthStencil(pd3dImmediateContext));
 
 	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Post-Processes");
+	
+	// Find the final non-additive pp
+	UINT lastNonAdditive = 0;
+	for (UINT i = _postProcesses.size() - 1; i > 0; i--)
+	{
+		if (!_postProcesses[i]->GetIsAdditive())
+		{
+			lastNonAdditive = i;
+			break;
+		}
+	}	
+	
 	// render the post processes	
 	for (UINT i = 0; i < _postProcesses.size(); i++)
 	{
+		bool isAdditive = _postProcesses[i]->GetIsAdditive();
+		
 		// calculate source resource view
-		ID3D11ShaderResourceView* srcSRV = (i % 2 != 0) ? _ppShaderResourceViews[0] : _ppShaderResourceViews[1];
-
+		ID3D11ShaderResourceView* srcSRV = (i > 0) ? _ppShaderResourceViews[0] : NULL;		
+		
 		// Calculate destination render target
-		ID3D11RenderTargetView* dstRTV = (i % 2 == 0) ? _ppRenderTargetViews[0] : _ppRenderTargetViews[1];
-
-		if (i == 0)
+		ID3D11RenderTargetView* dstRTV = isAdditive ? _ppRenderTargetViews[0] : _ppRenderTargetViews[1];
+		
+		// If this is the last non-additive or beyond, need to render to the final rtv
+		if (i >= lastNonAdditive)
 		{
-			// First pass, no source texture, just the gbuffer and light buffer
-			srcSRV = NULL;
-		}
-		if (i == _postProcesses.size() - 1)
-		{
-			// Last pass, render to the original rtv and dsv
 			dstRTV = pOrigRTV;
+		}
+
+		// After the last non-additive, source is null since we don't have a SRV of back buffer
+		if (i > lastNonAdditive)
+		{
+			srcSRV = NULL;
 		}
 
 		// Render the post process
 		V_RETURN(_postProcesses[i]->Render(pd3dImmediateContext, srcSRV, dstRTV, camera,
 			&_gBuffer, &_lightBuffer));
+
+		if (!isAdditive)
+		{
+			swapPPBuffers();
+		}
 	}
 	D3DPERF_EndEvent();
 
