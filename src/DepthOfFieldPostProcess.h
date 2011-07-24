@@ -33,7 +33,7 @@ public:
 
 	float GetFocalFalloffStart() const { return _falloffStart; }
 	float GetFocalFalloffEnd() const { return _falloffEnd; }
-	float SetFocalFalloffs(float start, float end) { _falloffStart = max(start, 0.0f); _falloffEnd = max(end, _falloffStart); }
+	void SetFocalFalloffs(float start, float end) { _falloffStart = max(start, 0.0f); _falloffEnd = max(end, _falloffStart); }
 
 	float GetCircleOfConfusionScale() const { return _cocScale; }
 	void SetCircleOfConfusionScale(float scale) { _cocScale = max(scale, 0.0f); }
