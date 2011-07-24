@@ -4,6 +4,8 @@
 UIPostProcess::UIPostProcess()
 	: _skin(), _canvas(&_skin)
 {
+	SetIsAdditive(true);
+
 	_skin.SetRender(&_uiRenderer);
 	_input.Initialize(&_canvas);
 }
@@ -24,30 +26,6 @@ HRESULT UIPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11S
 
 	// Set the render targets
 	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, NULL);
-
-	// Prepare the blend, depth and sampler
-	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthDisabled(), 0);
-
-	float blendFactor[4] = {1, 1, 1, 1};
-	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
-
-	Quad* fsQuad = GetFullScreenQuad();
-
-	ID3D11SamplerState* sampler = GetSamplerStates()->GetPoint();
-	pd3dImmediateContext->PSSetSamplers(0, 1, &sampler);
-
-	// Prepare the SRVs
-	ID3D11ShaderResourceView* ppSRVs[1] = { src };
-	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVs);
-
-	// Copy over the prev image
-	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Copy");
-	V_RETURN(fsQuad->Render(pd3dImmediateContext, _copyPS));
-	D3DPERF_EndEvent();
-
-	// Null the SRVs
-	ID3D11ShaderResourceView* ppSRVNULL[1] = { NULL };
-	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL);
 
 	// Render UI
 	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Canvas");
