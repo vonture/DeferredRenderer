@@ -378,9 +378,10 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AmbientOcclusionPostProcess.cpp" />
-    <ClCompile Include="AntiAliasConfigurationPane.cpp" />
-    <ClCompile Include="AntiAliasPostProcess.cpp" />
+    <ClCompile Include="SSAOConfigurationPane.cpp" />
+    <ClCompile Include="SSAOPostProcess.cpp" />
+    <ClCompile Include="MLAAConfigurationPane.cpp" />
+    <ClCompile Include="MLAAPostProcess.cpp" />
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="BoundingObjectRenderer.cpp" />
     <ClCompile Include="Camera.cpp" />
@@ -431,9 +432,10 @@
     <ClCompile Include="UIRenderer.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="xnaCollision.cpp" />
-    <ClInclude Include="AmbientOcclusionPostProcess.h" />
-    <ClInclude Include="AntiAliasConfigurationPane.h" />
-    <ClInclude Include="AntiAliasPostProcess.h" />
+    <ClInclude Include="SSAOConfigurationPane.h" />
+    <ClInclude Include="SSAOPostProcess.h" />
+    <ClInclude Include="MLAAConfigurationPane.h" />
+    <ClInclude Include="MLAAPostProcess.h" />
     <ClInclude Include="Application.h" />
     <ClInclude Include="BoundingObjectRenderer.h" />
     <ClInclude Include="ButtonState.h" />

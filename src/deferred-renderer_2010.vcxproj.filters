@@ -233,9 +233,6 @@
     <ClCompile Include="SkyPostProcess.cpp">
       <Filter>Post Process</Filter>
     </ClCompile>
-    <ClCompile Include="AntiAliasPostProcess.cpp">
-      <Filter>Post Process</Filter>
-    </ClCompile>
     <ClCompile Include="Camera.cpp">
       <Filter>Cameras</Filter>
     </ClCompile>
@@ -247,9 +244,6 @@
     </ClCompile>
     <ClCompile Include="OrthographicCamera.cpp">
       <Filter>Cameras</Filter>
-    </ClCompile>
-    <ClCompile Include="AmbientOcclusionPostProcess.cpp">
-      <Filter>Post Process</Filter>
     </ClCompile>
     <ClCompile Include="DirectionalLightRenderer.cpp">
       <Filter>Lights\Renderers</Filter>
@@ -312,9 +306,6 @@
     <ClCompile Include="HDRConfigurationPane.cpp">
       <Filter>Post Process\Configuration Panes</Filter>
     </ClCompile>
-    <ClCompile Include="AntiAliasConfigurationPane.cpp">
-      <Filter>Post Process\Configuration Panes</Filter>
-    </ClCompile>
     <ClCompile Include="FloatUpDown.cpp">
       <Filter>UI</Filter>
     </ClCompile>
@@ -335,6 +326,18 @@
     </ClCompile>
     <ClCompile Include="DirectionSelector.cpp">
       <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="SSAOPostProcess.cpp">
+      <Filter>Post Process</Filter>
+    </ClCompile>
+    <ClCompile Include="SSAOConfigurationPane.cpp">
+      <Filter>Post Process\Configuration Panes</Filter>
+    </ClCompile>
+    <ClCompile Include="MLAAPostProcess.cpp">
+      <Filter>Post Process</Filter>
+    </ClCompile>
+    <ClCompile Include="MLAAConfigurationPane.cpp">
+      <Filter>Post Process\Configuration Panes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -418,9 +421,6 @@
     <ClInclude Include="xnaCollision.h">
       <Filter>Collision</Filter>
     </ClInclude>
-    <ClInclude Include="AntiAliasPostProcess.h">
-      <Filter>Post Process</Filter>
-    </ClInclude>
     <ClInclude Include="PerspectiveCamera.h">
       <Filter>Cameras</Filter>
     </ClInclude>
@@ -429,9 +429,6 @@
     </ClInclude>
     <ClInclude Include="OrthographicCamera.h">
       <Filter>Cameras</Filter>
-    </ClInclude>
-    <ClInclude Include="AmbientOcclusionPostProcess.h">
-      <Filter>Post Process</Filter>
     </ClInclude>
     <ClInclude Include="DepthOfFieldPostProcess.h">
       <Filter>Post Process</Filter>
@@ -503,9 +500,6 @@
     <ClInclude Include="HDRConfigurationPane.h">
       <Filter>Post Process\Configuration Panes</Filter>
     </ClInclude>
-    <ClInclude Include="AntiAliasConfigurationPane.h">
-      <Filter>Post Process\Configuration Panes</Filter>
-    </ClInclude>
     <ClInclude Include="FloatUpDown.h">
       <Filter>UI</Filter>
     </ClInclude>
@@ -526,6 +520,18 @@
     </ClInclude>
     <ClInclude Include="DirectionSelector.h">
       <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="SSAOPostProcess.h">
+      <Filter>Post Process</Filter>
+    </ClInclude>
+    <ClInclude Include="SSAOConfigurationPane.h">
+      <Filter>Post Process\Configuration Panes</Filter>
+    </ClInclude>
+    <ClInclude Include="MLAAPostProcess.h">
+      <Filter>Post Process</Filter>
+    </ClInclude>
+    <ClInclude Include="MLAAConfigurationPane.h">
+      <Filter>Post Process\Configuration Panes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

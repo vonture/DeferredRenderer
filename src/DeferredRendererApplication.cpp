@@ -1,9 +1,10 @@
 #include "DeferredRendererApplication.h"
 
 #include "HDRConfigurationPane.h"
-#include "AntiAliasConfigurationPane.h"
+#include "MLAAConfigurationPane.h"
 #include "SkyConfigurationPane.h"
 #include "CameraConfigurationPane.h"
+#include "SSAOConfigurationPane.h"
 
 DeferredRendererApplication::DeferredRendererApplication()
 	: Application(L"Deferred Renderer", NULL), _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f), _configWindow(NULL),
@@ -183,9 +184,9 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 	};
 	_renderer.AddLight(&ambientLight);
 
-	_renderer.AddPostProcess(&_aoPP);
+	_renderer.AddPostProcess(&_ssaoPP);
 	_renderer.AddPostProcess(&_skyPP);	
-	_renderer.AddPostProcess(&_aaPP);
+	_renderer.AddPostProcess(&_mlaaPP);
 	_renderer.AddPostProcess(&_hdrPP);
 
 	// Unimplimented post processes
@@ -211,8 +212,8 @@ HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 	V_RETURN(_renderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));	
 	V_RETURN(_hdrPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_skyPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_aaPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_aoPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_mlaaPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_ssaoPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_dofPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_motionBlurPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_uiPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
@@ -226,8 +227,11 @@ HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 	CameraConfigurationPane* cameraPane = new CameraConfigurationPane(_configWindow, &_camera);
 	_configWindow->AddConfigPane(cameraPane);
 
-	AntiAliasConfigurationPane* aaPane = new AntiAliasConfigurationPane(_configWindow, &_aaPP);
-	_configWindow->AddConfigPane(aaPane);
+	MLAAConfigurationPane* mlaaPane = new MLAAConfigurationPane(_configWindow, &_mlaaPP);
+	_configWindow->AddConfigPane(mlaaPane);
+
+	SSAOConfigurationPane* ssaoPane = new SSAOConfigurationPane(_configWindow, &_ssaoPP);
+	_configWindow->AddConfigPane(ssaoPane);
 
 	HDRConfigurationPane* hdrPane = new HDRConfigurationPane(_configWindow, &_hdrPP);
 	_configWindow->AddConfigPane(hdrPane);
@@ -245,8 +249,8 @@ void DeferredRendererApplication::OnD3D11DestroyDevice()
 	_renderer.OnD3D11DestroyDevice();	
 	_hdrPP.OnD3D11DestroyDevice();
 	_skyPP.OnD3D11DestroyDevice();
-	_aaPP.OnD3D11DestroyDevice();
-	_aoPP.OnD3D11DestroyDevice();
+	_mlaaPP.OnD3D11DestroyDevice();
+	_ssaoPP.OnD3D11DestroyDevice();
 	_dofPP.OnD3D11DestroyDevice();
 	_motionBlurPP.OnD3D11DestroyDevice();
 	_uiPP.OnD3D11DestroyDevice();
@@ -266,8 +270,8 @@ HRESULT DeferredRendererApplication::OnD3D11ResizedSwapChain( ID3D11Device* pd3d
 	V_RETURN(_renderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));	
 	V_RETURN(_hdrPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_skyPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_aaPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_aoPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_mlaaPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_ssaoPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_dofPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_motionBlurPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_uiPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
@@ -282,8 +286,8 @@ void DeferredRendererApplication::OnD3D11ReleasingSwapChain()
 	_renderer.OnD3D11ReleasingSwapChain();	
 	_hdrPP.OnD3D11ReleasingSwapChain();
 	_skyPP.OnD3D11ReleasingSwapChain();
-	_aaPP.OnD3D11ReleasingSwapChain();
-	_aoPP.OnD3D11ReleasingSwapChain();
+	_mlaaPP.OnD3D11ReleasingSwapChain();
+	_ssaoPP.OnD3D11ReleasingSwapChain();
 	_dofPP.OnD3D11ReleasingSwapChain();
 	_motionBlurPP.OnD3D11ReleasingSwapChain();
 	_uiPP.OnD3D11ReleasingSwapChain();

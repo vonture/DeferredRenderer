@@ -3,13 +3,19 @@
 #include "Defines.h"
 #include "PostProcess.h"
 
-class AmbientOcclusionPostProcess : public PostProcess
+class SSAOPostProcess : public PostProcess
 {
 private:
 	float _sampleRadius;
 	float _blurSigma;
 	float _samplePower;
-	UINT _sampleCount;
+	UINT _sampleCountIndex;
+
+	static const UINT NUM_SSAO_SAMPLE_COUNTS = 5;
+	static const UINT SSAO_SAMPLE_COUNTS[NUM_SSAO_SAMPLE_COUNTS];
+	static const UINT SSAO_SAMPLE_COUNT_MAX = 64;
+	
+	XMFLOAT4 _sampleDirections[SSAO_SAMPLE_COUNT_MAX];
 
 	ID3D11Texture2D* _aoTexture;
 	ID3D11RenderTargetView* _aoRTV;
@@ -23,14 +29,11 @@ private:
 	ID3D11RenderTargetView* _blurTempRTV;
 	ID3D11ShaderResourceView* _blurTempSRV;
 
-	static const int RANDOM_TEXTURE_SIZE = 16;
-	static const int SSAO_SAMPLE_COUNT_MAX = 64;
+	static const int RANDOM_TEXTURE_SIZE = 16;	
 	ID3D11Texture2D* _randomTexture;
 	ID3D11ShaderResourceView* _randomSRV;
 
-	XMFLOAT4 _sampleDirections[SSAO_SAMPLE_COUNT_MAX];
-
-	ID3D11PixelShader* _aoPS;
+	ID3D11PixelShader* _aoPSs[NUM_SSAO_SAMPLE_COUNTS];
 	ID3D11PixelShader* _scalePS;
 	ID3D11PixelShader* _hBlurPS;
 	ID3D11PixelShader* _vBlurPS;
@@ -58,21 +61,23 @@ private:
 	};
 
 public:
-	AmbientOcclusionPostProcess();
-	~AmbientOcclusionPostProcess();
+	SSAOPostProcess();
+	~SSAOPostProcess();
 
 	float GetSampleRadius() const { return _sampleRadius; }
 	void SetSampleRadius(float radius) { _sampleRadius = max(radius, 0.0f); }
 
 	float GetBlurSigma() const { return _blurSigma; }
-	void SetBlurSigma(float sigma) { _blurSigma = max(sigma, 0.0f); }
+	void SetBlurSigma(float sigma) { _blurSigma = max(sigma, EPSILON); }
 
 	float GetSamplePower() const { return _samplePower; }
-	void SetSamplePower(float power) { _samplePower = max(power, 0.0001f); }
+	void SetSamplePower(float power) { _samplePower = max(power, EPSILON); }
 
-	UINT GetSampleCount() const { return _sampleCount; }
-	void SetSampleCount(UINT count) { _sampleCount = clamp(count, 0, SSAO_SAMPLE_COUNT_MAX); }
+	UINT GetSampleCount() const { return SSAO_SAMPLE_COUNTS[_sampleCountIndex]; }
 	
+	UINT GetSampleCountIndex() const { return _sampleCountIndex; }
+	void SetSampleCountIndex(UINT index) { _sampleCountIndex = clamp(index, 0, NUM_SSAO_SAMPLE_COUNTS - 1); }
+
 	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer);
 

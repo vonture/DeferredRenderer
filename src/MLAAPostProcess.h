@@ -3,7 +3,7 @@
 #include "Defines.h"
 #include "PostProcess.h"
 
-class AntiAliasPostProcess : public PostProcess
+class MLAAPostProcess : public PostProcess
 {
 private:
 	float _depthThreshold;
@@ -55,8 +55,8 @@ private:
 	};
 
 public:
-	AntiAliasPostProcess();
-	~AntiAliasPostProcess();
+	MLAAPostProcess();
+	~MLAAPostProcess();
 	
 	float GetDepthThreshold() const { return _depthThreshold; }
 	void SetDepthThreshold(float threshold) { _depthThreshold = max(threshold, 0.0f); } 

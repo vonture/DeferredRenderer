@@ -1,12 +1,26 @@
-#include "AmbientOcclusionPostProcess.h"
+#include "SSAOPostProcess.h"
 
-AmbientOcclusionPostProcess::AmbientOcclusionPostProcess()
+const UINT SSAOPostProcess::SSAO_SAMPLE_COUNTS[NUM_SSAO_SAMPLE_COUNTS] = 
+{
+	SSAO_SAMPLE_COUNT_MAX / 16,
+	SSAO_SAMPLE_COUNT_MAX / 8, 
+	SSAO_SAMPLE_COUNT_MAX / 4, 
+	SSAO_SAMPLE_COUNT_MAX / 2, 
+	SSAO_SAMPLE_COUNT_MAX / 1
+};
+
+SSAOPostProcess::SSAOPostProcess()
 	: _aoTexture(NULL), _aoRTV(NULL), _aoSRV(NULL), _blurTempTexture(NULL), _blurTempRTV(NULL), 
-	  _blurTempSRV(NULL), _aoPS(NULL), _scalePS(NULL), _hBlurPS(NULL), _vBlurPS(NULL),
+	  _blurTempSRV(NULL), _scalePS(NULL), _hBlurPS(NULL), _vBlurPS(NULL),
 	  _aoPropertiesBuffer(NULL), _randomTexture(NULL), _randomSRV(NULL), _sampleDirectionsBuffer(NULL),
 	  _compositePS(NULL)
 {
 	SetIsAdditive(false);
+
+	for (UINT i = 0; i < NUM_SSAO_SAMPLE_COUNTS; i++)
+	{
+		_aoPSs[i] = NULL;
+	}
 
 	for (UINT i = 0; i < 2; i++)
 	{
@@ -17,16 +31,16 @@ AmbientOcclusionPostProcess::AmbientOcclusionPostProcess()
 	
 	// Initialize some parameters to default values
 	SetSampleRadius(0.5f);
-	SetBlurSigma(0.8f);
-	SetSamplePower(3.5f);
-	SetSampleCount(16);
+	SetBlurSigma(0.45f);
+	SetSamplePower(4.5f);
+	SetSampleCountIndex(3);
 }
 
-AmbientOcclusionPostProcess::~AmbientOcclusionPostProcess()
+SSAOPostProcess::~SSAOPostProcess()
 {
 }
 
-HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
+HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
 	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"SSAO");
@@ -108,7 +122,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	};
 	pd3dImmediateContext->PSSetShaderResources(0, 3, ppSRVAO);	
 
-	V_RETURN(fsQuad->Render(pd3dImmediateContext, _aoPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _aoPSs[_sampleCountIndex]));
 
 	D3DPERF_EndEvent();
 
@@ -159,7 +173,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	D3DPERF_EndEvent();
 
 	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL1);
-	
+	/*
 	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Blur horizontal 2");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_blurTempRTV, NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[1]);
@@ -173,7 +187,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_blurTempSRV);
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _vBlurPS));
 	D3DPERF_EndEvent();
-	
+	*/
 	// Upscale to 1/4
 	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Upscale to 1/4");
 
@@ -226,7 +240,7 @@ HRESULT AmbientOcclusionPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCo
 	return S_OK;
 }
 
-HRESULT AmbientOcclusionPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
+HRESULT SSAOPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
@@ -236,10 +250,30 @@ HRESULT AmbientOcclusionPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 	// Load the shaders
 	ID3DBlob* pBlob = NULL;
 	
-	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_SSAO", "ps_4_0", NULL, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_aoPS));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_aoPS, "SSAO AO PS");
+	D3D_SHADER_MACRO sampleCountMacros[] = 
+	{
+		{ "SSAO_SAMPLE_COUNT", "" },
+		{ "SSAO_SAMPLE_COUNT_MAX", "" },
+		NULL,
+	};
+
+	char sampleCountString[6];
+	sprintf_s(sampleCountString, "%i", SSAO_SAMPLE_COUNT_MAX);
+	sampleCountMacros[1].Definition = sampleCountString;
+
+	char aoPSDebugName[MAX_PATH];
+	for (UINT i = 0; i < NUM_SSAO_SAMPLE_COUNTS; i++)
+	{
+		sprintf_s(sampleCountString, "%i", SSAO_SAMPLE_COUNTS[i]);
+		sampleCountMacros[0].Definition = sampleCountString;
+
+		V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_SSAO", "ps_4_0", sampleCountMacros, &pBlob ) );   
+		V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_aoPSs[i]));
+		SAFE_RELEASE(pBlob);
+
+		sprintf_s(aoPSDebugName, "SSAO AO (sample count = %s) PS", sampleCountString);
+		SET_DEBUG_NAME(_aoPSs[i], aoPSDebugName);
+	}
 	
 	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_Scale", "ps_4_0", NULL, &pBlob ) );   
     V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_scalePS));
@@ -355,14 +389,18 @@ HRESULT AmbientOcclusionPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 	return S_OK;
 }
 
-void AmbientOcclusionPostProcess::OnD3D11DestroyDevice()
+void SSAOPostProcess::OnD3D11DestroyDevice()
 {
 	PostProcess::OnD3D11DestroyDevice();	
 	
 	SAFE_RELEASE(_randomTexture);
 	SAFE_RELEASE(_randomSRV);
 
-	SAFE_RELEASE(_aoPS);
+	for (UINT i = 0; i < NUM_SSAO_SAMPLE_COUNTS; i++)
+	{
+		SAFE_RELEASE(_aoPSs[i]);
+	}
+
 	SAFE_RELEASE(_scalePS);
 	SAFE_RELEASE(_hBlurPS);
 	SAFE_RELEASE(_vBlurPS);
@@ -372,7 +410,7 @@ void AmbientOcclusionPostProcess::OnD3D11DestroyDevice()
 	SAFE_RELEASE(_sampleDirectionsBuffer);
 }
 
-HRESULT AmbientOcclusionPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice,
+HRESULT SSAOPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice,
 	IDXGISwapChain* pSwapChain, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
@@ -488,7 +526,7 @@ HRESULT AmbientOcclusionPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3d
 	return S_OK;
 }
 
-void AmbientOcclusionPostProcess::OnD3D11ReleasingSwapChain()
+void SSAOPostProcess::OnD3D11ReleasingSwapChain()
 {
 	PostProcess::OnD3D11ReleasingSwapChain();
 

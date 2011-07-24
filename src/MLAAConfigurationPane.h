@@ -2,11 +2,11 @@
 
 #include "Defines.h"
 #include "ConfigurationPane.h"
-#include "AntiAliasPostProcess.h"
+#include "MLAAPostProcess.h"
 #include "Gwen/Controls/HorizontalSlider.h"
 #include "Gwen/Controls/CheckBox.h"
 
-class AntiAliasConfigurationPane : public ConfigurationPane<AntiAliasPostProcess>
+class MLAAConfigurationPane : public ConfigurationPane<MLAAPostProcess>
 {
 private:
 	Gwen::Controls::CheckBoxWithLabel* _depthDetectionCheckBox;
@@ -27,8 +27,8 @@ private:
 	virtual void OnValueChanged(Gwen::Controls::Base *control);
 
 public:
-	AntiAliasConfigurationPane(Gwen::Controls::Base* parent, AntiAliasPostProcess* pp);
-	~AntiAliasConfigurationPane();
+	MLAAConfigurationPane(Gwen::Controls::Base* parent, MLAAPostProcess* pp);
+	~MLAAConfigurationPane();
 
 	void OnFrameMove(double totalTime, float dt);
 };

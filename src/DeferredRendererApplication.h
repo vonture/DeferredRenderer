@@ -9,8 +9,8 @@
 
 #include "HDRPostProcess.h"
 #include "SkyPostProcess.h"
-#include "AntiAliasPostProcess.h"
-#include "AmbientOcclusionPostProcess.h"
+#include "MLAAPostProcess.h"
+#include "SSAOPostProcess.h"
 #include "DepthOfFieldPostProcess.h"
 #include "MotionBlurPostProcess.h"
 #include "UIPostProcess.h"
@@ -27,8 +27,8 @@ private:
 
 	HDRPostProcess _hdrPP;
 	SkyPostProcess _skyPP;
-	AntiAliasPostProcess _aaPP;
-	AmbientOcclusionPostProcess _aoPP;
+	MLAAPostProcess _mlaaPP;
+	SSAOPostProcess _ssaoPP;
 	DepthOfFieldPostProcess _dofPP;
 	MotionBlurPostProcess _motionBlurPP;
 	UIPostProcess _uiPP;

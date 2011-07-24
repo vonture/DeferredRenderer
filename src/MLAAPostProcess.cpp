@@ -1,9 +1,9 @@
-#include "AntiAliasPostProcess.h"
+#include "MLAAPostProcess.h"
 
-const UINT AntiAliasPostProcess::WEIGHT_TEXTURE_SIZES[NUM_WEIGHT_TEXTURES] = { 9, 17, 33, 65, 129 };
-const WCHAR* AntiAliasPostProcess::WEIGHT_TEXTURE_PATH = L"media\\MLAA\\AreaMap";
+const UINT MLAAPostProcess::WEIGHT_TEXTURE_SIZES[NUM_WEIGHT_TEXTURES] = { 9, 17, 33, 65, 129 };
+const WCHAR* MLAAPostProcess::WEIGHT_TEXTURE_PATH = L"media\\MLAA\\AreaMap";
 
-AntiAliasPostProcess::AntiAliasPostProcess()
+MLAAPostProcess::MLAAPostProcess()
 	: _edgeDetectTexture(NULL), _edgeDetectRTV(NULL), _edgeDetectSRV(NULL),
 	  _blendWeightTexture(NULL), _blendWeightRTV(NULL), _blendWeightSRV(NULL),
 	  _copyBackgroundPS(NULL), _neighborhoodBlendPS(NULL),  _mlaaPropertiesBuffer(NULL),\
@@ -40,11 +40,11 @@ AntiAliasPostProcess::AntiAliasPostProcess()
 	SetMaxSearchSteps(16);
 }
 
-AntiAliasPostProcess::~AntiAliasPostProcess()
+MLAAPostProcess::~MLAAPostProcess()
 {
 }
 
-HRESULT AntiAliasPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
+HRESULT MLAAPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
 	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"MLAA");
@@ -173,7 +173,7 @@ HRESULT AntiAliasPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, 
 	return S_OK;
 }
 
-HRESULT AntiAliasPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
+HRESULT MLAAPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
@@ -270,7 +270,7 @@ HRESULT AntiAliasPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 	return S_OK;
 }
 
-void AntiAliasPostProcess::OnD3D11DestroyDevice()
+void MLAAPostProcess::OnD3D11DestroyDevice()
 {
 	PostProcess::OnD3D11DestroyDevice();
 	
@@ -297,7 +297,7 @@ void AntiAliasPostProcess::OnD3D11DestroyDevice()
 	SAFE_RELEASE(_mlaaPropertiesBuffer);
 }
 
-HRESULT AntiAliasPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice,
+HRESULT MLAAPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice,
 	IDXGISwapChain* pSwapChain, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
@@ -424,7 +424,7 @@ HRESULT AntiAliasPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice,
 	return S_OK;
 }
 
-void AntiAliasPostProcess::OnD3D11ReleasingSwapChain()
+void MLAAPostProcess::OnD3D11ReleasingSwapChain()
 {
 	PostProcess::OnD3D11ReleasingSwapChain();
 		

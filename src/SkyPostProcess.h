@@ -43,7 +43,7 @@ public:
 	void SetSkyColor(const XMFLOAT3& skyCol) { _skyColor = skyCol; }
 	void SetSunColor(const XMFLOAT3& sunCol) { _sunColor = sunCol; }
 	void SetSunDirection(const XMFLOAT3& sunDir);
-	void SetSunWidth(float width) { _sunWidth = max(width, 0.00001f); }
+	void SetSunWidth(float width) { _sunWidth = max(width, EPSILON); }
 	void SetSunEnabled(bool enable) { _enableSun = enable; }
 	void SetSunIntensity(float intensity) { _sunIntensity = max(intensity, 0.0f); }
 

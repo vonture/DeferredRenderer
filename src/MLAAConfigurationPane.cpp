@@ -1,12 +1,12 @@
-#include "AntiAliasConfigurationPane.h"
+#include "MLAAConfigurationPane.h"
 
-AntiAliasConfigurationPane::AntiAliasConfigurationPane(Gwen::Controls::Base* parent, AntiAliasPostProcess* pp)
+MLAAConfigurationPane::MLAAConfigurationPane(Gwen::Controls::Base* parent, MLAAPostProcess* pp)
 	: ConfigurationPane(parent, pp), _depthThresholdSlider(NULL), _depthThresholdLabel(NULL), 
 	  _normalThresholdSlider(NULL), _normalThresholdLabel(NULL), _lumThresholdSlider(NULL), _lumThresholdLabel(NULL),
 	  _maxSearchStepsSlider(NULL), _maxSearchStepsLabel(NULL), _depthDetectionCheckBox(NULL), _normalDetectionCheckBox(NULL),
 	  _lumDetectionCheckBox(NULL)
 {
-	SetName("Anti-Alias Post Process");
+	SetName("MLAA");
 
 	const int childWidth = 240;
 	const int labelHight = 20;
@@ -18,7 +18,7 @@ AntiAliasConfigurationPane::AntiAliasConfigurationPane(Gwen::Controls::Base* par
 	_depthDetectionCheckBox->Label()->SetText("Depth detection enabled");
 	_depthDetectionCheckBox->Checkbox()->SetChecked(pp->GetDepthDetectionEnabled());
 	_depthDetectionCheckBox->SetBounds(0, 0, childWidth, labelHight);
-	_depthDetectionCheckBox->Checkbox()->onCheckChanged.Add(this, &AntiAliasConfigurationPane::OnValueChanged);
+	_depthDetectionCheckBox->Checkbox()->onCheckChanged.Add(this, &MLAAConfigurationPane::OnValueChanged);
 
 	_depthThresholdLabel = new Gwen::Controls::Label(this);
 	_depthThresholdLabel->SetText("");
@@ -27,17 +27,17 @@ AntiAliasConfigurationPane::AntiAliasConfigurationPane(Gwen::Controls::Base* par
 
 	_depthThresholdSlider = new Gwen::Controls::HorizontalSlider(this);
 	_depthThresholdSlider->SetClampToNotches(false);
-	_depthThresholdSlider->SetRange(0.0001f, 2.0f);
+	_depthThresholdSlider->SetRange(EPSILON, 2.0f);
 	_depthThresholdSlider->SetValue(pp->GetDepthThreshold());
 	_depthThresholdSlider->SetBounds(0, _depthThresholdLabel->Bottom(), childWidth, sliderHeight);
-	_depthThresholdSlider->onValueChanged.Add(this, &AntiAliasConfigurationPane::OnValueChanged);
+	_depthThresholdSlider->onValueChanged.Add(this, &MLAAConfigurationPane::OnValueChanged);
 
 	// Normal settings
 	_normalDetectionCheckBox = new Gwen::Controls::CheckBoxWithLabel(this);
 	_normalDetectionCheckBox->Label()->SetText("Normal detection enabled");
 	_normalDetectionCheckBox->Checkbox()->SetChecked(pp->GetNormalDetectionEnabled());
 	_normalDetectionCheckBox->SetBounds(0, _depthThresholdSlider->Bottom() + spacing, childWidth, labelHight);
-	_normalDetectionCheckBox->Checkbox()->onCheckChanged.Add(this, &AntiAliasConfigurationPane::OnValueChanged);
+	_normalDetectionCheckBox->Checkbox()->onCheckChanged.Add(this, &MLAAConfigurationPane::OnValueChanged);
 
 	_normalThresholdLabel = new Gwen::Controls::Label(this);
 	_normalThresholdLabel->SetText("");
@@ -46,17 +46,17 @@ AntiAliasConfigurationPane::AntiAliasConfigurationPane(Gwen::Controls::Base* par
 
 	_normalThresholdSlider = new Gwen::Controls::HorizontalSlider(this);
 	_normalThresholdSlider->SetClampToNotches(false);
-	_normalThresholdSlider->SetRange(0.0001f, 0.5f);
+	_normalThresholdSlider->SetRange(EPSILON, 0.5f);
 	_normalThresholdSlider->SetValue(pp->GetNormalThreshold());
 	_normalThresholdSlider->SetBounds(0, _normalThresholdLabel->Bottom(), childWidth, sliderHeight);
-	_normalThresholdSlider->onValueChanged.Add(this, &AntiAliasConfigurationPane::OnValueChanged);
+	_normalThresholdSlider->onValueChanged.Add(this, &MLAAConfigurationPane::OnValueChanged);
 
 	// Luminance settings
 	_lumDetectionCheckBox = new Gwen::Controls::CheckBoxWithLabel(this);
 	_lumDetectionCheckBox->Label()->SetText("Luminance detection enabled");
 	_lumDetectionCheckBox->Checkbox()->SetChecked(pp->GetLuminanceDetectionEnabled());
 	_lumDetectionCheckBox->SetBounds(0, _normalThresholdSlider->Bottom() + spacing, childWidth, labelHight);
-	_lumDetectionCheckBox->Checkbox()->onCheckChanged.Add(this, &AntiAliasConfigurationPane::OnValueChanged);
+	_lumDetectionCheckBox->Checkbox()->onCheckChanged.Add(this, &MLAAConfigurationPane::OnValueChanged);
 
 	_lumThresholdLabel = new Gwen::Controls::Label(this);
 	_lumThresholdLabel->SetText("");
@@ -65,10 +65,10 @@ AntiAliasConfigurationPane::AntiAliasConfigurationPane(Gwen::Controls::Base* par
 
 	_lumThresholdSlider = new Gwen::Controls::HorizontalSlider(this);
 	_lumThresholdSlider->SetClampToNotches(false);
-	_lumThresholdSlider->SetRange(0.0001f, 0.5f);
+	_lumThresholdSlider->SetRange(EPSILON, 0.5f);
 	_lumThresholdSlider->SetValue(pp->GetLuminanceThreshold());	
 	_lumThresholdSlider->SetBounds(0, _lumThresholdLabel->Bottom(), childWidth, sliderHeight);
-	_lumThresholdSlider->onValueChanged.Add(this, &AntiAliasConfigurationPane::OnValueChanged);
+	_lumThresholdSlider->onValueChanged.Add(this, &MLAAConfigurationPane::OnValueChanged);
 
 	// Search stesps setting
 	_maxSearchStepsLabel = new Gwen::Controls::Label(this);
@@ -82,16 +82,16 @@ AntiAliasConfigurationPane::AntiAliasConfigurationPane(Gwen::Controls::Base* par
 	_maxSearchStepsSlider->SetNotchCount(64 - 4 + 1);
 	_maxSearchStepsSlider->SetValue(pp->GetMaxSearchSteps());
 	_maxSearchStepsSlider->SetBounds(0, _maxSearchStepsLabel->Bottom() + spacing, childWidth, sliderHeight);
-	_maxSearchStepsSlider->onValueChanged.Add(this, &AntiAliasConfigurationPane::OnValueChanged);
+	_maxSearchStepsSlider->onValueChanged.Add(this, &MLAAConfigurationPane::OnValueChanged);
 }
 
-AntiAliasConfigurationPane::~AntiAliasConfigurationPane()
+MLAAConfigurationPane::~MLAAConfigurationPane()
 {
 }
 
-void AntiAliasConfigurationPane::OnValueChanged(Gwen::Controls::Base *control)
+void MLAAConfigurationPane::OnValueChanged(Gwen::Controls::Base *control)
 {
-	AntiAliasPostProcess* pp = GetConfiguredObject();
+	MLAAPostProcess* pp = GetConfiguredObject();
 
 	if (control == _depthDetectionCheckBox->Checkbox())
 	{
@@ -123,9 +123,9 @@ void AntiAliasConfigurationPane::OnValueChanged(Gwen::Controls::Base *control)
 	}
 }
 
-void AntiAliasConfigurationPane::OnFrameMove(double totalTime, float dt)
+void MLAAConfigurationPane::OnFrameMove(double totalTime, float dt)
 {
-	AntiAliasPostProcess* pp = GetConfiguredObject();
+	MLAAPostProcess* pp = GetConfiguredObject();
 
 	_depthDetectionCheckBox->Checkbox()->SetChecked(pp->GetDepthDetectionEnabled());
 
