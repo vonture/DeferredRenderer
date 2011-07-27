@@ -5,6 +5,7 @@
 #include "IHasContent.h"
 #include "Window.h"
 #include "DeviceManager.h"
+#include "Logger.h"
 
 class Application : public IUpdateable, public IHasContent
 {

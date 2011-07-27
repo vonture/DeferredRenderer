@@ -1,11 +1,8 @@
 #include "Application.h"
 
-Application* MainApplication;
-
-LRESULT OnMainApplicationMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	return MainApplication->OnMessage(hWnd, msg, wParam, lParam);
-}
+using std::tr1::bind;
+using std::tr1::mem_fn;
+using namespace std::tr1::placeholders;
 
 Application::Application(const WCHAR* title, const WCHAR* icon)
 	: _window(NULL, title, icon, 1360, 768)
@@ -73,8 +70,8 @@ HRESULT Application::Start()
 	OnInitialize();
 		
 	// Register this application instance as the main one for callbacks
-	MainApplication = this;
-	_window.RegisterMessageFunction(&OnMainApplicationMessage);
+	Window::MessageFunction fn = bind(mem_fn(&Application::OnMessage), this, _1, _2, _3, _4);
+	_window.RegisterMessageFunction(fn);
 
 	// Ask the application to apply settings and initialize the device
 	OnPreparingDeviceSettings(&_deviceManager);
