@@ -16,6 +16,7 @@
 #include "UIPostProcess.h"
 
 #include "ConfigurationWindow.h"
+#include "LogWindow.h"
 
 class DeferredRendererApplication : public Application
 {
@@ -34,6 +35,7 @@ private:
 	UIPostProcess _uiPP;
 
 	ConfigurationWindow* _configWindow;
+	LogWindow* _logWindow;
 	
 	bool _uiEnabled;
 

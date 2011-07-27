@@ -7,11 +7,16 @@
 #include "SSAOConfigurationPane.h"
 
 DeferredRendererApplication::DeferredRendererApplication()
-	: Application(L"Deferred Renderer", NULL), _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f), _configWindow(NULL),
+	: Application(L"Deferred Renderer", NULL), _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f), 
+	  _configWindow(NULL), _logWindow(NULL),
 	  _scene(L"\\models\\tankscene\\tankscene.sdkmesh")
 {
 	_scene.SetScale(1.0f);
 	_scene.SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	
+	//XMFLOAT4 orientation;
+	//XMStoreFloat4(&orientation, XMQuaternionRotationRollPitchYaw(PiOver2, 0.0f, 0.0f));
+	//_scene.SetOrientation(orientation);
 
 	_camera.SetPosition(XMFLOAT3(1.0f, 4.0f, -6.0f));
 	_camera.SetRotation(XMFLOAT2(-0.1f, 0.35f));
@@ -25,6 +30,28 @@ DeferredRendererApplication::~DeferredRendererApplication()
 
 void DeferredRendererApplication::OnInitialize()
 {		
+	Gwen::Controls::Canvas* canvas = _uiPP.GetCanvas();
+
+	// Create the configuration window and its panes
+	_configWindow = new ConfigurationWindow(canvas);	
+
+	CameraConfigurationPane* cameraPane = new CameraConfigurationPane(_configWindow, &_camera);
+	_configWindow->AddConfigPane(cameraPane);
+
+	MLAAConfigurationPane* mlaaPane = new MLAAConfigurationPane(_configWindow, &_mlaaPP);
+	_configWindow->AddConfigPane(mlaaPane);
+
+	SSAOConfigurationPane* ssaoPane = new SSAOConfigurationPane(_configWindow, &_ssaoPP);
+	_configWindow->AddConfigPane(ssaoPane);
+
+	HDRConfigurationPane* hdrPane = new HDRConfigurationPane(_configWindow, &_hdrPP);
+	_configWindow->AddConfigPane(hdrPane);
+		
+	SkyConfigurationPane* skyPane = new SkyConfigurationPane(_configWindow, &_skyPP);
+	_configWindow->AddConfigPane(skyPane);
+
+	// Create the log window
+	_logWindow = new LogWindow(canvas, Logger::GetInstance());
 }
 
 void DeferredRendererApplication::OnPreparingDeviceSettings(DeviceManager* deviceManager)
@@ -46,32 +73,32 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 
 	if (IsActive() && mouse.IsOverWindow())
 	{
-		if (kb.IsKeyJustPressed(Esc))
+		if (kb.IsKeyJustPressed(Keys::Esc))
 		{
 			Exit();
 		}
 
-		if (kb.IsKeyJustPressed(B))
+		if (kb.IsKeyJustPressed(Keys::B))
 		{
 			_renderer.SetDrawBoundingObjects(!_renderer.GetDrawBoundingObjects());
 		}
 
-		if (kb.IsKeyJustPressed(F11))
+		if (kb.IsKeyJustPressed(Keys::F11))
 		{
 			SetFullScreen(!GetFullScreen());
 		}
 
-		if (kb.IsKeyJustPressed(M))
+		if (kb.IsKeyJustPressed(Keys::M))
 		{
 			SetMaximized(!GetMaximized());
 		}
 	
-		if (kb.IsKeyJustPressed(U))
+		if (kb.IsKeyJustPressed(Keys::U))
 		{
 			_uiEnabled = !_uiEnabled;
 		}
 
-		if (mouse.IsButtonDown(RightButton))
+		if (mouse.IsButtonDown(MouseButton::RightButton))
 		{
 			const float mouseRotateSpeed = _camera.GetRotationSpeed();
 		
@@ -84,19 +111,19 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 			//MouseState::SetCursorPosition(mouse.GetX() - mouse.GetDX(), mouse.GetY() - mouse.GetDY(), hwnd);
 
 			XMFLOAT2 moveDir = XMFLOAT2(0.0f, 0.0f);
-			if (kb.IsKeyDown(W) || kb.IsKeyDown(Up))
+			if (kb.IsKeyDown(Keys::W) || kb.IsKeyDown(Keys::Up))
 			{
 				moveDir.y++;
 			}
-			if (kb.IsKeyDown(S) || kb.IsKeyDown(Down))
+			if (kb.IsKeyDown(Keys::S) || kb.IsKeyDown(Keys::Down))
 			{
 				moveDir.y--;
 			}
-			if (kb.IsKeyDown(A) || kb.IsKeyDown(Left))
+			if (kb.IsKeyDown(Keys::A) || kb.IsKeyDown(Keys::Left))
 			{
 				moveDir.x--;
 			}
-			if (kb.IsKeyDown(D) || kb.IsKeyDown(Right))
+			if (kb.IsKeyDown(Keys::D) || kb.IsKeyDown(Keys::Right))
 			{
 				moveDir.x++;
 			}
@@ -219,26 +246,6 @@ HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 	V_RETURN(_uiPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_scene.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
-	Gwen::Controls::Canvas* canvas = _uiPP.GetCanvas();
-
-	_configWindow = new ConfigurationWindow(canvas);
-	_configWindow->SetBounds(10, 10, 260, pBackBufferSurfaceDesc->Height - 20);
-
-	CameraConfigurationPane* cameraPane = new CameraConfigurationPane(_configWindow, &_camera);
-	_configWindow->AddConfigPane(cameraPane);
-
-	MLAAConfigurationPane* mlaaPane = new MLAAConfigurationPane(_configWindow, &_mlaaPP);
-	_configWindow->AddConfigPane(mlaaPane);
-
-	SSAOConfigurationPane* ssaoPane = new SSAOConfigurationPane(_configWindow, &_ssaoPP);
-	_configWindow->AddConfigPane(ssaoPane);
-
-	HDRConfigurationPane* hdrPane = new HDRConfigurationPane(_configWindow, &_hdrPP);
-	_configWindow->AddConfigPane(hdrPane);
-		
-	SkyConfigurationPane* skyPane = new SkyConfigurationPane(_configWindow, &_skyPP);
-	_configWindow->AddConfigPane(skyPane);
-
 	return S_OK;
 }
 
@@ -276,6 +283,14 @@ HRESULT DeferredRendererApplication::OnD3D11ResizedSwapChain( ID3D11Device* pd3d
 	V_RETURN(_motionBlurPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_uiPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_scene.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+			
+	const int configWidth = 260;
+	const int logHeight = 125;
+	const int padding = 10;
+
+	_configWindow->SetBounds(padding, padding, configWidth, pBackBufferSurfaceDesc->Height - (padding * 2));
+	_logWindow->SetBounds(_configWindow->Right() + padding, pBackBufferSurfaceDesc->Height - logHeight - padding, 
+		pBackBufferSurfaceDesc->Width - _configWindow->Right() - (padding * 2), logHeight);
 
 	return S_OK;
 }
