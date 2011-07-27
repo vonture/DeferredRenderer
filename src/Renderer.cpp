@@ -108,7 +108,7 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 	if (_models.size() > 0)
 	{
 		sceneBounds = _models[0]->GetAxisAlignedBox();
-		for (UINT i = 0; i < _models.size(); i++)
+		for (UINT i = 1; i < _models.size(); i++)
 		{
 			AxisAlignedBox modelAABB = _models[i]->GetAxisAlignedBox();
 
