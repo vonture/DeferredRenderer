@@ -60,7 +60,7 @@ HRESULT SpriteRenderer::End(ID3D11DeviceContext* pd3d11DeviceContext)
 	pd3d11DeviceContext->Unmap(_indexBuffer, 0);
 
 	// Set the sampler
-	ID3D11SamplerState* samplers[1] = { _samplerStates.GetLinear() };
+	ID3D11SamplerState* samplers[1] = { _samplerStates.GetLinearClamp() };
 	pd3d11DeviceContext->PSSetSamplers(0, 1, samplers);
 
 	// Set the blend state

@@ -28,7 +28,7 @@ HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID
 	
 	pd3dImmediateContext->PSSetShaderResources(0, 3, combineSRVs);
 
-	ID3D11SamplerState* sampler = GetSamplerStates()->GetPoint();
+	ID3D11SamplerState* sampler = GetSamplerStates()->GetPointClamp();
 	pd3dImmediateContext->PSSetSamplers(0, 1, &sampler);
 
 	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthDisabled(), 0);

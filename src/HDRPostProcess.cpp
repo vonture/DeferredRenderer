@@ -72,8 +72,8 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	// Set all the device states
 	ID3D11SamplerState* samplers[2] =
 	{
-		GetSamplerStates()->GetPoint(),
-		GetSamplerStates()->GetLinear(),
+		GetSamplerStates()->GetPointClamp(),
+		GetSamplerStates()->GetLinearClamp(),
 	};
 
 	pd3dImmediateContext->PSSetSamplers(0, 2, samplers);

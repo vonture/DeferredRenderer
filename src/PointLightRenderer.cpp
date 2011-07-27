@@ -208,7 +208,7 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 		// Set the global properties for all point lights
 		ID3D11SamplerState* samplers[2] =
 		{
-			GetSamplerStates()->GetPoint(),
+			GetSamplerStates()->GetPointClamp(),
 			GetSamplerStates()->GetShadowMap(),
 		};
 		pd3dImmediateContext->PSSetSamplers(0, 2, samplers);	

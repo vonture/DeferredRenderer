@@ -37,7 +37,7 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 	float blendFactor[4] = {1, 1, 1, 1};
 	pd3dDeviceContext->OMSetBlendState(_blendStates.GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
 
-	ID3D11SamplerState* sampler = _samplerStates.GetAnisotropic16();
+	ID3D11SamplerState* sampler = _samplerStates.GetAnisotropic16Wrap();
 	pd3dDeviceContext->PSSetSamplers(0, 1, &sampler);
 	
 	for (UINT i = 0; i < instances->size(); i++)
