@@ -59,7 +59,7 @@ void ModelInstance::clean()
 HRESULT ModelInstance::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
-	V_RETURN(_model.CreateFromSDKMeshFile(pd3dDevice, _path));
+	V_RETURN(_model.CreateFromFile(pd3dDevice, _path));
 	
 	UINT meshCount = _model.GetMeshCount();
 	_transformedMeshOrientedBoxes = new OrientedBox[meshCount];
