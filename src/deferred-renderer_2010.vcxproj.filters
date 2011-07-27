@@ -54,9 +54,6 @@
     <Filter Include="UI">
       <UniqueIdentifier>{eb496945-77d7-4ef4-a46a-919f7d679550}</UniqueIdentifier>
     </Filter>
-    <Filter Include="XML">
-      <UniqueIdentifier>{121446dc-35d0-46cb-99d7-3c7efb792bc1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Sprites">
       <UniqueIdentifier>{eac99c23-503c-40bc-9249-f84d3af06b77}</UniqueIdentifier>
     </Filter>
@@ -65,6 +62,9 @@
     </Filter>
     <Filter Include="Cameras\Configuration Panes">
       <UniqueIdentifier>{cac029e3-4df9-487b-a45c-75390eb53342}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logging">
+      <UniqueIdentifier>{9cda81bf-f84a-43a6-aa79-b6bdb8bfe5a8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -279,15 +279,6 @@
     <ClCompile Include="MotionBlurPostProcess.cpp">
       <Filter>Post Process</Filter>
     </ClCompile>
-    <ClCompile Include="tinyxmlparser.cpp">
-      <Filter>XML</Filter>
-    </ClCompile>
-    <ClCompile Include="tinyxml.cpp">
-      <Filter>XML</Filter>
-    </ClCompile>
-    <ClCompile Include="tinyxmlerror.cpp">
-      <Filter>XML</Filter>
-    </ClCompile>
     <ClCompile Include="UIRenderer.cpp">
       <Filter>UI</Filter>
     </ClCompile>
@@ -338,6 +329,15 @@
     </ClCompile>
     <ClCompile Include="MLAAConfigurationPane.cpp">
       <Filter>Post Process\Configuration Panes</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger.cpp">
+      <Filter>Logging</Filter>
+    </ClCompile>
+    <ClCompile Include="LogWindow.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="AssimpLogger.cpp">
+      <Filter>Logging</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -473,9 +473,6 @@
     <ClInclude Include="MotionBlurPostProcess.h">
       <Filter>Post Process</Filter>
     </ClInclude>
-    <ClInclude Include="tinyxml.h">
-      <Filter>XML</Filter>
-    </ClInclude>
     <ClInclude Include="SpriteRenderer.h">
       <Filter>Sprites</Filter>
     </ClInclude>
@@ -532,6 +529,15 @@
     </ClInclude>
     <ClInclude Include="MLAAConfigurationPane.h">
       <Filter>Post Process\Configuration Panes</Filter>
+    </ClInclude>
+    <ClInclude Include="LogWindow.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger.h">
+      <Filter>Logging</Filter>
+    </ClInclude>
+    <ClInclude Include="AssimpLogger.h">
+      <Filter>Logging</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
