@@ -1,12 +1,13 @@
 #pragma once
 
 #include "Defines.h"
-#include <map>
-
-typedef LRESULT MessageFunction(HWND, UINT, WPARAM, LPARAM);
 
 class Window
 {
+public:
+	typedef std::tr1::function<LRESULT (HWND, UINT, WPARAM, LPARAM)> MessageFunction;
+	typedef std::tr1::function<INT_PTR (HWND, UINT, WPARAM, LPARAM)> DialogFunction;
+
 private:
 	const WCHAR* _name;
 	HWND _hwnd;
@@ -18,8 +19,8 @@ private:
 	RECT _unmaxedRect;
 	bool _maximized;
 
-	std::map<UINT, MessageFunction*> _messageFunctions;
-	MessageFunction* _allMessagesFunction;
+	std::map<UINT, MessageFunction> _messageFunctions;
+	MessageFunction _allMessagesFunction;
 
 	void makeWindow(const WCHAR* name, const WCHAR* sIconResource, const WCHAR* sMenuResource);
 	static LRESULT WINAPI wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -60,6 +61,6 @@ public:
 
 	void MessageLoop();
 
-	void RegisterMessageFunction(UINT message, MessageFunction* function);
-	void RegisterMessageFunction(MessageFunction* function);
+	void RegisterMessageFunction(UINT message, MessageFunction function);
+	void RegisterMessageFunction(MessageFunction function);
 };

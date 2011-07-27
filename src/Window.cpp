@@ -87,8 +87,6 @@ void Window::makeWindow(const WCHAR* name, const WCHAR* sIconResource, const WCH
 
 LRESULT WINAPI Window::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	HRESULT hr;
-
 	switch(uMsg)
     {
 		case WM_NCCREATE:
@@ -115,7 +113,7 @@ LRESULT Window::MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 {
 	if (_messageFunctions.find(uMsg) != _messageFunctions.end())
 	{
-		MessageFunction* msgFunction = _messageFunctions[uMsg];
+		MessageFunction msgFunction = _messageFunctions[uMsg];
 		msgFunction(hWnd, uMsg, wParam, lParam);
 	}
 	
@@ -289,8 +287,6 @@ void Window::Show()
 
 void Window::Hide()
 {
-	HRESULT hr;
-
 	ShowWindow(_hwnd, SW_HIDE);
 }
 
@@ -333,12 +329,12 @@ void Window::MessageLoop()
 	}
 }
 
-void Window::RegisterMessageFunction(UINT message, MessageFunction* function)
+void Window::RegisterMessageFunction(UINT message, MessageFunction function)
 {
 	_messageFunctions[message] = function;
 }
 
-void Window::RegisterMessageFunction(MessageFunction* function)
+void Window::RegisterMessageFunction(MessageFunction function)
 {
 	_allMessagesFunction = function;
 }
