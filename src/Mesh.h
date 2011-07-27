@@ -2,6 +2,7 @@
 
 #include "Defines.h"
 #include "SDKmesh.h"
+#include "aiScene.h"
 
 struct MeshPart
 {
@@ -54,5 +55,8 @@ public:
 	
 	HRESULT CreateFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d9Device, 
 		const WCHAR* modelPath, SDKMesh* model,	UINT meshIdx);
+
+	HRESULT CreateFromASSIMPMesh(ID3D11Device* device, const aiScene* scene, UINT meshIdx);
+
 	void Destroy();
 };

@@ -2,6 +2,7 @@
 
 #include "Defines.h"
 #include "SDKmesh.h"
+#include "aiScene.h"
 
 struct CB_MATERIAL_PROPERTIES
 {
@@ -31,6 +32,8 @@ private:
 
 	ID3D11Buffer* _propertiesBuffer;
 
+	HRESULT createPropertiesBuffer(ID3D11Device* device);
+
 public:
 	Material();
 	~Material();
@@ -49,6 +52,8 @@ public:
 	ID3D11Buffer* GetPropertiesBuffer() const { return _propertiesBuffer; }
 
 	HRESULT CreateFromSDKMeshMaterial(ID3D11Device* device, const WCHAR* modelPath, SDKMesh* model,
+		UINT materialIdx);
+	HRESULT CreateFromASSIMPMaterial(ID3D11Device* device, const WCHAR* modelPath, const aiScene* scene,
 		UINT materialIdx);
 	void Destroy();
 };

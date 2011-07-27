@@ -28,6 +28,35 @@ HRESULT loadMaterialTexture(ID3D11Device* device, const WCHAR* modelDir, const C
 	return D3DX11CreateShaderResourceViewFromFile(device, fullPath, NULL, NULL, outSRV, NULL);
 }
 
+HRESULT Material::createPropertiesBuffer(ID3D11Device* device)
+{
+	// Create the buffer
+	D3D11_BUFFER_DESC bufferDesc =
+	{
+		sizeof(CB_MATERIAL_PROPERTIES), //UINT ByteWidth;
+		D3D11_USAGE_DYNAMIC, //D3D11_USAGE Usage;
+		D3D11_BIND_CONSTANT_BUFFER, //UINT BindFlags;
+		D3D11_CPU_ACCESS_WRITE, //UINT CPUAccessFlags;
+		0, //UINT MiscFlags;
+		0, //UINT StructureByteStride;
+	};
+
+	CB_MATERIAL_PROPERTIES bufferData;
+	bufferData.AmbientColor = _ambientColor;
+	bufferData.DiffuseColor = _diffuseColor;
+	bufferData.EmissiveColor = _emissiveColor;
+	bufferData.SpecularColor = _specularColor;
+	bufferData.SpecularPower = _specularPower;
+	bufferData.Alpha = _alpha;
+
+	D3D11_SUBRESOURCE_DATA initData;
+	initData.pSysMem = &bufferData;
+	initData.SysMemPitch = 0;
+	initData.SysMemSlicePitch = 0;
+
+	return device->CreateBuffer(&bufferDesc, &initData, &_propertiesBuffer);
+}
+
 HRESULT Material::CreateFromSDKMeshMaterial(ID3D11Device* device, const WCHAR* modelDir, 
 	SDKMesh* model, UINT materialIdx)
 {
@@ -60,31 +89,90 @@ HRESULT Material::CreateFromSDKMeshMaterial(ID3D11Device* device, const WCHAR* m
 		_specularSRV = NULL;		
 	}
 
-	// Create the buffer
-	D3D11_BUFFER_DESC bufferDesc =
+	V_RETURN(createPropertiesBuffer(device));
+
+	return S_OK;
+}
+
+HRESULT Material::CreateFromASSIMPMaterial(ID3D11Device* device, const WCHAR* modelDir, 
+	const aiScene* scene, UINT materialIdx)
+{
+	HRESULT hr;
+
+	aiMaterial* material = scene->mMaterials[materialIdx];
+
+	// Gather material colors
+	aiColor3D col;
+
+	if (material->Get(AI_MATKEY_COLOR_AMBIENT, col) == aiReturn_SUCCESS)
 	{
-		sizeof(CB_MATERIAL_PROPERTIES), //UINT ByteWidth;
-		D3D11_USAGE_DYNAMIC, //D3D11_USAGE Usage;
-		D3D11_BIND_CONSTANT_BUFFER, //UINT BindFlags;
-		D3D11_CPU_ACCESS_WRITE, //UINT CPUAccessFlags;
-		0, //UINT MiscFlags;
-		0, //UINT StructureByteStride;
-	};
+		_ambientColor = XMFLOAT3(col.r, col.g, col.b);
+	}
+	else
+	{
+		_ambientColor = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	}
 
-	CB_MATERIAL_PROPERTIES bufferData;
-	bufferData.AmbientColor = _ambientColor;
-	bufferData.DiffuseColor = _diffuseColor;
-	bufferData.EmissiveColor = _emissiveColor;
-	bufferData.SpecularColor = _specularColor;
-	bufferData.SpecularPower = _specularPower;
-	bufferData.Alpha = _alpha;
+	if (material->Get(AI_MATKEY_COLOR_DIFFUSE, col) == aiReturn_SUCCESS)
+	{	
+		_diffuseColor = XMFLOAT3(col.r, col.g, col.b);
+	}
+	else
+	{
+		_diffuseColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	}
 
-	D3D11_SUBRESOURCE_DATA initData;
-	initData.pSysMem = &bufferData;
-	initData.SysMemPitch = 0;
-	initData.SysMemSlicePitch = 0;
+	if (material->Get(AI_MATKEY_SHININESS, col) == aiReturn_SUCCESS)
+	{	
+		_specularColor = XMFLOAT3(col.r, col.g, col.b);
+	}
+	else
+	{
+		_specularColor = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	}
 
-	V_RETURN(device->CreateBuffer(&bufferDesc, &initData, &_propertiesBuffer));
+	if (material->Get(AI_MATKEY_SHININESS_STRENGTH, _specularPower) != aiReturn_SUCCESS)
+	{
+		_specularPower = 0.0f;
+	}
+
+	if (material->Get(AI_MATKEY_COLOR_EMISSIVE, col) == aiReturn_SUCCESS)
+	{	
+		_emissiveColor = XMFLOAT3(col.r, col.g, col.b);
+	}
+	else
+	{
+		_emissiveColor = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	}
+	
+	// Load textures
+	aiString path;
+
+	_diffuseSRV = NULL;
+	if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0)
+	{		
+		material->GetTexture(aiTextureType_DIFFUSE, 0, &path);
+
+		loadMaterialTexture(device, modelDir, path.data, &_diffuseSRV);
+	}
+
+	_normalSRV = NULL;
+	if (material->GetTextureCount(aiTextureType_NORMALS) > 0)
+	{		
+		material->GetTexture(aiTextureType_NORMALS, 0, &path);
+
+		loadMaterialTexture(device, modelDir, path.data, &_normalSRV);
+	}
+
+	_specularSRV = NULL;
+	if (material->GetTextureCount(aiTextureType_SPECULAR) > 0)
+	{		
+		material->GetTexture(aiTextureType_SPECULAR, 0, &path);
+
+		loadMaterialTexture(device, modelDir, path.data, &_specularSRV);
+	}
+
+	V_RETURN(createPropertiesBuffer(device));
 
 	return S_OK;
 }

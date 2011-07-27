@@ -2,6 +2,11 @@
 #include "SDKmesh.h"
 #include "SDKmisc.h"
 
+#include "assimp.hpp"      // C++ importer interface
+#include "aiScene.h"      // Output data structure
+#include "aiPostProcess.h" // Post processing flags
+#include "AssimpLogger.h"
+
 Model::Model()
 	: _meshes(NULL), _meshCount(0), _materials(NULL), _materialCount(0)
 {
@@ -41,41 +46,103 @@ IDirect3DDevice9* createD3D9Device()
     return d3d9Device;
 }
 
-HRESULT Model::CreateFromSDKMeshFile(ID3D11Device* device, LPCWSTR fileName)
+HRESULT Model::CreateFromFile(ID3D11Device* device, LPCWSTR fileName)
 {
-	HRESULT hr;
-	SDKMesh sdkMesh;
-
+	HRESULT hr;	
+	
 	WCHAR resolvedPath[MAX_PATH];
 	V_RETURN(DXUTFindDXSDKMediaFileCch(resolvedPath, MAX_PATH, fileName));
-    V_RETURN(sdkMesh.Create(resolvedPath));
 
 	WCHAR directory[MAX_PATH];
-	GetDirectoryFromFileNameW(resolvedPath, directory, MAX_PATH);
-	
-	// Make materials
-    _materialCount = sdkMesh.GetNumMaterials();
-	_materials = new Material[_materialCount];
-    for (UINT i = 0; i < _materialCount; i++)
-    {
-        V_RETURN(_materials[i].CreateFromSDKMeshMaterial(device, directory, &sdkMesh, i));
-    }
-	
-	// Create a d3d9 device for loading the meshes
-	IDirect3DDevice9* d3d9device = createD3D9Device();
-
-	// Copy the meshes
-	_meshCount = sdkMesh.GetNumMeshes();
-	_meshes = new Mesh[_meshCount];
-    for (UINT i = 0; i < _meshCount; i++)
+	if (!GetDirectoryFromFileNameW(resolvedPath, directory, MAX_PATH))
 	{
-		V_RETURN(_meshes[i].CreateFromSDKMeshMesh(device, d3d9device, directory, &sdkMesh, i));
+		return E_FAIL;
 	}
 
-	SAFE_RELEASE(d3d9device);
+	WCHAR extensionW[MAX_PATH];
+	if (!GetExtensionFromFileNameW(resolvedPath, extensionW, MAX_PATH))
+	{
+		return E_FAIL;
+	}
 
-	// Done with the sdk mesh, free all it's resources
-	sdkMesh.Destroy();
+	// Convert extension to ascii since that's all that assimp supports
+	char extensionA[MAX_PATH];
+	if (!WStringToAnsi(extensionW, extensionA, MAX_PATH))
+	{
+		return E_FAIL;
+	}
+	
+	Assimp::Importer importer;
+	AssimpLogger::Register();
+
+	// determine if assimp can import this model
+	if (importer.IsExtensionSupported(extensionA))
+	{
+		// Get the ansi path
+		char pathA[MAX_PATH];
+		if (!WStringToAnsi(resolvedPath, pathA, MAX_PATH))
+		{
+			return E_FAIL;
+		}
+
+		// Load with assimp
+		const aiScene* scene = importer.ReadFile(pathA, aiProcess_ConvertToLeftHanded |
+														aiProcessPreset_TargetRealtime_Fast);
+		if (!scene)
+		{
+			return E_FAIL;
+		}
+
+		_materialCount = scene->mNumMaterials;
+		_materials = new Material[_materialCount];
+		for (UINT i = 0; i < _materialCount; i++)
+		{
+			V_RETURN(_materials[i].CreateFromASSIMPMaterial(device, directory, scene, i));
+		}
+
+		_meshCount = scene->mNumMeshes;
+		_meshes = new Mesh[_meshCount];
+		for (UINT i = 0; i < _meshCount; i++)
+		{
+			V_RETURN(_meshes[i].CreateFromASSIMPMesh(device, scene, i));
+		}
+	}
+	else if (strncmp(extensionA, ".x", MAX_PATH) == 0 ||
+			 strncmp(extensionA, ".sdkmesh", MAX_PATH) == 0)
+	{
+		// load with sdkmesh
+		SDKMesh sdkMesh;
+		V_RETURN(sdkMesh.Create(resolvedPath));
+
+		// Make materials
+		_materialCount = sdkMesh.GetNumMaterials();
+		_materials = new Material[_materialCount];
+		for (UINT i = 0; i < _materialCount; i++)
+		{
+			V_RETURN(_materials[i].CreateFromSDKMeshMaterial(device, directory, &sdkMesh, i));
+		}
+	
+		// Create a d3d9 device for loading the meshes
+		IDirect3DDevice9* d3d9device = createD3D9Device();
+
+		// Copy the meshes
+		_meshCount = sdkMesh.GetNumMeshes();
+		_meshes = new Mesh[_meshCount];
+		for (UINT i = 0; i < _meshCount; i++)
+		{
+			V_RETURN(_meshes[i].CreateFromSDKMeshMesh(device, d3d9device, directory, &sdkMesh, i));
+		}
+
+		SAFE_RELEASE(d3d9device);
+
+		// Done with the sdk mesh, free all it's resources
+		sdkMesh.Destroy();
+	}
+	else
+	{
+		// Don't know how to load this model
+		return E_FAIL;
+	}
 
 	// Compute the overall bounding box
 	if (_meshCount > 0)
@@ -126,37 +193,40 @@ HRESULT Model::Render(ID3D11DeviceContext* context,  UINT materialBufferSlot, UI
 HRESULT Model::RenderMesh(ID3D11DeviceContext* context, UINT meshIdx, UINT materialBufferSlot,
 	UINT diffuseSlot, UINT normalSlot, UINT specularSlot)
 {
-	ID3D11Buffer* vertexBuffers[1] = { _meshes[meshIdx].GetVertexBuffer() };
-	UINT strides[1] = { _meshes[meshIdx].GetVertexStride() };
+	const Mesh& mesh = _meshes[meshIdx];
+	UINT partCount = mesh.GetMeshPartCount();
+
+	ID3D11Buffer* vertexBuffers[1] = { mesh.GetVertexBuffer() };
+	UINT strides[1] = { mesh.GetVertexStride() };
 	UINT offsets[1] = { 0 };
 
 	context->IASetVertexBuffers(0, 1, vertexBuffers, strides, offsets);
-	context->IASetIndexBuffer(_meshes[meshIdx].GetIndexBuffer(), _meshes[meshIdx].GetIndexBufferFormat(), 0);
+	context->IASetIndexBuffer(mesh.GetIndexBuffer(), mesh.GetIndexBufferFormat(), 0);
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	
-	for (UINT i = 0; i < _meshes[meshIdx].GetMeshPartCount(); i++)
+	for (UINT i = 0; i < partCount; i++)
 	{
-		MeshPart part = _meshes[meshIdx].GetMeshPart(i);
-		UINT matIdx = part.MaterialIndex;
+		const MeshPart& part = mesh.GetMeshPart(i);
+		const Material& mat = _materials[part.MaterialIndex];
 
 		if (materialBufferSlot != INVALID_BUFFER_SLOT)
 		{
-			ID3D11Buffer* buf = _materials[matIdx].GetPropertiesBuffer();
+			ID3D11Buffer* buf = mat.GetPropertiesBuffer();
 			context->PSSetConstantBuffers(materialBufferSlot, 1, &buf);
 		}
 		if (diffuseSlot != INVALID_SAMPLER_SLOT)
 		{
-			ID3D11ShaderResourceView* srv = _materials[matIdx].GetDiffuseSRV();
+			ID3D11ShaderResourceView* srv = mat.GetDiffuseSRV();
 			context->PSSetShaderResources(diffuseSlot, 1, &srv);
 		}
 		if (normalSlot != INVALID_SAMPLER_SLOT)
 		{
-			ID3D11ShaderResourceView* srv = _materials[matIdx].GetNormalSRV();
+			ID3D11ShaderResourceView* srv = mat.GetNormalSRV();
 			context->PSSetShaderResources(normalSlot, 1, &srv);
 		}
 		if (specularSlot != INVALID_SAMPLER_SLOT)
 		{
-			ID3D11ShaderResourceView* srv = _materials[matIdx].GetSpecularSRV();
+			ID3D11ShaderResourceView* srv = mat.GetSpecularSRV();
 			context->PSSetShaderResources(specularSlot, 1, &srv);
 		}
 

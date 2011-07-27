@@ -1,8 +1,9 @@
 #include "Mesh.h"
+#include "Logger.h"
 
 Mesh::Mesh()
 	: _indexBuffer(NULL), _indexCount(0), _vertexBuffer(NULL), _vertexCount(0), _vertexStride(0), 
-	  _meshParts(NULL), _meshPartCount(0)
+	  _meshParts(NULL), _meshPartCount(0), _inputElements(NULL)
 {
 }
 
@@ -403,6 +404,124 @@ HRESULT Mesh::CreateFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d9
 	delete[] attributes;
 	delete[] attributeTable;
 	
+	return S_OK;
+}
+
+HRESULT Mesh::CreateFromASSIMPMesh(ID3D11Device* device, const aiScene* scene, UINT meshIdx)
+{
+	HRESULT hr;
+
+	aiMesh* mesh = scene->mMeshes[meshIdx];
+
+	if (!mesh->HasFaces() || !mesh->HasNormals() || !mesh->HasPositions() || 
+		!mesh->HasTangentsAndBitangents() || mesh->GetNumUVChannels() < 0)
+	{
+		return E_FAIL;
+	}
+
+	// Create an array of verticies
+	struct Vertex
+    {
+        XMFLOAT3 Position;
+        XMFLOAT3 Normal;
+        XMFLOAT2 TexCoord;
+        XMFLOAT3 Tangent;
+        XMFLOAT3 Bitangent;
+    };
+	_vertexStride = sizeof(Vertex);
+	
+	UINT uvChannel = 0;
+
+	_vertexCount = mesh->mNumVertices;
+	Vertex* verts = new Vertex[_vertexCount];
+	for (UINT i = 0; i < _vertexCount; i++)
+	{
+		verts[i].Position = XMFLOAT3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+		verts[i].TexCoord = XMFLOAT2(mesh->mTextureCoords[uvChannel][i].x, mesh->mTextureCoords[uvChannel][i].y);
+		verts[i].Normal = XMFLOAT3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);		
+		verts[i].Tangent = XMFLOAT3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
+		verts[i].Bitangent = XMFLOAT3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
+	}
+
+	// Compute the bounding box for the verticies
+	Collision::ComputeBoundingAxisAlignedBoxFromPoints(&_boundingBox, _vertexCount, (XMFLOAT3*)verts, 
+		sizeof(Vertex));
+	
+	// Build the vertex buffer
+	D3D11_BUFFER_DESC vbDesc =
+    {
+        _vertexCount * sizeof(Vertex),
+        D3D11_USAGE_DEFAULT,
+        D3D11_BIND_VERTEX_BUFFER,
+        0,
+        0
+    };
+
+	D3D11_SUBRESOURCE_DATA vbInitData;
+    vbInitData.pSysMem = verts;
+    vbInitData.SysMemPitch = 0;
+    vbInitData.SysMemSlicePitch = 0;
+
+	V_RETURN(device->CreateBuffer(&vbDesc, &vbInitData, &_vertexBuffer));
+
+	// Done with the verts, free them
+	SAFE_DELETE_ARRAY(verts);
+
+	// Create the indicies
+	_indexBufferFormat = DXGI_FORMAT_R32_UINT;
+	_indexCount = mesh->mNumFaces * 3;	
+	UINT* indices = new UINT[_indexCount];
+	for (UINT i = 0; i < _indexCount / 3; i++)
+	{
+		for (UINT j = 0; j < 3; j++)
+		{
+			indices[i * 3 + j] = mesh->mFaces[i].mIndices[j];
+		}
+	}
+	_meshPartCount = 1;
+	_meshParts = new MeshPart[_meshPartCount];
+	
+	// Create the index buffer
+	D3D11_BUFFER_DESC ibDesc =
+    {
+        _indexCount * sizeof(UINT),
+        D3D11_USAGE_DEFAULT,
+        D3D11_BIND_INDEX_BUFFER,
+        0,
+        0
+    };
+
+    D3D11_SUBRESOURCE_DATA ibInitData;
+    ibInitData.pSysMem = indices;
+    ibInitData.SysMemPitch = 0;
+    ibInitData.SysMemSlicePitch = 0;
+
+	V_RETURN(device->CreateBuffer(&ibDesc, &ibInitData, &_indexBuffer));
+
+	// delete the indices array
+	SAFE_DELETE_ARRAY(indices);
+	
+	// Create the mesh parts, only one per mesh
+	_meshParts[0].IndexStart = 0;
+	_meshParts[0].IndexCount = _indexCount;
+	_meshParts[0].MaterialIndex = mesh->mMaterialIndex;
+	_meshParts[0].VertexStart = 0;
+	_meshParts[0].VertexCount = _vertexCount;
+
+	// Create the input elements
+	_inputElementCount = 5;
+	const D3D11_INPUT_ELEMENT_DESC layout_mesh[] =
+    {
+        { "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD",  0, DXGI_FORMAT_R32G32_FLOAT,    0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TANGENT",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "BITANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    };
+	
+	_inputElements = new D3D11_INPUT_ELEMENT_DESC[_inputElementCount];
+	memcpy(_inputElements, layout_mesh, sizeof(D3D11_INPUT_ELEMENT_DESC) * _inputElementCount);
+
 	return S_OK;
 }
 
