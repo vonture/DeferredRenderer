@@ -3,27 +3,27 @@
 BYTE KeyboardState::_curState[256];
 KeyboardState KeyboardState::_prevState;
 
-ButtonState KeyboardState::GetKeyState(Keys key)
+ButtonState KeyboardState::GetKeyState(UINT key)
 {
 	return _keyStates[key];
 }
 
-bool KeyboardState::IsKeyDown(Keys key)
+bool KeyboardState::IsKeyDown(UINT key)
 {
 	return _keyStates[key].Pressed;
 }
 
-bool KeyboardState::IsKeyUp(Keys key)
+bool KeyboardState::IsKeyUp(UINT key)
 {
 	return !_keyStates[key].Pressed;
 }
 
-bool KeyboardState::IsKeyJustPressed(Keys key)
+bool KeyboardState::IsKeyJustPressed(UINT key)
 {
 	return _keyStates[key].JustPressed;
 }
 
-bool KeyboardState::IsKeyJustReleased(Keys key)
+bool KeyboardState::IsKeyJustReleased(UINT key)
 {
 	return _keyStates[key].JustReleased;
 }
