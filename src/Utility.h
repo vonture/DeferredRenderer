@@ -25,6 +25,24 @@ inline int WStringToAnsi(const WCHAR* wString, char* output, UINT outputLength)
 	return WideCharToMultiByte(CP_ACP, 0, wString, -1, output, outputLength, NULL, false);
 }
 
+inline int GetExtensionFromFileNameW(const WCHAR* fileName, WCHAR* output, UINT outputLength)
+{
+	_ASSERT(fileName);
+
+	std::wstring str = std::wstring(fileName);
+	UINT dotIdx = str.find_last_of(L".");
+
+	if (dotIdx != str.npos)
+	{
+		wcsncpy_s(output, outputLength, str.substr(dotIdx).c_str(), outputLength);
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
 inline int GetDirectoryFromFileNameW(const WCHAR* fileName, WCHAR* output, UINT outputLength)
 {
     _ASSERT(fileName);
