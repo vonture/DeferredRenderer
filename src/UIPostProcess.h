@@ -13,9 +13,9 @@
 class UIPostProcess : public PostProcess, public IUpdateable
 {
 private:
-	Gwen::Skin::TexturedBase _skin;
-	Gwen::Controls::Canvas _canvas;
-	Gwen::Input::Windows _input;
+	Gwen::Skin::Simple* _skin;
+	Gwen::Controls::Canvas* _canvas;
+	Gwen::Input::Windows* _input;
 
 	UIRenderer _uiRenderer;
 
@@ -25,7 +25,7 @@ public:
 	UIPostProcess();
 	~UIPostProcess();
 
-	Gwen::Controls::Canvas* GetCanvas() { return &_canvas; }
+	Gwen::Controls::Canvas* GetCanvas() { return _canvas; }
 
 	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer);
