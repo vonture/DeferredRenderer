@@ -115,20 +115,20 @@ public:
 class SamplerStates : public IHasContent
 {
 private:
-	ID3D11SamplerState* _linear;
-	ID3D11SamplerState* _point;
-	ID3D11SamplerState* _anisotropic2;
-	ID3D11SamplerState* _anisotropic4;
-	ID3D11SamplerState* _anisotropic8;
-	ID3D11SamplerState* _anisotropic16;
+	ID3D11SamplerState* _linearClamp;
+	ID3D11SamplerState* _pointClamp;
+	ID3D11SamplerState* _anisotropic16Clamp;
+	ID3D11SamplerState* _linearWrap;
+	ID3D11SamplerState* _pointWrap;
+	ID3D11SamplerState* _anisotropic16Wrap;
 	ID3D11SamplerState* _shadowMap;
 	
-	static D3D11_SAMPLER_DESC getLinearDesc();
-	static D3D11_SAMPLER_DESC getPointDesc();
-	static D3D11_SAMPLER_DESC getAnisotropic2Desc();
-	static D3D11_SAMPLER_DESC getAnisotropic4Desc();
-	static D3D11_SAMPLER_DESC getAnisotropic8Desc();
-	static D3D11_SAMPLER_DESC getAnisotropic16Desc();
+	static D3D11_SAMPLER_DESC getLinearClampDesc();
+	static D3D11_SAMPLER_DESC getPointClampDesc();
+	static D3D11_SAMPLER_DESC getAnisotropic16ClampDesc();	
+	static D3D11_SAMPLER_DESC getLinearWrapDesc();
+	static D3D11_SAMPLER_DESC getPointWrapDesc();
+	static D3D11_SAMPLER_DESC getAnisotropic16WrapDesc();
 	static D3D11_SAMPLER_DESC getShadowMapDesc();
 
 public:
@@ -138,11 +138,11 @@ public:
 		const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
 	void OnD3D11ReleasingSwapChain();
 
-	ID3D11SamplerState* GetLinear() { return _linear; };
-	ID3D11SamplerState* GetPoint() { return _point; };
-	ID3D11SamplerState* GetAnisotropic2() { return _anisotropic2; };
-	ID3D11SamplerState* GetAnisotropic4() { return _anisotropic4; };
-	ID3D11SamplerState* GetAnisotropic8() { return _anisotropic8; };
-	ID3D11SamplerState* GetAnisotropic16() { return _anisotropic16; };
+	ID3D11SamplerState* GetLinearClamp() { return _linearClamp; };
+	ID3D11SamplerState* GetPointClamp() { return _pointClamp; };
+	ID3D11SamplerState* GetAnisotropic16Clamp() { return _anisotropic16Clamp; };
+	ID3D11SamplerState* GetLinearWrap() { return _linearWrap; };
+	ID3D11SamplerState* GetPointWrap() { return _pointWrap; };
+	ID3D11SamplerState* GetAnisotropic16Wrap() { return _anisotropic16Wrap; };
 	ID3D11SamplerState* GetShadowMap() { return _shadowMap; };
 };
