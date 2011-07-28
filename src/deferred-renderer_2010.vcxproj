@@ -396,7 +396,7 @@
     <ClCompile Include="DepthOfFieldPostProcess.cpp" />
     <ClCompile Include="DeviceManager.cpp" />
     <ClCompile Include="DeviceStates.cpp" />
-    <ClCompile Include="DirectionalLightRenderer.cpp" />
+    <ClCompile Include="CascadedDirectionalLightRenderer.cpp" />
     <ClCompile Include="DirectionSelector.cpp" />
     <ClCompile Include="FirstPersonCamera.cpp" />
     <ClCompile Include="Float2UpDown.cpp" />
@@ -419,7 +419,7 @@
     <ClCompile Include="MouseState.cpp" />
     <ClCompile Include="OrthographicCamera.cpp" />
     <ClCompile Include="PerspectiveCamera.cpp" />
-    <ClCompile Include="PointLightRenderer.cpp" />
+    <ClCompile Include="DualParaboloidPointLightRenderer.cpp" />
     <ClCompile Include="PostProcess.cpp" />
     <ClCompile Include="Quad.cpp" />
     <ClCompile Include="Renderer.cpp" />
@@ -434,6 +434,7 @@
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="xnaCollision.cpp" />
     <ClInclude Include="AssimpLogger.h" />
+    <ClInclude Include="LightRenderer.h" />
     <ClInclude Include="LogWindow.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="SSAOConfigurationPane.h" />
@@ -453,7 +454,7 @@
     <ClInclude Include="DepthOfFieldPostProcess.h" />
     <ClInclude Include="DeviceManager.h" />
     <ClInclude Include="DeviceStates.h" />
-    <ClInclude Include="DirectionalLightRenderer.h" />
+    <ClInclude Include="CascadedDirectionalLightRenderer.h" />
     <ClInclude Include="DirectionSelector.h" />
     <ClInclude Include="FirstPersonCamera.h" />
     <ClInclude Include="CameraConfigurationPane.h" />
@@ -472,7 +473,7 @@
     <ClInclude Include="MouseState.h" />
     <ClInclude Include="OrthographicCamera.h" />
     <ClInclude Include="PerspectiveCamera.h" />
-    <ClInclude Include="PointLightRenderer.h" />
+    <ClInclude Include="DualParaboloidPointLightRenderer.h" />
     <ClInclude Include="ShaderLoader.h" />
     <ClInclude Include="SkyConfigurationPane.h" />
     <ClInclude Include="SkyPostProcess.h" />
@@ -536,7 +537,6 @@
     <ClInclude Include="IUpdateable.h" />
     <ClInclude Include="Lights.h" />
     <ClInclude Include="LightBuffer.h" />
-    <ClInclude Include="LightRenderer.h" />
     <ClInclude Include="ModelInstance.h" />
     <ClInclude Include="ModelRenderer.h" />
     <ClInclude Include="PostProcess.h" />

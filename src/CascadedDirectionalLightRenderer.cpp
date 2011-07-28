@@ -1,9 +1,9 @@
-#include "DirectionalLightRenderer.h"
+#include "CascadedDirectionalLightRenderer.h"
 
-const float DirectionalLightRenderer::CASCADE_SPLITS[NUM_CASCADES] = { 0.125f, 0.25f, 0.5f, 1.0f };
-const float DirectionalLightRenderer::BIAS = 0.005f;
+const float CascadedDirectionalLightRenderer::CASCADE_SPLITS[NUM_CASCADES] = { 0.125f, 0.25f, 0.5f, 1.0f };
+const float CascadedDirectionalLightRenderer::BIAS = 0.005f;
 
-DirectionalLightRenderer::DirectionalLightRenderer()
+CascadedDirectionalLightRenderer::CascadedDirectionalLightRenderer()
 	: _depthVS(NULL), _depthInput(NULL), _depthPropertiesBuffer(NULL),  _unshadowedPS(NULL),
 	  _shadowedPS(NULL), _cameraPropertiesBuffer(NULL), _lightPropertiesBuffer(NULL),
 	  _shadowPropertiesBuffer(NULL)
@@ -16,7 +16,7 @@ DirectionalLightRenderer::DirectionalLightRenderer()
 	}
 }
 
-HRESULT DirectionalLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, 
+HRESULT CascadedDirectionalLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, 
 	std::vector<ModelInstance*>* models, Camera* camera, AxisAlignedBox* sceneBounds)
 {
 	if (GetCount(true) > 0)
@@ -60,7 +60,7 @@ struct Triangle
 // correct near and far planes becomes even more important.
 // This concept is not complicated, but the intersection code is.
 //--------------------------------------------------------------------------------------
-void DirectionalLightRenderer::ComputeNearAndFar( FLOAT& fNearPlane, 
+void CascadedDirectionalLightRenderer::ComputeNearAndFar( FLOAT& fNearPlane, 
                                         FLOAT& fFarPlane, 
                                         FXMVECTOR vLightCameraOrthographicMin, 
                                         FXMVECTOR vLightCameraOrthographicMax, 
@@ -345,7 +345,7 @@ void DirectionalLightRenderer::ComputeNearAndFar( FLOAT& fNearPlane,
 //--------------------------------------------------------------------------------------
 // This function converts the "center, extents" version of an AABB into 8 points.
 //--------------------------------------------------------------------------------------
-void DirectionalLightRenderer::CreateAABBPoints( XMVECTOR* vAABBPoints, FXMVECTOR vCenter, FXMVECTOR vExtents )
+void CascadedDirectionalLightRenderer::CreateAABBPoints( XMVECTOR* vAABBPoints, FXMVECTOR vCenter, FXMVECTOR vExtents )
 {
     //This map enables us to use a for loop and do vector math.
     static const XMVECTORF32 vExtentsMap[] = 
@@ -372,7 +372,7 @@ void DirectionalLightRenderer::CreateAABBPoints( XMVECTOR* vAABBPoints, FXMVECTO
 // points that make up a view frustum.
 // The frustum is scaled to fit within the Begin and End interval paramaters.
 //--------------------------------------------------------------------------------------
-void DirectionalLightRenderer::CreateFrustumPointsFromCascadeInterval( float fCascadeIntervalBegin, 
+void CascadedDirectionalLightRenderer::CreateFrustumPointsFromCascadeInterval( float fCascadeIntervalBegin, 
                                                         FLOAT fCascadeIntervalEnd, 
                                                         XMMATRIX &vProjection,
                                                         XMVECTOR* pvCornerPointsWorld ) 
@@ -407,7 +407,7 @@ void DirectionalLightRenderer::CreateFrustumPointsFromCascadeInterval( float fCa
 
 }
 
-HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContext, DirectionalLight* dlight,
+HRESULT CascadedDirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContext, DirectionalLight* dlight,
 	UINT shadowMapIdx, std::vector<ModelInstance*>* models, Camera* camera, AxisAlignedBox* sceneBounds)
 {
 	HRESULT hr;
@@ -648,7 +648,7 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 	return S_OK;
 }
 
-HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
+HRESULT CascadedDirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
 	GBuffer* gBuffer)
 {	
 	if (GetCount(true) + GetCount(false) > 0)
@@ -763,7 +763,7 @@ HRESULT DirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediat
 	return S_OK;
 }
 
-HRESULT DirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
@@ -863,7 +863,7 @@ HRESULT DirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, 
 	return S_OK;
 }
 
-void DirectionalLightRenderer::OnD3D11DestroyDevice()
+void CascadedDirectionalLightRenderer::OnD3D11DestroyDevice()
 {
 	LightRenderer::OnD3D11DestroyDevice();
 
@@ -887,7 +887,7 @@ void DirectionalLightRenderer::OnD3D11DestroyDevice()
 	_fsQuad.OnD3D11DestroyDevice();
 }
 
-HRESULT DirectionalLightRenderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+HRESULT CascadedDirectionalLightRenderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
                         const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
@@ -899,7 +899,7 @@ HRESULT DirectionalLightRenderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDev
 	return S_OK;
 }
 
-void DirectionalLightRenderer::OnD3D11ReleasingSwapChain()
+void CascadedDirectionalLightRenderer::OnD3D11ReleasingSwapChain()
 {
 	LightRenderer::OnD3D11ReleasingSwapChain();
 	_fsQuad.OnD3D11ReleasingSwapChain();

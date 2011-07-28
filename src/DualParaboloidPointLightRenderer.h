@@ -4,44 +4,7 @@
 #include "LightRenderer.h"
 #include "ModelInstance.h"
 
-struct CB_POINTLIGHT_DEPTH_PROPERTIES
-{
-	XMFLOAT4X4 WorldView;
-	float Direction;
-	XMFLOAT2 CameraClips;
-	float Padding;
-};
-
-struct CB_POINTLIGHT_MODEL_PROPERTIES
-{
-	XMFLOAT4X4 World;
-	XMFLOAT4X4 WorldViewProjection;
-};
-
-struct CB_POINTLIGHT_LIGHT_PROPERTIES
-{
-	XMFLOAT3 LightPosition;
-	float LightRadius;
-	XMFLOAT3 LightColor;
-	float Padding;
-};
-
-struct CB_POINTLIGHT_CAMERA_PROPERTIES
-{
-	XMFLOAT4X4 InverseViewProjection;
-	XMFLOAT4 CameraPosition;
-};
-
-struct CB_POINTLIGHT_SHADOW_PROPERTIES
-{
-	XMFLOAT2 CameraClips;
-	XMFLOAT2 ShadowMapSize;
-	float Bias;
-	XMFLOAT3 Padding;
-	XMFLOAT4X4 ShadowMatrix;
-};
-
-class PointLightRenderer : public LightRenderer<PointLight>
+class DualParaboloidPointLightRenderer : public LightRenderer<PointLight>
 {
 private:
 	ID3D11VertexShader* _depthVS;
@@ -72,11 +35,48 @@ private:
 		UINT shadowMapIdx, std::vector<ModelInstance*>* models, Camera* camera,
 		AxisAlignedBox* sceneBounds);
 
+	struct CB_POINTLIGHT_DEPTH_PROPERTIES
+	{
+		XMFLOAT4X4 WorldView;
+		float Direction;
+		XMFLOAT2 CameraClips;
+		float Padding;
+	};
+
+	struct CB_POINTLIGHT_MODEL_PROPERTIES
+	{
+		XMFLOAT4X4 World;
+		XMFLOAT4X4 WorldViewProjection;
+	};
+
+	struct CB_POINTLIGHT_LIGHT_PROPERTIES
+	{
+		XMFLOAT3 LightPosition;
+		float LightRadius;
+		XMFLOAT3 LightColor;
+		float Padding;
+	};
+
+	struct CB_POINTLIGHT_CAMERA_PROPERTIES
+	{
+		XMFLOAT4X4 InverseViewProjection;
+		XMFLOAT4 CameraPosition;
+	};
+
+	struct CB_POINTLIGHT_SHADOW_PROPERTIES
+	{
+		XMFLOAT2 CameraClips;
+		XMFLOAT2 ShadowMapSize;
+		float Bias;
+		XMFLOAT3 Padding;
+		XMFLOAT4X4 ShadowMatrix;
+	};
+
 protected:
 	UINT GetMaxShadowedLights() const { return NUM_SHADOW_MAPS; }
 
 public:
-	PointLightRenderer();
+	DualParaboloidPointLightRenderer();
 
 	HRESULT RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*>* models,
 		Camera* camera, AxisAlignedBox* sceneBounds);

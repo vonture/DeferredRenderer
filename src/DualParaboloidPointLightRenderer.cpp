@@ -1,9 +1,9 @@
-#include "PointLightRenderer.h"
+#include "DualParaboloidPointLightRenderer.h"
 #include "ShaderLoader.h"
 
-const float PointLightRenderer::BIAS = 0.02f;
+const float DualParaboloidPointLightRenderer::BIAS = 0.02f;
 
-PointLightRenderer::PointLightRenderer()
+DualParaboloidPointLightRenderer::DualParaboloidPointLightRenderer()
 	: _depthVS(NULL), _depthInput(NULL), _depthPropertiesBuffer(NULL),
 	  _vertexShader(NULL), _unshadowedPS(NULL), _shadowedPS(NULL), _modelPropertiesBuffer(NULL),
 	  _lightPropertiesBuffer(NULL), _cameraPropertiesBuffer(NULL), _lightInputLayout(NULL),
@@ -17,7 +17,7 @@ PointLightRenderer::PointLightRenderer()
 	}
 }
 
-HRESULT PointLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*>* models,
+HRESULT DualParaboloidPointLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*>* models,
 	Camera* camera, AxisAlignedBox* sceneBounds)
 {
 	if (GetCount(true) > 0)
@@ -43,7 +43,7 @@ HRESULT PointLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateC
 	return S_OK;
 }
 
-HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContext, PointLight* light,
+HRESULT DualParaboloidPointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContext, PointLight* light,
 	UINT shadowMapIdx, std::vector<ModelInstance*>* models, Camera* camera, AxisAlignedBox* sceneBounds)
 {
 	HRESULT hr;
@@ -185,7 +185,7 @@ HRESULT PointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContex
 	return S_OK;
 }
 
-HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
+HRESULT DualParaboloidPointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
 	GBuffer* gBuffer)
 {
 	if (GetCount(true) + GetCount(false) > 0)
@@ -421,7 +421,7 @@ HRESULT PointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateConte
 	return S_OK;
 }
 
-HRESULT PointLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT DualParaboloidPointLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
@@ -530,7 +530,7 @@ HRESULT PointLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const 
 	return S_OK;
 }
 
-void PointLightRenderer::OnD3D11DestroyDevice()
+void DualParaboloidPointLightRenderer::OnD3D11DestroyDevice()
 {
 	LightRenderer::OnD3D11DestroyDevice();
 
@@ -557,7 +557,7 @@ void PointLightRenderer::OnD3D11DestroyDevice()
 	}
 }
 
-HRESULT PointLightRenderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+HRESULT DualParaboloidPointLightRenderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
                         const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
@@ -569,7 +569,7 @@ HRESULT PointLightRenderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, I
 	return S_OK;
 }
 
-void PointLightRenderer::OnD3D11ReleasingSwapChain()
+void DualParaboloidPointLightRenderer::OnD3D11ReleasingSwapChain()
 {
 	LightRenderer::OnD3D11ReleasingSwapChain();
 

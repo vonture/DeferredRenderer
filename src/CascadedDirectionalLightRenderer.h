@@ -6,34 +6,7 @@
 #include "FullscreenQuad.h"
 #include "DeviceStates.h"
 
-struct CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES
-{
-	XMFLOAT4X4 WorldViewProjection;
-};
-
-struct CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES
-{
-	_DECLSPEC_ALIGN_16_ XMFLOAT3 LightDirection;
-	_DECLSPEC_ALIGN_16_ XMFLOAT3 LightColor;
-};
-
-struct CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES
-{
-	XMFLOAT4X4 InverseViewProjection;
-	XMFLOAT3 CameraPosition;
-	FLOAT Padding;
-};
-
-struct CB_DIRECTIONALLIGHT_SHADOW_PROPERTIES
-{
-	XMFLOAT2 CameraClips;
-	XMFLOAT2 ShadowMapSize;
-	float CascadeSplits[4];
-	XMFLOAT4X4 ShadowMatricies[4];	
-	XMFLOAT4X4 ShadowTexCoordTransforms[4];
-};
-
-class DirectionalLightRenderer : public LightRenderer<DirectionalLight>
+class CascadedDirectionalLightRenderer : public LightRenderer<DirectionalLight>
 {
 private:
 	ID3D11VertexShader* _depthVS;
@@ -71,11 +44,38 @@ private:
 		UINT shadowMapIdx, std::vector<ModelInstance*>* models, Camera* camera,
 		AxisAlignedBox* sceneBounds);
 
+	struct CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES
+	{
+		XMFLOAT4X4 WorldViewProjection;
+	};
+
+	struct CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES
+	{
+		_DECLSPEC_ALIGN_16_ XMFLOAT3 LightDirection;
+		_DECLSPEC_ALIGN_16_ XMFLOAT3 LightColor;
+	};
+
+	struct CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES
+	{
+		XMFLOAT4X4 InverseViewProjection;
+		XMFLOAT3 CameraPosition;
+		FLOAT Padding;
+	};
+
+	struct CB_DIRECTIONALLIGHT_SHADOW_PROPERTIES
+	{
+		XMFLOAT2 CameraClips;
+		XMFLOAT2 ShadowMapSize;
+		float CascadeSplits[4];
+		XMFLOAT4X4 ShadowMatricies[4];	
+		XMFLOAT4X4 ShadowTexCoordTransforms[4];
+	};
+
 protected:
 	UINT GetMaxShadowedLights() const { return NUM_SHADOW_MAPS; }
 
 public:
-	DirectionalLightRenderer();
+	CascadedDirectionalLightRenderer();
 
 	HRESULT RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*>* models,
 		Camera* camera, AxisAlignedBox* sceneBounds);

@@ -245,12 +245,6 @@
     <ClCompile Include="OrthographicCamera.cpp">
       <Filter>Cameras</Filter>
     </ClCompile>
-    <ClCompile Include="DirectionalLightRenderer.cpp">
-      <Filter>Lights\Renderers</Filter>
-    </ClCompile>
-    <ClCompile Include="PointLightRenderer.cpp">
-      <Filter>Lights\Renderers</Filter>
-    </ClCompile>
     <ClCompile Include="SpotLightRenderer.cpp">
       <Filter>Lights\Renderers</Filter>
     </ClCompile>
@@ -338,6 +332,12 @@
     </ClCompile>
     <ClCompile Include="AssimpLogger.cpp">
       <Filter>Logging</Filter>
+    </ClCompile>
+    <ClCompile Include="DualParaboloidPointLightRenderer.cpp">
+      <Filter>Lights\Renderers</Filter>
+    </ClCompile>
+    <ClCompile Include="CascadedDirectionalLightRenderer.cpp">
+      <Filter>Lights\Renderers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -432,15 +432,6 @@
     </ClInclude>
     <ClInclude Include="DepthOfFieldPostProcess.h">
       <Filter>Post Process</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectionalLightRenderer.h">
-      <Filter>Lights\Renderers</Filter>
-    </ClInclude>
-    <ClInclude Include="PointLightRenderer.h">
-      <Filter>Lights\Renderers</Filter>
-    </ClInclude>
-    <ClInclude Include="LightRenderer.h">
-      <Filter>Lights\Renderers</Filter>
     </ClInclude>
     <ClInclude Include="Lights.h">
       <Filter>Lights\Light Types</Filter>
@@ -538,6 +529,15 @@
     </ClInclude>
     <ClInclude Include="AssimpLogger.h">
       <Filter>Logging</Filter>
+    </ClInclude>
+    <ClInclude Include="DualParaboloidPointLightRenderer.h">
+      <Filter>Lights\Renderers</Filter>
+    </ClInclude>
+    <ClInclude Include="LightRenderer.h">
+      <Filter>Lights\Renderers</Filter>
+    </ClInclude>
+    <ClInclude Include="CascadedDirectionalLightRenderer.h">
+      <Filter>Lights\Renderers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
