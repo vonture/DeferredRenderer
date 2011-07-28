@@ -1,7 +1,8 @@
 #include "Renderer.h"
 
 Renderer::Renderer() 
-	: _begun(false), _drawBoundingObjects(false)
+	: _begun(false), _pointLightRenderer(NULL), _directionalLightRenderer(NULL),
+	  _spotLightRenderer(NULL), _boDrawTypes(BoundingObjectDrawType::None)
 {
 	_ambientLight.Color = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
@@ -32,6 +33,30 @@ void Renderer::swapPPBuffers()
 	_ppRenderTargetViews[1] = tmpRTV;
 }
 
+void Renderer::SetPointLightRenderer(LightRenderer<PointLight>* renderer)
+{
+	if (!_begun)
+	{
+		_pointLightRenderer = renderer;
+	}
+}
+
+void Renderer::SetDirectionalLightRenderer(LightRenderer<DirectionalLight>* renderer)
+{
+	if (!_begun)
+	{
+		_directionalLightRenderer = renderer;
+	}
+}
+
+void Renderer::SetSpotLightRenderer(LightRenderer<SpotLight>* renderer)
+{
+	if (!_begun)
+	{
+		_spotLightRenderer = renderer;
+	}
+}
+
 void Renderer::AddModel(ModelInstance* model)
 {
 	if (model && _begun)
@@ -49,22 +74,34 @@ void Renderer::AddLight(AmbientLight* light)
 
 void Renderer::AddLight(DirectionalLight* light, bool shadowed)
 {
-	_directionalLightRenderer.Add(light, shadowed);
+	if (light && _directionalLightRenderer && _begun)
+	{
+		_directionalLightRenderer->Add(light, shadowed);
+	}
 }
 
 void Renderer::AddLight(PointLight* light, bool shadowed)
 {
-	_pointLightRenderer.Add(light, shadowed);
+	if (light && _pointLightRenderer && _begun)
+	{
+		_pointLightRenderer->Add(light, shadowed);
+	}
 }
 
 void Renderer::AddLight(SpotLight* light, bool shadowed)
 {
-	_spotLightRenderer.Add(light, shadowed);
+	if (light && _spotLightRenderer && _begun)
+	{
+		_spotLightRenderer->Add(light, shadowed);
+	}
 }
 
 void Renderer::AddPostProcess(PostProcess* postProcess)
 {
-	_postProcesses.push_back(postProcess);
+	if (postProcess && _begun)
+	{
+		_postProcesses.push_back(postProcess);
+	}
 }
 
 HRESULT Renderer::Begin()
@@ -76,8 +113,19 @@ HRESULT Renderer::Begin()
 	_begun = true;
 
 	_models.clear();	
-	_directionalLightRenderer.Clear();
-	_pointLightRenderer.Clear();
+
+	if (_pointLightRenderer)
+	{
+		_pointLightRenderer->Clear();
+	}
+	if (_directionalLightRenderer)
+	{
+		_directionalLightRenderer->Clear();
+	}
+	if (_spotLightRenderer)
+	{
+		_spotLightRenderer->Clear();
+	}
 		
 	_postProcesses.clear();
 	_postProcesses.push_back(&_combinePP);
@@ -118,9 +166,18 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 
 	// render the shadow maps
 	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Shadow Maps");
-	V_RETURN(_directionalLightRenderer.RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
-	V_RETURN(_pointLightRenderer.RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
-	V_RETURN(_spotLightRenderer.RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
+	if (_directionalLightRenderer)
+	{
+		V_RETURN(_directionalLightRenderer->RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
+	}
+	if (_pointLightRenderer)
+	{
+		V_RETURN(_pointLightRenderer->RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
+	}
+	if (_spotLightRenderer)
+	{
+		V_RETURN(_spotLightRenderer->RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
+	}
 	D3DPERF_EndEvent();
 
 	// Render the scene to the gbuffer
@@ -140,9 +197,18 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 	_lightBuffer.SetAmbientColor(_ambientLight.Color);
 	V_RETURN(_lightBuffer.Clear(pd3dImmediateContext));
 
-	V_RETURN(_directionalLightRenderer.RenderLights(pd3dImmediateContext, camera, &_gBuffer));
-	V_RETURN(_pointLightRenderer.RenderLights(pd3dImmediateContext, camera, &_gBuffer));
-	V_RETURN(_spotLightRenderer.RenderLights(pd3dImmediateContext, camera, &_gBuffer));
+	if (_directionalLightRenderer)
+	{
+		V_RETURN(_directionalLightRenderer->RenderLights(pd3dImmediateContext, camera, &_gBuffer));
+	}
+	if (_pointLightRenderer)
+	{
+		V_RETURN(_pointLightRenderer->RenderLights(pd3dImmediateContext, camera, &_gBuffer));
+	}
+	if (_spotLightRenderer)
+	{
+		V_RETURN(_spotLightRenderer->RenderLights(pd3dImmediateContext, camera, &_gBuffer));
+	}
 	D3DPERF_EndEvent();
 
 	V_RETURN(_lightBuffer.UnsetRenderTargetsAndDepthStencil(pd3dImmediateContext));
@@ -195,51 +261,64 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 	D3DPERF_EndEvent();
 
 	// Render the bounding shapes
-	if (_drawBoundingObjects)
+	if (_boDrawTypes != BoundingObjectDrawType::None)
 	{
 		D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 1.0f, 1.0f), L"Bounding Objects");
 		
-		for (UINT i = 0; i < _models.size(); i++)
+		if (_boDrawTypes & BoundingObjectDrawType::Models ||
+			_boDrawTypes & BoundingObjectDrawType::ModelMeshes)
 		{
-			UINT meshCount = _models[i]->GetModelMeshCount();
-			for (UINT j = 0; j < meshCount; j++)
+			for (UINT i = 0; i < _models.size(); i++)
 			{
-				OrientedBox obb = _models[i]->GetMeshOrientedBox(j);
-				_boRenderer.Add(obb);
+				if (_boDrawTypes & BoundingObjectDrawType::Models)
+				{
+					OrientedBox obb = _models[i]->GetOrientedBox();
+				}
+				if (_boDrawTypes & BoundingObjectDrawType::ModelMeshes)
+				{
+					UINT meshCount = _models[i]->GetModelMeshCount();
+					for (UINT j = 0; j < meshCount; j++)
+					{
+						OrientedBox obb = _models[i]->GetMeshOrientedBox(j);
+						_boRenderer.Add(obb);
+					}
+				}				
 			}
 		}
-		for (UINT i = 0; i < _pointLightRenderer.GetCount(false); i++)
+
+		if (_boDrawTypes & BoundingObjectDrawType::Lights)
 		{
-			PointLight* light = _pointLightRenderer.GetLight(i, false);
+			if (_pointLightRenderer)
+			{
+				UINT lightCount = _pointLightRenderer->GetCount();
+				for (UINT i = 0; i < lightCount; i++)
+				{
+					PointLight* light = _pointLightRenderer->GetLight(i);
 
-			Sphere lightSphere;
-			lightSphere.Center = light->Position;
-			lightSphere.Radius = light->Radius;
+					Sphere lightSphere;
+					lightSphere.Center = light->Position;
+					lightSphere.Radius = light->Radius;
 		
-			_boRenderer.Add(lightSphere);
+					_boRenderer.Add(lightSphere);
+				}
+			}
 		}
-		for (UINT i = 0; i < _pointLightRenderer.GetCount(true); i++)
+
+		if (_boDrawTypes & BoundingObjectDrawType::CameraFrustums)
 		{
-			PointLight* light = _pointLightRenderer.GetLight(i, true);
-
-			Sphere lightSphere;
-			lightSphere.Center = light->Position;
-			lightSphere.Radius = light->Radius;
+			XMFLOAT4X4 fCameraProj = camera->GetProjection();
+			XMMATRIX cameraProj = XMLoadFloat4x4(&fCameraProj);
 		
-			_boRenderer.Add(lightSphere);
+			Frustum cameraFrust;
+			Collision::ComputeFrustumFromProjection(&cameraFrust, &cameraProj);
+			cameraFrust.Origin = camera->GetPosition();
+			cameraFrust.Orientation = camera->GetOrientation();
+
+			_boRenderer.Add(cameraFrust);
 		}
-	
-		XMFLOAT4X4 fCameraProj = camera->GetProjection();
-		XMMATRIX cameraProj = XMLoadFloat4x4(&fCameraProj);
+
+		V_RETURN(_boRenderer.Render(pd3dImmediateContext, camera));
 		
-		Frustum cameraFrust;
-		Collision::ComputeFrustumFromProjection(&cameraFrust, &cameraProj);
-		cameraFrust.Origin = camera->GetPosition();
-		cameraFrust.Orientation = camera->GetOrientation();
-
-		_boRenderer.Add(cameraFrust);
-
-		_boRenderer.Render(pd3dImmediateContext, camera);
 		D3DPERF_EndEvent();
 	}
 	
@@ -258,9 +337,6 @@ HRESULT Renderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFA
 	V_RETURN(_lightBuffer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_modelRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_combinePP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_directionalLightRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_pointLightRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_spotLightRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_boRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
 	return S_OK;
@@ -272,9 +348,6 @@ void Renderer::OnD3D11DestroyDevice()
 	_lightBuffer.OnD3D11DestroyDevice();
 	_modelRenderer.OnD3D11DestroyDevice();
 	_combinePP.OnD3D11DestroyDevice();
-	_directionalLightRenderer.OnD3D11DestroyDevice();
-	_pointLightRenderer.OnD3D11DestroyDevice();
-	_spotLightRenderer.OnD3D11DestroyDevice();
 	_boRenderer.OnD3D11DestroyDevice();
 }
 
@@ -340,9 +413,6 @@ HRESULT Renderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapCh
 	V_RETURN(_lightBuffer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_modelRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_combinePP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_directionalLightRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_pointLightRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_spotLightRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_boRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
@@ -361,8 +431,5 @@ void Renderer::OnD3D11ReleasingSwapChain()
 	_lightBuffer.OnD3D11ReleasingSwapChain();
 	_modelRenderer.OnD3D11ReleasingSwapChain();
 	_combinePP.OnD3D11ReleasingSwapChain();
-	_directionalLightRenderer.OnD3D11ReleasingSwapChain();
-	_pointLightRenderer.OnD3D11ReleasingSwapChain();
-	_spotLightRenderer.OnD3D11ReleasingSwapChain();
 	_boRenderer.OnD3D11ReleasingSwapChain();
 }
