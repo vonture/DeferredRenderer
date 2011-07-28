@@ -15,6 +15,10 @@
 #include "MotionBlurPostProcess.h"
 #include "UIPostProcess.h"
 
+#include "DualParaboloidPointLightRenderer.h"
+#include "CascadedDirectionalLightRenderer.h"
+#include "SpotLightRenderer.h"
+
 #include "ConfigurationWindow.h"
 #include "LogWindow.h"
 
@@ -25,6 +29,10 @@ private:
 	TestingCamera _camera;
 
 	ModelInstance _scene;
+
+	DualParaboloidPointLightRenderer _paraboloidPointLR;
+	CascadedDirectionalLightRenderer _cascadedDirectionalLR;
+	SpotLightRenderer _spotLR;
 
 	HDRPostProcess _hdrPP;
 	SkyPostProcess _skyPP;

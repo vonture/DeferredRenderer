@@ -30,6 +30,13 @@ DeferredRendererApplication::~DeferredRendererApplication()
 
 void DeferredRendererApplication::OnInitialize()
 {		
+	// Set some properties of the renderer
+	_renderer.SetBoundingObjectDrawTypes(BoundingObjectDrawType::None);
+	_renderer.SetPointLightRenderer(&_paraboloidPointLR);
+	_renderer.SetDirectionalLightRenderer(&_cascadedDirectionalLR);
+	_renderer.SetSpotLightRenderer(&_spotLR);
+
+	// Create all the UI elements
 	Gwen::Controls::Canvas* canvas = _uiPP.GetCanvas();
 
 	// Create the configuration window and its panes
@@ -77,12 +84,7 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 		{
 			Exit();
 		}
-
-		if (kb.IsKeyJustPressed(Keys::B))
-		{
-			_renderer.SetDrawBoundingObjects(!_renderer.GetDrawBoundingObjects());
-		}
-
+		
 		if (kb.IsKeyJustPressed(Keys::F11))
 		{
 			SetFullScreen(!GetFullScreen());
@@ -244,6 +246,11 @@ HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 	V_RETURN(_dofPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_motionBlurPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_uiPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+
+	V_RETURN(_paraboloidPointLR.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_cascadedDirectionalLR.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_spotLR.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+
 	V_RETURN(_scene.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
 	return S_OK;
@@ -261,6 +268,11 @@ void DeferredRendererApplication::OnD3D11DestroyDevice()
 	_dofPP.OnD3D11DestroyDevice();
 	_motionBlurPP.OnD3D11DestroyDevice();
 	_uiPP.OnD3D11DestroyDevice();
+
+	_paraboloidPointLR.OnD3D11DestroyDevice();
+	_cascadedDirectionalLR.OnD3D11DestroyDevice();
+	_spotLR.OnD3D11DestroyDevice();
+
 	_scene.OnD3D11DestroyDevice();	
 }
 
@@ -282,6 +294,11 @@ HRESULT DeferredRendererApplication::OnD3D11ResizedSwapChain( ID3D11Device* pd3d
 	V_RETURN(_dofPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_motionBlurPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_uiPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	
+	V_RETURN(_paraboloidPointLR.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_cascadedDirectionalLR.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_spotLR.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	
 	V_RETURN(_scene.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 			
 	const int configWidth = 260;
@@ -306,6 +323,11 @@ void DeferredRendererApplication::OnD3D11ReleasingSwapChain()
 	_dofPP.OnD3D11ReleasingSwapChain();
 	_motionBlurPP.OnD3D11ReleasingSwapChain();
 	_uiPP.OnD3D11ReleasingSwapChain();
+
+	_paraboloidPointLR.OnD3D11ReleasingSwapChain();
+	_cascadedDirectionalLR.OnD3D11ReleasingSwapChain();
+	_spotLR.OnD3D11ReleasingSwapChain();
+
 	_scene.OnD3D11ReleasingSwapChain();
 }
 
