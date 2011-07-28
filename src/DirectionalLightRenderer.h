@@ -51,7 +51,6 @@ private:
 	static const UINT NUM_CASCADES = 4;
 	static const UINT SHADOW_MAP_SIZE = 2048;
 	static const float CASCADE_SPLITS[NUM_CASCADES];
-	static const float BACKUP;
 	static const float BIAS;
 	ID3D11Texture2D* _shadowMapTextures[NUM_SHADOW_MAPS];
 	ID3D11DepthStencilView* _shadowMapDSVs[NUM_SHADOW_MAPS];
@@ -62,6 +61,8 @@ private:
 
 	void ComputeNearAndFar(FLOAT& fNearPlane, FLOAT& fFarPlane, FXMVECTOR vLightCameraOrthographicMin, 
 		FXMVECTOR vLightCameraOrthographicMax, XMVECTOR* pvPointsInCameraView);
+
+	void CreateAABBPoints(XMVECTOR* vAABBPoints, FXMVECTOR vCenter, FXMVECTOR vExtents);
 
 	void CreateFrustumPointsFromCascadeInterval(float fCascadeIntervalBegin, FLOAT fCascadeIntervalEnd, 
 		XMMATRIX &vProjection, XMVECTOR* pvCornerPointsWorld);

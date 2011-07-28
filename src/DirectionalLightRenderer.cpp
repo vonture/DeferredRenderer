@@ -1,7 +1,6 @@
 #include "DirectionalLightRenderer.h"
 
 const float DirectionalLightRenderer::CASCADE_SPLITS[NUM_CASCADES] = { 0.125f, 0.25f, 0.5f, 1.0f };
-const float DirectionalLightRenderer::BACKUP = 0.1f;
 const float DirectionalLightRenderer::BIAS = 0.005f;
 
 DirectionalLightRenderer::DirectionalLightRenderer()
@@ -328,14 +327,45 @@ void DirectionalLightRenderer::ComputeNearAndFar( FLOAT& fNearPlane,
                 for( int vertind = 0; vertind < 3; ++ vertind ) 
                 {
                     float fTriangleCoordZ = XMVectorGetZ( triangleList[index].pt[vertind] );
-					fNearPlane = min(fNearPlane, fTriangleCoordZ);
-					fFarPlane = max(fFarPlane, fTriangleCoordZ);
+                    if( fNearPlane > fTriangleCoordZ ) 
+                    {
+                        fNearPlane = fTriangleCoordZ;
+                    }
+                    if( fFarPlane  <fTriangleCoordZ ) 
+                    {
+                        fFarPlane = fTriangleCoordZ;
+                    }
                 }
             }
         }
-    }
+    }    
+
 }
 
+//--------------------------------------------------------------------------------------
+// This function converts the "center, extents" version of an AABB into 8 points.
+//--------------------------------------------------------------------------------------
+void DirectionalLightRenderer::CreateAABBPoints( XMVECTOR* vAABBPoints, FXMVECTOR vCenter, FXMVECTOR vExtents )
+{
+    //This map enables us to use a for loop and do vector math.
+    static const XMVECTORF32 vExtentsMap[] = 
+    { 
+        {1.0f, 1.0f, -1.0f, 1.0f}, 
+        {-1.0f, 1.0f, -1.0f, 1.0f}, 
+        {1.0f, -1.0f, -1.0f, 1.0f}, 
+        {-1.0f, -1.0f, -1.0f, 1.0f}, 
+        {1.0f, 1.0f, 1.0f, 1.0f}, 
+        {-1.0f, 1.0f, 1.0f, 1.0f}, 
+        {1.0f, -1.0f, 1.0f, 1.0f}, 
+        {-1.0f, -1.0f, 1.0f, 1.0f} 
+    };
+    
+    for( INT index = 0; index < 8; ++index ) 
+    {
+        vAABBPoints[index] = XMVectorMultiplyAdd(vExtentsMap[index], vExtents, vCenter ); 
+    }
+
+}
 
 //--------------------------------------------------------------------------------------
 // This function takes the camera's projection matrix and returns the 8
@@ -347,8 +377,9 @@ void DirectionalLightRenderer::CreateFrustumPointsFromCascadeInterval( float fCa
                                                         XMMATRIX &vProjection,
                                                         XMVECTOR* pvCornerPointsWorld ) 
 {
+
     Frustum vViewFrust;
-    Collision::ComputeFrustumFromProjection( &vViewFrust, &vProjection );
+	Collision::ComputeFrustumFromProjection( &vViewFrust, &vProjection );
     vViewFrust.Near = fCascadeIntervalBegin;
     vViewFrust.Far = fCascadeIntervalEnd;
 
@@ -375,7 +406,6 @@ void DirectionalLightRenderer::CreateFrustumPointsFromCascadeInterval( float fCa
     pvCornerPointsWorld[7] = XMVectorSelect( vRightTopFar ,vLeftBottomFar, vGrabY );
 
 }
-
 
 HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediateContext, DirectionalLight* dlight,
 	UINT shadowMapIdx, std::vector<ModelInstance*>* models, Camera* camera, AxisAlignedBox* sceneBounds)
@@ -418,15 +448,16 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 	XMFLOAT3 lightOrigin = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
 
-	XMMATRIX lightSpaceTransform = XMMatrixLookToLH(XMLoadFloat3(&lightOrigin), -lightDir, up);
+	XMMATRIX mLightCameraView = XMMatrixLookAtLH(XMLoadFloat3(&lightOrigin), -lightDir, up);
 
-	XMVECTOR sceneAABBcorners[8];
-	Collision::ComputeAxisAlignedBoxCorners(sceneBounds, &sceneAABBcorners[0], &sceneAABBcorners[1],
-		&sceneAABBcorners[2], &sceneAABBcorners[3], &sceneAABBcorners[4], &sceneAABBcorners[5],
-		&sceneAABBcorners[6], &sceneAABBcorners[7]);
-	for(int j = 0; j < 8; j++) 
+	XMVECTOR vSceneCenter = XMLoadFloat3(&sceneBounds->Center);
+	XMVECTOR vSceneExtents = XMLoadFloat3(&sceneBounds->Extents);
+
+	XMVECTOR vSceneAABBPointsLightSpace[8];
+	CreateAABBPoints(vSceneAABBPointsLightSpace, vSceneCenter, vSceneExtents);
+	for(int i = 0; i < 8; i++) 
 	{
-		sceneAABBcorners[j] = XMVector4Transform(sceneAABBcorners[j], lightSpaceTransform); 
+		vSceneAABBPointsLightSpace[i] = XMVector4Transform(vSceneAABBPointsLightSpace[i], mLightCameraView); 
 	}
 
 	FLOAT fFrustumIntervalBegin, fFrustumIntervalEnd;
@@ -444,12 +475,12 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
         XMFLOAT2(0.0f, 0.5f)
     };
 
+	int numRows = (int)sqrtf((float)NUM_CASCADES);
+    float cascadeSize = (float)SHADOW_MAP_SIZE / numRows;
+
 	for (UINT i = 0; i < NUM_CASCADES; i++)
 	{
 		// Create the viewport
-		int numRows = (int)sqrtf((float)NUM_CASCADES);
-        float cascadeSize =  (float)SHADOW_MAP_SIZE / numRows;
-
 		D3D11_VIEWPORT vp;
 		vp.MinDepth = 0.0f;
 		vp.MaxDepth = 1.0f;
@@ -467,7 +498,8 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 		fFrustumIntervalEnd = splitDist * fCameraNearFarRange;
 		
 		XMVECTOR vFrustumPoints[8];
-		CreateFrustumPointsFromCascadeInterval(fFrustumIntervalBegin, fFrustumIntervalEnd, cameraProj, vFrustumPoints);
+		CreateFrustumPointsFromCascadeInterval(fFrustumIntervalBegin, fFrustumIntervalEnd, cameraProj,
+			vFrustumPoints);
 
 		vLightCameraOrthographicMin = XMVectorSet(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX);
         vLightCameraOrthographicMax = XMVectorSet(-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX);
@@ -479,7 +511,7 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
             // Transform the frustum from camera view space to world space.
             vFrustumPoints[icpIndex] = XMVector4Transform(vFrustumPoints[icpIndex], inverseCameraView);
             // Transform the point from world space to Light Camera Space.
-            vTempTranslatedCornerPoint = XMVector4Transform(vFrustumPoints[icpIndex], lightSpaceTransform);
+            vTempTranslatedCornerPoint = XMVector4Transform(vFrustumPoints[icpIndex], mLightCameraView);
             // Find the closest point.
             vLightCameraOrthographicMin = XMVectorMin(vTempTranslatedCornerPoint, vLightCameraOrthographicMin);
             vLightCameraOrthographicMax = XMVectorMax(vTempTranslatedCornerPoint, vLightCameraOrthographicMax);
@@ -514,6 +546,8 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
         FLOAT fWorldUnitsPerTexel = fCascadeBound / (float)cascadeSize;
         vWorldUnitsPerTexel = XMVectorSet(fWorldUnitsPerTexel, fWorldUnitsPerTexel, 0.0f, 0.0f);
 
+		//float fLightCameraOrthographicMinZ = XMVectorGetZ(vLightCameraOrthographicMin);
+
 		// We snape the camera to 1 pixel increments so that moving the camera does not cause the shadows to jitter.
         // This is a matter of integer dividing by the world space size of a texel
         vLightCameraOrthographicMin /= vWorldUnitsPerTexel;
@@ -527,16 +561,18 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 		// Determine the near and far planes
 		FLOAT fNearPlane = 0.0f;
         FLOAT fFarPlane = 10000.0f;
+				
 		ComputeNearAndFar( fNearPlane, fFarPlane, vLightCameraOrthographicMin, 
-                vLightCameraOrthographicMax, sceneAABBcorners);
+                vLightCameraOrthographicMax, vSceneAABBPointsLightSpace);
 		
+
 		// Craete the orthographic projection for this cascade.
 		XMMATRIX shadowProj = XMMatrixOrthographicOffCenterLH(
 			XMVectorGetX(vLightCameraOrthographicMin), XMVectorGetX(vLightCameraOrthographicMax), 
             XMVectorGetY(vLightCameraOrthographicMin), XMVectorGetY(vLightCameraOrthographicMax), 
             fNearPlane, fFarPlane);
 		
-		XMMATRIX shadowViewProj = XMMatrixMultiply(lightSpaceTransform, shadowProj);
+		XMMATRIX shadowViewProj = XMMatrixMultiply(mLightCameraView, shadowProj);
 
 		// Create the shadow frustum for intersection tests
 		Frustum shadowFrust;
@@ -556,7 +592,7 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 			int modelIntersect = Collision::IntersectOrientedBoxFrustum(&modelBounds, &shadowFrust);
 			if (!modelIntersect)
 			{
-				continue;
+				//continue;
 			}
 
 			// Prepare the buffer
@@ -581,7 +617,7 @@ HRESULT DirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dImmediate
 								
 					if (!Collision::IntersectOrientedBoxFrustum(&meshBounds, &shadowFrust))
 					{
-						continue;
+						//continue;
 					}
 				}
 
