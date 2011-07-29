@@ -8,7 +8,7 @@
 
 DeferredRendererApplication::DeferredRendererApplication()
 	: Application(L"Deferred Renderer", NULL), _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f), 
-	  _configWindow(NULL), _logWindow(NULL),
+	  _configWindow(NULL), _logWindow(NULL), _ppConfigPane(NULL),
 	  _scene(L"\\models\\tankscene\\tankscene.sdkmesh")
 {
 	_scene.SetScale(1.0f);
@@ -40,7 +40,17 @@ void DeferredRendererApplication::OnInitialize()
 	Gwen::Controls::Canvas* canvas = _uiPP.GetCanvas();
 
 	// Create the configuration window and its panes
-	_configWindow = new ConfigurationWindow(canvas);	
+	_configWindow = new ConfigurationWindow(canvas);
+
+	_ppConfigPane = new PostProcessSelectionPane(_configWindow);
+	_ppConfigPane->AddPostProcess(&_ssaoPP, L"SSAO", true, true);
+	_ppConfigPane->AddPostProcess(&_skyPP, L"Sky", true, true);
+	_ppConfigPane->AddPostProcess(&_mlaaPP, L"MLAA", true, true);
+	_ppConfigPane->AddPostProcess(&_hdrPP, L"HDR", true, true);
+	_ppConfigPane->AddPostProcess(&_uiPP, L"UI", true, false);
+	_ppConfigPane->AddPostProcess(&_motionBlurPP, L"Motion blur", false, false);
+	_ppConfigPane->AddPostProcess(&_dofPP, L"DoF", false, false);
+	_configWindow->AddConfigPane(_ppConfigPane);
 
 	CameraConfigurationPane* cameraPane = new CameraConfigurationPane(_configWindow, &_camera);
 	_configWindow->AddConfigPane(cameraPane);
@@ -51,9 +61,9 @@ void DeferredRendererApplication::OnInitialize()
 	SSAOConfigurationPane* ssaoPane = new SSAOConfigurationPane(_configWindow, &_ssaoPP);
 	_configWindow->AddConfigPane(ssaoPane);
 
-	HDRConfigurationPane* hdrPane = new HDRConfigurationPane(_configWindow, &_hdrPP);
+	HDRConfigurationPane* hdrPane = new HDRConfigurationPane(_configWindow, &_hdrPP);		
 	_configWindow->AddConfigPane(hdrPane);
-		
+
 	SkyConfigurationPane* skyPane = new SkyConfigurationPane(_configWindow, &_skyPP);
 	_configWindow->AddConfigPane(skyPane);
 
@@ -193,7 +203,7 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 	_renderer.AddLight(&purpleLight, true);
 	*/
 
-	if (_skyPP.GetSunEnabled())
+	if (_ppConfigPane->IsPostProcessEnabled(&_skyPP) && _skyPP.GetSunEnabled())
 	{
 		const float sunIntensity = _skyPP.GetSunIntensity();
 		const XMFLOAT3 sunColor = _skyPP.GetSunColor();
@@ -213,18 +223,10 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 	};
 	_renderer.AddLight(&ambientLight);
 
-	_renderer.AddPostProcess(&_ssaoPP);
-	_renderer.AddPostProcess(&_skyPP);	
-	_renderer.AddPostProcess(&_mlaaPP);
-	_renderer.AddPostProcess(&_hdrPP);
-
-	// Unimplimented post processes
-	//_renderer.AddPostProcess(&_dofPP);
-	//_renderer.AddPostProcess(&_motionBlurPP);
-
-	if (_uiEnabled)
+	UINT ppCount = _ppConfigPane->GetSelectedPostProcessCount();
+	for (UINT i = 0; i < ppCount; i++)
 	{
-		_renderer.AddPostProcess(&_uiPP);
+		_renderer.AddPostProcess(_ppConfigPane->GetSelectedPostProcesses(i));
 	}
 
 	V_RETURN(_renderer.End(pd3dImmediateContext, &_camera));

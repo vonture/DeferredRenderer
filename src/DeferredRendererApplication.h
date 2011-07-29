@@ -20,6 +20,7 @@
 #include "SpotLightRenderer.h"
 
 #include "ConfigurationWindow.h"
+#include "PostProcessSelectionPane.h"
 #include "LogWindow.h"
 
 class DeferredRendererApplication : public Application
@@ -43,6 +44,8 @@ private:
 	UIPostProcess _uiPP;
 
 	ConfigurationWindow* _configWindow;
+	PostProcessSelectionPane* _ppConfigPane;
+
 	LogWindow* _logWindow;
 	
 	bool _uiEnabled;
