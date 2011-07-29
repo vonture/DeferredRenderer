@@ -229,29 +229,33 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 	// render the post processes	
 	for (UINT i = 0; i < _postProcesses.size(); i++)
 	{
-		bool isAdditive = _postProcesses[i]->GetIsAdditive();
+		PostProcess* pp = _postProcesses[i];
+		bool isAdditive = pp->GetIsAdditive();
 		
 		// calculate source resource view
-		ID3D11ShaderResourceView* srcSRV = (i > 0) ? _ppShaderResourceViews[0] : NULL;		
+		ID3D11ShaderResourceView* srcSRV = NULL;
+		if (i > 0 && i <= lastNonAdditive)
+		{
+			srcSRV = _ppShaderResourceViews[0];
+		}
 		
 		// Calculate destination render target
-		ID3D11RenderTargetView* dstRTV = isAdditive ? _ppRenderTargetViews[0] : _ppRenderTargetViews[1];
-		
-		// If this is the last non-additive or beyond, need to render to the final rtv
+		ID3D11RenderTargetView* dstRTV = NULL;
 		if (i >= lastNonAdditive)
 		{
 			dstRTV = pOrigRTV;
 		}
-
-		// After the last non-additive, source is null since we don't have a SRV of back buffer
-		if (i > lastNonAdditive)
+		else if (isAdditive)
 		{
-			srcSRV = NULL;
+			dstRTV = _ppRenderTargetViews[0];
+		}
+		else
+		{
+			dstRTV = _ppRenderTargetViews[1];
 		}
 
 		// Render the post process
-		V_RETURN(_postProcesses[i]->Render(pd3dImmediateContext, srcSRV, dstRTV, camera,
-			&_gBuffer, &_lightBuffer));
+		V_RETURN(pp->Render(pd3dImmediateContext, srcSRV, dstRTV, camera, &_gBuffer, &_lightBuffer));
 
 		if (!isAdditive)
 		{
