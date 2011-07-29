@@ -38,20 +38,25 @@ void ConfigurationWindow::RemoveConfigPane(ConfigurationPaneBase* removePane)
 
 void ConfigurationWindow::OnFrameMove(double totalTime, float dt)
 {
-	Gwen::UnicodeString selectedLabel = _configSelectComboBox->GetSelectedItem()->GetText();	
-	if (_paneMap.find(selectedLabel) != _paneMap.end())
-	{
-		if (_selectedPane != _paneMap[selectedLabel])
-		{
-			if (_selectedPane)
-			{
-				_selectedPane->Hide();
-			}
+	Gwen::Controls::Label* selectedLabel = _configSelectComboBox->GetSelectedItem();
 
-			_selectedPane = _paneMap[selectedLabel];
-			_selectedPane->Show();
+	if (selectedLabel)
+	{
+		Gwen::UnicodeString selectedLabelString = selectedLabel->GetText();
+		if (_paneMap.find(selectedLabelString) != _paneMap.end())
+		{
+			if (_selectedPane != _paneMap[selectedLabelString])
+			{
+				if (_selectedPane)
+				{
+					_selectedPane->Hide();
+				}
+
+				_selectedPane = _paneMap[selectedLabelString];
+				_selectedPane->Show();
+			}
 		}
-	}
+	}	
 
 	std::map<Gwen::UnicodeString, ConfigurationPaneBase*>::iterator it;
 	for (it = _paneMap.begin(); it != _paneMap.end(); it++)
