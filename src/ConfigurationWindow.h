@@ -7,7 +7,7 @@
 #include "Gwen\Controls\ComboBox.h"
 #include "Gwen\Controls\GroupBox.h"
 
-class ConfigurationWindow : public IUpdateable, public Gwen::Controls::WindowControl
+class ConfigurationWindow :  public Gwen::Controls::WindowControl, public IUpdateable
 {
 private:
 	Gwen::Controls::ComboBox* _configSelectComboBox;
