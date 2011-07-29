@@ -382,6 +382,7 @@
     <ClCompile Include="AssimpLogger.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="LogWindow.cpp" />
+    <ClCompile Include="PostProcessSelectionPane.cpp" />
     <ClCompile Include="SSAOConfigurationPane.cpp" />
     <ClCompile Include="SSAOPostProcess.cpp" />
     <ClCompile Include="MLAAConfigurationPane.cpp" />
@@ -437,6 +438,7 @@
     <ClInclude Include="LightRenderer.h" />
     <ClInclude Include="LogWindow.h" />
     <ClInclude Include="Logger.h" />
+    <ClInclude Include="PostProcessSelectionPane.h" />
     <ClInclude Include="SSAOConfigurationPane.h" />
     <ClInclude Include="SSAOPostProcess.h" />
     <ClInclude Include="MLAAConfigurationPane.h" />
