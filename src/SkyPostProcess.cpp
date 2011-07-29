@@ -3,7 +3,7 @@
 SkyPostProcess::SkyPostProcess()
 	: _sunDisabledPS(NULL), _sunEnabledPS(NULL), _skyProperties(NULL)
 {
-	SetIsAdditive(false);
+	SetIsAdditive(true);
 
 	SetSunColor(XMFLOAT3(1.0f, 0.8f, 0.5f));
 	SetSkyColor(XMFLOAT3(0.2f, 0.5f, 1.0f));
@@ -69,11 +69,7 @@ HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	
 	// Render
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _enableSun ? _sunEnabledPS : _sunDisabledPS));
-
-	// Null the SRVs
-	ID3D11ShaderResourceView* ppSRVNULL[1] = { NULL };
-	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL);
-
+	
 	D3DPERF_EndEvent();
 
 	return S_OK;
