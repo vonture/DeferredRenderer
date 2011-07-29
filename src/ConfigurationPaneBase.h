@@ -14,5 +14,5 @@ public:
 		SetAutoHideBars(true);
 	}
 	
-	virtual void OnFrameMove(double totalTime, float dt) = 0;
+	virtual void OnFrameMove(double totalTime, float dt) { };
 };
