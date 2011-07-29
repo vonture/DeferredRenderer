@@ -79,12 +79,12 @@ public:
 		return shadowed ? _shadowedCount : _unshadowedCount;
 	}
 
-	T* GetLight(int idx)
+	T* GetLight(UINT idx)
     {
 		return (idx >= _shadowedCount) ? _unshadowed[idx] :  _shadowed[idx - _shadowedCount];
     }
 
-	T* GetLight(int idx, bool shadowed)
+	T* GetLight(UINT idx, bool shadowed)
     {
         return shadowed ? _shadowed[idx] : _unshadowed[idx];
     }
