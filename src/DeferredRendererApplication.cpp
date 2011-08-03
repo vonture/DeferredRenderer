@@ -5,6 +5,8 @@
 #include "SkyConfigurationPane.h"
 #include "CameraConfigurationPane.h"
 #include "SSAOConfigurationPane.h"
+#include "DeviceManagerConfigurationPane.h"
+#include "ProfilePane.h"
 
 DeferredRendererApplication::DeferredRendererApplication()
 	: Application(L"Deferred Renderer", NULL), _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f), 
@@ -39,6 +41,10 @@ void DeferredRendererApplication::OnInitialize()
 
 	// Create the configuration window and its panes
 	_configWindow = new ConfigurationWindow(canvas);
+	
+	DeviceManagerConfigurationPane* devicePane = new DeviceManagerConfigurationPane(_configWindow,
+		GetDeviceManager());
+	_configWindow->AddConfigPane(devicePane);
 
 	_ppConfigPane = new PostProcessSelectionPane(_configWindow);
 	_ppConfigPane->AddPostProcess(&_ssaoPP, L"SSAO", true, true);
@@ -49,6 +55,9 @@ void DeferredRendererApplication::OnInitialize()
 	_ppConfigPane->AddPostProcess(&_motionBlurPP, L"Motion blur", false, false);
 	_ppConfigPane->AddPostProcess(&_dofPP, L"DoF", false, false);
 	_configWindow->AddConfigPane(_ppConfigPane);
+
+	ProfilePane* profilePane = new ProfilePane(_configWindow, Logger::GetInstance());
+	_configWindow->AddConfigPane(profilePane);
 
 	CameraConfigurationPane* cameraPane = new CameraConfigurationPane(_configWindow, &_camera);
 	_configWindow->AddConfigPane(cameraPane);
