@@ -380,9 +380,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AssimpLogger.cpp" />
+    <ClCompile Include="DeviceManagerConfigurationPane.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="LogWindow.cpp" />
     <ClCompile Include="PostProcessSelectionPane.cpp" />
+    <ClCompile Include="ProfilePane.cpp" />
     <ClCompile Include="SSAOConfigurationPane.cpp" />
     <ClCompile Include="SSAOPostProcess.cpp" />
     <ClCompile Include="MLAAConfigurationPane.cpp" />
@@ -435,10 +437,12 @@
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="xnaCollision.cpp" />
     <ClInclude Include="AssimpLogger.h" />
+    <ClInclude Include="DeviceManagerConfigurationPane.h" />
     <ClInclude Include="LightRenderer.h" />
     <ClInclude Include="LogWindow.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="PostProcessSelectionPane.h" />
+    <ClInclude Include="ProfilePane.h" />
     <ClInclude Include="SSAOConfigurationPane.h" />
     <ClInclude Include="SSAOPostProcess.h" />
     <ClInclude Include="MLAAConfigurationPane.h" />

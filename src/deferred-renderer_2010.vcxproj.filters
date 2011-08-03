@@ -66,6 +66,9 @@
     <Filter Include="Logging">
       <UniqueIdentifier>{9cda81bf-f84a-43a6-aa79-b6bdb8bfe5a8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Graphics Helpers\Configuration Panes">
+      <UniqueIdentifier>{0804b36b-e9c7-4a70-9467-12bbd8a94e99}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="DXUT\Optional\directx.ico">
@@ -342,6 +345,12 @@
     <ClCompile Include="PostProcessSelectionPane.cpp">
       <Filter>UI</Filter>
     </ClCompile>
+    <ClCompile Include="ProfilePane.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="DeviceManagerConfigurationPane.cpp">
+      <Filter>Graphics Helpers\Configuration Panes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleSample.hlsl">
@@ -544,6 +553,12 @@
     </ClInclude>
     <ClInclude Include="PostProcessSelectionPane.h">
       <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="ProfilePane.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceManagerConfigurationPane.h">
+      <Filter>Graphics Helpers\Configuration Panes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
