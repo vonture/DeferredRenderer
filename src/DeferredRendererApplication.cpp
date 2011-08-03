@@ -20,8 +20,6 @@ DeferredRendererApplication::DeferredRendererApplication()
 
 	_camera.SetPosition(XMFLOAT3(1.0f, 4.0f, -6.0f));
 	_camera.SetRotation(XMFLOAT2(-0.1f, 0.35f));
-
-	_uiEnabled = true;
 }
 
 DeferredRendererApplication::~DeferredRendererApplication()
@@ -107,7 +105,8 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 	
 		if (kb.IsKeyJustPressed(Keys::U))
 		{
-			_uiEnabled = !_uiEnabled;
+			bool uiEnabled = _ppConfigPane->IsPostProcessEnabled(&_uiPP);
+			_ppConfigPane->SetPostProcessEnabled(&_uiPP, !uiEnabled);
 		}
 
 		if (mouse.IsButtonDown(MouseButton::RightButton))
@@ -155,16 +154,22 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 			_camera.SetPosition(camPos);
 		}
 	}
-
-	_uiPP.OnFrameMove(totalTime, dt);
-	_configWindow->OnFrameMove(totalTime, dt);
+	
+	if (_ppConfigPane->IsPostProcessEnabled(&_uiPP))
+	{
+		_uiPP.OnFrameMove(totalTime, dt);
+		_configWindow->OnFrameMove(totalTime, dt);
+	}
 }
 
 LRESULT DeferredRendererApplication::OnMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	HRESULT hr;
 	
-	V_RETURN(_uiPP.OnMessage(hWnd, msg, wParam, lParam));
+	if (_ppConfigPane->IsPostProcessEnabled(&_uiPP))
+	{
+		V_RETURN(_uiPP.OnMessage(hWnd, msg, wParam, lParam));
+	}
 
 	return Application::OnMessage(hWnd, msg, wParam, lParam);
 }

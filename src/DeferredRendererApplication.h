@@ -47,8 +47,6 @@ private:
 	PostProcessSelectionPane* _ppConfigPane;
 
 	LogWindow* _logWindow;
-	
-	bool _uiEnabled;
 
 protected:
 	void OnInitialize();
