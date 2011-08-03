@@ -1,4 +1,5 @@
 #include "CascadedDirectionalLightRenderer.h"
+#include "Logger.h"
 
 const float CascadedDirectionalLightRenderer::CASCADE_SPLITS[NUM_CASCADES] = { 0.125f, 0.25f, 0.5f, 1.0f };
 const float CascadedDirectionalLightRenderer::BIAS = 0.005f;
@@ -21,7 +22,7 @@ HRESULT CascadedDirectionalLightRenderer::RenderShadowMaps(ID3D11DeviceContext* 
 {
 	if (GetCount(true) > 0)
 	{
-		D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Directional Light Shadow Maps");
+		BEGIN_EVENT(L"Directional Light Shadow Maps");
 
 		// Save the old viewport
 		D3D11_VIEWPORT vpOld[D3D11_VIEWPORT_AND_SCISSORRECT_MAX_INDEX];
@@ -37,7 +38,7 @@ HRESULT CascadedDirectionalLightRenderer::RenderShadowMaps(ID3D11DeviceContext* 
 		// Re-apply the old viewport
 		pd3dImmediateContext->RSSetViewports(nViewPorts, vpOld);
 
-		D3DPERF_EndEvent();
+		END_EVENT();
 	}
 	return S_OK;
 }
@@ -653,7 +654,7 @@ HRESULT CascadedDirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 {	
 	if (GetCount(true) + GetCount(false) > 0)
 	{
-		D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Directional Lights");
+		BEGIN_EVENT(L"Directional Lights");
 
 		HRESULT hr;
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -757,7 +758,7 @@ HRESULT CascadedDirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 		ID3D11ShaderResourceView* nullSRV[5] = { NULL, NULL, NULL, NULL, NULL };
 		pd3dImmediateContext->PSSetShaderResources(0, 5, nullSRV);
 
-		D3DPERF_EndEvent();
+		END_EVENT();
 	}
 
 	return S_OK;

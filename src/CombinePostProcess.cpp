@@ -1,4 +1,5 @@
 #include "CombinePostProcess.h"
+#include "Logger.h"
 
 CombinePostProcess::CombinePostProcess()
 	: _pixelShader(NULL)
@@ -13,7 +14,7 @@ CombinePostProcess::~CombinePostProcess()
 HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
-	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Combine");
+	BEGIN_EVENT(L"Combine");
 
 	HRESULT hr;
 	
@@ -44,7 +45,7 @@ HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID
 	ID3D11ShaderResourceView* NULLSRVs[3] = { NULL, NULL, NULL};
 	pd3dImmediateContext->PSSetShaderResources(0, 3, NULLSRVs);
 
-	D3DPERF_EndEvent();
+	END_EVENT();
 
 	return S_OK;
 }

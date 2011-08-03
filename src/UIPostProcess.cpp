@@ -1,5 +1,6 @@
 #include "UIPostProcess.h"
 #include "ShaderLoader.h"
+#include "Logger.h"
 
 UIPostProcess::UIPostProcess()
 {
@@ -24,7 +25,7 @@ UIPostProcess::~UIPostProcess()
 HRESULT UIPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
-	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"UI");
+	BEGIN_EVENT(L"UI");
 		
 	// Set the parameters of the ui renderer
 	_uiRenderer.SetImmediateContext(pd3dImmediateContext);
@@ -33,11 +34,11 @@ HRESULT UIPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11S
 	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, NULL);
 
 	// Render UI
-	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Canvas");
+	BEGIN_EVENT(L"Canvas");
 	_canvas->RenderCanvas();
-	D3DPERF_EndEvent();
+	END_EVENT();
 
-	D3DPERF_EndEvent();
+	END_EVENT();
 
 	return S_OK;
 }

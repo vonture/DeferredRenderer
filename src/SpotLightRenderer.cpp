@@ -1,4 +1,5 @@
 #include "SpotLightRenderer.h"
+#include "Logger.h"
 
 SpotLightRenderer::SpotLightRenderer()
 {
@@ -13,9 +14,9 @@ HRESULT SpotLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateCo
 {
 	if (GetCount(true) > 0)
 	{
-		D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Spot Light Shadow Maps");
+		BEGIN_EVENT(L"Spot Light Shadow Maps");
 
-		D3DPERF_EndEvent();
+		END_EVENT();
 		return E_FAIL;
 	}
 	return S_OK;
@@ -25,9 +26,9 @@ HRESULT SpotLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateContex
 {
 	if (GetCount(true) + GetCount(false) > 0)
 	{
-		D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Spot Lights");
+		BEGIN_EVENT(L"Spot Lights");
 
-		D3DPERF_EndEvent();
+		END_EVENT();
 		return E_FAIL;
 	}
 	return S_OK;

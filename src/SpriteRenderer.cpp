@@ -1,5 +1,6 @@
 #include "SpriteRenderer.h"
 #include "ShaderLoader.h"
+#include "Logger.h"
 
 const float SpriteRenderer::SPRITE_DEPTH = 0.5f;
 
@@ -43,7 +44,7 @@ HRESULT SpriteRenderer::End(ID3D11DeviceContext* pd3d11DeviceContext)
 		return S_OK;
 	}
 
-	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Sprite");
+	BEGIN_EVENT(L"Sprite");
 	
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	
@@ -97,7 +98,7 @@ HRESULT SpriteRenderer::End(ID3D11DeviceContext* pd3d11DeviceContext)
 	ID3D11ShaderResourceView* nullSRV[1] = { NULL };
 	pd3d11DeviceContext->PSSetShaderResources(0, 1, nullSRV);
 
-	D3DPERF_EndEvent();
+	END_EVENT();
 
 	return S_OK;
 }

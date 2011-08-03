@@ -1,4 +1,5 @@
 #include "MLAAPostProcess.h"
+#include "Logger.h"
 
 const UINT MLAAPostProcess::WEIGHT_TEXTURE_SIZES[NUM_WEIGHT_TEXTURES] = { 9, 17, 33, 65, 129 };
 const WCHAR* MLAAPostProcess::WEIGHT_TEXTURE_PATH = L"media\\MLAA\\AreaMap";
@@ -47,7 +48,7 @@ MLAAPostProcess::~MLAAPostProcess()
 HRESULT MLAAPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
-	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"MLAA");
+	BEGIN_EVENT(L"MLAA");
 	
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -81,7 +82,7 @@ HRESULT MLAAPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 	Quad* fsQuad = GetFullScreenQuad();
 
 	// Render the edge detection
-	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Edge Detection");
+	BEGIN_EVENT(L"Edge Detection");
 
 	pd3dImmediateContext->OMSetRenderTargets(1, &_edgeDetectRTV, _dsv);
 
@@ -104,10 +105,10 @@ HRESULT MLAAPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 
 	ID3D11PixelShader* _curEdgePS = _edgeDetectPSs[_depthDetect ? 1 : 0][_normalDetect ? 1 : 0][_luminanceDetect ? 1 : 0];
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _curEdgePS));
-	D3DPERF_EndEvent();
+	END_EVENT();
 
 	// Render blend weights
-	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Calculate Blend Weights");
+	BEGIN_EVENT(L"Calculate Blend Weights");
 
 	// Determine which pixel shader and weight texture to use, max search steps must be <= than
 	// (max_distance - 1) / 2
@@ -135,10 +136,10 @@ HRESULT MLAAPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _blendWeightPSs[weightTexIdx]));
 
-	D3DPERF_EndEvent();
+	END_EVENT();
 
 	// Copy src into dst	
-	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Background Copy");
+	BEGIN_EVENT(L"Background Copy");
 
 	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, _dsv);
 
@@ -154,22 +155,22 @@ HRESULT MLAAPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _copyBackgroundPS));
 	
-	D3DPERF_EndEvent();
+	END_EVENT();
 
 	// Neighborhood blend	
-	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Neighborhood Blend");
+	BEGIN_EVENT(L"Neighborhood Blend");
 	
 	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetStencilEqual(), 0xFFFFFFFF);
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _neighborhoodBlendPS));
 
-	D3DPERF_EndEvent();
+	END_EVENT();
 	
 	// Clean up
 	ID3D11ShaderResourceView* ppSRVNULL[2] = { NULL, NULL };
 	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVNULL);
 
-	D3DPERF_EndEvent();
+	END_EVENT();
 	return S_OK;
 }
 

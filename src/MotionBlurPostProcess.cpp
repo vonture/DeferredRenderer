@@ -1,4 +1,5 @@
 #include "MotionBlurPostProcess.h"
+#include "Logger.h"
 
 MotionBlurPostProcess::MotionBlurPostProcess()
 	: _propertiesBuffer(NULL)
@@ -14,9 +15,9 @@ HRESULT MotionBlurPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext,
 	ID3D11ShaderResourceView* src, ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer,
 	LightBuffer* lightBuffer)
 {
-	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Motion blur");
+	BEGIN_EVENT(L"Motion blur");
 
-	D3DPERF_EndEvent();
+	END_EVENT();
 	return E_NOTIMPL;
 }
 

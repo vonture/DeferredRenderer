@@ -1,4 +1,5 @@
 #include "DepthOfFieldPostProcess.h"
+#include "Logger.h"
 
 DepthOfFieldPostProcess::DepthOfFieldPostProcess()
 	: _propertiesBuffer(NULL)
@@ -18,7 +19,7 @@ DepthOfFieldPostProcess::~DepthOfFieldPostProcess()
 HRESULT DepthOfFieldPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
-	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"DoF");
+	BEGIN_EVENT(L"DoF");
 
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -59,7 +60,7 @@ HRESULT DepthOfFieldPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContex
 
 	// Render DOF (not implimented yet)
 
-	D3DPERF_EndEvent();
+	END_EVENT();
 	return E_NOTIMPL;
 }
 

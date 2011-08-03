@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include "Logger.h"
 
 Renderer::Renderer() 
 	: _begun(false), _pointLightRenderer(NULL), _directionalLightRenderer(NULL),
@@ -147,6 +148,8 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 	}
 	_begun = false;
 	
+	BEGIN_EVENT(L"Render");
+
 	ID3D11RenderTargetView* pOrigRTV = NULL;
     ID3D11DepthStencilView* pOrigDSV = NULL;
     pd3dImmediateContext->OMGetRenderTargets( 1, &pOrigRTV, &pOrigDSV );
@@ -165,7 +168,7 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 	}
 
 	// render the shadow maps
-	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Shadow Maps");
+	BEGIN_EVENT(L"Shadow Maps");
 	if (_directionalLightRenderer)
 	{
 		V_RETURN(_directionalLightRenderer->RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
@@ -178,20 +181,20 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 	{
 		V_RETURN(_spotLightRenderer->RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
 	}
-	D3DPERF_EndEvent();
+	END_EVENT();
 
 	// Render the scene to the gbuffer
-	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"G-Buffer");
+	BEGIN_EVENT(L"G-Buffer");
 	V_RETURN(_gBuffer.SetRenderTargetsAndDepthStencil(pd3dImmediateContext));
 	V_RETURN(_gBuffer.Clear(pd3dImmediateContext));
 
 	V_RETURN(_modelRenderer.RenderModels(pd3dImmediateContext, &_models, camera));
 
 	V_RETURN(_gBuffer.UnsetRenderTargetsAndDepthStencil(pd3dImmediateContext));
-	D3DPERF_EndEvent();
+	END_EVENT();
 
 	// render the lights
-	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 0.0f, 0.0f, 1.0f), L"Lights");
+	BEGIN_EVENT(L"Lights");
 	V_RETURN(_lightBuffer.SetRenderTargets(pd3dImmediateContext, _gBuffer.GetReadOnlyDepthStencilView()));
 
 	_lightBuffer.SetAmbientColor(_ambientLight.Color);
@@ -209,11 +212,11 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 	{
 		V_RETURN(_spotLightRenderer->RenderLights(pd3dImmediateContext, camera, &_gBuffer));
 	}
-	D3DPERF_EndEvent();
+	END_EVENT();
 
 	V_RETURN(_lightBuffer.UnsetRenderTargetsAndDepthStencil(pd3dImmediateContext));
 
-	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Post-Processes");
+	BEGIN_EVENT(L"Post-Processes");
 	
 	// Find the final non-additive pp
 	UINT lastNonAdditive = 0;
@@ -262,12 +265,12 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 			swapPPBuffers();
 		}
 	}
-	D3DPERF_EndEvent();
+	END_EVENT();
 
 	// Render the bounding shapes
 	if (_boDrawTypes != BoundingObjectDrawType::None)
 	{
-		D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 1.0f, 1.0f), L"Bounding Objects");
+		BEGIN_EVENT(L"Bounding Objects");
 		
 		if (_boDrawTypes & BoundingObjectDrawType::Models ||
 			_boDrawTypes & BoundingObjectDrawType::ModelMeshes)
@@ -323,12 +326,14 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 
 		V_RETURN(_boRenderer.Render(pd3dImmediateContext, camera));
 		
-		D3DPERF_EndEvent();
+		END_EVENT();
 	}
 	
 	SAFE_RELEASE(pOrigRTV);
     SAFE_RELEASE(pOrigDSV);
 		
+	END_EVENT();
+
 	return S_OK;
 }
 

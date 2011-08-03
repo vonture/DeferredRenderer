@@ -1,4 +1,5 @@
 #include "SkyPostProcess.h"
+#include "Logger.h"
 
 SkyPostProcess::SkyPostProcess()
 	: _sunDisabledPS(NULL), _sunEnabledPS(NULL), _skyProperties(NULL)
@@ -26,7 +27,7 @@ void SkyPostProcess::SetSunDirection(const XMFLOAT3& sunDir)
 HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
-	D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 0.0f, 1.0f, 1.0f), L"Sky");
+	BEGIN_EVENT(L"Sky");
 
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;	
@@ -70,7 +71,7 @@ HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	// Render
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _enableSun ? _sunEnabledPS : _sunDisabledPS));
 	
-	D3DPERF_EndEvent();
+	END_EVENT();
 
 	return S_OK;
 }

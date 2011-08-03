@@ -1,5 +1,6 @@
 #include "DualParaboloidPointLightRenderer.h"
 #include "ShaderLoader.h"
+#include "Logger.h"
 
 const float DualParaboloidPointLightRenderer::BIAS = 0.02f;
 
@@ -22,7 +23,7 @@ HRESULT DualParaboloidPointLightRenderer::RenderShadowMaps(ID3D11DeviceContext* 
 {
 	if (GetCount(true) > 0)
 	{
-		D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Point Light Shadow Maps");
+		BEGIN_EVENT(L"Point Light Shadow Maps");
 
 		// Save the old viewport
 		D3D11_VIEWPORT vpOld[D3D11_VIEWPORT_AND_SCISSORRECT_MAX_INDEX];
@@ -38,7 +39,7 @@ HRESULT DualParaboloidPointLightRenderer::RenderShadowMaps(ID3D11DeviceContext* 
 		// Re-apply the old viewport
 		pd3dImmediateContext->RSSetViewports(nViewPorts, vpOld);
 		
-		D3DPERF_EndEvent();
+		END_EVENT();
 	}
 	return S_OK;
 }
@@ -190,7 +191,7 @@ HRESULT DualParaboloidPointLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 {
 	if (GetCount(true) + GetCount(false) > 0)
 	{
-		D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(0.0f, 1.0f, 0.0f, 1.0f), L"Point Lights");
+		BEGIN_EVENT(L"Point Lights");
 
 		HRESULT hr;
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -416,7 +417,7 @@ HRESULT DualParaboloidPointLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 		pd3dImmediateContext->RSSetState(prevRS);
 		SAFE_RELEASE(prevRS);
 
-		D3DPERF_EndEvent();
+		END_EVENT();
 	}
 	return S_OK;
 }
