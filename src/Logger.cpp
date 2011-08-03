@@ -7,6 +7,19 @@ Logger::Logger()
 	LARGE_INTEGER largeInt;
 	QueryPerformanceFrequency(&largeInt);
 	_timerFreq = (double)largeInt.QuadPart;
+
+	for (UINT i = 0; i < 2; i++)
+	{
+		_events[i] = new EVENT_INFO[MAX_EVENTS];
+	}
+}
+
+Logger::~Logger()
+{
+	for (UINT i = 0; i < 2; i++)
+	{
+		SAFE_DELETE_ARRAY(_events[i]);
+	}
 }
 
 void Logger::flush()
@@ -99,7 +112,7 @@ void Logger::BeginEvent(const WCHAR* name)
 	LARGE_INTEGER largeInt;
 	QueryPerformanceCounter(&largeInt);
 
-	EVENT_INFO* newEvent = &_events[_nextEventSlot];
+	EVENT_INFO* newEvent = &_events[0][_nextEventSlot];
 
 	newEvent->Name = name;
 	newEvent->Comment = L"";
@@ -168,9 +181,17 @@ void Logger::EndEvent(const WCHAR* comment)
 		// Ending the root event, re-setting the tree
 		_curEvent = NULL;
 		_nextEventSlot = 0;
+		swapEventFrames();
 	}
 	
 	D3DPERF_EndEvent();
+}
+
+void Logger::swapEventFrames()
+{
+	EVENT_INFO* temp = _events[0];
+	_events[0] = _events[1];
+	_events[1] = temp;
 }
 
 Logger Logger::_instance = Logger();

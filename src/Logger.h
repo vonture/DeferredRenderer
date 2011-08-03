@@ -56,6 +56,7 @@ public:
 
 private:	
 	Logger();
+	~Logger();
 
 	// Messages
 	struct MESSAGE_INFO
@@ -99,12 +100,13 @@ private:
 	EVENT_INFO* _curEvent;
 
 	UINT _nextEventSlot;
-	EVENT_INFO _events[MAX_EVENTS];
+	EVENT_INFO* _events[2];
 
 	// Timers
 	double _timerFreq;
 
 	void flush();
+	void swapEventFrames();
 
 	static Logger _instance;
 
