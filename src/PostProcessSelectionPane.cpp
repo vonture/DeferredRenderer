@@ -1,10 +1,8 @@
 #include "PostProcessSelectionPane.h"
 
 PostProcessSelectionPane::PostProcessSelectionPane(Gwen::Controls::Base* parent)
-	: ConfigurationPaneBase(parent)
-{
-	SetName("Post Processes");
-	
+	: ConfigurationPaneBase(parent, L"Post Processes")
+{	
 	const int childWidth = 240;
 	const int labelHight = 20;
 	const int listBoxHeight = 200;

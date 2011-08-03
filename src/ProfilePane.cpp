@@ -1,9 +1,8 @@
 #include "ProfilePane.h"
 
 ProfilePane::ProfilePane(Gwen::Controls::Base* parent, Logger* logger)
-	: ConfigurationPane(parent, logger)
+	: ConfigurationPane(parent, L"Profile", logger)
 {
-	SetName("Profile");
 }
 
 void ProfilePane::OnFrameMove(double totalTime, float dt)

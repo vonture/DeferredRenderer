@@ -1,13 +1,11 @@
 #include "HDRConfigurationPane.h"
 
 HDRConfigurationPane::HDRConfigurationPane(Gwen::Controls::Base* parent, HDRPostProcess* pp)
-	: ConfigurationPane(parent, pp), _tauSlider(NULL), _whiteLumPercSlider(NULL), _bloomThresholdSlider(NULL),
+	: ConfigurationPane(parent, L"HDR", pp), _tauSlider(NULL), _whiteLumPercSlider(NULL), _bloomThresholdSlider(NULL),
 	  _bloomMagnitudeSlider(NULL), _bloomBlurSigmaSlider(NULL), _timeScaleSlider(NULL), _tauLabel(NULL),
 	  _whiteLumPercLabel(NULL), _bloomThresholdLabel(NULL), _bloomMagnitudeLabel(NULL), _bloomBlurSigmaLabel(NULL),
 	  _exposureKeyLabel(NULL), _timeScaleLabel(NULL), _timeScale(1.0f)
-{
-	SetName("HDR");
-	
+{	
 	const int childWidth = 240;
 	const int labelHight = 20;
 	const int sliderHeight = 14;

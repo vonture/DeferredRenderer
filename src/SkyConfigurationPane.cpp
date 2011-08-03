@@ -1,10 +1,8 @@
 #include "SkyConfigurationPane.h"
 
 SkyConfigurationPane::SkyConfigurationPane(Gwen::Controls::Base* parent, SkyPostProcess* pp)
-	: ConfigurationPane(parent, pp)
+	: ConfigurationPane(parent, L"Sky", pp)
 {
-	SetName("Sky");
-
 	const int childWidth = 240;
 	const int labelHight = 20;
 	const int sliderHeight = 14;

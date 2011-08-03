@@ -7,9 +7,10 @@
 class ConfigurationPaneBase : public Gwen::Controls::ScrollControl, public IUpdateable
 {
 public:
-	ConfigurationPaneBase(Gwen::Controls::Base* parent) 
+	ConfigurationPaneBase(Gwen::Controls::Base* parent, const WCHAR* name) 
 		: Gwen::Controls::ScrollControl(parent) 
 	{ 
+		SetName(Gwen::Utility::UnicodeToString(name));
 		SetScroll(false, true);
 		SetAutoHideBars(true);
 	}

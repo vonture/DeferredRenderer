@@ -9,11 +9,12 @@ class ConfigurationPane : public ConfigurationPaneBase
 private:
 	T* _obj;
 
+protected:
+	T* GetConfiguredObject() { return _obj; }
+
 public:
-	ConfigurationPane(Gwen::Controls::Base* parent, T* obj)
-		: ConfigurationPaneBase(parent), _obj(obj)
+	ConfigurationPane(Gwen::Controls::Base* parent, const WCHAR* name, T* obj)
+		: ConfigurationPaneBase(parent, name), _obj(obj)
 	{
 	}
-
-	T* GetConfiguredObject() { return _obj; }
 };

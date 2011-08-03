@@ -1,10 +1,8 @@
 #include "CameraConfigurationPane.h"
 
 CameraConfigurationPane::CameraConfigurationPane(Gwen::Controls::Base* parent, TestingCamera* cam)
-	: ConfigurationPane(parent, cam)
-{
-	SetName("Camera");
-	
+	: ConfigurationPane(parent, L"Camera", cam)
+{	
 	const int childWidth = 240;
 	const int labelHight = 20;
 	const int sliderHeight = 14;

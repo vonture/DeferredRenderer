@@ -1,13 +1,11 @@
 #include "MLAAConfigurationPane.h"
 
 MLAAConfigurationPane::MLAAConfigurationPane(Gwen::Controls::Base* parent, MLAAPostProcess* pp)
-	: ConfigurationPane(parent, pp), _depthThresholdSlider(NULL), _depthThresholdLabel(NULL), 
+	: ConfigurationPane(parent, L"MLAA", pp), _depthThresholdSlider(NULL), _depthThresholdLabel(NULL), 
 	  _normalThresholdSlider(NULL), _normalThresholdLabel(NULL), _lumThresholdSlider(NULL), _lumThresholdLabel(NULL),
 	  _maxSearchStepsSlider(NULL), _maxSearchStepsLabel(NULL), _depthDetectionCheckBox(NULL), _normalDetectionCheckBox(NULL),
 	  _lumDetectionCheckBox(NULL)
 {
-	SetName("MLAA");
-
 	const int childWidth = 240;
 	const int labelHight = 20;
 	const int sliderHeight = 14;

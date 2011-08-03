@@ -1,10 +1,8 @@
 #include "SSAOConfigurationPane.h"
 
 SSAOConfigurationPane::SSAOConfigurationPane(Gwen::Controls::Base* parent, SSAOPostProcess* pp)
-	: ConfigurationPane(parent, pp)
+	: ConfigurationPane(parent, L"SSAO", pp)
 {
-	SetName("SSAO");
-
 	const int childWidth = 240;
 	const int labelHight = 20;
 	const int sliderHeight = 14;

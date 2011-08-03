@@ -2,9 +2,8 @@
 
 DeviceManagerConfigurationPane::DeviceManagerConfigurationPane(Gwen::Controls::Base* parent, 
 	DeviceManager* manager)
-	: ConfigurationPane(parent, manager)
+	: ConfigurationPane(parent, L"Graphics Device", manager)
 {
-	SetName("Graphics Device");
 }
 
 void DeviceManagerConfigurationPane::OnFrameMove(double totalTime, float dt)
