@@ -1,7 +1,12 @@
 #include "Logger.h"
 
 Logger::Logger()
+	: _nextEventSlot(0), _curEvent(NULL)
 {
+	// Query for the frequency of the counter now
+	LARGE_INTEGER largeInt;
+	QueryPerformanceFrequency(&largeInt);
+	_timerFreq = (double)largeInt.QuadPart;
 }
 
 void Logger::flush()
@@ -42,7 +47,7 @@ void Logger::flush()
 	}
 }
 
-void Logger::addReaderInternal(UINT type, void* caller, LogFunction callbackFunction)
+void Logger::AddReader(UINT type, void* caller, LogFunction callbackFunction)
 {
 	READER_INFO info = 
 	{
@@ -81,6 +86,91 @@ void Logger::AddLogMessage(UINT type, const WCHAR* sender, const WCHAR* message)
 
 	// Flush the message queue
 	flush();
+}
+
+void Logger::BeginEvent(const WCHAR* name)
+{
+	if (_nextEventSlot >= MAX_EVENTS)
+	{
+		AddLogMessage(MessageType::Error, L"Logger", L"Max event limit hit, too many calls to BeginEvent?");
+		return;
+	}
+
+	LARGE_INTEGER largeInt;
+	QueryPerformanceCounter(&largeInt);
+
+	EVENT_INFO* newEvent = &_events[_nextEventSlot];
+
+	newEvent->Name = name;
+	newEvent->Comment = L"";
+	newEvent->BeginTime = largeInt.QuadPart;
+	newEvent->Duration = -1.0f;
+	
+	newEvent->NextSibling = NULL;
+	newEvent->FirstChild = NULL;
+	newEvent->LastChild = NULL;
+
+	newEvent->Red = true;
+
+	// Figure out where to place this event
+	if (_nextEventSlot == 0)
+	{
+		newEvent->Parent = NULL;
+	}
+	else
+	{
+		// This should be placed as the last child of the _curEvent
+		if (_curEvent->LastChild)
+		{
+			_curEvent->LastChild->NextSibling = newEvent;
+			newEvent->Red = !_curEvent->LastChild->Red;
+		}
+		else
+		{
+			// _curEvent has no children yet
+			_curEvent->FirstChild = newEvent;
+		}
+		_curEvent->LastChild = newEvent;
+		newEvent->Parent = _curEvent;
+	}
+	
+	// Move the _curEvent pointer
+	_curEvent = newEvent;
+
+	_nextEventSlot++;
+
+	// Alternate event colors between red and blue
+	D3DCOLOR col = D3DCOLOR_COLORVALUE(newEvent->Red ? 1.0f : 0.0f, 0.0f, newEvent->Red ? 0.0f : 1.0f, 1.0f);
+	D3DPERF_BeginEvent(col, name);
+}
+
+void Logger::EndEvent(const WCHAR* comment)
+{
+	LARGE_INTEGER largeInt;
+	QueryPerformanceCounter(&largeInt);
+	
+	if (!_curEvent)
+	{
+		AddLogMessage(MessageType::Error, L"Logger", L"Too many calls to EndEvent, no events to end.");
+		return;
+	}
+	
+	// Calculate the duration
+	_curEvent->Duration = (float)((largeInt.QuadPart - _curEvent->BeginTime) / _timerFreq);
+
+	// Change the _curEvent pointer
+	if (_curEvent->Parent)
+	{
+		_curEvent = _curEvent->Parent;
+	}
+	else
+	{
+		// Ending the root event, re-setting the tree
+		_curEvent = NULL;
+		_nextEventSlot = 0;
+	}
+	
+	D3DPERF_EndEvent();
 }
 
 Logger Logger::_instance = Logger();
