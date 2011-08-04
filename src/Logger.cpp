@@ -11,6 +11,7 @@ Logger::Logger()
 	for (UINT i = 0; i < 2; i++)
 	{
 		_events[i] = new EVENT_INFO[MAX_EVENTS];
+		ZeroMemory(_events[i], sizeof(EVENT_INFO) * MAX_EVENTS);
 	}
 }
 
@@ -194,6 +195,68 @@ void Logger::swapEventFrames()
 	_events[1] = temp;
 }
 
+// Event Iterator class...
+Logger::EventIterator::EventIterator(EVENT_INFO* root)
+	: _curEvent(root)
+{
+}
+
+const WCHAR* Logger::EventIterator::GetName() const
+{
+	return _curEvent->Name;
+}
+
+const WCHAR* Logger::EventIterator::GetComment() const
+{
+	return _curEvent->Comment;
+}
+
+float Logger::EventIterator::GetDuration() const
+{
+	return _curEvent->Duration;
+}
+
+bool Logger::EventIterator::IsValid() const
+{
+	return _curEvent != NULL;
+}
+
+bool Logger::EventIterator::IsRoot() const
+{
+	return _curEvent->Parent == NULL;
+}
+
+bool Logger::EventIterator::HasChildren() const
+{
+	return _curEvent->FirstChild != NULL;
+}
+
+bool Logger::EventIterator::HasSiblings() const
+{
+	return _curEvent->NextSibling != NULL;
+}
+
+Logger::EventIterator Logger::EventIterator::GetFirstChild() const
+{
+	return EventIterator(_curEvent->FirstChild);
+}
+
+Logger::EventIterator Logger::EventIterator::GetNextSibling() const
+{
+	return EventIterator(_curEvent->NextSibling);
+}
+
+Logger::EventIterator Logger::EventIterator::GetParent() const
+{
+	return EventIterator(_curEvent->Parent);
+}
+
+Logger::EventIterator Logger::GetRootEvent()
+{
+	return Logger::EventIterator(&_events[1][0]);
+}
+
+// Static singleton get function
 Logger Logger::_instance = Logger();
 Logger* Logger::GetInstance()
 {

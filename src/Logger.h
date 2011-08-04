@@ -119,5 +119,33 @@ public:
 	void BeginEvent(const WCHAR* name);
 	void EndEvent(const WCHAR* comment = L"");
 
+	// Wrapper class to return event information
+	class EventIterator
+	{
+	public:
+		friend class Logger;
+
+	private:
+		EVENT_INFO* _curEvent;
+
+		EventIterator(EVENT_INFO* root);
+
+	public:
+		const WCHAR* GetName() const;
+		const WCHAR* GetComment() const;
+		float GetDuration() const;
+
+		bool IsValid() const;
+		bool IsRoot() const;
+		bool HasChildren() const;
+		bool HasSiblings() const;
+
+		EventIterator GetFirstChild() const;
+		EventIterator GetNextSibling() const;
+		EventIterator GetParent() const;
+	};
+
+	EventIterator GetRootEvent();
+
 	static Logger* GetInstance();
 };
