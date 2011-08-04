@@ -107,6 +107,8 @@ HRESULT Application::Start()
 	// Begin the main loop
 	while(_window.IsAlive())
 	{
+		BEGIN_EVENT(L"Main loop");
+
 		// Calculate times even if the window is minimized so that there is not a giant time delta
 		// in the next update
 		if (!QueryPerformanceCounter(&largeInt))
@@ -120,10 +122,17 @@ HRESULT Application::Start()
 			float deltaSeconds = (float)((curTime - prevTime) / (double)counterFreq);
 			double totalSeconds = (curTime - inactiveTime) / (double)counterFreq;
 
+			BEGIN_EVENT(L"Frame move");
 			OnFrameMove(totalSeconds, deltaSeconds);
-			V_RETURN(OnD3D11FrameRender(_deviceManager.GetDevice(), _deviceManager.GetImmediateContext()));
+			END_EVENT();
 
+			BEGIN_EVENT(L"Render");
+			V_RETURN(OnD3D11FrameRender(_deviceManager.GetDevice(), _deviceManager.GetImmediateContext()));
+			END_EVENT();
+
+			BEGIN_EVENT(L"Present");
 			V_RETURN(_deviceManager.Present());
+			END_EVENT();
 		}
 		else
 		{
@@ -134,6 +143,8 @@ HRESULT Application::Start()
 		prevTime = curTime;
 
 		_window.MessageLoop();
+
+		END_EVENT();
 	}
 
 	// Clean up
