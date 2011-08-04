@@ -113,7 +113,7 @@ void MLAAConfigurationPane::OnValueChanged(Gwen::Controls::Base *control)
 	}
 	else if (control == _lumThresholdSlider)
 	{
-		pp->SetNormalThreshold(_lumThresholdSlider->GetValue());
+		pp->SetLuminanceThreshold(_lumThresholdSlider->GetValue());
 	}
 	else if (control == _maxSearchStepsSlider)
 	{
