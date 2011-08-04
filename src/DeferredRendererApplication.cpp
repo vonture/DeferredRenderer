@@ -41,7 +41,10 @@ void DeferredRendererApplication::OnInitialize()
 
 	// Create the configuration window and its panes
 	_configWindow = new ConfigurationWindow(canvas);
-	
+		
+	ProfilePane* profilePane = new ProfilePane(_configWindow, Logger::GetInstance());
+	_configWindow->AddConfigPane(profilePane);
+
 	DeviceManagerConfigurationPane* devicePane = new DeviceManagerConfigurationPane(_configWindow,
 		GetDeviceManager());
 	_configWindow->AddConfigPane(devicePane);
@@ -55,10 +58,7 @@ void DeferredRendererApplication::OnInitialize()
 	_ppConfigPane->AddPostProcess(&_motionBlurPP, L"Motion blur", false, false);
 	_ppConfigPane->AddPostProcess(&_dofPP, L"DoF", false, false);
 	_configWindow->AddConfigPane(_ppConfigPane);
-
-	ProfilePane* profilePane = new ProfilePane(_configWindow, Logger::GetInstance());
-	_configWindow->AddConfigPane(profilePane);
-
+	
 	CameraConfigurationPane* cameraPane = new CameraConfigurationPane(_configWindow, &_camera);
 	_configWindow->AddConfigPane(cameraPane);
 
@@ -86,17 +86,20 @@ void DeferredRendererApplication::OnPreparingDeviceSettings(DeviceManager* devic
 	deviceManager->SetBackBufferHeight(768);	
 	//deviceManager->SetFullScreen(false);
 
-	deviceManager->SetVSyncEnabled(false);
+	deviceManager->SetVSyncEnabled(true);
 }
 
 void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 {
+	BEGIN_EVENT(L"Gather input");
 	HWND hwnd = GetHWND();
 	KeyboardState kb = KeyboardState::GetState();
 	MouseState mouse = MouseState::GetState(hwnd);
+	END_EVENT();
 
 	if (IsActive() && mouse.IsOverWindow())
 	{
+		BEGIN_EVENT(L"Process input");
 		if (kb.IsKeyJustPressed(Keys::Esc))
 		{
 			Exit();
@@ -162,12 +165,17 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 			XMStoreFloat3(&camPos, position);
 			_camera.SetPosition(camPos);
 		}
+		END_EVENT();
 	}
 	
 	if (_ppConfigPane->IsPostProcessEnabled(&_uiPP))
 	{
+		BEGIN_EVENT(L"Update UI");
+
 		_uiPP.OnFrameMove(totalTime, dt);
 		_configWindow->OnFrameMove(totalTime, dt);
+
+		END_EVENT();
 	}
 }
 
@@ -187,9 +195,11 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 {
 	HRESULT hr;
 
+	BEGIN_EVENT(L"Prepare scene");
+
 	V_RETURN(_renderer.Begin());
 
-	_renderer.AddModel(&_scene);	
+	_renderer.AddModel(&_scene);
 	
 	/*
 	PointLight greenLight = 
@@ -243,7 +253,11 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 		_renderer.AddPostProcess(_ppConfigPane->GetSelectedPostProcesses(i));
 	}
 
+	END_EVENT();
+
+	BEGIN_EVENT(L"Render scene");
 	V_RETURN(_renderer.End(pd3dImmediateContext, &_camera));
+	END_EVENT();
 
 	return S_OK;
 }
