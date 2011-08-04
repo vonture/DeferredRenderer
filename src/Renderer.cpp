@@ -148,8 +148,6 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 	}
 	_begun = false;
 	
-	BEGIN_EVENT(L"Render");
-
 	ID3D11RenderTargetView* pOrigRTV = NULL;
     ID3D11DepthStencilView* pOrigDSV = NULL;
     pd3dImmediateContext->OMGetRenderTargets( 1, &pOrigRTV, &pOrigDSV );
@@ -332,8 +330,6 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 	SAFE_RELEASE(pOrigRTV);
     SAFE_RELEASE(pOrigDSV);
 		
-	END_EVENT();
-
 	return S_OK;
 }
 
