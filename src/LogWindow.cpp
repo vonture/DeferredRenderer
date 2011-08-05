@@ -9,8 +9,6 @@ LogWindow::LogWindow(Gwen::Controls::Base* parent, Logger* logger)
 {
 	SetTitle(L"Log");
 	SetClosable(false);
-	SetMargin(Gwen::Margin(2, 2, 2, 2));
-	DisableResizing();
 
 	_textList = new Gwen::Controls::ListBox(this);
 	_textList->Dock(Gwen::Pos::Fill);
