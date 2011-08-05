@@ -46,25 +46,56 @@ private:
 	ID3D11RenderTargetView* _ppRenderTargetViews[2];
 	
 	AmbientLight _ambientLight;
-	LightRenderer<PointLight>* _pointLightRenderer;
-	LightRenderer<DirectionalLight>* _directionalLightRenderer;
-	LightRenderer<SpotLight>* _spotLightRenderer;
 
+	size_t _ambientLightHash;
+	std::map<size_t, LightRendererBase*> _lightRenderers;
+	
 	void swapPPBuffers();
 
 public:
 	Renderer();
-	~Renderer();
+	
+	template <class lightType>
+	void AddLightRenderer(LightRenderer<lightType>* renderer)
+	{
+		const type_info& info = typeid(lightType);
+		_lightRenderers[info.hash_code()] = renderer;
+	}
 
-	void SetPointLightRenderer(LightRenderer<PointLight>* renderer);
-	void SetDirectionalLightRenderer(LightRenderer<DirectionalLight>* renderer);
-	void SetSpotLightRenderer(LightRenderer<SpotLight>* renderer);
+	template <class lightType>
+	void AddLight(lightType* light, bool shadowed = true)
+	{
+		const type_info& info = typeid(lightType);
+		size_t hash = info.hash_code();		
+		
+		if (hash == _ambientLightHash)
+		{
+			// Special case for ambient lights
+			AmbientLight* asAmbient = reinterpret_cast<AmbientLight*>(light);
 
+			_ambientLight.Color.x += asAmbient->Color.x;
+			_ambientLight.Color.y += asAmbient->Color.y;
+			_ambientLight.Color.z += asAmbient->Color.z;			
+		}
+		else
+		{
+			// Regular light, look for its renderer
+			if (_lightRenderers.find(hash) != _lightRenderers.end())
+			{
+				LightRenderer<lightType>* renderer = dynamic_cast<LightRenderer<lightType>*>(_lightRenderers[hash]);
+				if (renderer)
+				{
+					renderer->Add(light, shadowed);
+				}
+			}
+			else
+			{
+				LOG_ERROR(L"Renderer", L"Attempted to add a light type which does not have a renderer set.");
+			}
+		}
+	}
+	
 	void AddModel(ModelInstance* model);
-	void AddLight(AmbientLight* light);
-	void AddLight(DirectionalLight* light, bool shadowed);
-	void AddLight(PointLight* light, bool shadowed);
-	void AddLight(SpotLight* light, bool shadowed);
 	void AddPostProcess(PostProcess* postProcess);
 
 	UINT GetBoundingObjectDrawTypes() const { return _boDrawTypes; }

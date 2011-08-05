@@ -2,8 +2,7 @@
 #include "Logger.h"
 
 Renderer::Renderer() 
-	: _begun(false), _pointLightRenderer(NULL), _directionalLightRenderer(NULL),
-	  _spotLightRenderer(NULL), _boDrawTypes(BoundingObjectDrawType::None)
+	: _begun(false), _boDrawTypes(BoundingObjectDrawType::None)
 {
 	_ambientLight.Color = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
@@ -13,10 +12,9 @@ Renderer::Renderer()
 		_ppShaderResourceViews[i] = NULL;
 		_ppRenderTargetViews[i] = NULL;
 	}
-}
 
-Renderer::~Renderer()
-{
+	const type_info& info = typeid(AmbientLight);
+	_ambientLightHash = info.hash_code();		
 }
 
 void Renderer::swapPPBuffers()
@@ -34,66 +32,11 @@ void Renderer::swapPPBuffers()
 	_ppRenderTargetViews[1] = tmpRTV;
 }
 
-void Renderer::SetPointLightRenderer(LightRenderer<PointLight>* renderer)
-{
-	if (!_begun)
-	{
-		_pointLightRenderer = renderer;
-	}
-}
-
-void Renderer::SetDirectionalLightRenderer(LightRenderer<DirectionalLight>* renderer)
-{
-	if (!_begun)
-	{
-		_directionalLightRenderer = renderer;
-	}
-}
-
-void Renderer::SetSpotLightRenderer(LightRenderer<SpotLight>* renderer)
-{
-	if (!_begun)
-	{
-		_spotLightRenderer = renderer;
-	}
-}
-
 void Renderer::AddModel(ModelInstance* model)
 {
 	if (model && _begun)
 	{
 		_models.push_back(model);
-	}
-}
-
-void Renderer::AddLight(AmbientLight* light)
-{
-	_ambientLight.Color.x += light->Color.x;
-	_ambientLight.Color.y += light->Color.y;
-	_ambientLight.Color.z += light->Color.z;
-}
-
-void Renderer::AddLight(DirectionalLight* light, bool shadowed)
-{
-	if (light && _directionalLightRenderer && _begun)
-	{
-		_directionalLightRenderer->Add(light, shadowed);
-	}
-}
-
-void Renderer::AddLight(PointLight* light, bool shadowed)
-{
-	if (light && _pointLightRenderer && _begun)
-	{
-		_pointLightRenderer->Add(light, shadowed);
-	}
-}
-
-void Renderer::AddLight(SpotLight* light, bool shadowed)
-{
-	if (light && _spotLightRenderer && _begun)
-	{
-		_spotLightRenderer->Add(light, shadowed);
 	}
 }
 
@@ -115,19 +58,11 @@ HRESULT Renderer::Begin()
 
 	_models.clear();	
 
-	if (_pointLightRenderer)
+	for (std::map<size_t, LightRendererBase*>::iterator it = _lightRenderers.begin(); it != _lightRenderers.end(); it++)
 	{
-		_pointLightRenderer->Clear();
+		it->second->Clear();
 	}
-	if (_directionalLightRenderer)
-	{
-		_directionalLightRenderer->Clear();
-	}
-	if (_spotLightRenderer)
-	{
-		_spotLightRenderer->Clear();
-	}
-		
+
 	_postProcesses.clear();
 	_postProcesses.push_back(&_combinePP);
 
@@ -166,55 +101,39 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 	}
 
 	// render the shadow maps
-	BEGIN_EVENT(L"Shadow Maps");
-	if (_directionalLightRenderer)
+	BEGIN_EVENT_D3D(L"Shadow Maps");
+	for (std::map<size_t, LightRendererBase*>::iterator it = _lightRenderers.begin(); it != _lightRenderers.end(); it++)
 	{
-		V_RETURN(_directionalLightRenderer->RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
+		V_RETURN(it->second->RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
 	}
-	if (_pointLightRenderer)
-	{
-		V_RETURN(_pointLightRenderer->RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
-	}
-	if (_spotLightRenderer)
-	{
-		V_RETURN(_spotLightRenderer->RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
-	}
-	END_EVENT();
+	END_EVENT_D3D(L"");
 
 	// Render the scene to the gbuffer
-	BEGIN_EVENT(L"G-Buffer");
+	BEGIN_EVENT_D3D(L"G-Buffer");
 	V_RETURN(_gBuffer.SetRenderTargetsAndDepthStencil(pd3dImmediateContext));
 	V_RETURN(_gBuffer.Clear(pd3dImmediateContext));
 
 	V_RETURN(_modelRenderer.RenderModels(pd3dImmediateContext, &_models, camera));
 
 	V_RETURN(_gBuffer.UnsetRenderTargetsAndDepthStencil(pd3dImmediateContext));
-	END_EVENT();
+	END_EVENT_D3D(L"");
 
 	// render the lights
-	BEGIN_EVENT(L"Lights");
+	BEGIN_EVENT_D3D(L"Lights");
 	V_RETURN(_lightBuffer.SetRenderTargets(pd3dImmediateContext, _gBuffer.GetReadOnlyDepthStencilView()));
 
 	_lightBuffer.SetAmbientColor(_ambientLight.Color);
 	V_RETURN(_lightBuffer.Clear(pd3dImmediateContext));
 
-	if (_directionalLightRenderer)
+	for (std::map<size_t, LightRendererBase*>::iterator it = _lightRenderers.begin(); it != _lightRenderers.end(); it++)
 	{
-		V_RETURN(_directionalLightRenderer->RenderLights(pd3dImmediateContext, camera, &_gBuffer));
+		V_RETURN(it->second->RenderLights(pd3dImmediateContext, camera, &_gBuffer));
 	}
-	if (_pointLightRenderer)
-	{
-		V_RETURN(_pointLightRenderer->RenderLights(pd3dImmediateContext, camera, &_gBuffer));
-	}
-	if (_spotLightRenderer)
-	{
-		V_RETURN(_spotLightRenderer->RenderLights(pd3dImmediateContext, camera, &_gBuffer));
-	}
-	END_EVENT();
+	END_EVENT_D3D(L"");
 
 	V_RETURN(_lightBuffer.UnsetRenderTargetsAndDepthStencil(pd3dImmediateContext));
 
-	BEGIN_EVENT(L"Post-Processes");
+	BEGIN_EVENT_D3D(L"Post-Processes");
 	
 	// Find the final non-additive pp
 	UINT lastNonAdditive = 0;
@@ -263,12 +182,12 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 			swapPPBuffers();
 		}
 	}
-	END_EVENT();
+	END_EVENT_D3D(L"");
 
 	// Render the bounding shapes
 	if (_boDrawTypes != BoundingObjectDrawType::None)
 	{
-		BEGIN_EVENT(L"Bounding Objects");
+		BEGIN_EVENT_D3D(L"Bounding Objects");
 		
 		if (_boDrawTypes & BoundingObjectDrawType::Models ||
 			_boDrawTypes & BoundingObjectDrawType::ModelMeshes)
@@ -291,24 +210,6 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 			}
 		}
 
-		if (_boDrawTypes & BoundingObjectDrawType::Lights)
-		{
-			if (_pointLightRenderer)
-			{
-				UINT lightCount = _pointLightRenderer->GetCount();
-				for (UINT i = 0; i < lightCount; i++)
-				{
-					PointLight* light = _pointLightRenderer->GetLight(i);
-
-					Sphere lightSphere;
-					lightSphere.Center = light->Position;
-					lightSphere.Radius = light->Radius;
-		
-					_boRenderer.Add(lightSphere);
-				}
-			}
-		}
-
 		if (_boDrawTypes & BoundingObjectDrawType::CameraFrustums)
 		{
 			XMFLOAT4X4 fCameraProj = camera->GetProjection();
@@ -324,7 +225,7 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 
 		V_RETURN(_boRenderer.Render(pd3dImmediateContext, camera));
 		
-		END_EVENT();
+		END_EVENT_D3D(L"");
 	}
 	
 	SAFE_RELEASE(pOrigRTV);
