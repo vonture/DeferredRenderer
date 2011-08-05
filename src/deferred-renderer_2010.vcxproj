@@ -135,13 +135,14 @@
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <ExceptionHandling>Sync</ExceptionHandling>
       <AdditionalIncludeDirectories>DXUT\Core;DXUT\Optional;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalOptions> %(AdditionalOptions)</AdditionalOptions>
       <PreprocessorDefinitions>WIN32;_DEBUG;DEBUG;PROFILE;_WINDOWS;D3DXFX_LARGEADDRESS_HANDLE;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>DXUT.h</PrecompiledHeaderFile>
       <FunctionLevelLinking>true</FunctionLevelLinking>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <CallingConvention>Cdecl</CallingConvention>
     </ClCompile>
     <Link>
       <AdditionalOptions> %(AdditionalOptions)</AdditionalOptions>
@@ -223,6 +224,9 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;D3DXFX_LARGEADDRESS_HANDLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>DXUT.h</PrecompiledHeaderFile>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <AdditionalOptions> %(AdditionalOptions)</AdditionalOptions>
@@ -381,10 +385,12 @@
   <ItemGroup>
     <ClCompile Include="AssimpLogger.cpp" />
     <ClCompile Include="DeviceManagerConfigurationPane.cpp" />
+    <ClCompile Include="LightRendererBase.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="LogWindow.cpp" />
     <ClCompile Include="PostProcessSelectionPane.cpp" />
     <ClCompile Include="ProfilePane.cpp" />
+    <ClCompile Include="SliderWithLabel.cpp" />
     <ClCompile Include="SSAOConfigurationPane.cpp" />
     <ClCompile Include="SSAOPostProcess.cpp" />
     <ClCompile Include="MLAAConfigurationPane.cpp" />
@@ -439,10 +445,12 @@
     <ClInclude Include="AssimpLogger.h" />
     <ClInclude Include="DeviceManagerConfigurationPane.h" />
     <ClInclude Include="LightRenderer.h" />
+    <ClInclude Include="LightRendererBase.h" />
     <ClInclude Include="LogWindow.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="PostProcessSelectionPane.h" />
     <ClInclude Include="ProfilePane.h" />
+    <ClInclude Include="SliderWithLabel.h" />
     <ClInclude Include="SSAOConfigurationPane.h" />
     <ClInclude Include="SSAOPostProcess.h" />
     <ClInclude Include="MLAAConfigurationPane.h" />

@@ -69,6 +69,9 @@
     <Filter Include="Graphics Helpers\Configuration Panes">
       <UniqueIdentifier>{0804b36b-e9c7-4a70-9467-12bbd8a94e99}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UI\Controls">
+      <UniqueIdentifier>{839f44bd-bf0c-4519-84d4-60b4a1f24ed9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="DXUT\Optional\directx.ico">
@@ -294,26 +297,14 @@
     <ClCompile Include="HDRConfigurationPane.cpp">
       <Filter>Post Process\Configuration Panes</Filter>
     </ClCompile>
-    <ClCompile Include="FloatUpDown.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
-    <ClCompile Include="Float3UpDown.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
     <ClCompile Include="CameraConfigurationPane.cpp">
       <Filter>Cameras\Configuration Panes</Filter>
-    </ClCompile>
-    <ClCompile Include="Float2UpDown.cpp">
-      <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="TestingCamera.cpp">
       <Filter>Cameras</Filter>
     </ClCompile>
     <ClCompile Include="SkyConfigurationPane.cpp">
       <Filter>Post Process\Configuration Panes</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectionSelector.cpp">
-      <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="SSAOPostProcess.cpp">
       <Filter>Post Process</Filter>
@@ -350,6 +341,24 @@
     </ClCompile>
     <ClCompile Include="DeviceManagerConfigurationPane.cpp">
       <Filter>Graphics Helpers\Configuration Panes</Filter>
+    </ClCompile>
+    <ClCompile Include="Float2UpDown.cpp">
+      <Filter>UI\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="Float3UpDown.cpp">
+      <Filter>UI\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="FloatUpDown.cpp">
+      <Filter>UI\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectionSelector.cpp">
+      <Filter>UI\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="SliderWithLabel.cpp">
+      <Filter>UI\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="LightRendererBase.cpp">
+      <Filter>Lights\Renderers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -500,26 +509,14 @@
     <ClInclude Include="HDRConfigurationPane.h">
       <Filter>Post Process\Configuration Panes</Filter>
     </ClInclude>
-    <ClInclude Include="FloatUpDown.h">
-      <Filter>UI</Filter>
-    </ClInclude>
-    <ClInclude Include="Float3UpDown.h">
-      <Filter>UI</Filter>
-    </ClInclude>
     <ClInclude Include="CameraConfigurationPane.h">
       <Filter>Cameras\Configuration Panes</Filter>
-    </ClInclude>
-    <ClInclude Include="Float2UpDown.h">
-      <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="TestingCamera.h">
       <Filter>Cameras</Filter>
     </ClInclude>
     <ClInclude Include="SkyConfigurationPane.h">
       <Filter>Post Process\Configuration Panes</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectionSelector.h">
-      <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="SSAOPostProcess.h">
       <Filter>Post Process</Filter>
@@ -559,6 +556,24 @@
     </ClInclude>
     <ClInclude Include="DeviceManagerConfigurationPane.h">
       <Filter>Graphics Helpers\Configuration Panes</Filter>
+    </ClInclude>
+    <ClInclude Include="FloatUpDown.h">
+      <Filter>UI\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="Float2UpDown.h">
+      <Filter>UI\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="Float3UpDown.h">
+      <Filter>UI\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectionSelector.h">
+      <Filter>UI\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="SliderWithLabel.h">
+      <Filter>UI\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="LightRendererBase.h">
+      <Filter>Lights\Renderers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
