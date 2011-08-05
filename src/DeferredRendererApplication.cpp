@@ -32,9 +32,10 @@ void DeferredRendererApplication::OnInitialize()
 {		
 	// Set some properties of the renderer
 	_renderer.SetBoundingObjectDrawTypes(BoundingObjectDrawType::None);
-	_renderer.SetPointLightRenderer(&_paraboloidPointLR);
-	_renderer.SetDirectionalLightRenderer(&_cascadedDirectionalLR);
-	_renderer.SetSpotLightRenderer(&_spotLR);
+
+	_renderer.AddLightRenderer(&_paraboloidPointLR);
+	_renderer.AddLightRenderer(&_cascadedDirectionalLR);
+	_renderer.AddLightRenderer(&_spotLR);
 
 	// Create all the UI elements
 	Gwen::Controls::Canvas* canvas = _uiPP.GetCanvas();
@@ -42,13 +43,9 @@ void DeferredRendererApplication::OnInitialize()
 	// Create the configuration window and its panes
 	_configWindow = new ConfigurationWindow(canvas);
 		
-	ProfilePane* profilePane = new ProfilePane(_configWindow, Logger::GetInstance());
-	_configWindow->AddConfigPane(profilePane);
-
-	DeviceManagerConfigurationPane* devicePane = new DeviceManagerConfigurationPane(_configWindow,
-		GetDeviceManager());
-	_configWindow->AddConfigPane(devicePane);
-
+	HDRConfigurationPane* hdrPane = new HDRConfigurationPane(_configWindow, &_hdrPP);		
+	_configWindow->AddConfigPane(hdrPane);
+	
 	_ppConfigPane = new PostProcessSelectionPane(_configWindow);
 	_ppConfigPane->AddPostProcess(&_ssaoPP, L"SSAO", true, true);
 	_ppConfigPane->AddPostProcess(&_skyPP, L"Sky", true, true);
@@ -59,6 +56,13 @@ void DeferredRendererApplication::OnInitialize()
 	_ppConfigPane->AddPostProcess(&_dofPP, L"DoF", false, false);
 	_configWindow->AddConfigPane(_ppConfigPane);
 	
+	ProfilePane* profilePane = new ProfilePane(_configWindow, Logger::GetInstance());
+	_configWindow->AddConfigPane(profilePane);
+
+	DeviceManagerConfigurationPane* devicePane = new DeviceManagerConfigurationPane(_configWindow,
+		GetDeviceManager());
+	_configWindow->AddConfigPane(devicePane);
+
 	CameraConfigurationPane* cameraPane = new CameraConfigurationPane(_configWindow, &_camera);
 	_configWindow->AddConfigPane(cameraPane);
 
@@ -68,8 +72,7 @@ void DeferredRendererApplication::OnInitialize()
 	SSAOConfigurationPane* ssaoPane = new SSAOConfigurationPane(_configWindow, &_ssaoPP);
 	_configWindow->AddConfigPane(ssaoPane);
 
-	HDRConfigurationPane* hdrPane = new HDRConfigurationPane(_configWindow, &_hdrPP);		
-	_configWindow->AddConfigPane(hdrPane);
+	
 
 	SkyConfigurationPane* skyPane = new SkyConfigurationPane(_configWindow, &_skyPP);
 	_configWindow->AddConfigPane(skyPane);
@@ -95,7 +98,7 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 	HWND hwnd = GetHWND();
 	KeyboardState kb = KeyboardState::GetState();
 	MouseState mouse = MouseState::GetState(hwnd);
-	END_EVENT();
+	END_EVENT(L"");
 
 	if (IsActive() && mouse.IsOverWindow())
 	{
@@ -165,7 +168,7 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 			XMStoreFloat3(&camPos, position);
 			_camera.SetPosition(camPos);
 		}
-		END_EVENT();
+		END_EVENT(L"");
 	}
 	
 	if (_ppConfigPane->IsPostProcessEnabled(&_uiPP))
@@ -175,7 +178,7 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 		_uiPP.OnFrameMove(totalTime, dt);
 		_configWindow->OnFrameMove(totalTime, dt);
 
-		END_EVENT();
+		END_EVENT(L"");
 	}
 }
 
@@ -237,6 +240,7 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 			sunDir,
 			XMFLOAT3(sunColor.x * sunIntensity, sunColor.y * sunIntensity, sunColor.z * sunIntensity)
 		};
+		
 		_renderer.AddLight(&sun, true);
 	}
 	
@@ -253,11 +257,11 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 		_renderer.AddPostProcess(_ppConfigPane->GetSelectedPostProcesses(i));
 	}
 
-	END_EVENT();
+	END_EVENT(L"");
 
 	BEGIN_EVENT(L"Render scene");
 	V_RETURN(_renderer.End(pd3dImmediateContext, &_camera));
-	END_EVENT();
+	END_EVENT(L"");
 
 	return S_OK;
 }
@@ -283,6 +287,14 @@ HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 
 	V_RETURN(_scene.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
+	const int configWidth = 260;
+	const int logHeight = 125;
+	const int padding = 10;
+
+	_configWindow->SetBounds(padding, padding, configWidth, pBackBufferSurfaceDesc->Height - (padding * 2));
+	_logWindow->SetBounds(_configWindow->Right() + padding, pBackBufferSurfaceDesc->Height - logHeight - padding, 
+		pBackBufferSurfaceDesc->Width - _configWindow->Right() - (padding * 2), logHeight);
+
 	return S_OK;
 }
 
@@ -306,11 +318,15 @@ void DeferredRendererApplication::OnD3D11DestroyDevice()
 	_scene.OnD3D11DestroyDevice();	
 }
 
-HRESULT DeferredRendererApplication::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
-                        const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT DeferredRendererApplication::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice,
+	IDXGISwapChain* pSwapChain, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
+	Gwen::Controls::Canvas* canvas = _uiPP.GetCanvas();
+	XMFLOAT2 sizePerc = XMFLOAT2((float)pBackBufferSurfaceDesc->Width / canvas->Width(),
+		(float)pBackBufferSurfaceDesc->Height / canvas->Height());
+	
 	V_RETURN(Application::OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 
 	float fAspectRatio = pBackBufferSurfaceDesc->Width / (float)pBackBufferSurfaceDesc->Height;
@@ -330,14 +346,12 @@ HRESULT DeferredRendererApplication::OnD3D11ResizedSwapChain( ID3D11Device* pd3d
 	V_RETURN(_spotLR.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	
 	V_RETURN(_scene.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-			
-	const int configWidth = 260;
-	const int logHeight = 125;
-	const int padding = 10;
 
-	_configWindow->SetBounds(padding, padding, configWidth, pBackBufferSurfaceDesc->Height - (padding * 2));
-	_logWindow->SetBounds(_configWindow->Right() + padding, pBackBufferSurfaceDesc->Height - logHeight - padding, 
-		pBackBufferSurfaceDesc->Width - _configWindow->Right() - (padding * 2), logHeight);
+	// Resize the UI by scaling with the resolution change
+	_configWindow->SetBounds(_configWindow->X() * sizePerc.x, _configWindow->Y() * sizePerc.y,
+		_configWindow->Width() * sizePerc.x, _configWindow->Height() * sizePerc.y);
+	_logWindow->SetBounds(_logWindow->X() * sizePerc.x, _logWindow->Y() * sizePerc.y,
+		_logWindow->Width() * sizePerc.x, _logWindow->Height() * sizePerc.y);
 
 	return S_OK;
 }
