@@ -1,8 +1,9 @@
 #include "Logger.h"
 
 Logger::Logger()
-	: _nextEventSlot(0), _curEvent(NULL)
+	: _nextEventSlot(0), _curEvent(NULL), _clogbuf(NULL), _cerrbuf(NULL)
 {
+#ifdef EVENTS_ENABLED
 	// Query for the frequency of the counter now
 	LARGE_INTEGER largeInt;
 	QueryPerformanceFrequency(&largeInt);
@@ -13,14 +14,59 @@ Logger::Logger()
 		_events[i] = new EVENT_INFO[MAX_EVENTS];
 		ZeroMemory(_events[i], sizeof(EVENT_INFO) * MAX_EVENTS);
 	}
+#else
+	for (UINT i = 0; i < 2; i++)
+	{
+		_events[i] = NULL;
+	}
+#endif
+
+	_clogbuf = std::clog.rdbuf(this);
+	_cerrbuf = std::cerr.rdbuf(this);
 }
 
 Logger::~Logger()
 {
+#ifdef EVENTS_ENABLED
 	for (UINT i = 0; i < 2; i++)
 	{
 		SAFE_DELETE_ARRAY(_events[i]);
 	}
+#endif
+
+	if (_clogbuf) 
+	{
+		std::clog.rdbuf(_clogbuf);
+	}
+	if (_cerrbuf)
+	{
+		std::cerr.rdbuf(_cerrbuf);
+	}
+}
+
+std::streambuf::int_type Logger::overflow(std::streambuf::int_type c)
+{
+    if (pbase())
+    {
+		WCHAR msg[256];
+		AnsiToWString(pbase(), msg, min(256, pptr() - pbase() + 1));
+		
+		AddLogMessage(MessageType::Info, L"cerr", msg);
+    }
+
+    return traits_type::to_int_type(0);
+}
+
+std::streamsize Logger::xsputn(const char * s, std::streamsize n)
+{
+	if (s)
+	{
+		WCHAR msg[256];
+		AnsiToWString(s, msg, 256);
+		AddLogMessage(MessageType::Info, L"cerr", msg);
+	}
+
+	return n;
 }
 
 void Logger::flush()
@@ -102,8 +148,9 @@ void Logger::AddLogMessage(UINT type, const WCHAR* sender, const WCHAR* message)
 	flush();
 }
 
-void Logger::BeginEvent(const WCHAR* name)
+void Logger::BeginEvent(const WCHAR* name, bool graphicsEvent)
 {
+#ifdef EVENTS_ENABLED
 	if (_nextEventSlot >= MAX_EVENTS)
 	{
 		AddLogMessage(MessageType::Error, L"Logger", L"Max event limit hit, too many calls to BeginEvent?");
@@ -153,13 +200,23 @@ void Logger::BeginEvent(const WCHAR* name)
 
 	_nextEventSlot++;
 
-	// Alternate event colors between red and blue
-	D3DCOLOR col = D3DCOLOR_COLORVALUE(newEvent->Red ? 1.0f : 0.0f, 0.0f, newEvent->Red ? 0.0f : 1.0f, 1.0f);
-	D3DPERF_BeginEvent(col, name);
+	if (graphicsEvent)
+	{
+		// Alternate event colors between red and blue
+		D3DCOLOR col = D3DCOLOR_COLORVALUE(newEvent->Red ? 1.0f : 0.0f, 0.0f, newEvent->Red ? 0.0f : 1.0f, 1.0f);
+		D3DPERF_BeginEvent(col, name);
+	}
+#else	
+	if (graphicsEvent)
+	{
+		D3DPERF_BeginEvent(D3DCOLOR_COLORVALUE(1.0f, 1.0f, 1.0f, 1.0f), name);
+	}
+#endif
 }
 
-void Logger::EndEvent(const WCHAR* comment)
+void Logger::EndEvent(const WCHAR* comment, bool graphicsEvent)
 {
+#ifdef EVENTS_ENABLED
 	LARGE_INTEGER largeInt;
 	QueryPerformanceCounter(&largeInt);
 	
@@ -183,9 +240,12 @@ void Logger::EndEvent(const WCHAR* comment)
 		_curEvent = NULL;
 		_nextEventSlot = 0;
 		swapEventFrames();
+	}	
+#endif
+	if (graphicsEvent)
+	{
+		D3DPERF_EndEvent();
 	}
-	
-	D3DPERF_EndEvent();
 }
 
 void Logger::swapEventFrames()
@@ -194,6 +254,7 @@ void Logger::swapEventFrames()
 	_events[0] = _events[1];
 	_events[1] = temp;
 }
+
 
 // Event Iterator class...
 Logger::EventIterator::EventIterator(EVENT_INFO* root)

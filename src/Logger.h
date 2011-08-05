@@ -1,6 +1,10 @@
 #pragma once
 
 #include "Defines.h"
+#include <streambuf>
+#include <iostream>
+
+#define EVENTS_ENABLED
 
 // Error logging implimentations
 #ifndef LOG_ERROR
@@ -25,15 +29,19 @@
 
 // Event implimentations
 #ifndef BEGIN_EVENT
-#define BEGIN_EVENT(name) (Logger::GetInstance()->BeginEvent(name))
+#define BEGIN_EVENT(name) (Logger::GetInstance()->BeginEvent(name, false))
 #endif
 
 #ifndef END_EVENT
-#define END_EVENT() (Logger::GetInstance()->EndEvent())
+#define END_EVENT(comment) (Logger::GetInstance()->EndEvent(comment, false))
 #endif
 
-#ifndef END_EVENT_COMMENT
-#define END_EVENT_COMMENT(comment) (Logger::GetInstance()->EndEvent(comment))
+#ifndef BEGIN_EVENT_D3D
+#define BEGIN_EVENT_D3D(name) (Logger::GetInstance()->BeginEvent(name, true))
+#endif
+
+#ifndef END_EVENT_D3D
+#define END_EVENT_D3D(comment) (Logger::GetInstance()->EndEvent(comment, true))
 #endif
 
 namespace MessageType
@@ -49,7 +57,7 @@ namespace MessageType
 	};
 }
 
-class Logger
+class Logger : public std::streambuf
 {
 public:
 	typedef std::tr1::function<void (UINT type, const WCHAR* sender, const WCHAR* message)> LogFunction;
@@ -57,6 +65,10 @@ public:
 private:	
 	Logger();
 	~Logger();
+
+	// Error and log rebuffering
+	std::streambuf* _clogbuf;
+    std::streambuf* _cerrbuf;
 
 	// Messages
 	struct MESSAGE_INFO
@@ -102,13 +114,20 @@ private:
 	UINT _nextEventSlot;
 	EVENT_INFO* _events[2];
 
+	void swapEventFrames();
+
 	// Timers
 	double _timerFreq;
 
+	// Message functions
 	void flush();
-	void swapEventFrames();
 
 	static Logger _instance;
+
+protected:
+	// streambuf functions
+	virtual std::streambuf::int_type overflow(std::streambuf::int_type c = traits_type::eof());
+	virtual std::streamsize xsputn(const char * s, std::streamsize n);
 
 public:
 	void AddReader(UINT type, void* caller, LogFunction callbackFunction);	
@@ -116,8 +135,8 @@ public:
 
 	void AddLogMessage(UINT type, const WCHAR* sender, const WCHAR* message);
 
-	void BeginEvent(const WCHAR* name);
-	void EndEvent(const WCHAR* comment = L"");
+	void BeginEvent(const WCHAR* name, bool graphicsEvent = true);
+	void EndEvent(const WCHAR* comment, bool graphicsEvent = true);
 
 	// Wrapper class to return event information
 	class EventIterator
@@ -146,6 +165,6 @@ public:
 	};
 
 	EventIterator GetRootEvent();
-
+	
 	static Logger* GetInstance();
 };
