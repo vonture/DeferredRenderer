@@ -44,7 +44,7 @@ HRESULT SpriteRenderer::End(ID3D11DeviceContext* pd3d11DeviceContext)
 		return S_OK;
 	}
 
-	BEGIN_EVENT(L"Sprite");
+	BEGIN_EVENT_D3D(L"Sprite");
 	
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	
@@ -98,7 +98,7 @@ HRESULT SpriteRenderer::End(ID3D11DeviceContext* pd3d11DeviceContext)
 	ID3D11ShaderResourceView* nullSRV[1] = { NULL };
 	pd3d11DeviceContext->PSSetShaderResources(0, 1, nullSRV);
 
-	END_EVENT();
+	END_EVENT_D3D(L"");
 
 	return S_OK;
 }

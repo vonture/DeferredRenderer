@@ -124,15 +124,15 @@ HRESULT Application::Start()
 
 			BEGIN_EVENT(L"Frame move");
 			OnFrameMove(totalSeconds, deltaSeconds);
-			END_EVENT();
+			END_EVENT(L"");
 
 			BEGIN_EVENT(L"Render");
 			V_RETURN(OnD3D11FrameRender(_deviceManager.GetDevice(), _deviceManager.GetImmediateContext()));
-			END_EVENT();
+			END_EVENT(L"");
 
 			BEGIN_EVENT(L"Present");
 			V_RETURN(_deviceManager.Present());
-			END_EVENT();
+			END_EVENT(L"");
 		}
 		else
 		{
@@ -144,7 +144,7 @@ HRESULT Application::Start()
 
 		_window.MessageLoop();
 
-		END_EVENT();
+		END_EVENT(L"");
 	}
 
 	// Clean up

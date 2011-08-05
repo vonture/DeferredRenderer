@@ -25,7 +25,7 @@ UIPostProcess::~UIPostProcess()
 HRESULT UIPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
-	BEGIN_EVENT(L"UI");
+	BEGIN_EVENT_D3D(L"UI");
 		
 	// Set the parameters of the ui renderer
 	_uiRenderer.SetImmediateContext(pd3dImmediateContext);
@@ -34,11 +34,11 @@ HRESULT UIPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11S
 	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, NULL);
 
 	// Render UI
-	BEGIN_EVENT(L"Canvas");
+	BEGIN_EVENT_D3D(L"Canvas");
 	_canvas->RenderCanvas();
-	END_EVENT();
+	END_EVENT_D3D(L"");
 
-	END_EVENT();
+	END_EVENT_D3D(L"");
 
 	return S_OK;
 }

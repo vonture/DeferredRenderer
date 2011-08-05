@@ -19,7 +19,7 @@ DepthOfFieldPostProcess::~DepthOfFieldPostProcess()
 HRESULT DepthOfFieldPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
-	BEGIN_EVENT(L"DoF");
+	BEGIN_EVENT_D3D(L"DoF");
 
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -60,7 +60,7 @@ HRESULT DepthOfFieldPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContex
 
 	// Render DOF (not implimented yet)
 
-	END_EVENT();
+	END_EVENT_D3D(L"");
 	return E_NOTIMPL;
 }
 

@@ -27,7 +27,7 @@ void SkyPostProcess::SetSunDirection(const XMFLOAT3& sunDir)
 HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
-	BEGIN_EVENT(L"Sky");
+	BEGIN_EVENT_D3D(L"Sky");
 
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;	
@@ -71,7 +71,7 @@ HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	// Render
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _enableSun ? _sunEnabledPS : _sunDisabledPS));
 	
-	END_EVENT();
+	END_EVENT_D3D(L"");
 
 	return S_OK;
 }

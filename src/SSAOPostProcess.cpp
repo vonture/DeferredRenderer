@@ -44,7 +44,7 @@ SSAOPostProcess::~SSAOPostProcess()
 HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
-	BEGIN_EVENT(L"SSAO");
+	BEGIN_EVENT_D3D(L"SSAO");
 
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -111,7 +111,7 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 		
 	// Render the SSAO
-	BEGIN_EVENT(L"Occlusion");
+	BEGIN_EVENT_D3D(L"Occlusion");
 
 	pd3dImmediateContext->OMSetRenderTargets(1, &_aoRTV, NULL);
 
@@ -125,10 +125,10 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _aoPSs[_sampleCountIndex]));
 
-	END_EVENT();
+	END_EVENT_D3D(L"");
 
 	// Down scale to 1/4
-	BEGIN_EVENT(L"Down scale to 1/4");
+	BEGIN_EVENT_D3D(L"Down scale to 1/4");
 
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[0], NULL);
 
@@ -141,10 +141,10 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS));
 
-	END_EVENT();
+	END_EVENT_D3D(L"");
 
 	// Down scale to 1/8
-	BEGIN_EVENT(L"Down scale to 1/8");
+	BEGIN_EVENT_D3D(L"Down scale to 1/8");
 
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[1], NULL);	
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[0]);
@@ -155,26 +155,26 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS));
 
-	END_EVENT();
+	END_EVENT_D3D(L"");
 
 	// Blur
-	BEGIN_EVENT(L"Blur horizontal");
+	BEGIN_EVENT_D3D(L"Blur horizontal");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_blurTempRTV, NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[1]);
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _hBlurPS));
-	END_EVENT();
+	END_EVENT_D3D(L"");
 
 	ID3D11ShaderResourceView* ppSRVNULL1[1] = { NULL };
 	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL1);
 
-	BEGIN_EVENT(L"Blur vertical");
+	BEGIN_EVENT_D3D(L"Blur vertical");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[1], NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_blurTempSRV);
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _vBlurPS));
-	END_EVENT();
+	END_EVENT_D3D(L"");
 	
 	// Upscale to 1/4
-	BEGIN_EVENT(L"Upscale to 1/4");
+	BEGIN_EVENT_D3D(L"Upscale to 1/4");
 
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[0], NULL);	
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[1]);
@@ -185,10 +185,10 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS));
 
-	END_EVENT();
+	END_EVENT_D3D(L"");
 
 	// Upscale to 1/2
-	BEGIN_EVENT(L"Upscale to 1/2");
+	BEGIN_EVENT_D3D(L"Upscale to 1/2");
 
 	pd3dImmediateContext->OMSetRenderTargets(1, &_aoRTV, NULL);	
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[0]);
@@ -199,13 +199,13 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS));
 
-	END_EVENT();
+	END_EVENT_D3D(L"");
 
 	// Re-apply the old viewport
 	pd3dImmediateContext->RSSetViewports(nViewPorts, vpOld);
 
 	// Composite
-	BEGIN_EVENT(L"Composite");
+	BEGIN_EVENT_D3D(L"Composite");
 
 	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, NULL);
 
@@ -214,13 +214,13 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _compositePS));
 
-	END_EVENT();
+	END_EVENT_D3D(L"");
 
 	// Unset the SRVs
 	ID3D11ShaderResourceView* ppSRVNULL2[2] = { NULL, NULL };
 	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVNULL2);
 
-	END_EVENT();
+	END_EVENT_D3D(L"");
 
 	return S_OK;
 }

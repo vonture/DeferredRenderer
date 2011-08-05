@@ -23,7 +23,7 @@ HRESULT DualParaboloidPointLightRenderer::RenderShadowMaps(ID3D11DeviceContext* 
 {
 	if (GetCount(true) > 0)
 	{
-		BEGIN_EVENT(L"Point Light Shadow Maps");
+		BEGIN_EVENT_D3D(L"Point Light Shadow Maps");
 
 		// Save the old viewport
 		D3D11_VIEWPORT vpOld[D3D11_VIEWPORT_AND_SCISSORRECT_MAX_INDEX];
@@ -39,7 +39,7 @@ HRESULT DualParaboloidPointLightRenderer::RenderShadowMaps(ID3D11DeviceContext* 
 		// Re-apply the old viewport
 		pd3dImmediateContext->RSSetViewports(nViewPorts, vpOld);
 		
-		END_EVENT();
+		END_EVENT_D3D(L"");
 	}
 	return S_OK;
 }
@@ -191,7 +191,7 @@ HRESULT DualParaboloidPointLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 {
 	if (GetCount(true) + GetCount(false) > 0)
 	{
-		BEGIN_EVENT(L"Point Lights");
+		BEGIN_EVENT_D3D(L"Point Lights");
 
 		HRESULT hr;
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -417,7 +417,7 @@ HRESULT DualParaboloidPointLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 		pd3dImmediateContext->RSSetState(prevRS);
 		SAFE_RELEASE(prevRS);
 
-		END_EVENT();
+		END_EVENT_D3D(L"");
 	}
 	return S_OK;
 }

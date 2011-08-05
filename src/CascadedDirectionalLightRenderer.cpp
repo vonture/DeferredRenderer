@@ -22,7 +22,7 @@ HRESULT CascadedDirectionalLightRenderer::RenderShadowMaps(ID3D11DeviceContext* 
 {
 	if (GetCount(true) > 0)
 	{
-		BEGIN_EVENT(L"Directional Light Shadow Maps");
+		BEGIN_EVENT_D3D(L"Directional Light Shadow Maps");
 
 		// Save the old viewport
 		D3D11_VIEWPORT vpOld[D3D11_VIEWPORT_AND_SCISSORRECT_MAX_INDEX];
@@ -38,7 +38,7 @@ HRESULT CascadedDirectionalLightRenderer::RenderShadowMaps(ID3D11DeviceContext* 
 		// Re-apply the old viewport
 		pd3dImmediateContext->RSSetViewports(nViewPorts, vpOld);
 
-		END_EVENT();
+		END_EVENT_D3D(L"");
 	}
 	return S_OK;
 }
@@ -654,7 +654,7 @@ HRESULT CascadedDirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 {	
 	if (GetCount(true) + GetCount(false) > 0)
 	{
-		BEGIN_EVENT(L"Directional Lights");
+		BEGIN_EVENT_D3D(L"Directional Lights");
 
 		HRESULT hr;
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -758,7 +758,7 @@ HRESULT CascadedDirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 		ID3D11ShaderResourceView* nullSRV[5] = { NULL, NULL, NULL, NULL, NULL };
 		pd3dImmediateContext->PSSetShaderResources(0, 5, nullSRV);
 
-		END_EVENT();
+		END_EVENT_D3D(L"");
 	}
 
 	return S_OK;

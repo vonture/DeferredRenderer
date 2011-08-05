@@ -14,9 +14,9 @@ HRESULT SpotLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateCo
 {
 	if (GetCount(true) > 0)
 	{
-		BEGIN_EVENT(L"Spot Light Shadow Maps");
+		BEGIN_EVENT_D3D(L"Spot Light Shadow Maps");
 
-		END_EVENT();
+		END_EVENT_D3D(L"");
 		return E_FAIL;
 	}
 	return S_OK;
@@ -26,9 +26,9 @@ HRESULT SpotLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateContex
 {
 	if (GetCount(true) + GetCount(false) > 0)
 	{
-		BEGIN_EVENT(L"Spot Lights");
+		BEGIN_EVENT_D3D(L"Spot Lights");
 
-		END_EVENT();
+		END_EVENT_D3D(L"");
 		return E_FAIL;
 	}
 	return S_OK;

@@ -14,7 +14,7 @@ CombinePostProcess::~CombinePostProcess()
 HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
-	BEGIN_EVENT(L"Combine");
+	BEGIN_EVENT_D3D(L"Combine");
 
 	HRESULT hr;
 	
@@ -45,7 +45,7 @@ HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID
 	ID3D11ShaderResourceView* NULLSRVs[3] = { NULL, NULL, NULL};
 	pd3dImmediateContext->PSSetShaderResources(0, 3, NULLSRVs);
 
-	END_EVENT();
+	END_EVENT_D3D(L"");
 
 	return S_OK;
 }

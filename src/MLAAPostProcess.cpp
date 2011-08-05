@@ -48,7 +48,7 @@ MLAAPostProcess::~MLAAPostProcess()
 HRESULT MLAAPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
-	BEGIN_EVENT(L"MLAA");
+	BEGIN_EVENT_D3D(L"MLAA");
 	
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -82,7 +82,7 @@ HRESULT MLAAPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 	Quad* fsQuad = GetFullScreenQuad();
 
 	// Render the edge detection
-	BEGIN_EVENT(L"Edge Detection");
+	BEGIN_EVENT_D3D(L"Edge Detection");
 
 	pd3dImmediateContext->OMSetRenderTargets(1, &_edgeDetectRTV, _dsv);
 
@@ -105,10 +105,10 @@ HRESULT MLAAPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 
 	ID3D11PixelShader* _curEdgePS = _edgeDetectPSs[_depthDetect ? 1 : 0][_normalDetect ? 1 : 0][_luminanceDetect ? 1 : 0];
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _curEdgePS));
-	END_EVENT();
+	END_EVENT_D3D(L"");
 
 	// Render blend weights
-	BEGIN_EVENT(L"Calculate Blend Weights");
+	BEGIN_EVENT_D3D(L"Calculate Blend Weights");
 
 	// Determine which pixel shader and weight texture to use, max search steps must be <= than
 	// (max_distance - 1) / 2
@@ -136,10 +136,10 @@ HRESULT MLAAPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _blendWeightPSs[weightTexIdx]));
 
-	END_EVENT();
+	END_EVENT_D3D(L"");
 
 	// Copy src into dst	
-	BEGIN_EVENT(L"Background Copy");
+	BEGIN_EVENT_D3D(L"Background Copy");
 
 	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, _dsv);
 
@@ -155,22 +155,22 @@ HRESULT MLAAPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _copyBackgroundPS));
 	
-	END_EVENT();
+	END_EVENT_D3D(L"");
 
 	// Neighborhood blend	
-	BEGIN_EVENT(L"Neighborhood Blend");
+	BEGIN_EVENT_D3D(L"Neighborhood Blend");
 	
 	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetStencilEqual(), 0xFFFFFFFF);
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _neighborhoodBlendPS));
 
-	END_EVENT();
+	END_EVENT_D3D(L"");
 	
 	// Clean up
 	ID3D11ShaderResourceView* ppSRVNULL[2] = { NULL, NULL };
 	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVNULL);
 
-	END_EVENT();
+	END_EVENT_D3D(L"");
 	return S_OK;
 }
 

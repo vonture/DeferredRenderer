@@ -15,9 +15,9 @@ HRESULT MotionBlurPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext,
 	ID3D11ShaderResourceView* src, ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer,
 	LightBuffer* lightBuffer)
 {
-	BEGIN_EVENT(L"Motion blur");
+	BEGIN_EVENT_D3D(L"Motion blur");
 
-	END_EVENT();
+	END_EVENT_D3D(L"");
 	return E_NOTIMPL;
 }
 
