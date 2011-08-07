@@ -32,7 +32,7 @@ SkyConfigurationPane::SkyConfigurationPane(Gwen::Controls::Base* parent, SkyPost
 	_sunColorLabel->SetBounds(0, _sunEnabledCheckBox->Bottom() + spacing, childWidth, labelHight);
 	
 	_sunColorPicker = new Gwen::Controls::ColorPicker(this);
-	_sunColorPicker->SetColor(vectorToGwenColor(pp->GetSkyColor()));
+	_sunColorPicker->SetColor(vectorToGwenColor(pp->GetSunColor()));
 	_sunColorPicker->SetBounds(0, _sunColorLabel->Bottom(), childWidth, colorPickerHeight);
 	_sunColorPicker->onColorChanged.Add(this, &SkyConfigurationPane::OnValueChanged);
 	
