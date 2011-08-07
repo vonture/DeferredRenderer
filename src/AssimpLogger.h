@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defines.h"
+#include "PCH.h"
 #include "assimp.hpp"
 #include "Logger.h"
 #include "LogStream.h"

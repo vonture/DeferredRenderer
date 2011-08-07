@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defines.h"
+#include "PCH.h"
 #include "Lights.h"
 #include "Camera.h"
 #include "PostProcess.h"
@@ -12,7 +12,7 @@
 #include "ModelRenderer.h"
 #include "SpotLightRenderer.h"
 #include "BoundingObjectRenderer.h"
-#include <vector>
+#include "xnaCollision.h"
 
 namespace BoundingObjectDrawType
 {

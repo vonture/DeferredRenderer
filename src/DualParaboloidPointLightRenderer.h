@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defines.h"
+#include "PCH.h"
 #include "Lights.h"
 #include "LightRenderer.h"
 #include "ModelInstance.h"

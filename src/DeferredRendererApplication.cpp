@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "DeferredRendererApplication.h"
 
 #include "HDRConfigurationPane.h"
@@ -50,7 +51,7 @@ void DeferredRendererApplication::OnInitialize()
 	_ppConfigPane->AddPostProcess(&_hdrPP, L"HDR", true, true);
 	_ppConfigPane->AddPostProcess(&_uiPP, L"UI", true, false);
 	_ppConfigPane->AddPostProcess(&_motionBlurPP, L"Motion blur", false, false);
-	_ppConfigPane->AddPostProcess(&_dofPP, L"DoF", false, false);
+	_ppConfigPane->AddPostProcess(&_pdofPP, L"Poisson DoF", false, false);
 
 	new ProfilePane(_configWindow, Logger::GetInstance());
 	new DeviceManagerConfigurationPane(_configWindow, GetDeviceManager());		
@@ -260,7 +261,7 @@ HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 	V_RETURN(_skyPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_mlaaPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_ssaoPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_dofPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_pdofPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_motionBlurPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(_uiPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
 
@@ -290,7 +291,7 @@ void DeferredRendererApplication::OnD3D11DestroyDevice()
 	_skyPP.OnD3D11DestroyDevice();
 	_mlaaPP.OnD3D11DestroyDevice();
 	_ssaoPP.OnD3D11DestroyDevice();
-	_dofPP.OnD3D11DestroyDevice();
+	_pdofPP.OnD3D11DestroyDevice();
 	_motionBlurPP.OnD3D11DestroyDevice();
 	_uiPP.OnD3D11DestroyDevice();
 
@@ -320,7 +321,7 @@ HRESULT DeferredRendererApplication::OnD3D11ResizedSwapChain(ID3D11Device* pd3dD
 	V_RETURN(_skyPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_mlaaPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_ssaoPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_dofPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_pdofPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_motionBlurPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_uiPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
 	
@@ -347,7 +348,7 @@ void DeferredRendererApplication::OnD3D11ReleasingSwapChain()
 	_skyPP.OnD3D11ReleasingSwapChain();
 	_mlaaPP.OnD3D11ReleasingSwapChain();
 	_ssaoPP.OnD3D11ReleasingSwapChain();
-	_dofPP.OnD3D11ReleasingSwapChain();
+	_pdofPP.OnD3D11ReleasingSwapChain();
 	_motionBlurPP.OnD3D11ReleasingSwapChain();
 	_uiPP.OnD3D11ReleasingSwapChain();
 

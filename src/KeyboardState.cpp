@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "KeyboardState.h"
 
 BYTE KeyboardState::_curState[256];

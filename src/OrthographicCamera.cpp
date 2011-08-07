@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "OrthographicCamera.h"
 
 OrthographicCamera::OrthographicCamera()

@@ -1,3 +1,4 @@
+
 //--------------------------------------------------------------------------------------
 // File: DDSTextureLoader.cpp
 //
@@ -5,7 +6,7 @@
 //
 // Copyright (c) Microsoft Corporation. All rights reserved.
 //--------------------------------------------------------------------------------------
-#include "DXUT.h"
+#include "PCH.h"
 #include "DDSTextureLoader.h"
 #include "DDS.h"
 

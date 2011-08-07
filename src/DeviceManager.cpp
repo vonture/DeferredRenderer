@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "DeviceManager.h"
 
 DeviceManager::DeviceManager()

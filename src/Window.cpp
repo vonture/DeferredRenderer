@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "Window.h"
 
 Window::Window(HINSTANCE hinstance, const WCHAR* name, const WCHAR* iconResource, DWORD width,

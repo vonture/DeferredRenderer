@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Defines.h"
+#include "PCH.h"
 #include "IHasContent.h"
 
-class Font : public IHasContent
+class SpriteFont : public IHasContent
 {
 private:
 	const WCHAR* _path;
@@ -24,8 +24,8 @@ private:
 	ID3D11ShaderResourceView* _fontSRV;
 
 public:
-	Font(const WCHAR* path);
-	~Font();
+	SpriteFont(const WCHAR* path);
+	~SpriteFont();
 
 	bool ContainsCharacter(WCHAR character);
 	

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defines.h"
+#include "PCH.h"
 #include "SDKmisc.h"
 
 HRESULT CompileShaderFromFile(WCHAR* szFileName,  LPCSTR szEntryPoint, LPCSTR szShaderModel, 

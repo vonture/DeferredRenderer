@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defines.h"
+#include "PCH.h"
 #include "PostProcess.h"
 #include "ConfigurationPaneBase.h"
 #include "Gwen/Controls/ListBox.h"

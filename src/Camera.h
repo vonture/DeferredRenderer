@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defines.h"
+#include "PCH.h"
 
 class Camera
 {
@@ -20,7 +20,6 @@ protected:
 public:
 	Camera();
 	Camera(float nearClip, float farClip);
-	~Camera();
 
 	virtual void BuildProjection(XMMATRIX* outProj, float nearClip, float farClip) = 0;
 
@@ -33,11 +32,9 @@ public:
 	void SetOrientation(const XMFLOAT4& newOrientation);
 	XMFLOAT4 GetOrientation() const;
 
-	void SetNearClip(float nearClip);
+	void SetClips(float nearClip, float farClip);	
 	float GetNearClip() const;
-
-	void SetFarClip(float farClip);
-	float GetFarClip() const;
+	float GetFarClip() const;	
 
 	const XMFLOAT4X4& GetView() const;
 	const XMFLOAT4X4& GetProjection() const;

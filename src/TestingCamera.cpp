@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "TestingCamera.h"
 
 TestingCamera::TestingCamera()

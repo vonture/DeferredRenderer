@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defines.h"
+#include "PCH.h"
 
 _DECLSPEC_ALIGN_16_ struct AmbientLight
 {

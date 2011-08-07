@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defines.h"
+#include "PCH.h"
 #include "IHasContent.h"
 #include "DeviceStates.h"
 #include "ModelInstance.h"

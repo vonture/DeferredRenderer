@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Defines.h"
+#include "PCH.h"
 #include "IHasContent.h"
 #include "Camera.h"
 #include "DeviceStates.h"
-#include <vector>
+#include "xnaCollision.h"
 
 struct BOUNDING_OBJECT_VERTEX
 {

@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "Application.h"
 
 using std::tr1::bind;

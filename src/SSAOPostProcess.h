@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defines.h"
+#include "PCH.h"
 #include "PostProcess.h"
 
 class SSAOPostProcess : public PostProcess

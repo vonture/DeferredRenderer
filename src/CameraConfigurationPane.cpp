@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "CameraConfigurationPane.h"
 
 CameraConfigurationPane::CameraConfigurationPane(Gwen::Controls::Base* parent, TestingCamera* cam)
@@ -104,13 +105,14 @@ void CameraConfigurationPane::OnFrameMove(double totalTime, float dt)
 	_cameraFovSlider->SetValue(cam->GetFieldOfView());
 	_cameraFovLabel->SetText("Field of view: " + Gwen::Utility::ToString(cam->GetFieldOfView()));
 
-	// near
-	cam->SetNearClip(_cameraNearClipSlider->GetValue());
+	// set clips
+	cam->SetClips(_cameraNearClipSlider->GetValue(), _cameraFarClipSlider->GetValue());
+
+	// near	
 	_cameraNearClipSlider->SetValue(cam->GetNearClip());
 	_cameraNearClipLabel->SetText("Near clip: " + Gwen::Utility::ToString(cam->GetNearClip()));
 
 	// far
-	cam->SetFarClip(_cameraFarClipSlider->GetValue());
 	_cameraFarClipSlider->SetValue(cam->GetFarClip());
 	_cameraFarClipLabel->SetText("Far clip: " + Gwen::Utility::ToString(cam->GetFarClip()));
 

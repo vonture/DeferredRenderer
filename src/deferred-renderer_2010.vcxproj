@@ -134,12 +134,12 @@
       <FloatingPointModel>Fast</FloatingPointModel>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <ExceptionHandling>Sync</ExceptionHandling>
-      <AdditionalIncludeDirectories>DXUT\Core;DXUT\Optional;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;DEBUG;PROFILE;_WINDOWS;D3DXFX_LARGEADDRESS_HANDLE;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>DXUT.h</PrecompiledHeaderFile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <CallingConvention>Cdecl</CallingConvention>
@@ -219,11 +219,11 @@
       <FloatingPointModel>Fast</FloatingPointModel>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <ExceptionHandling>Sync</ExceptionHandling>
-      <AdditionalIncludeDirectories>DXUT\Core;DXUT\Optional;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions> %(AdditionalOptions)</AdditionalOptions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;D3DXFX_LARGEADDRESS_HANDLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>DXUT.h</PrecompiledHeaderFile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -231,7 +231,7 @@
     <Link>
       <AdditionalOptions> %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>d3dcompiler.lib;d3dx11.lib;d3dx9.lib;dxerr.lib;dxguid.lib;winmm.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -307,11 +307,12 @@
       <FloatingPointModel>Fast</FloatingPointModel>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <ExceptionHandling>Sync</ExceptionHandling>
-      <AdditionalIncludeDirectories>DXUT\Core;DXUT\Optional;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions> %(AdditionalOptions)</AdditionalOptions>
       <PreprocessorDefinitions>WIN32;NDEBUG;PROFILE;_WINDOWS;D3DXFX_LARGEADDRESS_HANDLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>DXUT.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <AdditionalOptions> %(AdditionalOptions)</AdditionalOptions>
@@ -388,8 +389,11 @@
     <ClCompile Include="LightRendererBase.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="LogWindow.cpp" />
+    <ClCompile Include="PCH.cpp" />
     <ClCompile Include="PostProcessSelectionPane.cpp" />
     <ClCompile Include="ProfilePane.cpp" />
+    <ClCompile Include="SDKmesh.cpp" />
+    <ClCompile Include="SDKmisc.cpp" />
     <ClCompile Include="SliderWithLabel.cpp" />
     <ClCompile Include="SSAOConfigurationPane.cpp" />
     <ClCompile Include="SSAOPostProcess.cpp" />
@@ -402,7 +406,7 @@
     <ClCompile Include="CombinePostProcess.cpp" />
     <ClCompile Include="ConfigurationWindow.cpp" />
     <ClCompile Include="DDSTextureLoader.cpp" />
-    <ClCompile Include="DepthOfFieldPostProcess.cpp" />
+    <ClCompile Include="PoissonDoFPostProcess.cpp" />
     <ClCompile Include="DeviceManager.cpp" />
     <ClCompile Include="DeviceStates.cpp" />
     <ClCompile Include="CascadedDirectionalLightRenderer.cpp" />
@@ -411,7 +415,7 @@
     <ClCompile Include="Float2UpDown.cpp" />
     <ClCompile Include="Float3UpDown.cpp" />
     <ClCompile Include="FloatUpDown.cpp" />
-    <ClCompile Include="Font.cpp" />
+    <ClCompile Include="SpriteFont.cpp" />
     <ClCompile Include="FullscreenQuad.cpp" />
     <ClCompile Include="DeferredRendererApplication.cpp" />
     <ClCompile Include="GBuffer.cpp" />
@@ -453,6 +457,8 @@
     <ClInclude Include="Logger.h" />
     <ClInclude Include="PostProcessSelectionPane.h" />
     <ClInclude Include="ProfilePane.h" />
+    <ClInclude Include="SDKmesh.h" />
+    <ClInclude Include="SDKmisc.h" />
     <ClInclude Include="SliderWithLabel.h" />
     <ClInclude Include="SSAOConfigurationPane.h" />
     <ClInclude Include="SSAOPostProcess.h" />
@@ -467,8 +473,8 @@
     <ClInclude Include="ConfigurationWindow.h" />
     <ClInclude Include="DDS.h" />
     <ClInclude Include="DDSTextureLoader.h" />
-    <ClInclude Include="Defines.h" />
-    <ClInclude Include="DepthOfFieldPostProcess.h" />
+    <ClInclude Include="PCH.h" />
+    <ClInclude Include="PoissonDoFPostProcess.h" />
     <ClInclude Include="DeviceManager.h" />
     <ClInclude Include="DeviceStates.h" />
     <ClInclude Include="CascadedDirectionalLightRenderer.h" />
@@ -478,7 +484,7 @@
     <ClInclude Include="Float2UpDown.h" />
     <ClInclude Include="Float3UpDown.h" />
     <ClInclude Include="FloatUpDown.h" />
-    <ClInclude Include="Font.h" />
+    <ClInclude Include="SpriteFont.h" />
     <ClInclude Include="FullscreenQuad.h" />
     <ClInclude Include="HDRConfigurationPane.h" />
     <ClInclude Include="HDRPostProcess.h" />
@@ -505,33 +511,11 @@
     <None Include="Copy.hlsl" />
     <None Include="Depth.hlsl" />
     <None Include="DirectionalLight.hlsl" />
-    <None Include="DoF.hlsl" />
+    <None Include="PoissonDoF.hlsl" />
     <None Include="DualParaboloidDepth.hlsl" />
     <None Include="DXUT\Optional\directx.ico" />
     <ClInclude Include="DeferredBuffer.h" />
     <ClInclude Include="Camera.h" />
-    <ClInclude Include="DXUT\Core\DXUT.h" />
-    <ClInclude Include="DXUT\Core\DXUTDevice11.h" />
-    <ClInclude Include="DXUT\Core\DXUTDevice9.h" />
-    <ClInclude Include="DXUT\Core\DXUTmisc.h" />
-    <ClCompile Include="DXUT\Core\DXUT.cpp">
-      <PrecompiledHeader>Create</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="DXUT\Core\DXUTDevice11.cpp" />
-    <ClCompile Include="DXUT\Core\DXUTDevice9.cpp" />
-    <ClCompile Include="DXUT\Core\DXUTmisc.cpp" />
-    <ClInclude Include="DXUT\Optional\DXUTcamera.h" />
-    <ClInclude Include="DXUT\Optional\DXUTgui.h" />
-    <ClInclude Include="DXUT\Optional\DXUTres.h" />
-    <ClInclude Include="DXUT\Optional\DXUTsettingsdlg.h" />
-    <ClInclude Include="DXUT\Optional\SDKmesh.h" />
-    <ClInclude Include="DXUT\Optional\SDKmisc.h" />
-    <ClCompile Include="DXUT\Optional\DXUTcamera.cpp" />
-    <ClCompile Include="DXUT\Optional\DXUTgui.cpp" />
-    <ClCompile Include="DXUT\Optional\DXUTres.cpp" />
-    <ClCompile Include="DXUT\Optional\DXUTsettingsdlg.cpp" />
-    <ClCompile Include="DXUT\Optional\SDKmesh.cpp" />
-    <ClCompile Include="DXUT\Optional\SDKmisc.cpp" />
     <None Include="MLAA.hlsl" />
     <None Include="Sky.hlsl" />
     <None Include="Sprite.hlsl" />
@@ -544,7 +528,6 @@
     <None Include="Mesh.hlsl" />
     <None Include="PointLight.hlsl" />
     <None Include="QuadVS.hlsl" />
-    <None Include="SimpleSample.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DeferredRendererApplication.h" />

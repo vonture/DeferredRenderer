@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "SpotLightRenderer.h"
 #include "Logger.h"
 

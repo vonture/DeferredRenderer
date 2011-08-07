@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "HDRConfigurationPane.h"
 
 HDRConfigurationPane::HDRConfigurationPane(Gwen::Controls::Base* parent, HDRPostProcess* pp)

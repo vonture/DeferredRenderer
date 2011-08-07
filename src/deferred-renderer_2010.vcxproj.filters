@@ -80,66 +80,6 @@
     <None Include="DXUT\Optional\directx.ico">
       <Filter>Resource Files</Filter>
     </None>
-    <ClInclude Include="DXUT\Core\DXUT.h">
-      <Filter>DXUT</Filter>
-    </ClInclude>
-    <ClInclude Include="DXUT\Core\DXUTDevice11.h">
-      <Filter>DXUT</Filter>
-    </ClInclude>
-    <ClInclude Include="DXUT\Core\DXUTDevice9.h">
-      <Filter>DXUT</Filter>
-    </ClInclude>
-    <ClInclude Include="DXUT\Core\DXUTmisc.h">
-      <Filter>DXUT</Filter>
-    </ClInclude>
-    <ClCompile Include="DXUT\Core\DXUT.cpp">
-      <Filter>DXUT</Filter>
-    </ClCompile>
-    <ClCompile Include="DXUT\Core\DXUTDevice11.cpp">
-      <Filter>DXUT</Filter>
-    </ClCompile>
-    <ClCompile Include="DXUT\Core\DXUTDevice9.cpp">
-      <Filter>DXUT</Filter>
-    </ClCompile>
-    <ClCompile Include="DXUT\Core\DXUTmisc.cpp">
-      <Filter>DXUT</Filter>
-    </ClCompile>
-    <ClInclude Include="DXUT\Optional\DXUTcamera.h">
-      <Filter>DXUT</Filter>
-    </ClInclude>
-    <ClInclude Include="DXUT\Optional\DXUTgui.h">
-      <Filter>DXUT</Filter>
-    </ClInclude>
-    <ClInclude Include="DXUT\Optional\DXUTres.h">
-      <Filter>DXUT</Filter>
-    </ClInclude>
-    <ClInclude Include="DXUT\Optional\DXUTsettingsdlg.h">
-      <Filter>DXUT</Filter>
-    </ClInclude>
-    <ClInclude Include="DXUT\Optional\SDKmesh.h">
-      <Filter>DXUT</Filter>
-    </ClInclude>
-    <ClInclude Include="DXUT\Optional\SDKmisc.h">
-      <Filter>DXUT</Filter>
-    </ClInclude>
-    <ClCompile Include="DXUT\Optional\DXUTcamera.cpp">
-      <Filter>DXUT</Filter>
-    </ClCompile>
-    <ClCompile Include="DXUT\Optional\DXUTgui.cpp">
-      <Filter>DXUT</Filter>
-    </ClCompile>
-    <ClCompile Include="DXUT\Optional\DXUTres.cpp">
-      <Filter>DXUT</Filter>
-    </ClCompile>
-    <ClCompile Include="DXUT\Optional\DXUTsettingsdlg.cpp">
-      <Filter>DXUT</Filter>
-    </ClCompile>
-    <ClCompile Include="DXUT\Optional\SDKmesh.cpp">
-      <Filter>DXUT</Filter>
-    </ClCompile>
-    <ClCompile Include="DXUT\Optional\SDKmisc.cpp">
-      <Filter>DXUT</Filter>
-    </ClCompile>
     <None Include="QuadVS.hlsl">
       <Filter>Shaders</Filter>
     </None>
@@ -176,9 +116,6 @@
     <None Include="MLAA.hlsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="DoF.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="UIRenderer.h">
       <Filter>UI</Filter>
     </None>
@@ -186,6 +123,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="Copy.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="PoissonDoF.hlsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
@@ -275,9 +215,6 @@
     <ClCompile Include="Application.cpp">
       <Filter>Application</Filter>
     </ClCompile>
-    <ClCompile Include="DepthOfFieldPostProcess.cpp">
-      <Filter>Post Process</Filter>
-    </ClCompile>
     <ClCompile Include="DeferredRendererApplication.cpp" />
     <ClCompile Include="MotionBlurPostProcess.cpp">
       <Filter>Post Process</Filter>
@@ -286,9 +223,6 @@
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="SpriteRenderer.cpp">
-      <Filter>Sprites</Filter>
-    </ClCompile>
-    <ClCompile Include="Font.cpp">
       <Filter>Sprites</Filter>
     </ClCompile>
     <ClCompile Include="UIPostProcess.cpp">
@@ -363,11 +297,19 @@
     <ClCompile Include="LightRendererBase.cpp">
       <Filter>Lights\Renderers</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="SimpleSample.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
+    <ClCompile Include="PoissonDoFPostProcess.cpp">
+      <Filter>Post Process</Filter>
+    </ClCompile>
+    <ClCompile Include="SDKmisc.cpp">
+      <Filter>DXUT</Filter>
+    </ClCompile>
+    <ClCompile Include="SDKmesh.cpp">
+      <Filter>DXUT</Filter>
+    </ClCompile>
+    <ClCompile Include="SpriteFont.cpp">
+      <Filter>Sprites</Filter>
+    </ClCompile>
+    <ClCompile Include="PCH.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CLInclude Include="resource.h">
@@ -425,7 +367,6 @@
     <ClInclude Include="ButtonState.h">
       <Filter>Input</Filter>
     </ClInclude>
-    <ClInclude Include="Defines.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="HDRPostProcess.h">
       <Filter>Post Process</Filter>
@@ -453,9 +394,6 @@
     </ClInclude>
     <ClInclude Include="OrthographicCamera.h">
       <Filter>Cameras</Filter>
-    </ClInclude>
-    <ClInclude Include="DepthOfFieldPostProcess.h">
-      <Filter>Post Process</Filter>
     </ClInclude>
     <ClInclude Include="Lights.h">
       <Filter>Lights\Light Types</Filter>
@@ -489,9 +427,6 @@
       <Filter>Post Process</Filter>
     </ClInclude>
     <ClInclude Include="SpriteRenderer.h">
-      <Filter>Sprites</Filter>
-    </ClInclude>
-    <ClInclude Include="Font.h">
       <Filter>Sprites</Filter>
     </ClInclude>
     <ClInclude Include="UIPostProcess.h">
@@ -586,6 +521,19 @@
     </ClInclude>
     <ClInclude Include="ContentType.h">
       <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="PoissonDoFPostProcess.h">
+      <Filter>Post Process</Filter>
+    </ClInclude>
+    <ClInclude Include="PCH.h" />
+    <ClInclude Include="SDKmesh.h">
+      <Filter>DXUT</Filter>
+    </ClInclude>
+    <ClInclude Include="SDKmisc.h">
+      <Filter>DXUT</Filter>
+    </ClInclude>
+    <ClInclude Include="SpriteFont.h">
+      <Filter>Sprites</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

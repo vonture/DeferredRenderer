@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "ModelInstance.h"
 
 ModelInstance::ModelInstance(const WCHAR* path) 

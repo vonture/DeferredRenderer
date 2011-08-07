@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "MLAAConfigurationPane.h"
 
 MLAAConfigurationPane::MLAAConfigurationPane(Gwen::Controls::Base* parent, MLAAPostProcess* pp)

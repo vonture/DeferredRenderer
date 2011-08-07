@@ -1,21 +1,22 @@
-#include "Font.h"
+#include "PCH.h"
+#include "SpriteFont.h"
 #include "tinyxml.h"
 
-Font::Font(const WCHAR* path)
+SpriteFont::SpriteFont(const WCHAR* path)
 	: _path(path), _textureWidth(1), _textureHeight(1), _fontSRV(NULL)
 {
 }
 
-Font::~Font()
+SpriteFont::~SpriteFont()
 {
 }
 
-bool Font::ContainsCharacter(WCHAR character)
+bool SpriteFont::ContainsCharacter(WCHAR character)
 {
 	return _charMap.find(character) != _charMap.end();
 }
 	
-XMFLOAT2 Font::MeasureString(const WCHAR* text)
+XMFLOAT2 SpriteFont::MeasureString(const WCHAR* text)
 {
 	UINT numChars = (int)wcslen(text);
 
@@ -40,7 +41,7 @@ XMFLOAT2 Font::MeasureString(const WCHAR* text)
 	return size;
 }
 
-bool Font::GetCharacterInfo(WCHAR character, XMFLOAT2* outTexCoord, XMFLOAT2* outTexCoordSize, UINT* outWidth)
+bool SpriteFont::GetCharacterInfo(WCHAR character, XMFLOAT2* outTexCoord, XMFLOAT2* outTexCoordSize, UINT* outWidth)
 {
 	if (!ContainsCharacter(character))
 	{
@@ -55,17 +56,17 @@ bool Font::GetCharacterInfo(WCHAR character, XMFLOAT2* outTexCoord, XMFLOAT2* ou
 	return true;
 }
 
-UINT Font::GetLineSpacing()
+UINT SpriteFont::GetLineSpacing()
 {
 	return _lineSpacing;
 }
 
-ID3D11ShaderResourceView* Font::GetFontShaderResourceView()
+ID3D11ShaderResourceView* SpriteFont::GetFontShaderResourceView()
 {
 	return _fontSRV;
 }
 
-HRESULT Font::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT SpriteFont::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
@@ -178,18 +179,18 @@ HRESULT Font::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_D
 	return S_OK;
 }
 
-void Font::OnD3D11DestroyDevice()
+void SpriteFont::OnD3D11DestroyDevice()
 {
 	SAFE_RELEASE(_fontSRV);
 	_charMap.clear();
 }
 
-HRESULT Font::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+HRESULT SpriteFont::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
 	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	return S_OK;
 }
 
-void Font::OnD3D11ReleasingSwapChain()
+void SpriteFont::OnD3D11ReleasingSwapChain()
 {
 }

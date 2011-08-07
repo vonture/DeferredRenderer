@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "Quad.h"
 
 Quad::Quad() : _vertexShader(NULL), _inputLayout(NULL), _vertexBuffer(NULL)

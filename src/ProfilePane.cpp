@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "ProfilePane.h"
 
 ProfilePane::ProfilePane(Gwen::Controls::Base* parent, Logger* logger)

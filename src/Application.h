@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defines.h"
+#include "PCH.h"
 #include "IUpdateable.h"
 #include "IHasContent.h"
 #include "Window.h"

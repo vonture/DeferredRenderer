@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Defines.h"
+#include "PCH.h"
 #include "IHasContent.h"
 #include "DeviceStates.h"
-#include "Font.h"
+#include "SpriteFont.h"
 
 struct SPRITE_DRAW_DATA
 {
@@ -67,7 +67,7 @@ public:
 	HRESULT Begin();
 	HRESULT End(ID3D11DeviceContext* pd3d11DeviceContext);
 
-	void AddTextScreenSpace(Font* font, const WCHAR* text, SPRITE_DRAW_DATA& drawData);
+	void AddTextScreenSpace(SpriteFont* font, const WCHAR* text, SPRITE_DRAW_DATA& drawData);
 
 	void AddTexturedRectangles(ID3D11ShaderResourceView* texture, SPRITE_DRAW_DATA* spriteData,
 		UINT numSprites);

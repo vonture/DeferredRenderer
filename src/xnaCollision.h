@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <xnamath.h>
+#include "PCH.h"
 
 //-----------------------------------------------------------------------------
 // Bounding volumes structures.

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Defines.h"
+#include "PCH.h"
 #include "Gwen\Gwen.h"
 #include "DeviceStates.h"
 #include "IHasContent.h"
 #include "SpriteRenderer.h"
-#include "Font.h"
+#include "SpriteFont.h"
 
 class UIRenderer : public Gwen::Renderer::Base, public IHasContent
 {
@@ -18,7 +18,7 @@ private:
 	
 	XMFLOAT4 _drawColor;
 
-	Font _uiFont;
+	SpriteFont _uiFont;
 	SpriteRenderer _spriteRenderer;
 
 public:

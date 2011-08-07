@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "UIRenderer.h"
 #include "Gwen/Utility.h"
 #include "Gwen/Font.h"
@@ -68,20 +69,18 @@ void UIRenderer::FreeFont(Gwen::Font* pFont)
 }
 
 void UIRenderer::RenderText(Gwen::Font* pFont, Gwen::Point pos, const Gwen::UnicodeString& text)
-{	
-	Font* font = &_uiFont;
-
+{
 	Translate(pos.x, pos.y);
 
 	const WCHAR* string = text.c_str();
-	XMFLOAT2 textSize = font->MeasureString(string);
+	XMFLOAT2 textSize = _uiFont.MeasureString(string);
 	
 	SPRITE_DRAW_DATA spriteData;
 	spriteData.TopLeft = XMFLOAT2(pos.x, pos.y);
 	spriteData.Size = XMFLOAT2(textSize.x, textSize.y);
 	spriteData.Color = _drawColor;
 
-	_spriteRenderer.AddTextScreenSpace(font, text.c_str(), spriteData);
+	_spriteRenderer.AddTextScreenSpace(&_uiFont, text.c_str(), spriteData);
 }
 
 Gwen::Point UIRenderer::MeasureText(Gwen::Font* pFont, const Gwen::UnicodeString& text)

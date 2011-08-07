@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "SliderWithLabel.h"
 
 SliderWithLabel::SliderWithLabel(Gwen::Controls::Base* parent)

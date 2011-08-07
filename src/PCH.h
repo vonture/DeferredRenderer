@@ -14,10 +14,52 @@
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #define STRICT							// Use strict declarations for Windows types
 
+// Warning disables
+#pragma warning(disable: 4100) // disable unreference formal parameter warnings for /W4 builds
+#pragma warning(disable: 4324) // Padding added from aligned members
+
 // Windows header
 #include <windows.h>
 #include <commctrl.h>
 #include <psapi.h>
+
+// C RunTime Header Files
+#include <stdlib.h>
+#include <malloc.h>
+#include <memory.h>
+#include <tchar.h>
+
+// MSVC COM Support
+#include <comip.h>
+#include <comdef.h>
+
+// GDI+
+#include <gdiplus.h>
+
+// DirectX Includes
+#include "dxsdkver.h"
+#if (_DXSDK_PRODUCT_MAJOR < 9 || _DXSDK_BUILD_MAJOR < 1455)
+#error The installed DXSDK is out of date.
+#endif
+
+#ifdef _DEBUG
+#ifndef D3D_DEBUG_INFO
+#define D3D_DEBUG_INFO
+#endif
+#endif
+
+#include <dxgi.h>
+#include <d3d11.h>
+#include <d3dx11.h>
+#include <dxerr.h>
+#include <d3dx10.h>
+#include <D3Dcompiler.h>
+#include <d3d9.h>
+#include <D3d9types.h>
+#include <d3dx9.h>
+
+// XNA Math
+#include <xnamath.h>
 
 // Namespace usings
 using namespace std;
@@ -30,16 +72,7 @@ using namespace std;
 #include <sstream>
 #include <fstream>
 
-
-#include "DXUT.h"
 #include "SDKmisc.h"
-
-// GDI+
-#include <gdiplus.h>
-
-// XNA Math and collision
-#include <xnamath.h>
-#include "xnaCollision.h"
 
 // Some utility functions
 #include "Utility.h"
@@ -70,6 +103,3 @@ using namespace std;
 #pragma comment(lib, "tinyxml.lib")
 #pragma comment(lib, "assimp.lib")
 #endif
-
-// Warning disables
-#pragma warning(disable: 4324) // Padding added from aligned members

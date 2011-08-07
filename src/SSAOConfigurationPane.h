@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defines.h"
+#include "PCH.h"
 #include "ConfigurationPane.h"
 #include "SSAOPostProcess.h"
 #include "Gwen/Controls/HorizontalSlider.h"

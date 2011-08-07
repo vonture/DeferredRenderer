@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Defines.h"
-#include "xnaCollision.h"
+#include "PCH.h"
 #include "IHasContent.h"
 #include "Model.h"
+#include "xnaCollision.h"
 #include <map>
 
 class ModelInstance : public IHasContent

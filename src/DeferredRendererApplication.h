@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defines.h"
+#include "PCH.h"
 #include "Application.h"
 #include "Renderer.h"
 #include "TestingCamera.h"
@@ -11,7 +11,7 @@
 #include "SkyPostProcess.h"
 #include "MLAAPostProcess.h"
 #include "SSAOPostProcess.h"
-#include "DepthOfFieldPostProcess.h"
+#include "PoissonDoFPostProcess.h"
 #include "MotionBlurPostProcess.h"
 #include "UIPostProcess.h"
 
@@ -39,7 +39,7 @@ private:
 	SkyPostProcess _skyPP;
 	MLAAPostProcess _mlaaPP;
 	SSAOPostProcess _ssaoPP;
-	DepthOfFieldPostProcess _dofPP;
+	PoissonDoFPostProcess _pdofPP;
 	MotionBlurPostProcess _motionBlurPP;
 	UIPostProcess _uiPP;
 

@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "DualParaboloidPointLightRenderer.h"
 #include "ShaderLoader.h"
 #include "Logger.h"

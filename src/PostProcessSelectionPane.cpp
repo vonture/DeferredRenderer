@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "PostProcessSelectionPane.h"
 
 PostProcessSelectionPane::PostProcessSelectionPane(Gwen::Controls::Base* parent)

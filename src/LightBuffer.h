@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defines.h"
+#include "PCH.h"
 #include "DeferredBuffer.h"
 
 class LightBuffer : public DeferredBuffer

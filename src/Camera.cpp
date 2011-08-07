@@ -1,21 +1,20 @@
+#include "PCH.h"
 #include "Camera.h"
 
 Camera::Camera()
-	: _nearClip(0.1f), _farClip(1000.0f)
 {
+	SetClips(0.1f, 100.0f);
+
 	XMStoreFloat4x4(&_world, XMMatrixIdentity());
 	worldMatrixChanged();
 }
 
-Camera::Camera(float nearClip, float farClip) 
-		: _nearClip(nearClip), _farClip(farClip)
+Camera::Camera(float nearClip, float farClip)
 {
+	SetClips(nearClip, farClip);
+
 	XMStoreFloat4x4(&_world, XMMatrixIdentity());
 	worldMatrixChanged();
-}
-
-Camera::~Camera()
-{
 }
 
 void Camera::worldMatrixChanged()
@@ -112,19 +111,15 @@ XMFLOAT4 Camera::GetOrientation() const
 	return orientation;
 }
 
-void Camera::SetNearClip(float nearClip)
+void Camera::SetClips(float nearClip, float farClip)
 {
-	_nearClip = nearClip;
+	_nearClip = max(nearClip, EPSILON);
+	_farClip = max(_nearClip, farClip);
 }
 
 float Camera::GetNearClip() const
 {
 	return _nearClip;
-}
-
-void Camera::SetFarClip(float farClip)
-{
-	_farClip = farClip;
 }
 
 float Camera::GetFarClip() const

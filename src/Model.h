@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Defines.h"
+#include "PCH.h"
 #include "Material.h"
 #include "Mesh.h"
+#include "xnaCollision.h"
 
 #define INVALID_SAMPLER_SLOT ((UINT)-1)
 #define INVALID_BUFFER_SLOT ((UINT)-1)

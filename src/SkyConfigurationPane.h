@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defines.h"
+#include "PCH.h"
 #include "ConfigurationPane.h"
 #include "SkyPostProcess.h"
 #include "Gwen/Controls/ColorPicker.h"

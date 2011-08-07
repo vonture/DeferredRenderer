@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "MLAAPostProcess.h"
 #include "Logger.h"
 

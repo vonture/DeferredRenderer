@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defines.h"
+#include "PCH.h"
 #include "IHasContent.h"
 #include "GBuffer.h"
 #include "LightBuffer.h"

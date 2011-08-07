@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "AssimpLogger.h"
 
 AssimpLogger::AssimpLogger(Logger* logger)

@@ -1,4 +1,4 @@
-#include "DXUT.h"
+#include "PCH.h"
 #include "FullscreenQuad.h"
 
 void FullscreenQuad::fillVerticies(QUAD_VERTEX* verts)

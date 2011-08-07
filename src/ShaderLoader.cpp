@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "ShaderLoader.h"
 
 HRESULT CompileShaderFromFile(WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel,

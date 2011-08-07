@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "MouseState.h"
 
 MouseState MouseState::_prevState;

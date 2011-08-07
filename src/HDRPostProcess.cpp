@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "HDRPostProcess.h"
 #include "DDSTextureLoader.h"
 #include "Logger.h"

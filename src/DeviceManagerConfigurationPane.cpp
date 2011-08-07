@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "DeviceManagerConfigurationPane.h"
 
 DeviceManagerConfigurationPane::DeviceManagerConfigurationPane(Gwen::Controls::Base* parent, 

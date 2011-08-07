@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "SSAOPostProcess.h"
 #include "Logger.h"
 

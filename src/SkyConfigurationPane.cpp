@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "SkyConfigurationPane.h"
 
 SkyConfigurationPane::SkyConfigurationPane(Gwen::Controls::Base* parent, SkyPostProcess* pp)

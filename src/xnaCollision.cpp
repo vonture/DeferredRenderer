@@ -7,7 +7,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 //-------------------------------------------------------------------------------------
 
-#include "DXUT.h"
+#include "PCH.h"
 #include "xnaCollision.h"
 
 

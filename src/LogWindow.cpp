@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "LogWindow.h"
 
 using std::tr1::bind;

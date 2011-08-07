@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "ConfigurationWindow.h"
 
 ConfigurationWindow::ConfigurationWindow(Gwen::Controls::Base* parent)

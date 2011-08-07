@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "Float2UpDown.h"
 
 Float2UpDown::Float2UpDown(Gwen::Controls::Base *parent)
@@ -65,4 +66,3 @@ void Float2UpDown::OnUpDownChanged(Gwen::Controls::Base* obj)
 {	
 	onChanged.Call(this);
 }
-

@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "SSAOConfigurationPane.h"
 
 SSAOConfigurationPane::SSAOConfigurationPane(Gwen::Controls::Base* parent, SSAOPostProcess* pp)

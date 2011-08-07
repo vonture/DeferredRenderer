@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "SpriteRenderer.h"
 #include "ShaderLoader.h"
 #include "Logger.h"
@@ -103,7 +104,7 @@ HRESULT SpriteRenderer::End(ID3D11DeviceContext* pd3d11DeviceContext)
 	return S_OK;
 }
 
-void SpriteRenderer::AddTextScreenSpace(Font* font, const WCHAR* text, SPRITE_DRAW_DATA& drawData)
+void SpriteRenderer::AddTextScreenSpace(SpriteFont* font, const WCHAR* text, SPRITE_DRAW_DATA& drawData)
 {
 	if (_nextSprite >= MAX_SPRITES)
 	{
