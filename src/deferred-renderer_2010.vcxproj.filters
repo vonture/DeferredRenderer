@@ -72,6 +72,9 @@
     <Filter Include="UI\Controls">
       <UniqueIdentifier>{839f44bd-bf0c-4519-84d4-60b4a1f24ed9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Content">
+      <UniqueIdentifier>{74b8b006-1234-494c-8f4a-3f8e269c854b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="DXUT\Optional\directx.ico">
@@ -574,6 +577,15 @@
     </ClInclude>
     <ClInclude Include="LightRendererBase.h">
       <Filter>Lights\Renderers</Filter>
+    </ClInclude>
+    <ClInclude Include="ContentManager.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="ContentTypeBase.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="ContentType.h">
+      <Filter>Content</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

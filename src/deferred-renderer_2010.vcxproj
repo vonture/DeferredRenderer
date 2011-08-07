@@ -443,6 +443,9 @@
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="xnaCollision.cpp" />
     <ClInclude Include="AssimpLogger.h" />
+    <ClInclude Include="ContentManager.h" />
+    <ClInclude Include="ContentType.h" />
+    <ClInclude Include="ContentTypeBase.h" />
     <ClInclude Include="DeviceManagerConfigurationPane.h" />
     <ClInclude Include="LightRenderer.h" />
     <ClInclude Include="LightRendererBase.h" />
