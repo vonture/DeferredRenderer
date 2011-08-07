@@ -18,16 +18,17 @@ private:
 	ConfigurationPaneBase* _selectedPane;
 	std::map<Gwen::Controls::MenuItem*, ConfigurationPaneBase*> _paneMap;
 
-	virtual void onComboBoxSelect(Gwen::Controls::Base* control);
+	std::vector<Gwen::Controls::Base*> _newChildren;
 
+	void addConfigPane(ConfigurationPaneBase* newPane);
+
+	virtual void onComboBoxSelect(Gwen::Controls::Base* control);
+	
 protected:
 	virtual void AddChild(Gwen::Controls::Base* pChild);
 
 public:
 	ConfigurationWindow(Gwen::Controls::Base* parent);
 
-	void AddConfigPane(ConfigurationPaneBase* newPane);
-	void RemoveConfigPane(ConfigurationPaneBase* removePane);
-	
 	void OnFrameMove(double totalTime, float dt);
 };

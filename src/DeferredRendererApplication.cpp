@@ -41,11 +41,8 @@ void DeferredRendererApplication::OnInitialize()
 	Gwen::Controls::Canvas* canvas = _uiPP.GetCanvas();
 
 	// Create the configuration window and its panes
-	_configWindow = new ConfigurationWindow(canvas);
-		
-	HDRConfigurationPane* hdrPane = new HDRConfigurationPane(_configWindow, &_hdrPP);		
-	_configWindow->AddConfigPane(hdrPane);
-	
+	_configWindow = new ConfigurationWindow(canvas);	
+
 	_ppConfigPane = new PostProcessSelectionPane(_configWindow);
 	_ppConfigPane->AddPostProcess(&_ssaoPP, L"SSAO", true, true);
 	_ppConfigPane->AddPostProcess(&_skyPP, L"Sky", true, true);
@@ -54,28 +51,14 @@ void DeferredRendererApplication::OnInitialize()
 	_ppConfigPane->AddPostProcess(&_uiPP, L"UI", true, false);
 	_ppConfigPane->AddPostProcess(&_motionBlurPP, L"Motion blur", false, false);
 	_ppConfigPane->AddPostProcess(&_dofPP, L"DoF", false, false);
-	_configWindow->AddConfigPane(_ppConfigPane);
-	
-	ProfilePane* profilePane = new ProfilePane(_configWindow, Logger::GetInstance());
-	_configWindow->AddConfigPane(profilePane);
 
-	DeviceManagerConfigurationPane* devicePane = new DeviceManagerConfigurationPane(_configWindow,
-		GetDeviceManager());
-	_configWindow->AddConfigPane(devicePane);
-
-	CameraConfigurationPane* cameraPane = new CameraConfigurationPane(_configWindow, &_camera);
-	_configWindow->AddConfigPane(cameraPane);
-
-	MLAAConfigurationPane* mlaaPane = new MLAAConfigurationPane(_configWindow, &_mlaaPP);
-	_configWindow->AddConfigPane(mlaaPane);
-
-	SSAOConfigurationPane* ssaoPane = new SSAOConfigurationPane(_configWindow, &_ssaoPP);
-	_configWindow->AddConfigPane(ssaoPane);
-
-	
-
-	SkyConfigurationPane* skyPane = new SkyConfigurationPane(_configWindow, &_skyPP);
-	_configWindow->AddConfigPane(skyPane);
+	new ProfilePane(_configWindow, Logger::GetInstance());
+	new DeviceManagerConfigurationPane(_configWindow, GetDeviceManager());		
+	new CameraConfigurationPane(_configWindow, &_camera);
+	new HDRConfigurationPane(_configWindow, &_hdrPP);
+	new MLAAConfigurationPane(_configWindow, &_mlaaPP);
+	new SSAOConfigurationPane(_configWindow, &_ssaoPP);
+	new SkyConfigurationPane(_configWindow, &_skyPP);
 
 	// Create the log window
 	_logWindow = new LogWindow(canvas, Logger::GetInstance());

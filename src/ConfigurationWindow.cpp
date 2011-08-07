@@ -20,7 +20,7 @@ ConfigurationWindow::ConfigurationWindow(Gwen::Controls::Base* parent)
 
 	//_configSelectComboBox->SetPadding(Gwen::Padding(2, 2, 2, 2));
 	//_configSelectComboBox->SetMargin(Gwen::Margin(2, 2, 2, 2));
-	}
+}
 
 void ConfigurationWindow::onComboBoxSelect(Gwen::Controls::Base* control)
 {
@@ -42,18 +42,12 @@ void ConfigurationWindow::onComboBoxSelect(Gwen::Controls::Base* control)
 
 void ConfigurationWindow::AddChild(Gwen::Controls::Base* pChild)
 {
-	const type_info& ti = typeid( pChild );
+	_newChildren.push_back(pChild);
 
-	auto asBase = dynamic_cast<Gwen::Controls::Base*>(pChild);
-	auto asTable = dynamic_cast<Gwen::Controls::Layout::Table*>(asBase);
-	auto asPane = dynamic_cast<ConfigurationPaneBase*>(asTable);
-
-	if (asPane)
-	{
-	}
+	Gwen::Controls::WindowControl::AddChild(pChild);
 }
 
-void ConfigurationWindow::AddConfigPane(ConfigurationPaneBase* newPane)
+void ConfigurationWindow::addConfigPane(ConfigurationPaneBase* newPane)
 {
 	newPane->SetParent(_paneRow);
 
@@ -78,12 +72,22 @@ void ConfigurationWindow::AddConfigPane(ConfigurationPaneBase* newPane)
 	//newPane->RestrictToParent(true);	
 }
 
-void ConfigurationWindow::RemoveConfigPane(ConfigurationPaneBase* removePane)
-{
-}
-
 void ConfigurationWindow::OnFrameMove(double totalTime, float dt)
 {
+	if (_newChildren.size() > 0)
+	{
+		for (UINT i = 0; i < _newChildren.size(); i++)
+		{
+			ConfigurationPaneBase* asPane = dynamic_cast<ConfigurationPaneBase*>(_newChildren[i]);
+			if (asPane)
+			{
+				addConfigPane(asPane);
+			}
+		}
+
+		_newChildren.clear();
+	}
+
 	std::map<Gwen::Controls::MenuItem*, ConfigurationPaneBase*>::iterator it;
 	for (it = _paneMap.begin(); it != _paneMap.end(); it++)
 	{
