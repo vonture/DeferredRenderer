@@ -2,16 +2,16 @@
 
 #include "PCH.h"
 #include "IUpdateable.h"
-#include "Gwen/Controls/Layout/Table.h"
+#include "Gwen/Controls/Base.h"
+#include "Gwen/Utility.h"
 
-class ConfigurationPaneBase : public Gwen::Controls::Layout::Table, public IUpdateable
+class ConfigurationPaneBase : public Gwen::Controls::Base, public IUpdateable
 {
 public:
 	ConfigurationPaneBase(Gwen::Controls::Base* parent, const WCHAR* name) 
-		: Gwen::Controls::Layout::Table(parent) 
+		: Gwen::Controls::Base(parent) 
 	{ 
 		SetName(Gwen::Utility::UnicodeToString(name));
-		SetColumnCount(1);
 	}
 
 	virtual void OnFrameMove(double totalTime, float dt) { };
