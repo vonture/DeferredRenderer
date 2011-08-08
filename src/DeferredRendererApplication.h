@@ -14,6 +14,7 @@
 #include "PoissonDoFPostProcess.h"
 #include "MotionBlurPostProcess.h"
 #include "UIPostProcess.h"
+#include "FXAAPostProcess.h"
 
 #include "DualParaboloidPointLightRenderer.h"
 #include "CascadedDirectionalLightRenderer.h"
@@ -38,6 +39,7 @@ private:
 	HDRPostProcess _hdrPP;
 	SkyPostProcess _skyPP;
 	MLAAPostProcess _mlaaPP;
+	FXAAPostProcess _fxaaPP;
 	SSAOPostProcess _ssaoPP;
 	PoissonDoFPostProcess _pdofPP;
 	MotionBlurPostProcess _motionBlurPP;
