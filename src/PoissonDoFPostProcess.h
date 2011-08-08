@@ -2,6 +2,7 @@
 
 #include "PCH.h"
 #include "PostProcess.h"
+#include "Poisson.h"
 
 class PoissonDoFPostProcess : public PostProcess
 {
@@ -12,11 +13,12 @@ private:
 	float _cocScale;
 	UINT _sampleCountIndex;
 
-	static const UINT NUM_DOF_SAMPLE_COUNTS = 5;
-	static const UINT DOF_SAMPLE_COUNTS[NUM_DOF_SAMPLE_COUNTS];
-	static const UINT DOF_SAMPLE_COUNT_MAX = 64;
+	UINT _sceneWidth;
+	UINT _sceneHeight;
 
-	ID3D11PixelShader* _ps;
+	static const UINT NUM_DOF_SAMPLE_COUNTS = 5; // Same as Poisson::DISTRIBUTION_COUNT
+
+	ID3D11PixelShader* _dofPSs[NUM_DOF_SAMPLE_COUNTS];
 
 	ID3D11Buffer* _propertiesBuffer;
 	struct CB_DOF_PROPERTIES
@@ -27,7 +29,7 @@ private:
 		float FocalFalloffNear;
 		float FocalFalloffFar;
 		float CircleOfConfusionScale;
-		XMFLOAT2 Padding;
+		XMFLOAT2 InvSceneResolution;
 	};
 
 	ID3D11Buffer* _sampleBuffers[NUM_DOF_SAMPLE_COUNTS];
@@ -46,9 +48,10 @@ public:
 	float GetCircleOfConfusionScale() const { return _cocScale; }
 	void SetCircleOfConfusionScale(float scale) { _cocScale = max(scale, 0.0f); }
 
-	UINT GetSampleCount() const { return DOF_SAMPLE_COUNTS[_sampleCountIndex]; }
+	UINT GetSampleCount() const { return Poisson::GetDistributionSize(_sampleCountIndex); }
 	UINT GetSampleCountIndex() const { return _sampleCountIndex; }
 	void SetSampleCountIndex(UINT idx) { _sampleCountIndex = min(idx, NUM_DOF_SAMPLE_COUNTS - 1); }
+	UINT GetNumSampleCountIndicies() const { return NUM_DOF_SAMPLE_COUNTS; }
 
 	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer);
