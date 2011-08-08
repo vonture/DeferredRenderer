@@ -15,9 +15,7 @@ const UINT SSAOPostProcess::SSAO_SAMPLE_COUNTS[NUM_SSAO_SAMPLE_COUNTS] =
 
 SSAOPostProcess::SSAOPostProcess()
 	: _aoTexture(NULL), _aoRTV(NULL), _aoSRV(NULL), _blurTempTexture(NULL), _blurTempRTV(NULL), 
-	  _blurTempSRV(NULL), _scalePS(NULL), _hBlurPS(NULL), _vBlurPS(NULL),
-	  _aoPropertiesBuffer(NULL), _randomTexture(NULL), _randomSRV(NULL),
-	  _compositePS(NULL)
+	  _blurTempSRV(NULL), _aoPropertiesBuffer(NULL), _randomTexture(NULL), _randomSRV(NULL)
 {
 	SetIsAdditive(false);
 
@@ -32,17 +30,19 @@ SSAOPostProcess::SSAOPostProcess()
 		_downScaleTextures[i] = NULL;
 		_downScaleRTVs[i] = NULL;
 		_downScaleSRVs[i] = NULL;
+
+		_scalePS[i] = NULL;
+		_hBlurPS[i] = NULL;
+		_vBlurPS[i] = NULL;
+		_compositePS[i] = NULL;
 	}
 	
 	// Initialize some parameters to default values
-	SetSampleRadius(0.5f);
+	SetSampleRadius(0.3f);
 	SetBlurSigma(0.45f);
 	SetSamplePower(4.5f);
 	SetSampleCountIndex(3);
-}
-
-SSAOPostProcess::~SSAOPostProcess()
-{
+	SetHalfResolution(true);
 }
 
 HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
@@ -104,11 +104,13 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 		
 	Quad* fsQuad = GetFullScreenQuad();
 
+	float resolutionMult = _halfRes ? 0.5f : 1.0f;
+
 	D3D11_VIEWPORT vp;
 	vp.MinDepth = 0.0f;
 	vp.MaxDepth = 1.0f;
-	vp.Width = vpOld[0].Width / 2.0f;
-	vp.Height = vpOld[0].Height / 2.0f;
+	vp.Width = vpOld[0].Width * resolutionMult;
+	vp.Height = vpOld[0].Height * resolutionMult;
 	vp.TopLeftX = 0.0f;
     vp.TopLeftY = 0.0f;
 
@@ -139,11 +141,11 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 	ID3D11ShaderResourceView* ppDownScaleSRV[3] = { _aoSRV,	NULL, NULL };
 	pd3dImmediateContext->PSSetShaderResources(0, 3, ppDownScaleSRV);
 
-	vp.Width = vpOld[0].Width / 4.0f;
-	vp.Height = vpOld[0].Height / 4.0f;
+	vp.Width = vpOld[0].Width * 0.5f * resolutionMult;
+	vp.Height = vpOld[0].Height * 0.5f * resolutionMult;
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 
-	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS[_halfRes ? 1 : 0]));
 
 	END_EVENT_D3D(L"");
 
@@ -153,11 +155,11 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[1], NULL);	
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[0]);
 
-	vp.Width = vpOld[0].Width / 8.0f;
-	vp.Height = vpOld[0].Height / 8.0f;
+	vp.Width = vpOld[0].Width * 0.25f * resolutionMult;
+	vp.Height = vpOld[0].Height * 0.25f * resolutionMult;
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 
-	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS[_halfRes ? 1 : 0]));
 
 	END_EVENT_D3D(L"");
 
@@ -165,7 +167,7 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 	BEGIN_EVENT_D3D(L"Blur horizontal");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_blurTempRTV, NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[1]);
-	V_RETURN(fsQuad->Render(pd3dImmediateContext, _hBlurPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _hBlurPS[_halfRes ? 1 : 0]));
 	END_EVENT_D3D(L"");
 
 	ID3D11ShaderResourceView* ppSRVNULL1[1] = { NULL };
@@ -174,7 +176,7 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 	BEGIN_EVENT_D3D(L"Blur vertical");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[1], NULL);
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_blurTempSRV);
-	V_RETURN(fsQuad->Render(pd3dImmediateContext, _vBlurPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _vBlurPS[_halfRes ? 1 : 0]));
 	END_EVENT_D3D(L"");
 	
 	// Upscale to 1/4
@@ -183,11 +185,11 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 	pd3dImmediateContext->OMSetRenderTargets(1, &_downScaleRTVs[0], NULL);	
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[1]);
 
-	vp.Width = vpOld[0].Width / 4.0f;
-	vp.Height = vpOld[0].Height / 4.0f;	
+	vp.Width = vpOld[0].Width * 0.5f * resolutionMult;
+	vp.Height = vpOld[0].Height * 0.5f * resolutionMult;	
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 
-	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS[_halfRes ? 1 : 0]));
 
 	END_EVENT_D3D(L"");
 
@@ -197,11 +199,11 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 	pd3dImmediateContext->OMSetRenderTargets(1, &_aoRTV, NULL);	
 	pd3dImmediateContext->PSSetShaderResources(0, 1, &_downScaleSRVs[0]);
 
-	vp.Width = vpOld[0].Width / 2.0f;
-	vp.Height = vpOld[0].Height / 2.0f;	
+	vp.Width = vpOld[0].Width * resolutionMult;
+	vp.Height = vpOld[0].Height * resolutionMult;	
 	pd3dImmediateContext->RSSetViewports(1, &vp);
 
-	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _scalePS[_halfRes ? 1 : 0]));
 
 	END_EVENT_D3D(L"");
 
@@ -216,7 +218,7 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 	ID3D11ShaderResourceView* ppSRVToneMap[2] = { src, _aoSRV };
 	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVToneMap);
 
-	V_RETURN(fsQuad->Render(pd3dImmediateContext, _compositePS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _compositePS[_halfRes ? 1 : 0]));
 
 	END_EVENT_D3D(L"");
 
@@ -259,26 +261,56 @@ HRESULT SSAOPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 		sprintf_s(aoPSDebugName, "SSAO AO (sample count = %s) PS", sampleCountString);
 		SET_DEBUG_NAME(_aoPSs[i], aoPSDebugName);
 	}
-	
-	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_Scale", "ps_4_0", NULL, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_scalePS));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_scalePS, "SSAO scale PS");
 
-	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_BlurHorizontal", "ps_4_0", NULL, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_hBlurPS));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_hBlurPS, "SSAO horizontal blur PS");
+	D3D_SHADER_MACRO halfResMacros[] = 
+	{
+		{ "SSAO_HALF_RES", "" },
+		NULL,
+	};
 
-	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_BlurVertical", "ps_4_0", NULL, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_vBlurPS));
+	// full res shaders
+	halfResMacros[0].Definition = "0";
+	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_Scale", "ps_4_0", halfResMacros, &pBlob ) );   
+    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_scalePS[0]));
 	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_vBlurPS, "SSAO vertical blur PS");
+	SET_DEBUG_NAME(_scalePS[0], "SSAO scale (full resolution) PS");
 
-	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_SSAO_Composite", "ps_4_0", NULL, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_compositePS));
+	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_BlurHorizontal", "ps_4_0", halfResMacros, &pBlob ) );   
+    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_hBlurPS[0]));
 	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_compositePS, "SSAO composite PS");
+	SET_DEBUG_NAME(_hBlurPS[0], "SSAO horizontal blur (full resolution) PS");
+
+	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_BlurVertical", "ps_4_0", halfResMacros, &pBlob ) );   
+    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_vBlurPS[0]));
+	SAFE_RELEASE(pBlob);
+	SET_DEBUG_NAME(_vBlurPS[0], "SSAO vertical blur (full resolution) PS");
+
+	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_SSAO_Composite", "ps_4_0", halfResMacros, &pBlob ) );   
+    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_compositePS[0]));
+	SAFE_RELEASE(pBlob);
+	SET_DEBUG_NAME(_compositePS[0], "SSAO composite (full resolution) PS");
+
+	// half res shaders
+	halfResMacros[0].Definition = "1";
+	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_Scale", "ps_4_0", halfResMacros, &pBlob ) );   
+    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_scalePS[1]));
+	SAFE_RELEASE(pBlob);
+	SET_DEBUG_NAME(_scalePS[1], "SSAO scale (half resolution) PS");
+
+	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_BlurHorizontal", "ps_4_0", halfResMacros, &pBlob ) );   
+    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_hBlurPS[1]));
+	SAFE_RELEASE(pBlob);
+	SET_DEBUG_NAME(_hBlurPS[1], "SSAO horizontal blur (half resolution) PS");
+
+	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_BlurVertical", "ps_4_0", halfResMacros, &pBlob ) );   
+    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_vBlurPS[1]));
+	SAFE_RELEASE(pBlob);
+	SET_DEBUG_NAME(_vBlurPS[1], "SSAO vertical blur (half resolution) PS");
+
+	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_SSAO_Composite", "ps_4_0", halfResMacros, &pBlob ) );   
+    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_compositePS[1]));
+	SAFE_RELEASE(pBlob);
+	SET_DEBUG_NAME(_compositePS[1], "SSAO composite (half resolution) PS");
 
 	// Create the buffers
 	D3D11_BUFFER_DESC bufferDesc =
@@ -394,10 +426,13 @@ void SSAOPostProcess::OnD3D11DestroyDevice()
 		SAFE_RELEASE(_sampleDirectionsBuffers[i]);
 	}
 
-	SAFE_RELEASE(_scalePS);
-	SAFE_RELEASE(_hBlurPS);
-	SAFE_RELEASE(_vBlurPS);
-	SAFE_RELEASE(_compositePS);
+	for (UINT i = 0; i < 2; i++)
+	{
+		SAFE_RELEASE(_scalePS[i]);
+		SAFE_RELEASE(_hBlurPS[i]);
+		SAFE_RELEASE(_vBlurPS[i]);
+		SAFE_RELEASE(_compositePS[i]);
+	}
 
 	SAFE_RELEASE(_aoPropertiesBuffer);
 }
@@ -412,8 +447,8 @@ HRESULT SSAOPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice,
 	// Create the AO texture components
 	D3D11_TEXTURE2D_DESC aoTextureDesc = 
     {
-        pBackBufferSurfaceDesc->Width / 2,//UINT Width;
-        pBackBufferSurfaceDesc->Height / 2,//UINT Height;
+        pBackBufferSurfaceDesc->Width,//UINT Width;
+        pBackBufferSurfaceDesc->Height,//UINT Height;
         1,//UINT MipLevels;
         1,//UINT ArraySize;
         DXGI_FORMAT_R16_FLOAT,//DXGI_FORMAT Format;
@@ -467,15 +502,15 @@ HRESULT SSAOPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice,
         0//UINT MiscFlags;    
     };
 
+	downScaleTextureDesc.Width = pBackBufferSurfaceDesc->Width / 2;
+	downScaleTextureDesc.Height = pBackBufferSurfaceDesc->Height / 2;
+	V_RETURN(pd3dDevice->CreateTexture2D(&downScaleTextureDesc, NULL, &_downScaleTextures[0]));
+	SET_DEBUG_NAME(_downScaleTextures[0], "SSAO downscale 1/2 texture");
+	
 	downScaleTextureDesc.Width = pBackBufferSurfaceDesc->Width / 4;
 	downScaleTextureDesc.Height = pBackBufferSurfaceDesc->Height / 4;
-	V_RETURN(pd3dDevice->CreateTexture2D(&downScaleTextureDesc, NULL, &_downScaleTextures[0]));
-	SET_DEBUG_NAME(_downScaleTextures[0], "SSAO downscale 1/4 texture");
-	
-	downScaleTextureDesc.Width = pBackBufferSurfaceDesc->Width / 8;
-	downScaleTextureDesc.Height = pBackBufferSurfaceDesc->Height / 8;
 	V_RETURN(pd3dDevice->CreateTexture2D(&downScaleTextureDesc, NULL, &_downScaleTextures[1]));
-	SET_DEBUG_NAME(_downScaleTextures[1], "SSAO downscale 1/8 texture");
+	SET_DEBUG_NAME(_downScaleTextures[1], "SSAO downscale 1/4 texture");
 
 	V_RETURN(pd3dDevice->CreateTexture2D(&downScaleTextureDesc, NULL, &_blurTempTexture));
 	SET_DEBUG_NAME(_blurTempTexture, "SSAO blur temp texture");
@@ -489,10 +524,10 @@ HRESULT SSAOPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice,
     };
 
 	V_RETURN(pd3dDevice->CreateRenderTargetView(_downScaleTextures[0], &downScaleRTVDesc, &_downScaleRTVs[0]));
-	SET_DEBUG_NAME(_downScaleRTVs[0], "SSAO downscale 1/4 RTV");
+	SET_DEBUG_NAME(_downScaleRTVs[0], "SSAO downscale 1/2 RTV");
 
 	V_RETURN(pd3dDevice->CreateRenderTargetView(_downScaleTextures[1], &downScaleRTVDesc, &_downScaleRTVs[1]));
-	SET_DEBUG_NAME(_downScaleRTVs[1], "SSAO downscale 1/8 RTV");
+	SET_DEBUG_NAME(_downScaleRTVs[1], "SSAO downscale 1/4 RTV");
 	
 	V_RETURN(pd3dDevice->CreateRenderTargetView(_blurTempTexture, &downScaleRTVDesc, &_blurTempRTV));
 	SET_DEBUG_NAME(_blurTempRTV, "SSAO blur temp RTV");
@@ -507,10 +542,10 @@ HRESULT SSAOPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice,
 	downScaleSRVDesc.Texture2D.MipLevels = 1;
 
 	V_RETURN(pd3dDevice->CreateShaderResourceView(_downScaleTextures[0], &downScaleSRVDesc, &_downScaleSRVs[0]));
-	SET_DEBUG_NAME(_downScaleSRVs[0], "SSAO downscale 1/4 SRV");
+	SET_DEBUG_NAME(_downScaleSRVs[0], "SSAO downscale 1/2 SRV");
 
 	V_RETURN(pd3dDevice->CreateShaderResourceView(_downScaleTextures[1], &downScaleSRVDesc, &_downScaleSRVs[1]));
-	SET_DEBUG_NAME(_downScaleSRVs[1], "SSAO downscale 1/8 SRV");
+	SET_DEBUG_NAME(_downScaleSRVs[1], "SSAO downscale 1/4 SRV");
 
 	V_RETURN(pd3dDevice->CreateShaderResourceView(_blurTempTexture, &downScaleSRVDesc, &_blurTempSRV));
 	SET_DEBUG_NAME(_blurTempSRV, "SSAO blur temp SRV");

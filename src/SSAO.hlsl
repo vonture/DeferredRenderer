@@ -2,6 +2,10 @@
 #define SSAO_SAMPLE_COUNT 16
 #endif
 
+#ifndef SSAO_HALF_RES
+#define SSAO_HALF_RES 1
+#endif
+
 #ifndef BLUR_RADIUS
 #define BLUR_RADIUS 4
 #endif
@@ -114,14 +118,26 @@ float4 PS_SSAO(PS_In_Quad input) : SV_TARGET0
 float4 PS_SSAO_Composite(PS_In_Quad input) : SV_TARGET0
 {
 	float3 vSceneColor = Texture0.Sample(PointSampler, input.vTexCoord);
-	float fAO = Texture1.Sample(LinearSampler, input.vTexCoord).x;
+	
+#if SSAO_HALF_RES
+	float2 aoTexCoord = input.vTexCoord * 0.5f;
+#else
+	float2 aoTexCoord = input.vTexCoord;
+#endif
+	float fAO = Texture1.Sample(LinearSampler, aoTexCoord).x;
 
 	return float4(fAO * vSceneColor, 1.0f);
 }
 
 float4 PS_Scale(PS_In_Quad input) : SV_TARGET0
 {
-	return Texture0.Sample(LinearSampler, input.vTexCoord);
+#if SSAO_HALF_RES
+	float2 texCoord = input.vTexCoord * 0.5f;
+#else
+	float2 texCoord = input.vTexCoord;
+#endif
+
+	return Texture0.Sample(LinearSampler, texCoord);
 }
 
 // Calculates the gaussian blur weight for a given distance and sigmas
@@ -133,6 +149,10 @@ float CalcGaussianWeight(int sampleDist)
 // Performs a gaussian blur in one direction
 float Blur(float2 texCoord, int2 direction)
 {
+#if SSAO_HALF_RES
+	texCoord = texCoord * 0.5f;
+#endif
+
     float value = 0;
     for (int i = -BLUR_RADIUS; i < BLUR_RADIUS; i++)
     {

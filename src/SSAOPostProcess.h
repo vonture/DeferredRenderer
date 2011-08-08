@@ -9,6 +9,7 @@ private:
 	float _sampleRadius;
 	float _blurSigma;
 	float _samplePower;
+	bool _halfRes;
 	UINT _sampleCountIndex;
 
 	static const UINT NUM_SSAO_SAMPLE_COUNTS = 7;
@@ -34,10 +35,10 @@ private:
 	ID3D11ShaderResourceView* _randomSRV;
 
 	ID3D11PixelShader* _aoPSs[NUM_SSAO_SAMPLE_COUNTS];
-	ID3D11PixelShader* _scalePS;
-	ID3D11PixelShader* _hBlurPS;
-	ID3D11PixelShader* _vBlurPS;
-	ID3D11PixelShader* _compositePS;
+	ID3D11PixelShader* _scalePS[2];
+	ID3D11PixelShader* _hBlurPS[2];
+	ID3D11PixelShader* _vBlurPS[2];
+	ID3D11PixelShader* _compositePS[2];
 	
 	ID3D11Buffer* _aoPropertiesBuffer;
 	ID3D11Buffer* _sampleDirectionsBuffers[NUM_SSAO_SAMPLE_COUNTS];
@@ -57,7 +58,6 @@ private:
 
 public:
 	SSAOPostProcess();
-	~SSAOPostProcess();
 
 	float GetSampleRadius() const { return _sampleRadius; }
 	void SetSampleRadius(float radius) { _sampleRadius = max(radius, 0.0f); }
@@ -67,6 +67,9 @@ public:
 
 	float GetSamplePower() const { return _samplePower; }
 	void SetSamplePower(float power) { _samplePower = max(power, EPSILON); }
+
+	bool GetHalfResolution() const { return _halfRes; }
+	void SetHalfResolution(bool val) { _halfRes = val; }
 
 	UINT GetSampleCount() const { return SSAO_SAMPLE_COUNTS[_sampleCountIndex]; }
 	
