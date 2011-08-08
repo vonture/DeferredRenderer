@@ -5,7 +5,7 @@
 #include "SkyPostProcess.h"
 #include "Gwen/Controls/ColorPicker.h"
 #include "Gwen/Controls/CheckBox.h"
-#include "Gwen/Controls/HorizontalSlider.h"
+#include "SliderWithLabel.h"
 #include "DirectionSelector.h"
 
 class SkyConfigurationPane : public ConfigurationPane<SkyPostProcess>
@@ -19,11 +19,10 @@ private:
 	Gwen::Controls::Label* _sunColorLabel;
 	Gwen::Controls::ColorPicker* _sunColorPicker;
 
-	Gwen::Controls::Label* _sunIntensityLabel;
-	Gwen::Controls::HorizontalSlider* _sunIntensitySlider;
+	SliderWithLabel* _sunIntensitySlider;
 
 	Gwen::Controls::Label* _sunWidthLabel;
-	Gwen::Controls::HorizontalSlider* _sunWidthSlider;
+	SliderWithLabel* _sunWidthSlider;
 	
 	Gwen::Controls::Label* _sunDirLabel;
 	DirectionSelector* _sunDirSelector;

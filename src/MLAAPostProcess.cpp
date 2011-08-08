@@ -39,7 +39,7 @@ MLAAPostProcess::MLAAPostProcess()
 	SetNormalDetectionEnabled(true);
 	SetLuminanceDetectionEnabled(false);
 
-	SetMaxSearchSteps(16);
+	SetSearchSteps(16);
 }
 
 MLAAPostProcess::~MLAAPostProcess()

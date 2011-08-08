@@ -4,23 +4,21 @@
 ProfilePane::ProfilePane(Gwen::Controls::Base* parent, Logger* logger)
 	: ConfigurationPane(parent, L"Profile", logger)
 {
-	const int childWidth = 240;
 	const int treeHeight = 400;
-	const int buttonHeight = 30;
-	const int spacing = 3;
 
 	_tree = new Gwen::Controls::TreeControl(this);
-	_tree->SetBounds(0, 0, childWidth, treeHeight);
+	_tree->SetHeight(treeHeight);
+	_tree->Dock(Gwen::Pos::Top);
 
 	_captureButton = new Gwen::Controls::Button(this);
-	_captureButton->SetBounds(0, _tree->Bottom() + spacing, childWidth, buttonHeight);
 	_captureButton->SetText("Capture frame");
 	_captureButton->onPress.Add(this, &ProfilePane::onCaptureButtonPressed);
+	_captureButton->Dock(Gwen::Pos::Top);
 
 	_clearButton = new Gwen::Controls::Button(this);
-	_clearButton->SetBounds(0, _captureButton->Bottom() + spacing, childWidth, buttonHeight);
 	_clearButton->SetText("Clear");
 	_clearButton->onPress.Add(this, &ProfilePane::onClearButtonPressed);
+	_clearButton->Dock(Gwen::Pos::Top);
 }
 
 void ProfilePane::onCaptureButtonPressed(Gwen::Controls::Base* button)

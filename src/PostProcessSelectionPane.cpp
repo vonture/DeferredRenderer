@@ -4,43 +4,44 @@
 PostProcessSelectionPane::PostProcessSelectionPane(Gwen::Controls::Base* parent)
 	: ConfigurationPaneBase(parent, L"Post Processes")
 {	
-	const int childWidth = 240;
-	const int labelHight = 20;
+	const int labelHeight = 20;
 	const int listBoxHeight = 200;
-	const int buttonHeight = 30;
-	const int spacing = 3;
 
 	_enabledLabel = new Gwen::Controls::Label(this);
 	_enabledLabel->SetText("Enabled:");
 	_enabledLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
-	_enabledLabel->SetBounds(0, 0, childWidth, labelHight);
+	_enabledLabel->SetHeight(labelHeight);
+	_enabledLabel->Dock(Gwen::Pos::Top);
 
 	_enabledPPListBox = new Gwen::Controls::ListBox(this);
-	_enabledPPListBox->SetBounds(0, _enabledLabel->Bottom(), childWidth, listBoxHeight);
+	_enabledPPListBox->SetHeight(listBoxHeight);
+	_enabledPPListBox->Dock(Gwen::Pos::Top);
 	_enabledPPListBox->onRowSelected.Add(this, &PostProcessSelectionPane::onEnabledSelectionChanged);
 
 	_disabledLabel = new Gwen::Controls::Label(this);
 	_disabledLabel->SetText("Disabled:");
 	_disabledLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
-	_disabledLabel->SetBounds(0, _enabledPPListBox->Bottom() + spacing, childWidth, labelHight);
+	_disabledLabel->SetHeight(labelHeight);
+	_disabledLabel->Dock(Gwen::Pos::Top);
 
 	_disabledPPListBox = new Gwen::Controls::ListBox(this);
-	_disabledPPListBox->SetBounds(0, _disabledLabel->Bottom(), childWidth, listBoxHeight);
+	_disabledPPListBox->SetHeight(listBoxHeight);
+	_disabledPPListBox->Dock(Gwen::Pos::Top);
 	_disabledPPListBox->onRowSelected.Add(this, &PostProcessSelectionPane::onDisabledSelectionChanged);
 
 	_enableDisableButton = new Gwen::Controls::Button(this);
 	_enableDisableButton->SetText("Enable/Disable");
-	_enableDisableButton->SetBounds(0, _disabledPPListBox->Bottom() + spacing, childWidth, buttonHeight);
+	_enableDisableButton->Dock(Gwen::Pos::Top);	
 	_enableDisableButton->onPress.Add(this, &PostProcessSelectionPane::onEnableDisableButtonPressed);
 
 	_upButton = new Gwen::Controls::Button(this);
 	_upButton->SetText("Move up");
-	_upButton->SetBounds(0, _enableDisableButton->Bottom() + spacing, childWidth, buttonHeight);
+	_upButton->Dock(Gwen::Pos::Top);
 	_upButton->onPress.Add(this, &PostProcessSelectionPane::onUpButtonPressed);
 
 	_downButton = new Gwen::Controls::Button(this);
 	_downButton->SetText("Move down");
-	_downButton->SetBounds(0, _upButton->Bottom(), childWidth, buttonHeight);
+	_downButton->Dock(Gwen::Pos::Top);
 	_downButton->onPress.Add(this, &PostProcessSelectionPane::onDownButtonPressed);
 
 	_lastSelectedListBox = _enabledPPListBox;

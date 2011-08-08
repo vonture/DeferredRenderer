@@ -3,32 +3,27 @@
 #include "PCH.h"
 #include "ConfigurationPane.h"
 #include "MLAAPostProcess.h"
-#include "Gwen/Controls/HorizontalSlider.h"
+#include "SliderWithLabel.h"
 #include "Gwen/Controls/CheckBox.h"
 
 class MLAAConfigurationPane : public ConfigurationPane<MLAAPostProcess>
 {
 private:
 	Gwen::Controls::CheckBoxWithLabel* _depthDetectionCheckBox;
-	Gwen::Controls::HorizontalSlider* _depthThresholdSlider;
-	Gwen::Controls::Label* _depthThresholdLabel;
+	SliderWithLabel* _depthThresholdSlider;
 
 	Gwen::Controls::CheckBoxWithLabel* _normalDetectionCheckBox;
-	Gwen::Controls::HorizontalSlider* _normalThresholdSlider;
-	Gwen::Controls::Label* _normalThresholdLabel;
-
-	Gwen::Controls::HorizontalSlider* _lumThresholdSlider;
-	Gwen::Controls::Label* _lumThresholdLabel;
+	SliderWithLabel* _normalThresholdSlider;
+	
 	Gwen::Controls::CheckBoxWithLabel* _lumDetectionCheckBox;
+	SliderWithLabel* _lumThresholdSlider;
 
-	Gwen::Controls::HorizontalSlider* _maxSearchStepsSlider;
-	Gwen::Controls::Label* _maxSearchStepsLabel;
+	SliderWithLabel* _maxSearchStepsSlider;
 
 	virtual void OnValueChanged(Gwen::Controls::Base *control);
 
 public:
 	MLAAConfigurationPane(Gwen::Controls::Base* parent, MLAAPostProcess* pp);
-	~MLAAConfigurationPane();
 
 	void OnFrameMove(double totalTime, float dt);
 };

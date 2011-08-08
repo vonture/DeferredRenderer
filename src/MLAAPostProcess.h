@@ -76,9 +76,11 @@ public:
 	bool GetLuminanceDetectionEnabled() const { return _luminanceDetect; }
 	void SetLuminanceDetectionEnabled(bool enabled) { _luminanceDetect = enabled; }
 
-	UINT GetMaxSearchSteps() const { return _maxSearchSteps; }
-	void SetMaxSearchSteps(UINT steps) { _maxSearchSteps = clamp(steps, (WEIGHT_TEXTURE_SIZES[0] - 1) / 2,
-		(WEIGHT_TEXTURE_SIZES[NUM_WEIGHT_TEXTURES - 1] - 1) / 2); }
+	UINT GetSearchSteps() const { return _maxSearchSteps; }
+	void SetSearchSteps(UINT steps) { _maxSearchSteps = clamp(steps, GetMinSearchSteps(), GetMaxSearchSteps()); }
+
+	UINT GetMinSearchSteps() const { return WEIGHT_TEXTURE_SIZES[0] - 1 / 2; }
+	UINT GetMaxSearchSteps() const { return (WEIGHT_TEXTURE_SIZES[NUM_WEIGHT_TEXTURES - 1] - 1) / 2; }
 
 	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer);
