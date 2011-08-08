@@ -11,9 +11,9 @@ private:
 	float _samplePower;
 	UINT _sampleCountIndex;
 
-	static const UINT NUM_SSAO_SAMPLE_COUNTS = 5;
+	static const UINT NUM_SSAO_SAMPLE_COUNTS = 7;
 	static const UINT SSAO_SAMPLE_COUNTS[NUM_SSAO_SAMPLE_COUNTS];
-	static const UINT SSAO_SAMPLE_COUNT_MAX = 64;
+	static const UINT SSAO_SAMPLE_COUNT_MAX = 256;
 	
 	XMFLOAT4 _sampleDirections[SSAO_SAMPLE_COUNT_MAX];
 
@@ -40,7 +40,7 @@ private:
 	ID3D11PixelShader* _compositePS;
 	
 	ID3D11Buffer* _aoPropertiesBuffer;
-	ID3D11Buffer* _sampleDirectionsBuffer;
+	ID3D11Buffer* _sampleDirectionsBuffers[NUM_SSAO_SAMPLE_COUNTS];
 
 	struct CB_AO_PROPERTIES
 	{
@@ -53,11 +53,6 @@ private:
 		float CameraFarClip;
 		float SamplePower;
 		XMFLOAT2 Padding;
-	};
-
-	struct CB_AO_SAMPLE_DIRECTIONS
-	{
-		XMFLOAT4 SampleDirections[SSAO_SAMPLE_COUNT_MAX];
 	};
 
 public:
@@ -77,6 +72,7 @@ public:
 	
 	UINT GetSampleCountIndex() const { return _sampleCountIndex; }
 	void SetSampleCountIndex(UINT index) { _sampleCountIndex = clamp(index, 0, NUM_SSAO_SAMPLE_COUNTS - 1); }
+	UINT GetNumSampleCountIndices() const { return NUM_SSAO_SAMPLE_COUNTS; }
 
 	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer);

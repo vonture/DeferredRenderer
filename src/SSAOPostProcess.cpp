@@ -4,6 +4,8 @@
 
 const UINT SSAOPostProcess::SSAO_SAMPLE_COUNTS[NUM_SSAO_SAMPLE_COUNTS] = 
 {
+	SSAO_SAMPLE_COUNT_MAX / 64,
+	SSAO_SAMPLE_COUNT_MAX / 32,
 	SSAO_SAMPLE_COUNT_MAX / 16,
 	SSAO_SAMPLE_COUNT_MAX / 8, 
 	SSAO_SAMPLE_COUNT_MAX / 4, 
@@ -14,7 +16,7 @@ const UINT SSAOPostProcess::SSAO_SAMPLE_COUNTS[NUM_SSAO_SAMPLE_COUNTS] =
 SSAOPostProcess::SSAOPostProcess()
 	: _aoTexture(NULL), _aoRTV(NULL), _aoSRV(NULL), _blurTempTexture(NULL), _blurTempRTV(NULL), 
 	  _blurTempSRV(NULL), _scalePS(NULL), _hBlurPS(NULL), _vBlurPS(NULL),
-	  _aoPropertiesBuffer(NULL), _randomTexture(NULL), _randomSRV(NULL), _sampleDirectionsBuffer(NULL),
+	  _aoPropertiesBuffer(NULL), _randomTexture(NULL), _randomSRV(NULL),
 	  _compositePS(NULL)
 {
 	SetIsAdditive(false);
@@ -22,8 +24,9 @@ SSAOPostProcess::SSAOPostProcess()
 	for (UINT i = 0; i < NUM_SSAO_SAMPLE_COUNTS; i++)
 	{
 		_aoPSs[i] = NULL;
+		_sampleDirectionsBuffers[i] = NULL;
 	}
-
+	
 	for (UINT i = 0; i < 2; i++)
 	{
 		_downScaleTextures[i] = NULL;
@@ -80,7 +83,7 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 	ID3D11Buffer* cbs[2] = 
 	{
 		_aoPropertiesBuffer,
-		_sampleDirectionsBuffer
+		_sampleDirectionsBuffers[_sampleCountIndex],
 	};
 
 	pd3dImmediateContext->PSSetConstantBuffers(0, 2, cbs);
@@ -239,15 +242,11 @@ HRESULT SSAOPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 	D3D_SHADER_MACRO sampleCountMacros[] = 
 	{
 		{ "SSAO_SAMPLE_COUNT", "" },
-		{ "SSAO_SAMPLE_COUNT_MAX", "" },
 		NULL,
 	};
 
 	char sampleCountString[6];
-	sprintf_s(sampleCountString, "%i", SSAO_SAMPLE_COUNT_MAX);
-	sampleCountMacros[1].Definition = sampleCountString;
-
-	char aoPSDebugName[MAX_PATH];
+	char aoPSDebugName[256];
 	for (UINT i = 0; i < NUM_SSAO_SAMPLE_COUNTS; i++)
 	{
 		sprintf_s(sampleCountString, "%i", SSAO_SAMPLE_COUNTS[i]);
@@ -317,9 +316,16 @@ HRESULT SSAOPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 	directionInitData.SysMemPitch = 0;
 	directionInitData.SysMemSlicePitch = 0;
 
-	bufferDesc.ByteWidth = sizeof(CB_AO_SAMPLE_DIRECTIONS);
-	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, &directionInitData, &_sampleDirectionsBuffer));	
-	SET_DEBUG_NAME(_sampleDirectionsBuffer, "SSAO sample directions buffer");
+	char bufferDebugName[256];
+	for (UINT i = 0; i < NUM_SSAO_SAMPLE_COUNTS; i++)
+	{
+		bufferDesc.ByteWidth = SSAO_SAMPLE_COUNTS[i] * sizeof(XMFLOAT4);
+
+		V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, &directionInitData, &_sampleDirectionsBuffers[i]));	
+				
+		sprintf_s(bufferDebugName, "SSAO sample directions buffer (samples = %u)", SSAO_SAMPLE_COUNTS[i]);
+		SET_DEBUG_NAME(_sampleDirectionsBuffers[i], bufferDebugName);
+	}
 
 	// The random texture and srv are not dependent on the back buffer, create them here
 	D3D11_TEXTURE2D_DESC randomTextureDesc = 
@@ -385,6 +391,7 @@ void SSAOPostProcess::OnD3D11DestroyDevice()
 	for (UINT i = 0; i < NUM_SSAO_SAMPLE_COUNTS; i++)
 	{
 		SAFE_RELEASE(_aoPSs[i]);
+		SAFE_RELEASE(_sampleDirectionsBuffers[i]);
 	}
 
 	SAFE_RELEASE(_scalePS);
@@ -393,7 +400,6 @@ void SSAOPostProcess::OnD3D11DestroyDevice()
 	SAFE_RELEASE(_compositePS);
 
 	SAFE_RELEASE(_aoPropertiesBuffer);
-	SAFE_RELEASE(_sampleDirectionsBuffer);
 }
 
 HRESULT SSAOPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice,
