@@ -11,9 +11,6 @@ class ConfigurationWindow :  public Gwen::Controls::WindowControl, public IUpdat
 {
 private:
 	Gwen::Controls::ComboBox* _configSelectComboBox;
-	Gwen::Controls::Layout::Table* _layout;
-
-	Gwen::Controls::Layout::TableRow* _paneRow;
 
 	ConfigurationPaneBase* _selectedPane;
 	std::map<Gwen::Controls::MenuItem*, ConfigurationPaneBase*> _paneMap;

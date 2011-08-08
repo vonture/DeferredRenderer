@@ -6,21 +6,11 @@ ConfigurationWindow::ConfigurationWindow(Gwen::Controls::Base* parent)
 {
 	SetTitle(L"Configuration");
 	SetClosable(false);
+	
+	SetPadding(Gwen::Margin(1, 1, 1, 1));
 
-	_layout = new Gwen::Controls::Layout::Table(this);
-	_layout->SetColumnCount(1);
-	_layout->Dock(Gwen::Pos::Fill);
-
-	Gwen::Controls::Layout::TableRow* comboBoxRow = _layout->AddRow();
-
-	_paneRow = _layout->AddRow();
-	_paneRow->Dock(Gwen::Pos::Fill);
-
-	_configSelectComboBox = new Gwen::Controls::ComboBox(comboBoxRow);
-	_configSelectComboBox->Dock(Gwen::Pos::Fill);
-
-	//_configSelectComboBox->SetPadding(Gwen::Padding(2, 2, 2, 2));
-	//_configSelectComboBox->SetMargin(Gwen::Margin(2, 2, 2, 2));
+	_configSelectComboBox = new Gwen::Controls::ComboBox(this);
+	_configSelectComboBox->Dock(Gwen::Pos::Top);
 }
 
 void ConfigurationWindow::onComboBoxSelect(Gwen::Controls::Base* control)
@@ -50,7 +40,7 @@ void ConfigurationWindow::AddChild(Gwen::Controls::Base* pChild)
 
 void ConfigurationWindow::addConfigPane(ConfigurationPaneBase* newPane)
 {
-	newPane->SetParent(_paneRow);
+	newPane->SetParent(this);
 
 	Gwen::UnicodeString label = Gwen::Utility::StringToUnicode(newPane->GetName());
 	
@@ -67,10 +57,6 @@ void ConfigurationWindow::addConfigPane(ConfigurationPaneBase* newPane)
 		// Select the first pane
 		onComboBoxSelect(item);
 	}
-
-	//newPane->SetPadding(Gwen::Padding(2, 2, 2, 2));
-	//newPane->SetMargin(Gwen::Margin(2, 2, 2, 2));
-	//newPane->RestrictToParent(true);	
 }
 
 void ConfigurationWindow::OnFrameMove(double totalTime, float dt)
