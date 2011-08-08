@@ -4,10 +4,12 @@
 #include "ConfigurationPane.h"
 #include "SSAOPostProcess.h"
 #include "SliderWithLabel.h"
+#include "Gwen/Controls/CheckBox.h"
 
 class SSAOConfigurationPane : public ConfigurationPane<SSAOPostProcess>
 {
 private:
+	Gwen::Controls::CheckBoxWithLabel* _halfResCheckBox;
 	SliderWithLabel* _sampleRadiusSlider;
 	SliderWithLabel* _blurSigmaSlider;
 	SliderWithLabel* _samplePowerSlider;

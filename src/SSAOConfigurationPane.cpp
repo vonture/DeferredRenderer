@@ -4,6 +4,12 @@
 SSAOConfigurationPane::SSAOConfigurationPane(Gwen::Controls::Base* parent, SSAOPostProcess* pp)
 	: ConfigurationPane(parent, L"SSAO", pp)
 {
+	_halfResCheckBox = new Gwen::Controls::CheckBoxWithLabel(this);
+	_halfResCheckBox->Label()->SetText("Half resolution");
+	_halfResCheckBox->Checkbox()->SetChecked(pp->GetHalfResolution());
+	_halfResCheckBox->Dock(Gwen::Pos::Top);
+	_halfResCheckBox->Checkbox()->onCheckChanged.Add(this, &SSAOConfigurationPane::OnValueChanged);
+
 	_sampleCountSlider = new SliderWithLabel(this);
 	_sampleCountSlider->Slider()->SetClampToNotches(true);
 	_sampleCountSlider->Slider()->SetRange(0.0f, pp->GetNumSampleCountIndices() - 1);
@@ -35,7 +41,11 @@ void SSAOConfigurationPane::OnValueChanged(Gwen::Controls::Base *control)
 {
 	SSAOPostProcess* pp = GetConfiguredObject();
 
-	if (control == _sampleCountSlider->Slider())
+	if (control == _halfResCheckBox->Checkbox())
+	{
+		pp->SetHalfResolution(_halfResCheckBox->Checkbox()->IsChecked());
+	}
+	else if (control == _sampleCountSlider->Slider())
 	{
 		pp->SetSampleCountIndex(floor(_sampleCountSlider->Slider()->GetValue() + 0.5f));
 	}
@@ -56,6 +66,8 @@ void SSAOConfigurationPane::OnValueChanged(Gwen::Controls::Base *control)
 void SSAOConfigurationPane::OnFrameMove(double totalTime, float dt)
 {
 	SSAOPostProcess* pp = GetConfiguredObject();
+
+	_halfResCheckBox->Checkbox()->SetChecked(pp->GetHalfResolution());
 
 	_sampleCountSlider->Slider()->SetValue(pp->GetSampleCountIndex());
 	_sampleCountSlider->Label()->SetText("Sample count: " + Gwen::Utility::ToString(pp->GetSampleCount())); 
