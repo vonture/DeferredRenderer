@@ -6,6 +6,7 @@
 #include "SkyConfigurationPane.h"
 #include "CameraConfigurationPane.h"
 #include "SSAOConfigurationPane.h"
+#include "PoissonDoFConfigurationPane.h"
 #include "DeviceManagerConfigurationPane.h"
 #include "ProfilePane.h"
 
@@ -49,9 +50,9 @@ void DeferredRendererApplication::OnInitialize()
 	_ppConfigPane->AddPostProcess(&_skyPP, L"Sky", true, true);
 	_ppConfigPane->AddPostProcess(&_mlaaPP, L"MLAA", true, true);
 	_ppConfigPane->AddPostProcess(&_hdrPP, L"HDR", true, true);
+	_ppConfigPane->AddPostProcess(&_pdofPP, L"Poisson DoF", true, true);
 	_ppConfigPane->AddPostProcess(&_uiPP, L"UI", true, false);
-	_ppConfigPane->AddPostProcess(&_motionBlurPP, L"Motion blur", false, false);
-	_ppConfigPane->AddPostProcess(&_pdofPP, L"Poisson DoF", false, false);
+	_ppConfigPane->AddPostProcess(&_motionBlurPP, L"Motion blur", false, false);	
 
 	new ProfilePane(_configWindow, Logger::GetInstance());
 	new DeviceManagerConfigurationPane(_configWindow, GetDeviceManager());		
@@ -60,6 +61,7 @@ void DeferredRendererApplication::OnInitialize()
 	new MLAAConfigurationPane(_configWindow, &_mlaaPP);
 	new SSAOConfigurationPane(_configWindow, &_ssaoPP);
 	new SkyConfigurationPane(_configWindow, &_skyPP);
+	new PoissonDoFConfigurationPane(_configWindow, &_pdofPP);
 
 	// Create the log window
 	_logWindow = new LogWindow(canvas, Logger::GetInstance());
@@ -70,10 +72,8 @@ void DeferredRendererApplication::OnPreparingDeviceSettings(DeviceManager* devic
 	Application::OnPreparingDeviceSettings(deviceManager);
 
 	deviceManager->SetBackBufferWidth(1360);
-	deviceManager->SetBackBufferHeight(768);	
-	//deviceManager->SetFullScreen(false);
-
-	deviceManager->SetVSyncEnabled(true);
+	deviceManager->SetBackBufferHeight(768);
+	deviceManager->SetVSyncEnabled(false);
 }
 
 void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
