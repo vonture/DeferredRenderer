@@ -4,6 +4,8 @@
 DirectionSelector::DirectionSelector(Gwen::Controls::Base *parent)
 	: Gwen::Controls::Base(parent), _direction(0.0f, 0.0f), _selected(false)
 {
+	SetSize(150, 150);
+
 	_outerCircle = new Gwen::Controls::RadioButton(this);
 	_outerCircle->SetChecked(false);
 	_outerCircle->SetTabable(false);
