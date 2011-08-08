@@ -390,6 +390,8 @@
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="LogWindow.cpp" />
     <ClCompile Include="PCH.cpp" />
+    <ClCompile Include="Poisson.cpp" />
+    <ClCompile Include="PoissonDoFConfigurationPane.cpp" />
     <ClCompile Include="PostProcessSelectionPane.cpp" />
     <ClCompile Include="ProfilePane.cpp" />
     <ClCompile Include="SDKmesh.cpp" />
@@ -455,6 +457,8 @@
     <ClInclude Include="LightRendererBase.h" />
     <ClInclude Include="LogWindow.h" />
     <ClInclude Include="Logger.h" />
+    <ClInclude Include="Poisson.h" />
+    <ClInclude Include="PoissonDoFConfigurationPane.h" />
     <ClInclude Include="PostProcessSelectionPane.h" />
     <ClInclude Include="ProfilePane.h" />
     <ClInclude Include="SDKmesh.h" />

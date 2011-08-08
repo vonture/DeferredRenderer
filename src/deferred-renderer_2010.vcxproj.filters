@@ -75,6 +75,9 @@
     <Filter Include="Content">
       <UniqueIdentifier>{74b8b006-1234-494c-8f4a-3f8e269c854b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Utility">
+      <UniqueIdentifier>{d830b4ca-7382-48aa-ad84-f0f9e77ded14}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="DXUT\Optional\directx.ico">
@@ -310,6 +313,12 @@
       <Filter>Sprites</Filter>
     </ClCompile>
     <ClCompile Include="PCH.cpp" />
+    <ClCompile Include="Poisson.cpp">
+      <Filter>Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="PoissonDoFConfigurationPane.cpp">
+      <Filter>Post Process\Configuration Panes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CLInclude Include="resource.h">
@@ -367,7 +376,6 @@
     <ClInclude Include="ButtonState.h">
       <Filter>Input</Filter>
     </ClInclude>
-    <ClInclude Include="Utility.h" />
     <ClInclude Include="HDRPostProcess.h">
       <Filter>Post Process</Filter>
     </ClInclude>
@@ -534,6 +542,15 @@
     </ClInclude>
     <ClInclude Include="SpriteFont.h">
       <Filter>Sprites</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="Poisson.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="PoissonDoFConfigurationPane.h">
+      <Filter>Post Process\Configuration Panes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
