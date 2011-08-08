@@ -386,6 +386,8 @@
   <ItemGroup>
     <ClCompile Include="AssimpLogger.cpp" />
     <ClCompile Include="DeviceManagerConfigurationPane.cpp" />
+    <ClCompile Include="FXAAConfigurationPane.cpp" />
+    <ClCompile Include="FXAAPostProcess.cpp" />
     <ClCompile Include="LightRendererBase.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="LogWindow.cpp" />
@@ -453,6 +455,8 @@
     <ClInclude Include="ContentType.h" />
     <ClInclude Include="ContentTypeBase.h" />
     <ClInclude Include="DeviceManagerConfigurationPane.h" />
+    <ClInclude Include="FXAAConfigurationPane.h" />
+    <ClInclude Include="FXAAPostProcess.h" />
     <ClInclude Include="LightRenderer.h" />
     <ClInclude Include="LightRendererBase.h" />
     <ClInclude Include="LogWindow.h" />
@@ -515,6 +519,8 @@
     <None Include="Copy.hlsl" />
     <None Include="Depth.hlsl" />
     <None Include="DirectionalLight.hlsl" />
+    <None Include="FXAA.hlsl" />
+    <None Include="Fxaa3_11.hlsl" />
     <None Include="PoissonDoF.hlsl" />
     <None Include="DualParaboloidDepth.hlsl" />
     <None Include="DXUT\Optional\directx.ico" />

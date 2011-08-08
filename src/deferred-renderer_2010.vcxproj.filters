@@ -131,6 +131,12 @@
     <None Include="PoissonDoF.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Fxaa3_11.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="FXAA.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ModelInstance.cpp">
@@ -317,6 +323,12 @@
       <Filter>Utility</Filter>
     </ClCompile>
     <ClCompile Include="PoissonDoFConfigurationPane.cpp">
+      <Filter>Post Process\Configuration Panes</Filter>
+    </ClCompile>
+    <ClCompile Include="FXAAPostProcess.cpp">
+      <Filter>Post Process</Filter>
+    </ClCompile>
+    <ClCompile Include="FXAAConfigurationPane.cpp">
       <Filter>Post Process\Configuration Panes</Filter>
     </ClCompile>
   </ItemGroup>
@@ -550,6 +562,12 @@
       <Filter>Utility</Filter>
     </ClInclude>
     <ClInclude Include="PoissonDoFConfigurationPane.h">
+      <Filter>Post Process\Configuration Panes</Filter>
+    </ClInclude>
+    <ClInclude Include="FXAAPostProcess.h">
+      <Filter>Post Process</Filter>
+    </ClInclude>
+    <ClInclude Include="FXAAConfigurationPane.h">
       <Filter>Post Process\Configuration Panes</Filter>
     </ClInclude>
   </ItemGroup>
