@@ -25,51 +25,65 @@ void Camera::worldMatrixChanged()
 	XMVECTOR det;
 	XMMATRIX view = XMMatrixInverse(&det, world);
 	XMMATRIX viewProj = XMMatrixMultiply(view, proj);
+	XMMATRIX invViewProj = XMMatrixInverse(&det, viewProj);
 
 	XMStoreFloat4x4(&_view, view);
 	XMStoreFloat4x4(&_viewProj, viewProj);
+	XMStoreFloat4x4(&_invViewProj, invViewProj);
+}
+
+void Camera::projMatrixChanged()
+{
+	XMMATRIX world = XMLoadFloat4x4(&_world);
+	XMMATRIX view = XMLoadFloat4x4(&_view);
+	XMMATRIX proj = XMLoadFloat4x4(&_proj);
+
+	XMVECTOR det;
+	XMMATRIX viewProj = XMMatrixMultiply(view, proj);
+	XMMATRIX invViewProj = XMMatrixInverse(&det, viewProj);
+
+	XMStoreFloat4x4(&_viewProj, viewProj);
+	XMStoreFloat4x4(&_invViewProj, invViewProj);
+}
+
+void Camera::viewMatrixChanged()
+{
+	XMMATRIX view = XMLoadFloat4x4(&_view);
+	XMMATRIX proj = XMLoadFloat4x4(&_proj);
+
+	XMVECTOR det;
+	XMMATRIX world = XMMatrixInverse(&det, view);
+	XMMATRIX viewProj = XMMatrixMultiply(view, proj);
+	XMMATRIX invViewProj = XMMatrixInverse(&det, viewProj);
+
+	XMStoreFloat4x4(&_world, world);
+	XMStoreFloat4x4(&_viewProj, viewProj);
+	XMStoreFloat4x4(&_invViewProj, invViewProj);
 }
 
 void Camera::UpdateProjection()
 {
-	XMMATRIX view = XMLoadFloat4x4(&_view);
-
 	XMMATRIX proj;
 	BuildProjection(&proj, _nearClip, _farClip);
-	XMMATRIX viewProj = XMMatrixMultiply(view, proj);
-
 	XMStoreFloat4x4(&_proj, proj);
-	XMStoreFloat4x4(&_viewProj, viewProj);
+
+	projMatrixChanged();
 }
 
 void Camera::SetLookAt(const XMFLOAT3 &eye, const XMFLOAT3 &lookAt, const XMFLOAT3 &up)
-{		
-	XMMATRIX proj = XMLoadFloat4x4(&_proj);
-
+{	
 	XMMATRIX view = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&lookAt), XMLoadFloat3(&up));
-
-	XMVECTOR det;
-	XMMATRIX world = XMMatrixInverse(&det, view);
-	XMMATRIX viewProj = XMMatrixMultiply(view, proj);
-
-	XMStoreFloat4x4(&_world, world);
 	XMStoreFloat4x4(&_view, view);
-	XMStoreFloat4x4(&_viewProj, viewProj);
+
+	viewMatrixChanged();
 }
 
 void Camera::SetLookTo(const XMFLOAT3 &eye, const XMFLOAT3 &lookTo, const XMFLOAT3 &up)
 {
-	XMMATRIX proj = XMLoadFloat4x4(&_proj);
-
 	XMMATRIX view = XMMatrixLookToLH(XMLoadFloat3(&eye), XMLoadFloat3(&lookTo), XMLoadFloat3(&up));
-
-	XMVECTOR det;
-	XMMATRIX world = XMMatrixInverse(&det, view);
-	XMMATRIX viewProj = XMMatrixMultiply(view, proj);
-
-	XMStoreFloat4x4(&_world, world);
 	XMStoreFloat4x4(&_view, view);
-	XMStoreFloat4x4(&_viewProj, viewProj);
+
+	viewMatrixChanged();
 }
 
 void Camera::SetPosition(const XMFLOAT3& pos)
@@ -140,6 +154,11 @@ const XMFLOAT4X4& Camera::GetProjection() const
 const XMFLOAT4X4& Camera::GetViewProjection() const
 {
 	return _viewProj;
+}
+
+const XMFLOAT4X4& Camera::GetInverseViewProjection() const
+{
+	return _invViewProj;
 }
 
 void Camera::SetWorld(const XMFLOAT4X4& world)

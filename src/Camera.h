@@ -9,10 +9,13 @@ private:
 	XMFLOAT4X4 _view;
 	XMFLOAT4X4 _proj;
 	XMFLOAT4X4 _viewProj;
+	XMFLOAT4X4 _invViewProj;
 	float _nearClip;
 	float _farClip;
 
 	void worldMatrixChanged();
+	void projMatrixChanged();
+	void viewMatrixChanged();
 
 protected:
 	void UpdateProjection();
@@ -39,6 +42,7 @@ public:
 	const XMFLOAT4X4& GetView() const;
 	const XMFLOAT4X4& GetProjection() const;
 	const XMFLOAT4X4& GetViewProjection() const;
+	const XMFLOAT4X4& GetInverseViewProjection() const;
 
 	void SetWorld(const XMFLOAT4X4& world);
 	const XMFLOAT4X4& GetWorld() const;
