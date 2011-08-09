@@ -14,10 +14,6 @@ DeviceManager::DeviceManager()
     _refreshRate.Denominator = 1;
 }
 
-DeviceManager::~DeviceManager()
-{
-}
-
 HRESULT DeviceManager::Initialize(HWND outputWindow)
 {
 	HRESULT hr;

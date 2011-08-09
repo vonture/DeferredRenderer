@@ -42,7 +42,6 @@ private:
 
 public:
 	DeviceManager();
-	~DeviceManager();
 
 	HRESULT Initialize(HWND outputWindow);
 	HRESULT Reset();
