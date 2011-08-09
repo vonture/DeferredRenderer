@@ -20,7 +20,7 @@ cbuffer cbSSAOProperties : register(cb0)
 	float CameraNearClip			: packoffset(c8.w);
 	float CameraFarClip				: packoffset(c9.x);
 	float SamplePower				: packoffset(c9.y);
-	float2 Padding					: packoffset(c9.z);
+	float2 InverseSceneSize			: packoffset(c9.z);
 }
 
 cbuffer cbSSAOSampleDirections : register(cb1)
@@ -147,17 +147,23 @@ float CalcGaussianWeight(int sampleDist)
 }
 
 // Performs a gaussian blur in one direction
-float Blur(float2 texCoord, int2 direction)
+float Blur(float2 texCoord, float2 direction)
 {
 #if SSAO_HALF_RES
 	texCoord = texCoord * 0.5f;
 #endif
 
+	// Blur happens at 1/4 scene size
+	float2 step = InverseSceneSize * 0.25f;
+
     float value = 0;
     for (int i = -BLUR_RADIUS; i < BLUR_RADIUS; i++)
     {
 		float weight = CalcGaussianWeight(i);
-		float sample = Texture0.Sample(PointSampler, texCoord, direction * i).x;
+
+		float2 sampleCoord = texCoord + direction * ((i + 0.5f) * step);
+
+		float sample = Texture0.SampleLevel(LinearSampler, sampleCoord, 0).x;
 		value += sample * weight;
     }
 
@@ -167,11 +173,11 @@ float Blur(float2 texCoord, int2 direction)
 // Horizontal gaussian blur
 float4 PS_BlurHorizontal(PS_In_Quad input) : SV_TARGET0
 {
-    return float4(Blur(input.vTexCoord, int2(2, 0)), 0.0f, 0.0f, 1.0f);
+    return float4(Blur(input.vTexCoord, float2(1.0f, 0.0f)), 0.0f, 0.0f, 1.0f);
 }
 
 // Vertical gaussian blur
 float4 PS_BlurVertical(PS_In_Quad input) : SV_TARGET0
 {
-	return float4(Blur(input.vTexCoord, int2(0, 2)), 0.0f, 0.0f, 1.0f);
+	return float4(Blur(input.vTexCoord, float2(0.0f, 1.0f)), 0.0f, 0.0f, 1.0f);
 }

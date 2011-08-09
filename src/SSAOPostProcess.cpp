@@ -38,7 +38,7 @@ SSAOPostProcess::SSAOPostProcess()
 	}
 	
 	// Initialize some parameters to default values
-	SetSampleRadius(0.3f);
+	SetSampleRadius(0.5f);
 	SetBlurSigma(0.45f);
 	SetSamplePower(4.5f);
 	SetSampleCountIndex(3);
@@ -76,6 +76,7 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 	aoProperties->CameraNearClip = camera->GetNearClip();
 	aoProperties->CameraFarClip = camera->GetFarClip();
 	aoProperties->SamplePower = _samplePower;
+	aoProperties->InverseSceneSize = _invSceneSize;
 
 	pd3dImmediateContext->Unmap(_aoPropertiesBuffer, 0);
 
@@ -410,6 +411,9 @@ HRESULT SSAOPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 	V_RETURN(pd3dDevice->CreateShaderResourceView(_randomTexture, &randomSRVDesc, &_randomSRV));
 	SET_DEBUG_NAME(_randomSRV, "SSAO random SRV");
 
+	_invSceneSize.x = 1.0f / pBackBufferSurfaceDesc->Width;
+	_invSceneSize.y = 1.0f / pBackBufferSurfaceDesc->Height;
+
 	return S_OK;
 }
 
@@ -549,6 +553,9 @@ HRESULT SSAOPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice,
 
 	V_RETURN(pd3dDevice->CreateShaderResourceView(_blurTempTexture, &downScaleSRVDesc, &_blurTempSRV));
 	SET_DEBUG_NAME(_blurTempSRV, "SSAO blur temp SRV");
+
+	_invSceneSize.x = 1.0f / pBackBufferSurfaceDesc->Width;
+	_invSceneSize.y = 1.0f / pBackBufferSurfaceDesc->Height;
 
 	return S_OK;
 }

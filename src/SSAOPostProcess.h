@@ -12,6 +12,8 @@ private:
 	bool _halfRes;
 	UINT _sampleCountIndex;
 
+	XMFLOAT2 _invSceneSize;
+	
 	static const UINT NUM_SSAO_SAMPLE_COUNTS = 7;
 	static const UINT SSAO_SAMPLE_COUNTS[NUM_SSAO_SAMPLE_COUNTS];
 	static const UINT SSAO_SAMPLE_COUNT_MAX = 256;
@@ -53,7 +55,7 @@ private:
 		float CameraNearClip;
 		float CameraFarClip;
 		float SamplePower;
-		XMFLOAT2 Padding;
+		XMFLOAT2 InverseSceneSize;
 	};
 
 public:
