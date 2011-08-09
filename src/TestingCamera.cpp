@@ -2,13 +2,17 @@
 #include "TestingCamera.h"
 
 TestingCamera::TestingCamera()
-	: FirstPersonCamera(), _moveSpeed(10.0f), _rotSpeed(0.002f)
+	: FirstPersonCamera()
 {
+	SetMovementSpeed(10.0f);
+	SetRotationSpeed(0.002f);
 }
 
 TestingCamera::TestingCamera(float nearClip, float farClip, float fov, float aspect)
-	: FirstPersonCamera(nearClip, farClip, fov, aspect), _moveSpeed(10.0f), _rotSpeed(0.002f)
+	: FirstPersonCamera(nearClip, farClip, fov, aspect)
 {
+	SetMovementSpeed(10.0f);
+	SetRotationSpeed(0.002f);
 }
 
 float TestingCamera::GetMovementSpeed() const 

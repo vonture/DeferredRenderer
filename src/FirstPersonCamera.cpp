@@ -2,14 +2,16 @@
 #include "FirstPersonCamera.h"
 
 FirstPersonCamera::FirstPersonCamera()
-	: PerspectiveCamera(), _rotation(0.0f, 0.0f)
+	: PerspectiveCamera()
 {
+	SetRotation(XMFLOAT2(0.0f, 0.0f));
 	UpdateProjection();
 }
 
 FirstPersonCamera::FirstPersonCamera(float nearClip, float farClip, float fov, float aspect)
-	: PerspectiveCamera(nearClip, farClip, fov, aspect), _rotation(0.0f, 0.0f)
+	: PerspectiveCamera(nearClip, farClip, fov, aspect)
 {
+	SetRotation(XMFLOAT2(0.0f, 0.0f));
 	UpdateProjection();
 }
 

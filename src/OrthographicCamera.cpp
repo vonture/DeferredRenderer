@@ -2,14 +2,17 @@
 #include "OrthographicCamera.h"
 
 OrthographicCamera::OrthographicCamera()
-	: Camera(), _xMin(0.0f), _yMin(0.0f), _xMax(1.0f), _yMax(1.0f)
+	: Camera()
 {
+	SetBounds(0.0f, 0.0f, 1.0f, 1.0f);
 	UpdateProjection();
 }
 
-OrthographicCamera::OrthographicCamera(float nearClip, float farClip, float minX, float minY, float maxX, float maxY)
-	: Camera(nearClip, farClip), _xMin(minX), _yMin(minY), _xMax(maxX), _yMax(maxY)
+OrthographicCamera::OrthographicCamera(float nearClip, float farClip, float minX, float minY,
+	float maxX, float maxY)
+	: Camera(nearClip, farClip)
 {
+	SetBounds(minX, minY, maxX, maxY);
 	UpdateProjection();
 }
 
