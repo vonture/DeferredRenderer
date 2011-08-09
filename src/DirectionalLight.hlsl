@@ -1,8 +1,13 @@
 #define EPSILON 1e-5
 
+#ifndef CASCADE_COUNT
 #define CASCADE_COUNT 4
 #define SQRT_CASCADE_COUNT 2
+#endif
+
+#ifndef PCF_RADIUS
 #define PCF_RADIUS 2
+#endif
 
 cbuffer cbCameraProperties : register(b0)
 {
