@@ -25,10 +25,20 @@ DeferredRendererApplication::DeferredRendererApplication()
 
 	_camera.SetPosition(XMFLOAT3(1.0f, 4.0f, -6.0f));
 	_camera.SetRotation(XMFLOAT2(-0.1f, 0.35f));
-}
 
-DeferredRendererApplication::~DeferredRendererApplication()
-{
+	_contentHolders.push_back(&_renderer);
+	_contentHolders.push_back(&_hdrPP);
+	_contentHolders.push_back(&_skyPP);
+	_contentHolders.push_back(&_mlaaPP);
+	_contentHolders.push_back(&_fxaaPP);
+	_contentHolders.push_back(&_ssaoPP);
+	_contentHolders.push_back(&_pdofPP);
+	_contentHolders.push_back(&_motionBlurPP);
+	_contentHolders.push_back(&_uiPP);
+	_contentHolders.push_back(&_paraboloidPointLR);
+	_contentHolders.push_back(&_cascadedDirectionalLR);
+	_contentHolders.push_back(&_spotLR);
+	_contentHolders.push_back(&_scene);
 }
 
 void DeferredRendererApplication::OnInitialize()
@@ -73,9 +83,10 @@ void DeferredRendererApplication::OnInitialize()
 void DeferredRendererApplication::OnPreparingDeviceSettings(DeviceManager* deviceManager)
 {
 	Application::OnPreparingDeviceSettings(deviceManager);
-
-	deviceManager->SetBackBufferWidth(1360);
-	deviceManager->SetBackBufferHeight(768);
+	
+	deviceManager->SetAutoDepthStencilEnabled(false);
+	deviceManager->SetBackBufferWidth(1920);
+	deviceManager->SetBackBufferHeight(1080);
 	deviceManager->SetVSyncEnabled(false);
 }
 
@@ -190,32 +201,6 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 	V_RETURN(_renderer.Begin());
 
 	_renderer.AddModel(&_scene);
-	
-	/*
-	PointLight greenLight = 
-	{
-		XMFLOAT3(-8.5f, 9.5f, 9.2f),
-		10.0f,
-		XMFLOAT3(1.5f, 3.0f, 1.0f)
-	};
-	_renderer.AddLight(&greenLight, true);
-
-	PointLight redLight = 
-	{
-		XMFLOAT3(-1.6f, 4.5f, -4.2f),
-		12.0f,
-		XMFLOAT3(2.5f, 1.0f, 1.0f)
-	};
-	_renderer.AddLight(&redLight, true);
-
-	PointLight purpleLight = 
-	{
-		XMFLOAT3(9.6f, 3.6f, 4.5f),
-		15.0f,
-		XMFLOAT3(1.5f, 0.0f, 3.0f)
-	};
-	_renderer.AddLight(&purpleLight, true);
-	*/
 
 	if (_ppConfigPane->IsPostProcessEnabled(&_skyPP) && _skyPP.GetSunEnabled())
 	{
@@ -258,22 +243,10 @@ HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 	HRESULT hr;
 
 	V_RETURN(Application::OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-
-	V_RETURN(_renderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));	
-	V_RETURN(_hdrPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_skyPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_mlaaPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_fxaaPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_ssaoPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_pdofPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_motionBlurPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_uiPP.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-
-	V_RETURN(_paraboloidPointLR.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_cascadedDirectionalLR.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_spotLR.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-
-	V_RETURN(_scene.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	for (UINT i = 0; i < _contentHolders.size(); i++)
+	{
+		V_RETURN(_contentHolders[i]->OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	}
 
 	const int configWidth = 260;
 	const int logHeight = 125;
@@ -289,22 +262,10 @@ HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 void DeferredRendererApplication::OnD3D11DestroyDevice()
 {
 	Application::OnD3D11DestroyDevice();
-
-	_renderer.OnD3D11DestroyDevice();	
-	_hdrPP.OnD3D11DestroyDevice();
-	_skyPP.OnD3D11DestroyDevice();
-	_mlaaPP.OnD3D11DestroyDevice();
-	_fxaaPP.OnD3D11DestroyDevice();
-	_ssaoPP.OnD3D11DestroyDevice();
-	_pdofPP.OnD3D11DestroyDevice();
-	_motionBlurPP.OnD3D11DestroyDevice();
-	_uiPP.OnD3D11DestroyDevice();
-
-	_paraboloidPointLR.OnD3D11DestroyDevice();
-	_cascadedDirectionalLR.OnD3D11DestroyDevice();
-	_spotLR.OnD3D11DestroyDevice();
-
-	_scene.OnD3D11DestroyDevice();	
+	for (UINT i = 0; i < _contentHolders.size(); i++)
+	{
+		_contentHolders[i]->OnD3D11DestroyDevice();
+	}
 }
 
 HRESULT DeferredRendererApplication::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice,
@@ -312,30 +273,18 @@ HRESULT DeferredRendererApplication::OnD3D11ResizedSwapChain(ID3D11Device* pd3dD
 {
 	HRESULT hr;
 
+	float fAspectRatio = pBackBufferSurfaceDesc->Width / (float)pBackBufferSurfaceDesc->Height;
+	_camera.SetAspectRatio(fAspectRatio);
+
 	Gwen::Controls::Canvas* canvas = _uiPP.GetCanvas();
 	XMFLOAT2 sizePerc = XMFLOAT2((float)pBackBufferSurfaceDesc->Width / canvas->Width(),
 		(float)pBackBufferSurfaceDesc->Height / canvas->Height());
 	
 	V_RETURN(Application::OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-
-	float fAspectRatio = pBackBufferSurfaceDesc->Width / (float)pBackBufferSurfaceDesc->Height;
-	_camera.SetAspectRatio(fAspectRatio);
-	
-	V_RETURN(_renderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));	
-	V_RETURN(_hdrPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_skyPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_mlaaPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_fxaaPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_ssaoPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_pdofPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_motionBlurPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_uiPP.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	
-	V_RETURN(_paraboloidPointLR.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_cascadedDirectionalLR.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_spotLR.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	
-	V_RETURN(_scene.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	for (UINT i = 0; i < _contentHolders.size(); i++)
+	{
+		V_RETURN(_contentHolders[i]->OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	}
 
 	// Resize the UI by scaling with the resolution change
 	_configWindow->SetBounds(_configWindow->X() * sizePerc.x, _configWindow->Y() * sizePerc.y,
@@ -348,22 +297,10 @@ HRESULT DeferredRendererApplication::OnD3D11ResizedSwapChain(ID3D11Device* pd3dD
 void DeferredRendererApplication::OnD3D11ReleasingSwapChain()
 {
 	Application::OnD3D11ReleasingSwapChain();
-
-	_renderer.OnD3D11ReleasingSwapChain();	
-	_hdrPP.OnD3D11ReleasingSwapChain();
-	_skyPP.OnD3D11ReleasingSwapChain();
-	_mlaaPP.OnD3D11ReleasingSwapChain();
-	_fxaaPP.OnD3D11ReleasingSwapChain();
-	_ssaoPP.OnD3D11ReleasingSwapChain();
-	_pdofPP.OnD3D11ReleasingSwapChain();
-	_motionBlurPP.OnD3D11ReleasingSwapChain();
-	_uiPP.OnD3D11ReleasingSwapChain();
-
-	_paraboloidPointLR.OnD3D11ReleasingSwapChain();
-	_cascadedDirectionalLR.OnD3D11ReleasingSwapChain();
-	_spotLR.OnD3D11ReleasingSwapChain();
-
-	_scene.OnD3D11ReleasingSwapChain();
+	for (UINT i = 0; i < _contentHolders.size(); i++)
+	{
+		_contentHolders[i]->OnD3D11ReleasingSwapChain();
+	}
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)

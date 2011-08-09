@@ -32,6 +32,8 @@ private:
 
 	ModelInstance _scene;
 
+	std::vector<IHasContent*> _contentHolders;
+
 	DualParaboloidPointLightRenderer _paraboloidPointLR;
 	CascadedDirectionalLightRenderer _cascadedDirectionalLR;
 	SpotLightRenderer _spotLR;
@@ -56,7 +58,6 @@ protected:
 
 public:
 	DeferredRendererApplication();
-	~DeferredRendererApplication();
 
 	void OnFrameMove(double totalTime, float dt);
 	LRESULT OnMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
