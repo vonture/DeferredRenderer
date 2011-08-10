@@ -2,10 +2,13 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "deferred-renderer", "deferred-renderer\deferred-renderer_2010.vcxproj", "{D3D11105-96D0-4629-88B8-122C0256058C}"
 	ProjectSection(ProjectDependencies) = postProject
+		{99E8E26E-4171-4A0A-B6D8-020A0E63E436} = {99E8E26E-4171-4A0A-B6D8-020A0E63E436}
 		{C406DAEC-0886-4771-8DEA-9D7329B46CC1} = {C406DAEC-0886-4771-8DEA-9D7329B46CC1}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tinyxml", "tinyxml\tinyxml_lib.vcxproj", "{C406DAEC-0886-4771-8DEA-9D7329B46CC1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gwen", "gwen\GWEN.vcxproj", "{99E8E26E-4171-4A0A-B6D8-020A0E63E436}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tinyxml", "tinyxml\tinyxml.vcxproj", "{C406DAEC-0886-4771-8DEA-9D7329B46CC1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,6 +20,10 @@ Global
 		{D3D11105-96D0-4629-88B8-122C0256058C}.Debug|Win32.Build.0 = Debug|Win32
 		{D3D11105-96D0-4629-88B8-122C0256058C}.Release|Win32.ActiveCfg = Release|Win32
 		{D3D11105-96D0-4629-88B8-122C0256058C}.Release|Win32.Build.0 = Release|Win32
+		{99E8E26E-4171-4A0A-B6D8-020A0E63E436}.Debug|Win32.ActiveCfg = Debug|Win32
+		{99E8E26E-4171-4A0A-B6D8-020A0E63E436}.Debug|Win32.Build.0 = Debug|Win32
+		{99E8E26E-4171-4A0A-B6D8-020A0E63E436}.Release|Win32.ActiveCfg = Release|Win32
+		{99E8E26E-4171-4A0A-B6D8-020A0E63E436}.Release|Win32.Build.0 = Release|Win32
 		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.Debug|Win32.ActiveCfg = Debug|Win32
 		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.Debug|Win32.Build.0 = Debug|Win32
 		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.Release|Win32.ActiveCfg = Release|Win32
