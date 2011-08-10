@@ -93,13 +93,12 @@ using namespace std;
 // Libraries in this solution
 #pragma comment(lib, "tinyxml.lib")
 #pragma comment(lib, "gwen.lib")
+#pragma comment(lib, "assimp.lib")
 
 #ifdef _DEBUG
 #pragma comment(lib, "comsuppwd.lib")
 #pragma comment(lib, "d3dx9d.lib")
-#pragma comment(lib, "assimpd.lib")
 #else
 #pragma comment(lib, "comsuppw.lib")
 #pragma comment(lib, "d3dx9.lib")
-#pragma comment(lib, "assimp.lib")
 #endif

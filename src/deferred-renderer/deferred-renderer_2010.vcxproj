@@ -39,15 +39,15 @@
     <LinkIncremental>true</LinkIncremental>
     <GenerateManifest>true</GenerateManifest>
     <ExecutablePath>$(DXSDK_DIR)Utilities\bin\x86;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>$(SolutionDir)gwen/include;$(ProjectDir)assimp/include;$(SolutionDir)tinyxml/include;$(DXSDK_DIR)include;$(IncludePath);$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)$(Configuration)-lib\;$(ProjectDir)assimp\lib\x86;$(DXSDK_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)gwen/include;$(SolutionDir)assimp/include;$(SolutionDir)tinyxml/include;$(DXSDK_DIR)include;$(IncludePath);$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(Configuration)-lib\;$(DXSDK_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>true</GenerateManifest>
     <ExecutablePath>$(DXSDK_DIR)Utilities\bin\x86;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>$(SolutionDir)gwen/include;$(ProjectDir)assimp/include;$(SolutionDir)tinyxml/include;$(DXSDK_DIR)include;;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)$(Configuration)-lib\;$(ProjectDir)assimp\lib\x86;$(DXSDK_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)gwen/include;$(SolutionDir)assimp/include;$(SolutionDir)tinyxml/include;$(DXSDK_DIR)include;;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(Configuration)-lib\;$(DXSDK_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

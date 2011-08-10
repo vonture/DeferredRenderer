@@ -3,31 +3,56 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "deferred-renderer", "deferred-renderer\deferred-renderer_2010.vcxproj", "{D3D11105-96D0-4629-88B8-122C0256058C}"
 	ProjectSection(ProjectDependencies) = postProject
 		{99E8E26E-4171-4A0A-B6D8-020A0E63E436} = {99E8E26E-4171-4A0A-B6D8-020A0E63E436}
+		{CD26EBC4-A0A2-41FD-806E-C55743F5ECDD} = {CD26EBC4-A0A2-41FD-806E-C55743F5ECDD}
 		{C406DAEC-0886-4771-8DEA-9D7329B46CC1} = {C406DAEC-0886-4771-8DEA-9D7329B46CC1}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gwen", "gwen\GWEN.vcxproj", "{99E8E26E-4171-4A0A-B6D8-020A0E63E436}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GWEN", "gwen\GWEN.vcxproj", "{99E8E26E-4171-4A0A-B6D8-020A0E63E436}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tinyxml", "tinyxml\tinyxml.vcxproj", "{C406DAEC-0886-4771-8DEA-9D7329B46CC1}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "assimp", "assimp\assimp.vcxproj", "{CD26EBC4-A0A2-41FD-806E-C55743F5ECDD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
+		MinSizeRel|Win32 = MinSizeRel|Win32
 		Release|Win32 = Release|Win32
+		RelWithDebInfo|Win32 = RelWithDebInfo|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{D3D11105-96D0-4629-88B8-122C0256058C}.Debug|Win32.ActiveCfg = Debug|Win32
 		{D3D11105-96D0-4629-88B8-122C0256058C}.Debug|Win32.Build.0 = Debug|Win32
+		{D3D11105-96D0-4629-88B8-122C0256058C}.MinSizeRel|Win32.ActiveCfg = Release|Win32
+		{D3D11105-96D0-4629-88B8-122C0256058C}.MinSizeRel|Win32.Build.0 = Release|Win32
 		{D3D11105-96D0-4629-88B8-122C0256058C}.Release|Win32.ActiveCfg = Release|Win32
 		{D3D11105-96D0-4629-88B8-122C0256058C}.Release|Win32.Build.0 = Release|Win32
+		{D3D11105-96D0-4629-88B8-122C0256058C}.RelWithDebInfo|Win32.ActiveCfg = Release|Win32
+		{D3D11105-96D0-4629-88B8-122C0256058C}.RelWithDebInfo|Win32.Build.0 = Release|Win32
 		{99E8E26E-4171-4A0A-B6D8-020A0E63E436}.Debug|Win32.ActiveCfg = Debug|Win32
 		{99E8E26E-4171-4A0A-B6D8-020A0E63E436}.Debug|Win32.Build.0 = Debug|Win32
+		{99E8E26E-4171-4A0A-B6D8-020A0E63E436}.MinSizeRel|Win32.ActiveCfg = Debug|Win32
+		{99E8E26E-4171-4A0A-B6D8-020A0E63E436}.MinSizeRel|Win32.Build.0 = Debug|Win32
 		{99E8E26E-4171-4A0A-B6D8-020A0E63E436}.Release|Win32.ActiveCfg = Release|Win32
 		{99E8E26E-4171-4A0A-B6D8-020A0E63E436}.Release|Win32.Build.0 = Release|Win32
+		{99E8E26E-4171-4A0A-B6D8-020A0E63E436}.RelWithDebInfo|Win32.ActiveCfg = Release|Win32
+		{99E8E26E-4171-4A0A-B6D8-020A0E63E436}.RelWithDebInfo|Win32.Build.0 = Release|Win32
 		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.Debug|Win32.ActiveCfg = Debug|Win32
 		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.Debug|Win32.Build.0 = Debug|Win32
+		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.MinSizeRel|Win32.ActiveCfg = Release|Win32
+		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.MinSizeRel|Win32.Build.0 = Release|Win32
 		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.Release|Win32.ActiveCfg = Release|Win32
 		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.Release|Win32.Build.0 = Release|Win32
+		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.RelWithDebInfo|Win32.ActiveCfg = Release|Win32
+		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.RelWithDebInfo|Win32.Build.0 = Release|Win32
+		{CD26EBC4-A0A2-41FD-806E-C55743F5ECDD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CD26EBC4-A0A2-41FD-806E-C55743F5ECDD}.Debug|Win32.Build.0 = Debug|Win32
+		{CD26EBC4-A0A2-41FD-806E-C55743F5ECDD}.MinSizeRel|Win32.ActiveCfg = Release|Win32
+		{CD26EBC4-A0A2-41FD-806E-C55743F5ECDD}.MinSizeRel|Win32.Build.0 = Release|Win32
+		{CD26EBC4-A0A2-41FD-806E-C55743F5ECDD}.Release|Win32.ActiveCfg = Release|Win32
+		{CD26EBC4-A0A2-41FD-806E-C55743F5ECDD}.Release|Win32.Build.0 = Release|Win32
+		{CD26EBC4-A0A2-41FD-806E-C55743F5ECDD}.RelWithDebInfo|Win32.ActiveCfg = Release|Win32
+		{CD26EBC4-A0A2-41FD-806E-C55743F5ECDD}.RelWithDebInfo|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
