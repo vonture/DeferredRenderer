@@ -87,7 +87,7 @@
     <GenerateManifest>true</GenerateManifest>
     <ExecutablePath>$(DXSDK_DIR)Utilities\bin\x86;$(ExecutablePath)</ExecutablePath>
     <IncludePath>$(SolutionDir)/tinyxml;$(DXSDK_DIR)Include;$(ProjectDir)gwen\include;$(ProjectDir)assimp\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)$(Configuration)\;$(DXSDK_DIR)Lib\x86;$(ProjectDir)assimp\lib\x86;$(ProjectDir)gwen\lib\x86;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)$(Configuration)-lib\;$(DXSDK_DIR)Lib\x86;$(ProjectDir)assimp\lib\x86;$(ProjectDir)gwen\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|X64'">
     <LinkIncremental>true</LinkIncremental>
@@ -101,7 +101,7 @@
     <GenerateManifest>true</GenerateManifest>
     <ExecutablePath>$(DXSDK_DIR)Utilities\bin\x86;$(ExecutablePath)</ExecutablePath>
     <IncludePath>$(SolutionDir)/tinyxml;$(DXSDK_DIR)Include;$(ProjectDir)assimp\include;$(ProjectDir)gwen\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\$Configuration;$(DXSDK_DIR)Lib\x86;$(ProjectDir)assimp\lib\x86;$(ProjectDir)gwen\lib\x86;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)$(Configuration)-lib\;$(DXSDK_DIR)Lib\x86;$(ProjectDir)assimp\lib\x86;$(ProjectDir)gwen\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|X64'">
     <LinkIncremental>false</LinkIncremental>
