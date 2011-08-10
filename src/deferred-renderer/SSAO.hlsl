@@ -161,7 +161,7 @@ float Blur(float2 texCoord, float2 direction)
     {
 		float weight = CalcGaussianWeight(i);
 
-		float2 sampleCoord = texCoord + direction * ((i + 0.5f) * step);
+		float2 sampleCoord = texCoord + direction * ((i - 0.5f) * step);
 
 		float sample = Texture0.SampleLevel(LinearSampler, sampleCoord, 0).x;
 		value += sample * weight;
