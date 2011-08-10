@@ -217,7 +217,7 @@ static UINT BitsPerPixel( D3DFORMAT fmt )
 #endif // !D3D_DISABLE_9EX
 
         default:
-            assert( FALSE ); // unhandled format
+            _ASSERT( FALSE ); // unhandled format
             return 0;
     }
 }
@@ -344,7 +344,7 @@ static UINT BitsPerPixel( DXGI_FORMAT fmt )
         return 8;
 
     default:
-        assert( FALSE ); // unhandled format
+        _ASSERT( FALSE ); // unhandled format
         return 0;
     }
 }

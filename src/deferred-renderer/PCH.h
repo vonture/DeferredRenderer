@@ -90,16 +90,16 @@ using namespace std;
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "gdiplus.lib")
 
+#pragma comment(lib, "tinyxml.lib")
+
 #ifdef _DEBUG
 #pragma comment(lib, "comsuppwd.lib")
 #pragma comment(lib, "d3dx9d.lib")
 #pragma comment(lib, "gwend_static.lib")
-#pragma comment(lib, "tinyxmld.lib")
 #pragma comment(lib, "assimpd.lib")
 #else
 #pragma comment(lib, "comsuppw.lib")
 #pragma comment(lib, "d3dx9.lib")
 #pragma comment(lib, "gwen_static.lib")
-#pragma comment(lib, "tinyxml.lib")
 #pragma comment(lib, "assimp.lib")
 #endif

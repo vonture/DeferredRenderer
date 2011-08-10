@@ -195,6 +195,10 @@ const XMFLOAT4* Poisson::GetDistribution(UINT idx)
 	{
 		return Poisson64;
 	}
+	else
+	{
+		return NULL;
+	}
 }
 
 UINT Poisson::GetDistributionSize(UINT idx)

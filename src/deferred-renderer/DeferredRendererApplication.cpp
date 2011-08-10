@@ -59,10 +59,10 @@ void DeferredRendererApplication::OnInitialize()
 	_ppConfigPane = new PostProcessSelectionPane(_configWindow);
 	_ppConfigPane->AddPostProcess(&_ssaoPP, L"SSAO", true, true);
 	_ppConfigPane->AddPostProcess(&_skyPP, L"Sky", true, true);
-	_ppConfigPane->AddPostProcess(&_mlaaPP, L"MLAA", true, true);
-	_ppConfigPane->AddPostProcess(&_fxaaPP, L"FXAA", false, true);
+	_ppConfigPane->AddPostProcess(&_mlaaPP, L"MLAA", false, true);	
 	_ppConfigPane->AddPostProcess(&_hdrPP, L"HDR", true, true);
 	_ppConfigPane->AddPostProcess(&_pdofPP, L"Poisson DoF", true, true);
+	_ppConfigPane->AddPostProcess(&_fxaaPP, L"FXAA", true, true);
 	_ppConfigPane->AddPostProcess(&_uiPP, L"UI", true, false);
 	_ppConfigPane->AddPostProcess(&_motionBlurPP, L"Motion blur", false, false);	
 
@@ -85,8 +85,8 @@ void DeferredRendererApplication::OnPreparingDeviceSettings(DeviceManager* devic
 	Application::OnPreparingDeviceSettings(deviceManager);
 	
 	deviceManager->SetAutoDepthStencilEnabled(false);
-	deviceManager->SetBackBufferWidth(1920);
-	deviceManager->SetBackBufferHeight(1080);
+	deviceManager->SetBackBufferWidth(1280);
+	deviceManager->SetBackBufferHeight(720);
 	deviceManager->SetVSyncEnabled(false);
 }
 
