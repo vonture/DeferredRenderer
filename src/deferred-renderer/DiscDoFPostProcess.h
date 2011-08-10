@@ -4,7 +4,7 @@
 #include "PostProcess.h"
 #include "Poisson.h"
 
-class PoissonDoFPostProcess : public PostProcess
+class DiscDoFPostProcess : public PostProcess
 {
 private:	
 	float _focalDistance;
@@ -35,8 +35,8 @@ private:
 	ID3D11Buffer* _sampleBuffers[NUM_DOF_SAMPLE_COUNTS];
 
 public:
-	PoissonDoFPostProcess();
-	~PoissonDoFPostProcess();
+	DiscDoFPostProcess();
+	~DiscDoFPostProcess();
 
 	float GetFocalDistance() const { return _focalDistance; }
 	void SetFocalDistance(float dist) { _focalDistance = max(dist, 0.0f); }

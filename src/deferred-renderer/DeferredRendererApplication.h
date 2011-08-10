@@ -11,7 +11,8 @@
 #include "SkyPostProcess.h"
 #include "MLAAPostProcess.h"
 #include "SSAOPostProcess.h"
-#include "PoissonDoFPostProcess.h"
+#include "HBAOPostProcess.h"
+#include "DiscDoFPostProcess.h"
 #include "MotionBlurPostProcess.h"
 #include "UIPostProcess.h"
 #include "FXAAPostProcess.h"
@@ -43,7 +44,8 @@ private:
 	MLAAPostProcess _mlaaPP;
 	FXAAPostProcess _fxaaPP;
 	SSAOPostProcess _ssaoPP;
-	PoissonDoFPostProcess _pdofPP;
+	HBAOPostProcess _hbaoPP;
+	DiscDoFPostProcess _discDoFPP;
 	MotionBlurPostProcess _motionBlurPP;
 	UIPostProcess _uiPP;
 

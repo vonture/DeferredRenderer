@@ -146,15 +146,18 @@
     <ClCompile Include="DeviceManagerConfigurationPane.cpp" />
     <ClCompile Include="FXAAConfigurationPane.cpp" />
     <ClCompile Include="FXAAPostProcess.cpp" />
+    <ClCompile Include="HBAOConfigurationPane.cpp" />
+    <ClCompile Include="HBAOPostProcess.cpp" />
     <ClCompile Include="LightRendererBase.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="LogWindow.cpp" />
+    <ClCompile Include="MotionBlurConfigurationPane.cpp" />
     <ClCompile Include="PCH.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Poisson.cpp" />
-    <ClCompile Include="PoissonDoFConfigurationPane.cpp" />
+    <ClCompile Include="DiscDoFConfigurationPane.cpp" />
     <ClCompile Include="PostProcessSelectionPane.cpp" />
     <ClCompile Include="ProfilePane.cpp" />
     <ClCompile Include="SDKmesh.cpp" />
@@ -171,7 +174,7 @@
     <ClCompile Include="CombinePostProcess.cpp" />
     <ClCompile Include="ConfigurationWindow.cpp" />
     <ClCompile Include="DDSTextureLoader.cpp" />
-    <ClCompile Include="PoissonDoFPostProcess.cpp" />
+    <ClCompile Include="DiscDoFPostProcess.cpp" />
     <ClCompile Include="DeviceManager.cpp" />
     <ClCompile Include="DeviceStates.cpp" />
     <ClCompile Include="CascadedDirectionalLightRenderer.cpp" />
@@ -218,12 +221,15 @@
     <ClInclude Include="DeviceManagerConfigurationPane.h" />
     <ClInclude Include="FXAAConfigurationPane.h" />
     <ClInclude Include="FXAAPostProcess.h" />
+    <ClInclude Include="HBAOConfigurationPane.h" />
+    <ClInclude Include="HBAOPostProcess.h" />
     <ClInclude Include="LightRenderer.h" />
     <ClInclude Include="LightRendererBase.h" />
     <ClInclude Include="LogWindow.h" />
     <ClInclude Include="Logger.h" />
+    <ClInclude Include="MotionBlurConfigurationPane.h" />
     <ClInclude Include="Poisson.h" />
-    <ClInclude Include="PoissonDoFConfigurationPane.h" />
+    <ClInclude Include="DiscDoFConfigurationPane.h" />
     <ClInclude Include="PostProcessSelectionPane.h" />
     <ClInclude Include="ProfilePane.h" />
     <ClInclude Include="SDKmesh.h" />
@@ -243,7 +249,7 @@
     <ClInclude Include="DDS.h" />
     <ClInclude Include="DDSTextureLoader.h" />
     <ClInclude Include="PCH.h" />
-    <ClInclude Include="PoissonDoFPostProcess.h" />
+    <ClInclude Include="DiscDoFPostProcess.h" />
     <ClInclude Include="DeviceManager.h" />
     <ClInclude Include="DeviceStates.h" />
     <ClInclude Include="CascadedDirectionalLightRenderer.h" />

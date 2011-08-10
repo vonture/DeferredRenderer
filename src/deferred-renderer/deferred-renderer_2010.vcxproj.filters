@@ -299,9 +299,6 @@
     <ClCompile Include="LightRendererBase.cpp">
       <Filter>Lights\Renderers</Filter>
     </ClCompile>
-    <ClCompile Include="PoissonDoFPostProcess.cpp">
-      <Filter>Post Process</Filter>
-    </ClCompile>
     <ClCompile Include="SDKmisc.cpp">
       <Filter>DXUT</Filter>
     </ClCompile>
@@ -315,13 +312,25 @@
     <ClCompile Include="Poisson.cpp">
       <Filter>Utility</Filter>
     </ClCompile>
-    <ClCompile Include="PoissonDoFConfigurationPane.cpp">
-      <Filter>Post Process\Configuration Panes</Filter>
-    </ClCompile>
     <ClCompile Include="FXAAPostProcess.cpp">
       <Filter>Post Process</Filter>
     </ClCompile>
     <ClCompile Include="FXAAConfigurationPane.cpp">
+      <Filter>Post Process\Configuration Panes</Filter>
+    </ClCompile>
+    <ClCompile Include="HBAOPostProcess.cpp">
+      <Filter>Post Process</Filter>
+    </ClCompile>
+    <ClCompile Include="HBAOConfigurationPane.cpp">
+      <Filter>Post Process\Configuration Panes</Filter>
+    </ClCompile>
+    <ClCompile Include="DiscDoFPostProcess.cpp">
+      <Filter>Post Process</Filter>
+    </ClCompile>
+    <ClCompile Include="DiscDoFConfigurationPane.cpp">
+      <Filter>Post Process\Configuration Panes</Filter>
+    </ClCompile>
+    <ClCompile Include="MotionBlurConfigurationPane.cpp">
       <Filter>Post Process\Configuration Panes</Filter>
     </ClCompile>
   </ItemGroup>
@@ -529,9 +538,6 @@
     <ClInclude Include="ContentType.h">
       <Filter>Content</Filter>
     </ClInclude>
-    <ClInclude Include="PoissonDoFPostProcess.h">
-      <Filter>Post Process</Filter>
-    </ClInclude>
     <ClInclude Include="PCH.h" />
     <ClInclude Include="SDKmesh.h">
       <Filter>DXUT</Filter>
@@ -548,13 +554,25 @@
     <ClInclude Include="Poisson.h">
       <Filter>Utility</Filter>
     </ClInclude>
-    <ClInclude Include="PoissonDoFConfigurationPane.h">
-      <Filter>Post Process\Configuration Panes</Filter>
-    </ClInclude>
     <ClInclude Include="FXAAPostProcess.h">
       <Filter>Post Process</Filter>
     </ClInclude>
     <ClInclude Include="FXAAConfigurationPane.h">
+      <Filter>Post Process\Configuration Panes</Filter>
+    </ClInclude>
+    <ClInclude Include="HBAOPostProcess.h">
+      <Filter>Post Process</Filter>
+    </ClInclude>
+    <ClInclude Include="HBAOConfigurationPane.h">
+      <Filter>Post Process\Configuration Panes</Filter>
+    </ClInclude>
+    <ClInclude Include="DiscDoFPostProcess.h">
+      <Filter>Post Process</Filter>
+    </ClInclude>
+    <ClInclude Include="DiscDoFConfigurationPane.h">
+      <Filter>Post Process\Configuration Panes</Filter>
+    </ClInclude>
+    <ClInclude Include="MotionBlurConfigurationPane.h">
       <Filter>Post Process\Configuration Panes</Filter>
     </ClInclude>
   </ItemGroup>

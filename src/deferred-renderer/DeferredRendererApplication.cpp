@@ -7,7 +7,9 @@
 #include "SkyConfigurationPane.h"
 #include "CameraConfigurationPane.h"
 #include "SSAOConfigurationPane.h"
-#include "PoissonDoFConfigurationPane.h"
+#include "HBAOConfigurationPane.h"
+#include "DiscDoFConfigurationPane.h"
+#include "MotionBlurConfigurationPane.h"
 #include "DeviceManagerConfigurationPane.h"
 #include "ProfilePane.h"
 
@@ -32,7 +34,8 @@ DeferredRendererApplication::DeferredRendererApplication()
 	_contentHolders.push_back(&_mlaaPP);
 	_contentHolders.push_back(&_fxaaPP);
 	_contentHolders.push_back(&_ssaoPP);
-	_contentHolders.push_back(&_pdofPP);
+	_contentHolders.push_back(&_hbaoPP);
+	_contentHolders.push_back(&_discDoFPP);
 	_contentHolders.push_back(&_motionBlurPP);
 	_contentHolders.push_back(&_uiPP);
 	_contentHolders.push_back(&_paraboloidPointLR);
@@ -58,10 +61,11 @@ void DeferredRendererApplication::OnInitialize()
 
 	_ppConfigPane = new PostProcessSelectionPane(_configWindow);
 	_ppConfigPane->AddPostProcess(&_ssaoPP, L"SSAO", true, true);
+	_ppConfigPane->AddPostProcess(&_hbaoPP, L"HBAO", false, false);
 	_ppConfigPane->AddPostProcess(&_skyPP, L"Sky", true, true);
 	_ppConfigPane->AddPostProcess(&_mlaaPP, L"MLAA", false, true);	
 	_ppConfigPane->AddPostProcess(&_hdrPP, L"HDR", true, true);
-	_ppConfigPane->AddPostProcess(&_pdofPP, L"Poisson DoF", true, true);
+	_ppConfigPane->AddPostProcess(&_discDoFPP, L"Disc DoF", true, true);
 	_ppConfigPane->AddPostProcess(&_fxaaPP, L"FXAA", true, true);
 	_ppConfigPane->AddPostProcess(&_uiPP, L"UI", true, false);
 	_ppConfigPane->AddPostProcess(&_motionBlurPP, L"Motion blur", false, false);	
@@ -73,8 +77,10 @@ void DeferredRendererApplication::OnInitialize()
 	new MLAAConfigurationPane(_configWindow, &_mlaaPP);
 	new FXAAConfigurationPane(_configWindow, &_fxaaPP);
 	new SSAOConfigurationPane(_configWindow, &_ssaoPP);
+	new HBAOConfigurationPane(_configWindow, &_hbaoPP);
 	new SkyConfigurationPane(_configWindow, &_skyPP);
-	new PoissonDoFConfigurationPane(_configWindow, &_pdofPP);
+	new DiscDoFConfigurationPane(_configWindow, &_discDoFPP);
+	new MotionBlurConfigurationPane(_configWindow, &_motionBlurPP);
 
 	// Create the log window
 	_logWindow = new LogWindow(canvas, Logger::GetInstance());

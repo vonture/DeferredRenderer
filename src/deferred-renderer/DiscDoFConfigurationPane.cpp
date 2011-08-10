@@ -1,45 +1,45 @@
 #include "PCH.h"
-#include "PoissonDoFConfigurationPane.h"
+#include "DiscDoFConfigurationPane.h"
 
-PoissonDoFConfigurationPane::PoissonDoFConfigurationPane(Gwen::Controls::Base* parent, 
-	PoissonDoFPostProcess* pp)
+DiscDoFConfigurationPane::DiscDoFConfigurationPane(Gwen::Controls::Base* parent, 
+	DiscDoFPostProcess* pp)
 	: ConfigurationPane(parent, L"Poisson DoF", pp)
 {
 	_focalDistSlider = new SliderWithLabel(this);
 	_focalDistSlider->Slider()->SetRange(0.0f, 100.0f);
 	_focalDistSlider->Slider()->SetValue(pp->GetFocalDistance());
-	_focalDistSlider->Slider()->onValueChanged.Add(this, &PoissonDoFConfigurationPane::OnValueChanged);
+	_focalDistSlider->Slider()->onValueChanged.Add(this, &DiscDoFConfigurationPane::OnValueChanged);
 	_focalDistSlider->Dock(Gwen::Pos::Top);
 
 	_falloffStartSlider = new SliderWithLabel(this);
 	_falloffStartSlider->Slider()->SetRange(0.0f, 100.0f);
 	_falloffStartSlider->Slider()->SetValue(pp->GetFocalFalloffStart());
-	_falloffStartSlider->Slider()->onValueChanged.Add(this, &PoissonDoFConfigurationPane::OnValueChanged);
+	_falloffStartSlider->Slider()->onValueChanged.Add(this, &DiscDoFConfigurationPane::OnValueChanged);
 	_falloffStartSlider->Dock(Gwen::Pos::Top);
 
 	_falloffEndSlider = new SliderWithLabel(this);
 	_falloffEndSlider->Slider()->SetRange(0.0f, 100.0f);
 	_falloffEndSlider->Slider()->SetValue(pp->GetFocalFalloffEnd());
-	_falloffEndSlider->Slider()->onValueChanged.Add(this, &PoissonDoFConfigurationPane::OnValueChanged);
+	_falloffEndSlider->Slider()->onValueChanged.Add(this, &DiscDoFConfigurationPane::OnValueChanged);
 	_falloffEndSlider->Dock(Gwen::Pos::Top);
 
 	_cocScaleSlider = new SliderWithLabel(this);
 	_cocScaleSlider->Slider()->SetRange(0.0f, 15.0f);
 	_cocScaleSlider->Slider()->SetValue(pp->GetCircleOfConfusionScale());
-	_cocScaleSlider->Slider()->onValueChanged.Add(this, &PoissonDoFConfigurationPane::OnValueChanged);
+	_cocScaleSlider->Slider()->onValueChanged.Add(this, &DiscDoFConfigurationPane::OnValueChanged);
 	_cocScaleSlider->Dock(Gwen::Pos::Top);
 
 	_sampleCountSlider = new SliderWithLabel(this);
 	_sampleCountSlider->Slider()->SetClampToNotches(true);
 	_sampleCountSlider->Slider()->SetRange(0.0f, pp->GetNumSampleCountIndicies() - 1);
 	_sampleCountSlider->Slider()->SetValue(pp->GetSampleCountIndex());	
-	_sampleCountSlider->Slider()->onValueChanged.Add(this, &PoissonDoFConfigurationPane::OnValueChanged);
+	_sampleCountSlider->Slider()->onValueChanged.Add(this, &DiscDoFConfigurationPane::OnValueChanged);
 	_sampleCountSlider->Dock(Gwen::Pos::Top);
 }
 
-void PoissonDoFConfigurationPane::OnValueChanged(Gwen::Controls::Base *control)
+void DiscDoFConfigurationPane::OnValueChanged(Gwen::Controls::Base *control)
 {
-	PoissonDoFPostProcess* pp = GetConfiguredObject();
+	DiscDoFPostProcess* pp = GetConfiguredObject();
 
 	if (control == _focalDistSlider->Slider())
 	{
@@ -59,9 +59,9 @@ void PoissonDoFConfigurationPane::OnValueChanged(Gwen::Controls::Base *control)
 	}
 }
 
-void PoissonDoFConfigurationPane::OnFrameMove(double totalTime, float dt)
+void DiscDoFConfigurationPane::OnFrameMove(double totalTime, float dt)
 {
-	PoissonDoFPostProcess* pp = GetConfiguredObject();
+	DiscDoFPostProcess* pp = GetConfiguredObject();
 
 	_focalDistSlider->Slider()->SetValue(pp->GetFocalDistance());
 	_focalDistSlider->Label()->SetText("Focal distance: " + Gwen::Utility::ToString(pp->GetFocalDistance())); 

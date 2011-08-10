@@ -1,8 +1,8 @@
 #include "PCH.h"
-#include "PoissonDoFPostProcess.h"
+#include "DiscDoFPostProcess.h"
 #include "Logger.h"
 
-PoissonDoFPostProcess::PoissonDoFPostProcess()
+DiscDoFPostProcess::DiscDoFPostProcess()
 	: _propertiesBuffer(NULL)
 {
 	SetIsAdditive(false);
@@ -20,11 +20,11 @@ PoissonDoFPostProcess::PoissonDoFPostProcess()
 	SetSampleCountIndex(1);
 }
 
-PoissonDoFPostProcess::~PoissonDoFPostProcess()
+DiscDoFPostProcess::~DiscDoFPostProcess()
 {
 }
 
-HRESULT PoissonDoFPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
+HRESULT DiscDoFPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
 {
 	BEGIN_EVENT_D3D(L"DoF");
@@ -85,7 +85,7 @@ HRESULT PoissonDoFPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext,
 	return S_OK;
 }
 
-HRESULT PoissonDoFPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
+HRESULT DiscDoFPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
@@ -155,7 +155,7 @@ HRESULT PoissonDoFPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 	return S_OK;
 }
 
-void PoissonDoFPostProcess::OnD3D11DestroyDevice()
+void DiscDoFPostProcess::OnD3D11DestroyDevice()
 {
 	PostProcess::OnD3D11DestroyDevice();
 	
@@ -168,7 +168,7 @@ void PoissonDoFPostProcess::OnD3D11DestroyDevice()
 	}
 }
 
-HRESULT PoissonDoFPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice,
+HRESULT DiscDoFPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice,
 	IDXGISwapChain* pSwapChain, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
@@ -182,7 +182,7 @@ HRESULT PoissonDoFPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice
 	return S_OK;
 }
 
-void PoissonDoFPostProcess::OnD3D11ReleasingSwapChain()
+void DiscDoFPostProcess::OnD3D11ReleasingSwapChain()
 {
 	PostProcess::OnD3D11ReleasingSwapChain();
 }
