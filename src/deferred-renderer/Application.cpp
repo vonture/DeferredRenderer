@@ -81,6 +81,9 @@ HRESULT Application::Start()
 	// Set the window to be the same size as the back buffer
 	_window.SetClientSize(_deviceManager.GetBackBufferWidth(), _deviceManager.GetBackBufferHeight());
 
+	// Window prepared, show it
+	_window.Show();
+
 	// Call the IHasContent methods
 	V_RETURN(OnD3D11CreateDevice(_deviceManager.GetDevice(), _deviceManager.GetBackBufferSurfaceDesc()));
 	V_RETURN(OnD3D11ResizedSwapChain(_deviceManager.GetDevice(), _deviceManager.GetSwapChain(),
@@ -102,9 +105,6 @@ HRESULT Application::Start()
 	}
 	double counterFreq = (double)largeInt.QuadPart;
 	
-	// Everything is ready, show the window
-	_window.Show();	
-
 	// Begin the main loop
 	while(_window.IsAlive())
 	{
