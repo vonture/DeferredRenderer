@@ -7,7 +7,11 @@
 #endif
 
 #ifndef BLUR_RADIUS
-#define BLUR_RADIUS 4
+#define BLUR_RADIUS 5
+#endif
+
+#ifndef RAND_TEX_SIZE
+#define RAND_TEX_SIZE 32
 #endif
 
 cbuffer cbSSAOProperties : register(cb0)
@@ -62,14 +66,14 @@ float4 PS_SSAO(PS_In_Quad input) : SV_TARGET0
 	// Texture0 = Normals
 	// Texture1 = Depth
 	// Texture2 = Random noise
-	float3 vNormal = Texture0.Sample(PointSampler, input.vTexCoord).xyz;
+	float3 vNormal = Texture0.SampleLevel(PointSampler, input.vTexCoord, 0).xyz;
 	
-	float fDepth = Texture1.Sample(PointSampler, input.vTexCoord).x;
+	float fDepth = Texture1.SampleLevel(PointSampler, input.vTexCoord, 0).x;
 	float4 vPositionWS = GetPositionWS(input.vPosition2, fDepth);
 
 	// Sample the random texture so that this location will always yeild the same
 	// random direction (so that there is no flickering)
-	float3 vRandomDirection = Texture2.Sample(PointSampler, frac(input.vTexCoord * 111.111f)).xyz;
+	float3 vRandomDirection = Texture2.SampleLevel(PointSampler, frac(input.vTexCoord * RAND_TEX_SIZE), 0).xyz;
 	
 	float fAOSum = 0.0f;
 	for (int i = 0; i < SSAO_SAMPLE_COUNT; i++)
@@ -93,7 +97,7 @@ float4 PS_SSAO(PS_In_Quad input) : SV_TARGET0
 		vSampleTexCoord.y = 1.0f - vSampleTexCoord.y;
 
 		// Sample the depth of the new location
-		float fSampleDepth = Texture1.Sample(PointSampler, vSampleTexCoord).x;
+		float fSampleDepth = Texture1.SampleLevel(PointSampler, vSampleTexCoord, 0).x;
 		
 		float fSampleLinearDepth = GetLinearDepth(fSampleDepth, CameraNearClip, CameraFarClip);
 		float fRayLinearDepth = GetLinearDepth(vSamplePositionCS.z, CameraNearClip, CameraFarClip);
@@ -117,27 +121,15 @@ float4 PS_SSAO(PS_In_Quad input) : SV_TARGET0
 
 float4 PS_SSAO_Composite(PS_In_Quad input) : SV_TARGET0
 {
-	float3 vSceneColor = Texture0.Sample(PointSampler, input.vTexCoord);
+	float3 vSceneColor = Texture0.SampleLevel(PointSampler, input.vTexCoord, 0);
 	
 #if SSAO_HALF_RES
-	float2 aoTexCoord = input.vTexCoord * 0.5f;
+	float fAO = Texture1.SampleLevel(LinearSampler, input.vTexCoord * 0.5f, 0).x;
 #else
-	float2 aoTexCoord = input.vTexCoord;
-#endif
-	float fAO = Texture1.Sample(LinearSampler, aoTexCoord).x;
+	float fAO = Texture1.SampleLevel(PointSampler, input.vTexCoord, 0).x;
+#endif	
 
 	return float4(fAO * vSceneColor, 1.0f);
-}
-
-float4 PS_Scale(PS_In_Quad input) : SV_TARGET0
-{
-#if SSAO_HALF_RES
-	float2 texCoord = input.vTexCoord * 0.5f;
-#else
-	float2 texCoord = input.vTexCoord;
-#endif
-
-	return Texture0.Sample(LinearSampler, texCoord);
 }
 
 // Calculates the gaussian blur weight for a given distance and sigmas
@@ -153,18 +145,19 @@ float Blur(float2 texCoord, float2 direction)
 	texCoord = texCoord * 0.5f;
 #endif
 
-	// Blur happens at 1/4 scene size
-	float2 step = InverseSceneSize * 0.25f;
+	float weightMid = CalcGaussianWeight(0);
+	float sampleMid = Texture0.SampleLevel(PointSampler, texCoord, 0).x;
+    float value = sampleMid * weightMid;
 
-    float value = 0;
-    for (int i = -BLUR_RADIUS; i < BLUR_RADIUS; i++)
+    for (int i = 1; i <= BLUR_RADIUS; i++)
     {
+		float2 offset = i * (InverseSceneSize * direction);
 		float weight = CalcGaussianWeight(i);
 
-		float2 sampleCoord = texCoord + direction * ((i - 0.5f) * step);
+		float sampleDown = Texture0.SampleLevel(PointSampler, texCoord - offset, 0).x;
+		float sampleUp = Texture0.SampleLevel(PointSampler, texCoord + offset, 0).x;
 
-		float sample = Texture0.SampleLevel(LinearSampler, sampleCoord, 0).x;
-		value += sample * weight;
+		value = value + (sampleDown * weight) + (sampleUp * weight);
     }
 
     return value;

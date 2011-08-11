@@ -24,20 +24,15 @@ private:
 	ID3D11RenderTargetView* _aoRTV;
 	ID3D11ShaderResourceView* _aoSRV;
 
-	ID3D11Texture2D* _downScaleTextures[2];
-	ID3D11RenderTargetView* _downScaleRTVs[2];
-	ID3D11ShaderResourceView* _downScaleSRVs[2];
-
 	ID3D11Texture2D* _blurTempTexture;
 	ID3D11RenderTargetView* _blurTempRTV;
 	ID3D11ShaderResourceView* _blurTempSRV;
 
-	static const int RANDOM_TEXTURE_SIZE = 16;	
+	static const int RANDOM_TEXTURE_SIZE = 32;	
 	ID3D11Texture2D* _randomTexture;
 	ID3D11ShaderResourceView* _randomSRV;
 
 	ID3D11PixelShader* _aoPSs[NUM_SSAO_SAMPLE_COUNTS];
-	ID3D11PixelShader* _scalePS[2];
 	ID3D11PixelShader* _hBlurPS[2];
 	ID3D11PixelShader* _vBlurPS[2];
 	ID3D11PixelShader* _compositePS[2];
