@@ -68,31 +68,26 @@ public:
 		const type_info& info = typeid(lightType);
 		size_t hash = info.hash_code();		
 		
-		if (hash == _ambientLightHash)
+		if (_lightRenderers.find(hash) != _lightRenderers.end())
 		{
-			// Special case for ambient lights
-			AmbientLight* asAmbient = reinterpret_cast<AmbientLight*>(light);
-
-			_ambientLight.Color.x += asAmbient->Color.x;
-			_ambientLight.Color.y += asAmbient->Color.y;
-			_ambientLight.Color.z += asAmbient->Color.z;			
+			LightRenderer<lightType>* renderer = dynamic_cast<LightRenderer<lightType>*>(_lightRenderers[hash]);
+			if (renderer)
+			{
+				renderer->Add(light, shadowed);
+			}
 		}
 		else
 		{
-			// Regular light, look for its renderer
-			if (_lightRenderers.find(hash) != _lightRenderers.end())
-			{
-				LightRenderer<lightType>* renderer = dynamic_cast<LightRenderer<lightType>*>(_lightRenderers[hash]);
-				if (renderer)
-				{
-					renderer->Add(light, shadowed);
-				}
-			}
-			else
-			{
-				LOG_ERROR(L"Renderer", L"Attempted to add a light type which does not have a renderer set.");
-			}
-		}
+			LOG_ERROR(L"Renderer", L"Attempted to add a light type which does not have a renderer set.");
+		}		
+	}
+
+	template<>
+	void AddLight<AmbientLight>(AmbientLight* light, bool shadowed)
+	{
+		_ambientLight.Color.x += light->Color.x;
+		_ambientLight.Color.y += light->Color.y;
+		_ambientLight.Color.z += light->Color.z;	
 	}
 	
 	void AddModel(ModelInstance* model);
