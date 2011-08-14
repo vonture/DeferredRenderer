@@ -47,7 +47,6 @@ private:
 	
 	AmbientLight _ambientLight;
 
-	size_t _ambientLightHash;
 	std::map<size_t, LightRendererBase*> _lightRenderers;
 	
 	void swapPPBuffers();
