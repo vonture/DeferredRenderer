@@ -126,11 +126,11 @@ HRESULT SkyPostProcess:: OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXG
 	char debugName[256];
 	for (UINT i = 0; i < SKY_TYPE_COUNT; i++)
 	{
-		sprintf_s(a, "%ff", SKY_TYPES[i].A);
-		sprintf_s(b, "%ff", SKY_TYPES[i].B);
-		sprintf_s(c, "%ff", SKY_TYPES[i].C);
-		sprintf_s(d, "%ff", SKY_TYPES[i].D);
-		sprintf_s(e, "%ff", SKY_TYPES[i].E);
+		sprintf_s(a, "%#ff", SKY_TYPES[i].A);
+		sprintf_s(b, "%#ff", SKY_TYPES[i].B);
+		sprintf_s(c, "%#ff", SKY_TYPES[i].C);
+		sprintf_s(d, "%#ff", SKY_TYPES[i].D);
+		sprintf_s(e, "%#ff", SKY_TYPES[i].E);
 
 		skyMacros[0].Definition = "0";
 		V_RETURN( CompileShaderFromFile( L"Sky.hlsl", "PS_Sky", "ps_4_0", skyMacros, &pBlob ) );   
