@@ -21,4 +21,4 @@ public:
 	{
 		return LoadContent(device, path);
 	}
-}
+};
