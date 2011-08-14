@@ -212,6 +212,7 @@
     <ClCompile Include="SpotLightRenderer.cpp" />
     <ClCompile Include="SpriteRenderer.cpp" />
     <ClCompile Include="TestingCamera.cpp" />
+    <ClCompile Include="TextureContent.cpp" />
     <ClCompile Include="UIPostProcess.cpp" />
     <ClCompile Include="UIRenderer.cpp" />
     <ClCompile Include="Window.cpp" />
@@ -219,6 +220,7 @@
     <ClInclude Include="AssimpLogger.h" />
     <ClInclude Include="ContentManager.h" />
     <ClInclude Include="ContentType.h" />
+    <ClInclude Include="ContentTypeNoOptions.h" />
     <ClInclude Include="DeviceManagerConfigurationPane.h" />
     <ClInclude Include="FXAAConfigurationPane.h" />
     <ClInclude Include="FXAAPostProcess.h" />
@@ -280,6 +282,7 @@
     <ClInclude Include="SpotLightRenderer.h" />
     <ClInclude Include="SpriteRenderer.h" />
     <ClInclude Include="TestingCamera.h" />
+    <ClInclude Include="TextureContent.h" />
     <ClInclude Include="UIPostProcess.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="Window.h" />

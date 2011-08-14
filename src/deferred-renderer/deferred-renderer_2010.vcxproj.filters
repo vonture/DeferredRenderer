@@ -339,6 +339,9 @@
     <ClCompile Include="ShaderContent.cpp">
       <Filter>Content</Filter>
     </ClCompile>
+    <ClCompile Include="TextureContent.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -579,6 +582,12 @@
       <Filter>Post Process\Configuration Panes</Filter>
     </ClInclude>
     <ClInclude Include="ShaderContent.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureContent.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="ContentTypeNoOptions.h">
       <Filter>Content</Filter>
     </ClInclude>
   </ItemGroup>
