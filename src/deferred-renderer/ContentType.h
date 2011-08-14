@@ -1,22 +1,30 @@
 #pragma once
 
 #include "PCH.h"
-#include "ContentTypeBase.h"
+
+class ContentTypeBase
+{
+public:	
+	virtual HRESULT LoadContent(ID3D11Device* device) = 0;
+	virtual void UnloadContent() = 0;
+};
 
 template <class T>
 class ContentType : public ContentTypeBase
 {
-private:
-	T* _content;
-
-protected:
-	void SetContent(T* content) { _content = content; }
+	const WCHAR* _path;
+	T* _options;
 
 public:
-	ContentType() 
-		: _content(NULL) 
+	ContentType(const WCHAR* path, T* options) 
+		: _path(path), _options(options)
 	{
 	}
+	
+	virtual HRESULT LoadContent(ID3D11Device* device, const WCHAR* path, T* options) = 0;
 
-	T* GetContent() { return _content; }
+	HRESULT LoadContent(ID3D11Device* device) 
+	{
+		return LoadContent(device, _path, _options); 
+	}
 };
