@@ -289,3 +289,8 @@ HRESULT DeviceManager::afterReset()
 
 	return S_OK;
 }
+
+HRESULT DeviceManager::TakeScreenshot(const WCHAR* path, D3DX11_IMAGE_FILE_FORMAT format)
+{
+	return D3DX11SaveTextureToFile(_immediateContext, _backBufferTexture, format, path);
+}

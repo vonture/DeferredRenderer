@@ -80,4 +80,6 @@ public:
     void SetFullScreen(bool enabled) { _fullScreen = enabled; }
     void SetVSyncEnabled(bool enabled) { _vsync = enabled; }
     void SetMinFeatureLevel(D3D_FEATURE_LEVEL level) { _minFeatureLevel = level; }
+
+	HRESULT TakeScreenshot(const WCHAR* path = L"", D3DX11_IMAGE_FILE_FORMAT format = D3DX11_IFF_DDS);
 };
