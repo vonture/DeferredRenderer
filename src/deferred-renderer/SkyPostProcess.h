@@ -13,8 +13,17 @@ private:
 	float _sunIntensity;
 	bool _enableSun;
 
-	ID3D11PixelShader* _sunEnabledPS;
-	ID3D11PixelShader* _sunDisabledPS;
+	struct SKY_TYPE
+	{
+		float A, B, C, D, E;
+		const WCHAR* Description;
+	};
+
+	static const UINT SKY_TYPE_COUNT = 15;
+	static const SKY_TYPE SKY_TYPES[SKY_TYPE_COUNT];
+	UINT _skyTypeIndex;	
+
+	ID3D11PixelShader* _skyPSs[2][SKY_TYPE_COUNT];
 
 	ID3D11Buffer* _skyProperties;
 
@@ -46,6 +55,11 @@ public:
 	void SetSunWidth(float width) { _sunWidth = max(width, EPSILON); }
 	void SetSunEnabled(bool enable) { _enableSun = enable; }
 	void SetSunIntensity(float intensity) { _sunIntensity = max(intensity, 0.0f); }
+
+	void SetSkyTypeIndex(UINT idx) { _skyTypeIndex = clamp(idx, 0, SKY_TYPE_COUNT - 1); }
+	UINT GetSkyTypeIndex() const { return _skyTypeIndex; }
+	const WCHAR* GetSkyTypeDescription() const { return SKY_TYPES[_skyTypeIndex].Description; }
+	UINT GetSkyTypeIndexCount() const { return SKY_TYPE_COUNT; }
 
 	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer);

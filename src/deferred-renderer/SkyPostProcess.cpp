@@ -2,10 +2,35 @@
 #include "SkyPostProcess.h"
 #include "Logger.h"
 
+const SkyPostProcess::SKY_TYPE SkyPostProcess::SKY_TYPES[SKY_TYPE_COUNT] = 
+{
+	{  4.0f, -0.70f,  0.0f, -1.0f, 0.00f, L"CIE Standard Overcast Sky, steep luminance gradation towards zenith, azimuthal uniformity" },
+	{  4.0f, -0.70f,  2.0f, -1.5f, 0.15f, L"Overcast, with steep luminance gradation and slight brightening towards the sun" },
+	{  1.1f, -0.80f,  0.0f, -1.0f, 0.00f, L"Overcast, moderately graded with azimuthal uniformity" },
+	{  1.1f, -0.80f,  2.0f, -1.5f, 0.15f, L"Overcast, moderately graded and slight brightening towards the sun" },
+	{  0.0f, -1.00f,  0.0f, -1.0f, 0.00f, L"Sky of uniform luminance" },
+	{  0.0f, -1.00f,  2.0f, -1.5f, 0.15f, L"Partly cloudy sky, no gradation towards zenith, slight brightening towards the sun" },
+	{  0.0f, -1.00f,  5.0f, -2.5f, 0.30f, L"Partly cloudy sky, no gradation towards zenith, brighter circumsolar region" },
+	{  0.0f, -1.00f, 10.0f, -3.0f, 0.45f, L"Partly cloudy sky, no gradation towards zenith, distinct solar corona" },
+	{ -1.0f, -0.55f,  2.0f, -1.5f, 0.15f, L"Partly cloudy, with the obscured sun" },
+	{ -1.0f, -0.55f,  5.0f, -2.5f, 0.30f, L"Partly cloudy, with brighter circumsolar region" },
+	{ -1.0f, -0.55f, 10.0f, -3.0f, 0.45f, L"White-blue sky with distinct solar corona" },
+	{ -1.0f, -0.32f, 10.0f, -3.0f, 0.45f, L"CIE Standard Clear Sky, low illuminance turbidity" },
+	{ -1.0f, -0.32f, 16.0f, -3.0f, 0.30f, L"CIE Standard Clear Sky, polluted atmosphere" },
+	{ -1.0f, -0.15f, 16.0f, -3.0f, 0.30f, L"Cloudless turbid sky with broad solar corona" },
+	{ -1.0f, -0.15f, 24.0f, -2.8f, 0.15f, L"White-blue turbid sky with broad solar corona" },
+};
+
 SkyPostProcess::SkyPostProcess()
-	: _sunDisabledPS(NULL), _sunEnabledPS(NULL), _skyProperties(NULL)
+	: _skyProperties(NULL)
 {
 	SetIsAdditive(true);
+
+	for (UINT i = 0; i < SKY_TYPE_COUNT; i++)
+	{
+		_skyPSs[0][i] = NULL;
+		_skyPSs[1][i] = NULL;
+	}
 
 	SetSunColor(XMFLOAT3(1.0f, 0.8f, 0.5f));
 	SetSkyColor(XMFLOAT3(0.2f, 0.5f, 1.0f));
@@ -13,6 +38,7 @@ SkyPostProcess::SkyPostProcess()
 	SetSunWidth(0.05f);
 	SetSunEnabled(true);
 	SetSunIntensity(4.0f);
+	SetSkyTypeIndex(11);
 }
 
 SkyPostProcess::~SkyPostProcess()
@@ -70,7 +96,7 @@ HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	Quad* fsQuad = GetFullScreenQuad();
 	
 	// Render
-	V_RETURN(fsQuad->Render(pd3dImmediateContext, _enableSun ? _sunEnabledPS : _sunDisabledPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _skyPSs[_enableSun ? 1 : 0][_skyTypeIndex]));
 	
 	END_EVENT_D3D(L"");
 
@@ -86,24 +112,42 @@ HRESULT SkyPostProcess:: OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXG
 	// Load the shaders
 	ID3DBlob* pBlob = NULL;
 
+	char a[16], b[16], c[16], d[16], e[16];
 	D3D_SHADER_MACRO skyMacros[] = 
 	{
 		{ "SUN_ENABLED", "" },
-		NULL,
+		{ "A", a },
+		{ "B", b },
+		{ "C", c },
+		{ "D", d },
+		{ "E", e },
 	};
 
-	skyMacros[0].Definition = "0";
-	V_RETURN( CompileShaderFromFile( L"Sky.hlsl", "PS_Sky", "ps_4_0", skyMacros, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_sunDisabledPS));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_sunDisabledPS, "Sky post process (sun disabled) pixel shader");
+	char debugName[256];
+	for (UINT i = 0; i < SKY_TYPE_COUNT; i++)
+	{
+		sprintf_s(a, "%ff", SKY_TYPES[i].A);
+		sprintf_s(b, "%ff", SKY_TYPES[i].B);
+		sprintf_s(c, "%ff", SKY_TYPES[i].C);
+		sprintf_s(d, "%ff", SKY_TYPES[i].D);
+		sprintf_s(e, "%ff", SKY_TYPES[i].E);
 
-	skyMacros[0].Definition = "1";
-	V_RETURN( CompileShaderFromFile( L"Sky.hlsl", "PS_Sky", "ps_4_0", skyMacros, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_sunEnabledPS));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_sunEnabledPS, "Sky post process (sun enabled) pixel shader");
+		skyMacros[0].Definition = "0";
+		V_RETURN( CompileShaderFromFile( L"Sky.hlsl", "PS_Sky", "ps_4_0", skyMacros, &pBlob ) );   
+		V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_skyPSs[0][i]));
+		SAFE_RELEASE(pBlob);
 
+		sprintf_s(debugName, "Sky post process (sun disabled, type = %u)", i);
+		SET_DEBUG_NAME(_skyPSs[0][i], debugName);
+
+		skyMacros[0].Definition = "1";
+		V_RETURN( CompileShaderFromFile( L"Sky.hlsl", "PS_Sky", "ps_4_0", skyMacros, &pBlob ) );   
+		V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_skyPSs[1][i]));
+		SAFE_RELEASE(pBlob);
+		
+		sprintf_s(debugName, "Sky post process (sun enabled, type = %u)", i);
+		SET_DEBUG_NAME(_skyPSs[1][i], debugName);
+	}
 	// Create the buffer
 	D3D11_BUFFER_DESC bufferDesc =
 	{
@@ -125,8 +169,11 @@ void SkyPostProcess::OnD3D11DestroyDevice()
 {
 	PostProcess::OnD3D11DestroyDevice();
 
-	SAFE_RELEASE(_sunEnabledPS);
-	SAFE_RELEASE(_sunDisabledPS);
+	for (UINT i = 0; i < SKY_TYPE_COUNT; i++)
+	{
+		SAFE_RELEASE(_skyPSs[0][i]);
+		SAFE_RELEASE(_skyPSs[1][i]);
+	}
 	SAFE_RELEASE(_skyProperties);
 }
 
