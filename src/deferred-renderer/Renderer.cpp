@@ -12,10 +12,7 @@ Renderer::Renderer()
 		_ppTextures[i] = NULL;
 		_ppShaderResourceViews[i] = NULL;
 		_ppRenderTargetViews[i] = NULL;
-	}
-
-	const type_info& info = typeid(AmbientLight);
-	_ambientLightHash = info.hash_code();		
+	}	
 }
 
 void Renderer::swapPPBuffers()
