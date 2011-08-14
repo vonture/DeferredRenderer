@@ -333,6 +333,12 @@
     <ClCompile Include="MotionBlurConfigurationPane.cpp">
       <Filter>Post Process\Configuration Panes</Filter>
     </ClCompile>
+    <ClCompile Include="ContentManager.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderContent.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -532,9 +538,6 @@
     <ClInclude Include="ContentManager.h">
       <Filter>Content</Filter>
     </ClInclude>
-    <ClInclude Include="ContentTypeBase.h">
-      <Filter>Content</Filter>
-    </ClInclude>
     <ClInclude Include="ContentType.h">
       <Filter>Content</Filter>
     </ClInclude>
@@ -574,6 +577,9 @@
     </ClInclude>
     <ClInclude Include="MotionBlurConfigurationPane.h">
       <Filter>Post Process\Configuration Panes</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderContent.h">
+      <Filter>Content</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

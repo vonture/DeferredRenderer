@@ -143,6 +143,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AssimpLogger.cpp" />
+    <ClCompile Include="ContentManager.cpp" />
     <ClCompile Include="DeviceManagerConfigurationPane.cpp" />
     <ClCompile Include="FXAAConfigurationPane.cpp" />
     <ClCompile Include="FXAAPostProcess.cpp" />
@@ -162,6 +163,7 @@
     <ClCompile Include="ProfilePane.cpp" />
     <ClCompile Include="SDKmesh.cpp" />
     <ClCompile Include="SDKmisc.cpp" />
+    <ClCompile Include="ShaderContent.cpp" />
     <ClCompile Include="SliderWithLabel.cpp" />
     <ClCompile Include="SSAOConfigurationPane.cpp" />
     <ClCompile Include="SSAOPostProcess.cpp" />
@@ -217,7 +219,6 @@
     <ClInclude Include="AssimpLogger.h" />
     <ClInclude Include="ContentManager.h" />
     <ClInclude Include="ContentType.h" />
-    <ClInclude Include="ContentTypeBase.h" />
     <ClInclude Include="DeviceManagerConfigurationPane.h" />
     <ClInclude Include="FXAAConfigurationPane.h" />
     <ClInclude Include="FXAAPostProcess.h" />
@@ -234,6 +235,7 @@
     <ClInclude Include="ProfilePane.h" />
     <ClInclude Include="SDKmesh.h" />
     <ClInclude Include="SDKmisc.h" />
+    <ClInclude Include="ShaderContent.h" />
     <ClInclude Include="SliderWithLabel.h" />
     <ClInclude Include="SSAOConfigurationPane.h" />
     <ClInclude Include="SSAOPostProcess.h" />
