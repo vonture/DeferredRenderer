@@ -11,6 +11,8 @@
 class SkyConfigurationPane : public ConfigurationPane<SkyPostProcess>
 {
 private:
+	SliderWithLabel* _skyTypeSlider;
+
 	Gwen::Controls::Label* _skyColorLabel;
 	Gwen::Controls::ColorPicker* _skyColorPicker;
 

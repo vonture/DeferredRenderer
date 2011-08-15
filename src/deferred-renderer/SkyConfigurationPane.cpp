@@ -6,6 +6,14 @@ SkyConfigurationPane::SkyConfigurationPane(Gwen::Controls::Base* parent, SkyPost
 {
 	const int labelHeight = 20;
 
+	_skyTypeSlider = new SliderWithLabel(this);
+	_skyTypeSlider->Slider()->SetClampToNotches(true);
+	_skyTypeSlider->Slider()->SetRange(0.0f, pp->GetSkyTypeIndexCount() - 1);
+	_skyTypeSlider->Slider()->SetNotchCount(pp->GetSkyTypeIndexCount());
+	_skyTypeSlider->Slider()->SetValue(pp->GetSkyTypeIndex());	
+	_skyTypeSlider->Slider()->onValueChanged.Add(this, &SkyConfigurationPane::OnValueChanged);
+	_skyTypeSlider->Dock(Gwen::Pos::Top);
+
 	_skyColorLabel = new Gwen::Controls::Label(this);
 	_skyColorLabel->SetText("Sky color:");
 	_skyColorLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
@@ -76,7 +84,11 @@ void SkyConfigurationPane::OnValueChanged(Gwen::Controls::Base *control)
 {
 	SkyPostProcess* pp = GetConfiguredObject();
 
-	if (control == _skyColorPicker)
+	if (control == _skyTypeSlider->Slider())
+	{
+		pp->SetSkyTypeIndex(floor(_skyTypeSlider->Slider()->GetValue() + 0.5f));
+	}
+	else if (control == _skyColorPicker)
 	{
 		pp->SetSkyColor(gwenColorToVector(_skyColorPicker->GetColor()));
 	}
@@ -107,6 +119,9 @@ void SkyConfigurationPane::OnValueChanged(Gwen::Controls::Base *control)
 void SkyConfigurationPane::OnFrameMove(double totalTime, float dt)
 {
 	SkyPostProcess* pp = GetConfiguredObject();
+
+	_skyTypeSlider->Slider()->SetValue(pp->GetSkyTypeIndex());
+	_skyTypeSlider->Label()->SetText("Sky type: " + Gwen::Utility::UnicodeToString(pp->GetSkyTypeDescription()));
 
 	_skyColorPicker->SetColor(vectorToGwenColor(pp->GetSkyColor()));
 	_sunEnabledCheckBox->Checkbox()->SetChecked(pp->GetSunEnabled());
