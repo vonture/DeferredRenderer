@@ -1,5 +1,6 @@
 #include "PCH.h"
 #include "ShaderLoader.h"
+#include "Logger.h"
 
 // TO BE REMOVED
 HRESULT CompileShaderFromFile(WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel,
@@ -110,8 +111,13 @@ HRESULT PixelShaderLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* threadP
 {
 	if (!options)
 	{
+		swprintf_s(errorMsg, errorLen, L"Options cannot be null when loading shaders.");
 		return E_FAIL;
 	}
+	
+	WCHAR logMsg[MAX_LOG_LENGTH];
+	swprintf_s(logMsg, L"Loading pixel shader: %s", path);
+	LOG_INFO(L"Pixel Shader Loader", logMsg);
 
 	HRESULT hr;
 	
@@ -131,7 +137,7 @@ HRESULT PixelShaderLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* threadP
 	{
 		SAFE_RELEASE(pShaderBlob);
 
-		FormatHRESULTErrorMessageW(hr, errorMsg, errorLen);
+		FormatDXErrorMessageW(hr, errorMsg, errorLen);
 		return hr;
 	}
 
