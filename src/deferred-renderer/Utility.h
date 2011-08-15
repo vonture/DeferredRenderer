@@ -15,6 +15,32 @@ const float PiOver8 = Pi / 8.0f;
 #define saturate(val) clamp((val), 0, 1)
 #endif
 
+inline HRESULT FormatHRESULTErrorMessageW(HRESULT errorId, WCHAR* msgBuffer, UINT msgLen)
+{
+	return FormatMessageW(
+		FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		errorId, 
+		LANG_SYSTEM_DEFAULT,
+		msgBuffer,
+		msgLen,
+		NULL
+	);
+}
+
+inline HRESULT FormatHRESULTErrorMessageA(HRESULT errorId, char* msgBuffer, UINT msgLen)
+{
+	return FormatMessageA(
+		FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		errorId, 
+		LANG_SYSTEM_DEFAULT,
+		msgBuffer,
+		msgLen,
+		NULL
+	);
+}
+
 inline int AnsiToWString(const char* ansiString, WCHAR* output, UINT outputLength)
 {
     return MultiByteToWideChar(CP_ACP, 0, ansiString, -1, output, outputLength);
