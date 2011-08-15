@@ -142,8 +142,13 @@ void Logger::AddLogMessage(UINT type, const WCHAR* sender, const WCHAR* message)
 		sender,		// const WCHAR* Sender;
 		message,	// const WCHAR* Message;	
 	};
-
 	_messages.push_back(info);
+
+#if _DEBUG
+	WCHAR msg[MAX_LOG_LENGTH];
+	swprintf_s(msg, L"%s: %s\n", sender, message);	
+	OutputDebugStringW(msg);
+#endif
 
 	// Flush the message queue
 	flush();
