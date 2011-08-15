@@ -36,6 +36,9 @@
 // GDI+
 #include <gdiplus.h>
 
+// For hashing
+#include <locale>
+
 // DirectX Includes
 #include "dxsdkver.h"
 #if (_DXSDK_PRODUCT_MAJOR < 9 || _DXSDK_BUILD_MAJOR < 1455)
