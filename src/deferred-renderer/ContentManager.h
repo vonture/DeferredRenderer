@@ -15,12 +15,27 @@ private:
 	static const UINT ERROR_MSG_LEN = 256;
 
 	HRESULT getPath(const WCHAR* inPathSegment, WCHAR* outputPath, UINT outputLen);
+		
+	template <class optionsType, class contentType>
+	long getContentLoaderHash()
+	{
+		size_t optionsHash = typeid(lightType).hash_code();
+		size_t contentHash = typeid(contentType).hash_code();
+		return  optionsHash + contentHash;
+	}
 
 public:
 	ContentManager();
 
 	const WCHAR* GetSearchPath() const { return _searchPath; }
 	void SetSearchPath(const WCHAR* path) { wcscpy_s(_searchPath, path); }
+
+	template <class optionsType, class contentType>
+	void AddContentLoader(ContentLoader<optionsType, contentType>* loader)
+	{
+		long hash = getContentLoaderHash<optionsType, contentType>();
+		_contentLoaders[hash] = loader;
+	}
 	
 	template <class optionsType, class contentType>
 	HRESULT LoadContent(ID3D11Device* device, const WCHAR* path, optionsType* options, contentType** ppContentOut)
@@ -54,10 +69,7 @@ public:
 		else
 		{
 			// Find the right content loader
-			size_t optionsHash = typeid(lightType).hash_code();
-			size_t contentHash = typeid(contentType).hash_code();
-			long loaderLookupHash = optionsHash + contentHash;
-
+			long loaderLookupHash = getContentLoaderHash<optionsType, contentType>();
 			if (_contentLoaders.find(loaderLookupHash) == _contentLoaders.end())
 			{
 				LOG_ERROR(L"ContentManager", L"Unable find loader for the given types.");
