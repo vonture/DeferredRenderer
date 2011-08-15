@@ -12,23 +12,23 @@ private:
 	std::map<long, ContentType*> _loadedContent;
 	WCHAR _searchPath[MAX_PATH];
 
-	static const UINT ERROR_MSG_LEN = 256;
+	static const UINT ERROR_MSG_LEN = 512;
 
 	HRESULT getPath(const WCHAR* inPathSegment, WCHAR* outputPath, UINT outputLen);
 		
 	template <class optionsType, class contentType>
 	long getContentLoaderHash()
 	{
-		size_t optionsHash = typeid(lightType).hash_code();
+		size_t optionsHash = typeid(optionsType).hash_code();
 		size_t contentHash = typeid(contentType).hash_code();
-		return  optionsHash + contentHash;
+		return optionsHash + contentHash;
 	}
 
 public:
 	ContentManager();
 
 	const WCHAR* GetSearchPath() const { return _searchPath; }
-	void SetSearchPath(const WCHAR* path) { wcscpy_s(_searchPath, path); }
+	void SetSearchPath(const WCHAR* path);
 
 	template <class optionsType, class contentType>
 	void AddContentLoader(ContentLoader<optionsType, contentType>* loader)
@@ -40,15 +40,19 @@ public:
 	template <class optionsType, class contentType>
 	HRESULT LoadContent(ID3D11Device* device, const WCHAR* path, optionsType* options, contentType** ppContentOut)
 	{
+		// Generate the full path
+		WCHAR fullPath[MAX_PATH];
+		getPath(path, fullPath, MAX_PATH);
+
 		// Generate hash for this content
 		long hash;
-		if (FAILED(GenerateContentHash<optionsType>(path, options, &hash)))
+		if (FAILED(GenerateContentHash<optionsType>(fullPath, options, &hash)))
 		{
 			LOG_ERROR(L"ContentManager", L"Unable to generate hash of options type.");
 			return E_FAIL;
 		}
 
-		if (_loadedContent.find(hash) != _contentMap.end())
+		if (_loadedContent.find(hash) != _loadedContent.end())
 		{
 			ContentType* asContentBase = _loadedContent[hash];
 
@@ -89,14 +93,17 @@ public:
 			// Load this content
 			contentType* content = NULL;
 			WCHAR errorMsg[ERROR_MSG_LEN];
-			while (FAILED(castedLoader->Load(device, NULL, path, options, errorMsg, ERROR_MSG_LEN, &content)))
+			while (FAILED(castedLoader->Load(device, NULL, fullPath, options, errorMsg, ERROR_MSG_LEN, &content)))
 			{
 				LOG_ERROR(L"ContentManager", errorMsg);
 
 				// If in debug mode, display a messagebox saying the content failed to load and give an 
 				// option to retry loading
 				#if _DEBUG
-					int button = MessageBoxW(NULL, errorMsg, L"Content loading error", MB_RETRYCANCEL);
+					WCHAR msgBoxText[ERROR_MSG_LEN];
+					swprintf_s(msgBoxText, L"File: %s\nError: %s", fullPath, errorMsg);
+
+					int button = MessageBoxW(NULL, msgBoxText, L"Content loading error", MB_RETRYCANCEL);
 					if(button != IDRETRY)
 					{
 						return E_FAIL;
@@ -108,8 +115,8 @@ public:
 
 			_loadedContent[hash] = content;
 
-			asContentType->AddRef();
-			*ppContentOut = asContentType;
+			content->AddRef();
+			*ppContentOut = content;
 			return S_OK;
 		}
 	}

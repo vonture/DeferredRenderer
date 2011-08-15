@@ -3,7 +3,7 @@
 
 ContentManager::ContentManager()
 {
-	_wgetcwd(_searchPath, MAX_PATH);
+	SetSearchPath(L"");
 }
 
 HRESULT ContentManager::getPath(const WCHAR* inPathSegment, WCHAR* outputPath, UINT outputLen)
@@ -14,6 +14,13 @@ HRESULT ContentManager::getPath(const WCHAR* inPathSegment, WCHAR* outputPath, U
 	
 	// TODO: add error checking
 	return S_OK;
+}
+
+void ContentManager::SetSearchPath(const WCHAR* path)
+{
+	_wgetcwd(_searchPath, MAX_PATH);
+	wcsncat_s(_searchPath, MAX_PATH, L"\\", MAX_PATH);
+	wcsncat_s(_searchPath, MAX_PATH, path, MAX_PATH);
 }
 
 void ContentManager::ReleaseContent()
