@@ -86,6 +86,13 @@ void DeferredRendererApplication::OnInitialize()
 	_logWindow = new LogWindow(canvas, Logger::GetInstance());
 }
 
+void DeferredRendererApplication::OnPreparingContentManager(ContentManager* contentManager)
+{
+	contentManager->SetSearchPath(L"\\..\\..\\");
+	contentManager->AddContentLoader(&_textureLoader);
+	contentManager->AddContentLoader(&_shaderLoader);
+}
+
 void DeferredRendererApplication::OnPreparingDeviceSettings(DeviceManager* deviceManager)
 {
 	Application::OnPreparingDeviceSettings(deviceManager);
@@ -244,10 +251,11 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 	return S_OK;
 }
 
-HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, 
+	ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
-
+	
 	V_RETURN(Application::OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 	for (UINT i = 0; i < _contentHolders.size(); i++)
 	{

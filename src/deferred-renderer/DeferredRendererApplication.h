@@ -21,6 +21,9 @@
 #include "CascadedDirectionalLightRenderer.h"
 #include "SpotLightRenderer.h"
 
+#include "ShaderLoader.h"
+#include "TextureLoader.h"
+
 #include "ConfigurationWindow.h"
 #include "PostProcessSelectionPane.h"
 #include "LogWindow.h"
@@ -49,6 +52,9 @@ private:
 	MotionBlurPostProcess _motionBlurPP;
 	UIPostProcess _uiPP;
 
+	Texture2DLoader _textureLoader;
+	PixelShaderLoader _shaderLoader;
+
 	ConfigurationWindow* _configWindow;
 	PostProcessSelectionPane* _ppConfigPane;
 
@@ -56,6 +62,7 @@ private:
 
 protected:
 	void OnInitialize();
+	void OnPreparingContentManager(ContentManager* contentManager);
 	void OnPreparingDeviceSettings(DeviceManager* deviceManager);
 
 public:
