@@ -4,6 +4,8 @@
 #include <streambuf>
 #include <iostream>
 
+#define MAX_LOG_LENGTH 512
+#define MAX_SENDER_LENGTH 32
 #define EVENTS_ENABLED
 
 // Error logging implimentations
