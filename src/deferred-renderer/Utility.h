@@ -41,6 +41,11 @@ inline HRESULT FormatHRESULTErrorMessageA(HRESULT errorId, char* msgBuffer, UINT
 	);
 }
 
+inline HRESULT FormatDXErrorMessageW(HRESULT error, WCHAR* msgBuffer, UINT msgLen)
+{
+	return wcsncpy_s(msgBuffer, msgLen, DXGetErrorDescription(error), msgLen);
+}
+
 inline int AnsiToWString(const char* ansiString, WCHAR* output, UINT outputLength)
 {
     return MultiByteToWideChar(CP_ACP, 0, ansiString, -1, output, outputLength);
