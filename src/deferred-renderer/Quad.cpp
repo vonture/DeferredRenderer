@@ -26,7 +26,7 @@ HRESULT Quad::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11PixelShade
 	return S_OK;
 }
 
-HRESULT Quad::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT Quad::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
@@ -76,7 +76,7 @@ void Quad::OnD3D11DestroyDevice()
 	SAFE_RELEASE(_vertexBuffer);
 }
 
-HRESULT Quad::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+HRESULT Quad::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
                         const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	return S_OK;

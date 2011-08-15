@@ -35,11 +35,11 @@ HRESULT SpotLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateContex
 	return S_OK;
 }
 
-HRESULT SpotLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT SpotLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
-	V_RETURN(LightRenderer::OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(LightRenderer::OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
@@ -49,12 +49,12 @@ void SpotLightRenderer::OnD3D11DestroyDevice()
 	LightRenderer::OnD3D11DestroyDevice();
 }
 
-HRESULT SpotLightRenderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+HRESULT SpotLightRenderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
                         const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
-	V_RETURN(LightRenderer::OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(LightRenderer::OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }

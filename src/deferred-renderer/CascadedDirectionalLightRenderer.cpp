@@ -765,12 +765,12 @@ HRESULT CascadedDirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 	return S_OK;
 }
 
-HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
 	// Call base function
-	V_RETURN(LightRenderer::OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(LightRenderer::OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 
 	// Compile both shaders from file
 	ID3DBlob* pBlob = NULL;
@@ -860,7 +860,7 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 	}
 
 	// Load the other IHasContents
-	V_RETURN(_fsQuad.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_fsQuad.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
@@ -889,14 +889,14 @@ void CascadedDirectionalLightRenderer::OnD3D11DestroyDevice()
 	_fsQuad.OnD3D11DestroyDevice();
 }
 
-HRESULT CascadedDirectionalLightRenderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+HRESULT CascadedDirectionalLightRenderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
                         const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
-	V_RETURN(LightRenderer::OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(LightRenderer::OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 
-	V_RETURN(_fsQuad.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_fsQuad.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }

@@ -66,7 +66,7 @@ ID3D11ShaderResourceView* SpriteFont::GetFontShaderResourceView()
 	return _fontSRV;
 }
 
-HRESULT SpriteFont::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT SpriteFont::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
@@ -185,7 +185,7 @@ void SpriteFont::OnD3D11DestroyDevice()
 	_charMap.clear();
 }
 
-HRESULT SpriteFont::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+HRESULT SpriteFont::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
 	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	return S_OK;

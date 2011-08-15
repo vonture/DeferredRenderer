@@ -10,10 +10,6 @@ Application::Application(const WCHAR* title, const WCHAR* icon)
 {
 }
 
-Application::~Application()
-{
-}
-
 LRESULT Application::OnMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	HRESULT hr;
@@ -27,8 +23,7 @@ LRESULT Application::OnMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
 				UINT width = _window.GetClientWidth();
 				UINT height = _window.GetClientHeight();
 			
-				if(width != _deviceManager.GetBackBufferWidth() || 
-				   height != _deviceManager.GetBackBufferHeight())
+				if(width != _deviceManager.GetBackBufferWidth() || height != _deviceManager.GetBackBufferHeight())
 				{
 					OnD3D11ReleasingSwapChain();
 
@@ -36,14 +31,18 @@ LRESULT Application::OnMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
 					_deviceManager.SetBackBufferHeight(height);
 					_deviceManager.Reset();
 
-					V_RETURN(OnD3D11ResizedSwapChain(_deviceManager.GetDevice(), _deviceManager.GetSwapChain(), 
-						_deviceManager.GetBackBufferSurfaceDesc()));
+					V_RETURN(OnD3D11ResizedSwapChain(_deviceManager.GetDevice(), &_contentManager, 
+						_deviceManager.GetSwapChain(), _deviceManager.GetBackBufferSurfaceDesc()));
 				}
 			}
 		}
 	}
 
 	return 0;
+}
+
+void Application::OnPreparingContentManager(ContentManager* contentManager)
+{
 }
 
 void Application::OnPreparingDeviceSettings(DeviceManager* deviceManager)
@@ -78,6 +77,9 @@ HRESULT Application::Start()
 	OnPreparingDeviceSettings(&_deviceManager);
 	V_RETURN(_deviceManager.Initialize(_window.GetHWND()));
 
+	// Prepare content manager
+	OnPreparingContentManager(&_contentManager);
+
 	// Set the window to be the same size as the back buffer
 	_window.SetClientSize(_deviceManager.GetBackBufferWidth(), _deviceManager.GetBackBufferHeight());
 
@@ -85,8 +87,8 @@ HRESULT Application::Start()
 	_window.Show();
 
 	// Call the IHasContent methods
-	V_RETURN(OnD3D11CreateDevice(_deviceManager.GetDevice(), _deviceManager.GetBackBufferSurfaceDesc()));
-	V_RETURN(OnD3D11ResizedSwapChain(_deviceManager.GetDevice(), _deviceManager.GetSwapChain(),
+	V_RETURN(OnD3D11CreateDevice(_deviceManager.GetDevice(), &_contentManager, _deviceManager.GetBackBufferSurfaceDesc()));
+	V_RETURN(OnD3D11ResizedSwapChain(_deviceManager.GetDevice(), &_contentManager, _deviceManager.GetSwapChain(),
 		_deviceManager.GetBackBufferSurfaceDesc()));
 		
 	// Prepare the counters to use for timing
@@ -173,7 +175,7 @@ void Application::SetFullScreen(bool fullScreen)
 		_deviceManager.SetFullScreen(fullScreen);
         _deviceManager.Reset();
 
-		V(OnD3D11ResizedSwapChain(_deviceManager.GetDevice(), _deviceManager.GetSwapChain(), 
+		V(OnD3D11ResizedSwapChain(_deviceManager.GetDevice(), &_contentManager, _deviceManager.GetSwapChain(), 
 			_deviceManager.GetBackBufferSurfaceDesc()));
 	}
 }
@@ -203,7 +205,7 @@ bool Application::IsActive() const
 	return _window.IsActive();
 }
 
-HRESULT Application::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT Application::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	return S_OK;
 }
@@ -212,7 +214,7 @@ void Application::OnD3D11DestroyDevice()
 {
 }
 
-HRESULT Application::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+HRESULT Application::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
                             const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	return S_OK;

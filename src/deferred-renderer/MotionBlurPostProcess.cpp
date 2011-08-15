@@ -22,12 +22,12 @@ HRESULT MotionBlurPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext,
 	return E_NOTIMPL;
 }
 
-HRESULT MotionBlurPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, 
+HRESULT MotionBlurPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, 
 	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
-	V_RETURN(PostProcess::OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(PostProcess::OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 
 	// Create the buffer
 	D3D11_BUFFER_DESC bufferDesc =
@@ -53,12 +53,12 @@ void MotionBlurPostProcess::OnD3D11DestroyDevice()
 	SAFE_RELEASE(_propertiesBuffer);
 }
 
-HRESULT MotionBlurPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice,
+HRESULT MotionBlurPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager,
 	IDXGISwapChain* pSwapChain, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
-	V_RETURN(PostProcess::OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(PostProcess::OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }

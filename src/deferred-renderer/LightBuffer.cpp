@@ -86,7 +86,7 @@ HRESULT LightBuffer::UnsetRenderTargets(ID3D11DeviceContext* pd3dImmediateContex
 	return S_OK;
 }
 
-HRESULT LightBuffer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT LightBuffer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	return S_OK;
 }
@@ -94,7 +94,7 @@ void LightBuffer::OnD3D11DestroyDevice()
 {
 }
 
-HRESULT LightBuffer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+HRESULT LightBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
                         const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;

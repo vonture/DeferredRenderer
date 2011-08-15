@@ -57,7 +57,7 @@ void ModelInstance::clean()
 	_dirty = false;
 }
 
-HRESULT ModelInstance::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT ModelInstance::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 	V_RETURN(_model.CreateFromFile(pd3dDevice, _path));
@@ -81,7 +81,7 @@ void ModelInstance::OnD3D11DestroyDevice()
 	_dirty = true;
 }
 
-HRESULT ModelInstance::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+HRESULT ModelInstance::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
                         const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	return S_OK;

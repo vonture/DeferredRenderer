@@ -52,7 +52,7 @@ void DeferredRendererApplication::OnInitialize()
 	_renderer.AddLightRenderer(&_paraboloidPointLR);
 	_renderer.AddLightRenderer(&_cascadedDirectionalLR);
 	_renderer.AddLightRenderer(&_spotLR);
-
+	
 	// Create all the UI elements
 	Gwen::Controls::Canvas* canvas = _uiPP.GetCanvas();
 
@@ -244,14 +244,14 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 	return S_OK;
 }
 
-HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
-	V_RETURN(Application::OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(Application::OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 	for (UINT i = 0; i < _contentHolders.size(); i++)
 	{
-		V_RETURN(_contentHolders[i]->OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+		V_RETURN(_contentHolders[i]->OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 	}
 
 	const int configWidth = 260;
@@ -274,7 +274,7 @@ void DeferredRendererApplication::OnD3D11DestroyDevice()
 	}
 }
 
-HRESULT DeferredRendererApplication::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice,
+HRESULT DeferredRendererApplication::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager,
 	IDXGISwapChain* pSwapChain, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
@@ -286,10 +286,10 @@ HRESULT DeferredRendererApplication::OnD3D11ResizedSwapChain(ID3D11Device* pd3dD
 	XMFLOAT2 sizePerc = XMFLOAT2((float)pBackBufferSurfaceDesc->Width / canvas->Width(),
 		(float)pBackBufferSurfaceDesc->Height / canvas->Height());
 	
-	V_RETURN(Application::OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(Application::OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 	for (UINT i = 0; i < _contentHolders.size(); i++)
 	{
-		V_RETURN(_contentHolders[i]->OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+		V_RETURN(_contentHolders[i]->OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 	}
 
 	// Resize the UI by scaling with the resolution change

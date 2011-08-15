@@ -94,7 +94,7 @@ HRESULT GBuffer::UnsetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext, I
 	return S_OK;
 }
 
-HRESULT GBuffer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT GBuffer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	return S_OK;
 }
@@ -103,7 +103,7 @@ void GBuffer::OnD3D11DestroyDevice()
 {	
 }
 
-HRESULT GBuffer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
                         const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;

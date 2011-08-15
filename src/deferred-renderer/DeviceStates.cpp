@@ -1,7 +1,7 @@
 #include "PCH.h"
 #include "DeviceStates.h"
 
-HRESULT BlendStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT BlendStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 	D3D11_BLEND_DESC blendDesc;
@@ -32,7 +32,7 @@ void BlendStates::OnD3D11DestroyDevice()
 	SAFE_RELEASE(_noColor);
 }
 
-HRESULT BlendStates::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+HRESULT BlendStates::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
 	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	return S_OK;
@@ -143,7 +143,7 @@ D3D11_BLEND_DESC BlendStates::getColorWriteDisabledDesc()
 	return blendDesc;
 }
 
-HRESULT RasterizerStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT RasterizerStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 	D3D11_RASTERIZER_DESC rasterDesc;
@@ -186,7 +186,7 @@ void RasterizerStates::OnD3D11DestroyDevice()
 	SAFE_RELEASE(_wireframe);
 }
 
-HRESULT RasterizerStates::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+HRESULT RasterizerStates::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
 	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	return S_OK;
@@ -341,7 +341,7 @@ D3D11_RASTERIZER_DESC RasterizerStates::getWireframeDesc()
 	return rastDesc;
 }
 
-HRESULT DepthStencilStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT DepthStencilStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 	D3D11_DEPTH_STENCIL_DESC desc;
@@ -384,7 +384,7 @@ void DepthStencilStates::OnD3D11DestroyDevice()
 	SAFE_RELEASE(_revDepthWriteEnabled);
 }
 
-HRESULT DepthStencilStates::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+HRESULT DepthStencilStates::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
 	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	return S_OK;
@@ -538,7 +538,7 @@ D3D11_DEPTH_STENCIL_DESC DepthStencilStates::getReverseDepthWriteEnabledDesc()
 	return dsDesc;
 }
 
-HRESULT SamplerStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT SamplerStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 	D3D11_SAMPLER_DESC desc;
@@ -577,7 +577,7 @@ void SamplerStates::OnD3D11DestroyDevice()
 	SAFE_RELEASE(_shadowMap);
 }
 
-HRESULT SamplerStates::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+HRESULT SamplerStates::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
 	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	return S_OK;

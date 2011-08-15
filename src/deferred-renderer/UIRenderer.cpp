@@ -150,7 +150,7 @@ void UIRenderer::FreeTexture(Gwen::Texture* pTexture)
 	SAFE_RELEASE(srv);
 }
 
-HRESULT UIRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT UIRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
@@ -158,8 +158,8 @@ HRESULT UIRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SUR
 
 	_backBufferSurfaceDesc = *pBackBufferSurfaceDesc;
 
-	V_RETURN(_spriteRenderer.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(_uiFont.OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(_spriteRenderer.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
+	V_RETURN(_uiFont.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
@@ -170,7 +170,7 @@ void UIRenderer::OnD3D11DestroyDevice()
 	_uiFont.OnD3D11DestroyDevice();
 }
 
-HRESULT UIRenderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+HRESULT UIRenderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
 	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
@@ -179,8 +179,8 @@ HRESULT UIRenderer::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwap
 
 	_swapChain = pSwapChain;
 
-	V_RETURN(_spriteRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_uiFont.OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_spriteRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_uiFont.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }

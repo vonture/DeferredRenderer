@@ -26,10 +26,10 @@ public:
 
 	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11PixelShader* pixelShader);
 
-	virtual HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
+	virtual HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
 	virtual void OnD3D11DestroyDevice();
 
-	virtual HRESULT OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+	virtual HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
                             const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
 	virtual void OnD3D11ReleasingSwapChain();
 };

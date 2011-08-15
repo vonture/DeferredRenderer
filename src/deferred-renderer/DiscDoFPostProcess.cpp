@@ -85,12 +85,12 @@ HRESULT DiscDoFPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID
 	return S_OK;
 }
 
-HRESULT DiscDoFPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
+HRESULT DiscDoFPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager,
 	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
-	V_RETURN(PostProcess::OnD3D11CreateDevice(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(PostProcess::OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 
 	// Create the shaders
 	ID3DBlob* pBlob = NULL;
@@ -168,12 +168,12 @@ void DiscDoFPostProcess::OnD3D11DestroyDevice()
 	}
 }
 
-HRESULT DiscDoFPostProcess::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice,
+HRESULT DiscDoFPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager,
 	IDXGISwapChain* pSwapChain, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
-	V_RETURN(PostProcess::OnD3D11ResizedSwapChain(pd3dDevice, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(PostProcess::OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 	
 	// Store the resolution
 	_sceneWidth = pBackBufferSurfaceDesc->Width;
