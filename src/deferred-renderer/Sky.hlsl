@@ -1,8 +1,9 @@
 #ifndef SUN_ENABLED
-#define SUN_ENABLED 0
+#define SUN_ENABLED 1
 #endif
 
 #define PI_OVER_TWO 1.57079633f
+#define EPSILON 0.00001f
 
 #ifndef UP
 #define UP float3(0.0f, 1.0f, 0.0f)
@@ -76,22 +77,24 @@ float F(float gamma)
 
 float3 CIEClearSky(float3 dir, float3 sunDir)
 {
-	float3 skyDir = float3(dir.x, abs(dir.y), dir.z);
-	float gamma = AngleBetween(skyDir, sunDir);
-	float S = AngleBetween(sunDir, UP);
+	float3 skyDir = float3(dir.x, abs(dir.y), dir.z);	
 	float theta = AngleBetween(skyDir, UP);
+		
+	float zenithContribution = Phi(theta) / Phi(0.0f);
+	
+#if SUN_ENABLED
+	float gamma = AngleBetween(skyDir, sunDir);	
+	float sunGamma = AngleBetween(dir, sunDir);
+	float S = AngleBetween(sunDir, UP);
 
 	float sunContribution = F(gamma) / F(S);
-	float zenithContribution = Phi(theta) / Phi(0.0f);
-		
-	// Slightly deviates from the model so that the color of the sun lights the sky around it
-	float3 color = max((sunContribution * SunColor) + (zenithContribution * SkyColor), 0.0f);
 
-#if SUN_ENABLED
-	float sunGamma = AngleBetween(dir, sunDir);
-	return lerp(SunColor * SunIntensity, color, saturate(abs(sunGamma) / SunWidth));
+	float3 color = lerp(SkyColor, SunColor, sunContribution / (zenithContribution + sunContribution + EPSILON));
+	float luminance = sunContribution * zenithContribution;
+		
+	return lerp(SunColor * SunIntensity, color, saturate(abs(sunGamma) / SunWidth)) * luminance;
 #else
-	return color;
+	return SkyColor * zenithContribution;
 #endif
 }
 
