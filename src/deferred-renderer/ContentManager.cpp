@@ -16,21 +16,13 @@ HRESULT ContentManager::getPath(const WCHAR* inPathSegment, WCHAR* outputPath, U
 	return S_OK;
 }
 
-HRESULT ContentManager::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+void ContentManager::ReleaseContent()
 {
-	return S_OK;
-}
+	std::map<long, ContentType*>::iterator i;
+	for (i = _loadedContent.begin(); i != _loadedContent.end(); i++)
+	{
+		SAFE_RELEASE(i->second);
+	}
 
-void ContentManager::OnD3D11DestroyDevice()
-{
-}
-
-HRESULT ContentManager::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
-	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
-{
-	return S_OK;
-}
-
-void ContentManager::OnD3D11ReleasingSwapChain()
-{
+	_loadedContent.clear();
 }

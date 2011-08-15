@@ -1,20 +1,13 @@
 #pragma once
 
 #include "PCH.h"
-#include "ContentTypeNoOptions.h"
+#include "ContentType.h"
 
-class Texture2DContent : public ContentTypeNoOptions
+struct Texture2DContent : public ContentType
 {
-private:
-	ID3D11ShaderResourceView* _srv;
-	D3DX11_IMAGE_INFO _info;
+	ID3D11ShaderResourceView* ShaderResourceView;
+	D3DX11_IMAGE_INFO Info;
 
-public:
-	Texture2DContent(const WCHAR* path) : ContentTypeNoOptions(path) { }
-
-	ID3D11ShaderResourceView* GetSRV() { return _srv; }
-	const D3DX11_IMAGE_INFO* GetInfo() const { return &_info; }
-
-	HRESULT LoadContent(ID3D11Device* device, const WCHAR* path);
-	void UnloadContent();
+	Texture2DContent() : ShaderResourceView(NULL) { }
+	~Texture2DContent() { SAFE_RELEASE(ShaderResourceView); }
 };

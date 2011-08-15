@@ -202,9 +202,6 @@
     <ClCompile Include="DDSTextureLoader.cpp">
       <Filter>Graphics Helpers</Filter>
     </ClCompile>
-    <ClCompile Include="ShaderLoader.cpp">
-      <Filter>Graphics Helpers</Filter>
-    </ClCompile>
     <ClCompile Include="DeviceStates.cpp">
       <Filter>Graphics Helpers</Filter>
     </ClCompile>
@@ -336,10 +333,13 @@
     <ClCompile Include="ContentManager.cpp">
       <Filter>Content</Filter>
     </ClCompile>
-    <ClCompile Include="ShaderContent.cpp">
+    <ClCompile Include="ContentType.cpp">
       <Filter>Content</Filter>
     </ClCompile>
-    <ClCompile Include="TextureContent.cpp">
+    <ClCompile Include="TextureLoader.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderLoader.cpp">
       <Filter>Content</Filter>
     </ClCompile>
   </ItemGroup>
@@ -430,9 +430,6 @@
       <Filter>Graphics Helpers</Filter>
     </ClInclude>
     <ClInclude Include="DDSTextureLoader.h">
-      <Filter>Graphics Helpers</Filter>
-    </ClInclude>
-    <ClInclude Include="ShaderLoader.h">
       <Filter>Graphics Helpers</Filter>
     </ClInclude>
     <ClInclude Include="DeviceStates.h">
@@ -587,7 +584,13 @@
     <ClInclude Include="TextureContent.h">
       <Filter>Content</Filter>
     </ClInclude>
-    <ClInclude Include="ContentTypeNoOptions.h">
+    <ClInclude Include="ContentLoader.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureLoader.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderLoader.h">
       <Filter>Content</Filter>
     </ClInclude>
   </ItemGroup>
