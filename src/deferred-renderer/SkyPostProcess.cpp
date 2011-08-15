@@ -121,6 +121,7 @@ HRESULT SkyPostProcess:: OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXG
 		{ "C", c },
 		{ "D", d },
 		{ "E", e },
+		NULL,
 	};
 
 	char debugName[256];
