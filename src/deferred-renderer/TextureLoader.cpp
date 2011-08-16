@@ -1,9 +1,10 @@
 #include "PCH.h"
 #include "TextureLoader.h"
 #include "Logger.h"
+#include "DDSTextureLoader.h"
 
 template <>
-HRESULT GenerateContentHash<TextureOptions>(const WCHAR* path, TextureOptions* options, long* hash)
+HRESULT GenerateContentHash<TextureLoadOptions>(const WCHAR* path, TextureLoadOptions* options, long* hash)
 {
 	if (!hash)
 	{
@@ -21,8 +22,8 @@ HRESULT GenerateContentHash<TextureOptions>(const WCHAR* path, TextureOptions* o
 	return S_OK;
 }
 
-HRESULT Texture2DLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
-	TextureOptions* options, WCHAR* errorMsg, UINT errorLen, Texture2DContent** contentOut)
+HRESULT TextureLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
+	TextureLoadOptions* options, WCHAR* errorMsg, UINT errorLen, TextureContent** contentOut)
 {
 	HRESULT hr;
 
@@ -30,7 +31,7 @@ HRESULT Texture2DLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* threadPum
 	swprintf_s(logMsg, L"Loading texture: %s", path);
 	LOG_INFO(L"Texture2DLoader", logMsg);
 	
-	Texture2DContent* content = new Texture2DContent();
+	TextureContent* content = new TextureContent();
 
 	hr = D3DX11GetImageInfoFromFile(path, NULL, &content->Info, NULL);
 	if (FAILED(hr))
@@ -38,8 +39,15 @@ HRESULT Texture2DLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* threadPum
 		FormatDXErrorMessageW(hr, errorMsg, errorLen);
 		return hr;
 	}
-
-	V_RETURN(D3DX11CreateShaderResourceViewFromFile(device, path, NULL, NULL, &content->ShaderResourceView, NULL));
+	
+	if (options && options->Generate3DFrom2D)
+	{
+		hr = CreateDDSTexture3DFromFile(device, path, &content->ShaderResourceView);
+	}
+	else
+	{
+		hr = D3DX11CreateShaderResourceViewFromFile(device, path, NULL, NULL, &content->ShaderResourceView, NULL);
+	}
 	if (FAILED(hr))
 	{
 		FormatDXErrorMessageW(hr, errorMsg, errorLen);

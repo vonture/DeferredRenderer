@@ -1,20 +1,29 @@
 #pragma once
 
 #include "PCH.h"
-#include "TextureContent.h"
+#include "ContentType.h"
 #include "ContentLoader.h"
 
-struct TextureOptions
+struct TextureContent : public ContentType
 {
+	ID3D11ShaderResourceView* ShaderResourceView;
+	D3DX11_IMAGE_INFO Info;
+
+	TextureContent() : ShaderResourceView(NULL) { }
+	~TextureContent() {  SAFE_RELEASE(ShaderResourceView); }
+};
+struct TextureLoadOptions
+{
+	bool Generate3DFrom2D;
 	const char* DebugName;
 };
 
 template <>
-HRESULT GenerateContentHash<TextureOptions>(const WCHAR* path, TextureOptions* options, long* hash);
+HRESULT GenerateContentHash<TextureLoadOptions>(const WCHAR* path, TextureLoadOptions* options, long* hash);
 
-class Texture2DLoader : public ContentLoader<TextureOptions, Texture2DContent>
+class TextureLoader : public ContentLoader<TextureLoadOptions, TextureContent>
 {
 public:
 	HRESULT Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
-		TextureOptions* options, WCHAR* errorMsg, UINT errorLen, Texture2DContent** contentOut);
+		TextureLoadOptions* options, WCHAR* errorMsg, UINT errorLen, TextureContent** contentOut);
 };
