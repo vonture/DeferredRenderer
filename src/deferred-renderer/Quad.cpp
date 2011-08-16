@@ -68,6 +68,9 @@ HRESULT Quad::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pCon
 	_vertexShader = vsContent->VertexShader;
 	_inputLayout = vsContent->InputLayout;
 
+	_vertexShader->AddRef();
+	_inputLayout->AddRef();
+
 	SAFE_RELEASE(vsContent);
 
 	return S_OK;
