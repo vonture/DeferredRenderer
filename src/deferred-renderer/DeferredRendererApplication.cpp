@@ -87,10 +87,13 @@ void DeferredRendererApplication::OnInitialize()
 }
 
 void DeferredRendererApplication::OnPreparingContentManager(ContentManager* contentManager)
-{
-	contentManager->SetSearchPath(L"\\..\\..\\");
+{	
+	contentManager->AddSearchPath(L"\\..\\..\\");					// Project root
+	contentManager->AddSearchPath(L"\\..\\deferred-renderer\\");	// source folder
+
 	contentManager->AddContentLoader(&_textureLoader);
-	contentManager->AddContentLoader(&_shaderLoader);
+	contentManager->AddContentLoader(&_psLoader);
+	contentManager->AddContentLoader(&_vsLoader);
 }
 
 void DeferredRendererApplication::OnPreparingDeviceSettings(DeviceManager* deviceManager)

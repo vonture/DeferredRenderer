@@ -21,7 +21,8 @@
 #include "CascadedDirectionalLightRenderer.h"
 #include "SpotLightRenderer.h"
 
-#include "ShaderLoader.h"
+#include "PixelShaderLoader.h"
+#include "VertexShaderLoader.h"
 #include "TextureLoader.h"
 
 #include "ConfigurationWindow.h"
@@ -52,8 +53,9 @@ private:
 	MotionBlurPostProcess _motionBlurPP;
 	UIPostProcess _uiPP;
 
-	Texture2DLoader _textureLoader;
-	PixelShaderLoader _shaderLoader;
+	TextureLoader _textureLoader;
+	PixelShaderLoader _psLoader;
+	VertexShaderLoader _vsLoader;
 
 	ConfigurationWindow* _configWindow;
 	PostProcessSelectionPane* _ppConfigPane;
