@@ -5,6 +5,14 @@ ContentManager::ContentManager()
 {
 }
 
+ContentManager::~ContentManager()
+{
+	for (UINT i = 0; i < _searchPaths.size(); i++)
+	{
+		SAFE_DELETE(_searchPaths[i]);
+	}
+}
+
 HRESULT ContentManager::getPath(const WCHAR* inPathSegment, WCHAR* outputPath, UINT outputLen)
 {
 	for (UINT i = 0; i < _searchPaths.size(); i++)

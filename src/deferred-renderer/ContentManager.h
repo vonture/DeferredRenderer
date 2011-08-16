@@ -26,6 +26,7 @@ private:
 
 public:
 	ContentManager();
+	~ContentManager();
 
 	void AddSearchPath(const WCHAR* path);
 
