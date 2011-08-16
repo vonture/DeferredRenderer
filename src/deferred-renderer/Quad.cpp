@@ -1,11 +1,9 @@
 #include "PCH.h"
 #include "Quad.h"
+#include "VertexShaderLoader.h"
 
-Quad::Quad() : _vertexShader(NULL), _inputLayout(NULL), _vertexBuffer(NULL)
-{
-}
-
-Quad::~Quad()
+Quad::Quad() 
+	: _vertexShader(NULL), _inputLayout(NULL), _vertexBuffer(NULL)
 {
 }
 
@@ -51,20 +49,26 @@ HRESULT Quad::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pCon
     V_RETURN(pd3dDevice->CreateBuffer(&vbDesc, &initData, &_vertexBuffer));
 
 	// Create the vertex shader
-	ID3DBlob* pBlob = NULL;
-
-	V_RETURN(CompileShaderFromFile(L"QuadVS.hlsl", "VS_Quad", "vs_4_0", NULL, &pBlob));
-    V_RETURN(pd3dDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(),
-		NULL, &_vertexShader));
-
-	// create the input layout
-    const D3D11_INPUT_ELEMENT_DESC quadlayout[] =
+	D3D11_INPUT_ELEMENT_DESC quadlayout[] =
     {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         { "TEXCOORD", 0,       DXGI_FORMAT_R32G32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
-    V_RETURN( pd3dDevice->CreateInputLayout(quadlayout, 2, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), &_inputLayout));
-    SAFE_RELEASE( pBlob );
+
+	VertexShaderOptions vsOpts;
+	vsOpts.EntryPoint = "VS_Quad";
+	vsOpts.Defines = NULL;
+	vsOpts.InputElements = quadlayout;
+	vsOpts.InputElementCount = ARRAYSIZE(quadlayout);
+	vsOpts.DebugName = "Quad VS";
+
+	VertexShaderContent* vsContent;
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"QuadVS.hlsl", &vsOpts, &vsContent));
+
+	_vertexShader = vsContent->VertexShader;
+	_inputLayout = vsContent->InputLayout;
+
+	SAFE_RELEASE(vsContent);
 
 	return S_OK;
 }

@@ -22,7 +22,6 @@ protected:
 
 public:
 	Quad();
-	~Quad();
 
 	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11PixelShader* pixelShader);
 
