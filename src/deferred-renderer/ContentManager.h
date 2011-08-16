@@ -10,7 +10,7 @@ class ContentManager
 private:
 	std::map<long, ContentLoaderBase*> _contentLoaders;
 	std::map<long, ContentType*> _loadedContent;
-	WCHAR _searchPath[MAX_PATH];
+	std::vector<WCHAR*> _searchPaths;
 
 	static const UINT ERROR_MSG_LEN = 512;
 
@@ -27,8 +27,7 @@ private:
 public:
 	ContentManager();
 
-	const WCHAR* GetSearchPath() const { return _searchPath; }
-	void SetSearchPath(const WCHAR* path);
+	void AddSearchPath(const WCHAR* path);
 
 	template <class optionsType, class contentType>
 	void AddContentLoader(ContentLoader<optionsType, contentType>* loader)
@@ -42,7 +41,11 @@ public:
 	{
 		// Generate the full path
 		WCHAR fullPath[MAX_PATH];
-		getPath(path, fullPath, MAX_PATH);
+		if (FAILED(getPath(path, fullPath, MAX_PATH)))
+		{
+			LOG_ERROR(L"ContentManager", L"Unable to find file.");
+			return E_FAIL;
+		}
 
 		// Generate hash for this content
 		long hash;

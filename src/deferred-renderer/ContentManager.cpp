@@ -3,24 +3,34 @@
 
 ContentManager::ContentManager()
 {
-	SetSearchPath(L"");
 }
 
 HRESULT ContentManager::getPath(const WCHAR* inPathSegment, WCHAR* outputPath, UINT outputLen)
 {
-	wcsncpy_s(outputPath, outputLen, _searchPath, MAX_PATH);
-	wcsncat_s(outputPath, outputLen, L"\\", MAX_PATH);
-	wcsncat_s(outputPath, outputLen, inPathSegment, MAX_PATH);
-	
-	// TODO: add error checking
-	return S_OK;
+	for (UINT i = 0; i < _searchPaths.size(); i++)
+	{
+		wcsncpy_s(outputPath, outputLen, _searchPaths[i], MAX_PATH);
+		wcsncat_s(outputPath, outputLen, L"\\", MAX_PATH);
+		wcsncat_s(outputPath, outputLen, inPathSegment, MAX_PATH);
+
+		if (GetFileAttributes(outputPath) != INVALID_FILE_ATTRIBUTES)
+		{
+			return S_OK;
+		}
+	}
+
+	return E_FAIL;
 }
 
-void ContentManager::SetSearchPath(const WCHAR* path)
+void ContentManager::AddSearchPath(const WCHAR* path)
 {
-	_wgetcwd(_searchPath, MAX_PATH);
-	wcsncat_s(_searchPath, MAX_PATH, L"\\", MAX_PATH);
-	wcsncat_s(_searchPath, MAX_PATH, path, MAX_PATH);
+	WCHAR* newPath = new WCHAR[MAX_PATH];
+
+	_wgetcwd(newPath, MAX_PATH);
+	wcsncat_s(newPath, MAX_PATH, L"\\", MAX_PATH);
+	wcsncat_s(newPath, MAX_PATH, path, MAX_PATH);
+
+	_searchPaths.push_back(newPath);
 }
 
 void ContentManager::ReleaseContent()
