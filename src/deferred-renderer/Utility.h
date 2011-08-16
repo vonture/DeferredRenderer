@@ -110,6 +110,43 @@ inline int GetDirectoryFromFileNameS(const char* fileName, char* output, UINT ou
 	return 1;
 }
 
+inline HRESULT CompileShaderFromFile(const WCHAR* szFileName, const char* szEntryPoint, const char* szShaderModel,
+	D3D_SHADER_MACRO* defines, ID3DX11ThreadPump* threadPump, WCHAR* errorBuffer, UINT errorLen, 
+	ID3DBlob** ppBlobOut, HRESULT* hrOut)
+{
+    HRESULT hr;
+
+    DWORD dwShaderFlags = D3DCOMPILE_ENABLE_STRICTNESS;
+#if defined( DEBUG ) || defined( _DEBUG )
+    // Set the D3DCOMPILE_DEBUG flag to embed debug information in the shaders.
+    // Setting this flag improves the shader debugging experience, but still allows 
+    // the shaders to be optimized and to run exactly the way they will run in 
+    // the release configuration of this program.
+    dwShaderFlags |= D3DCOMPILE_DEBUG;
+#endif
+
+    ID3DBlob* pErrorBlob;
+    hr = D3DX11CompileFromFile(szFileName, defines, NULL, szEntryPoint, szShaderModel, 
+        dwShaderFlags, 0, NULL, ppBlobOut, &pErrorBlob, NULL);
+    if(FAILED(hr))
+    {
+        if(pErrorBlob)
+		{
+			AnsiToWString((char*)pErrorBlob->GetBufferPointer(), errorBuffer, errorLen);
+			pErrorBlob->Release();
+		}
+        
+        return hr;
+    }
+
+	if (pErrorBlob)
+	{
+		pErrorBlob->Release();
+	}
+
+    return S_OK;
+}
+
 #define SET_DEBUG_NAME(obj, name) ((obj)->SetPrivateData(WKPDID_D3DDebugObjectName, lstrlenA(name), (name)))
 
 #if defined(DEBUG) || defined(_DEBUG)
