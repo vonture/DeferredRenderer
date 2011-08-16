@@ -339,8 +339,14 @@
     <ClCompile Include="TextureLoader.cpp">
       <Filter>Content</Filter>
     </ClCompile>
-    <ClCompile Include="ShaderLoader.cpp">
+    <ClCompile Include="PixelShaderLoader.cpp">
       <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="VertexShaderLoader.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderLoader.cpp">
+      <Filter>Graphics Helpers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -578,20 +584,20 @@
     <ClInclude Include="MotionBlurConfigurationPane.h">
       <Filter>Post Process\Configuration Panes</Filter>
     </ClInclude>
-    <ClInclude Include="ShaderContent.h">
-      <Filter>Content</Filter>
-    </ClInclude>
-    <ClInclude Include="TextureContent.h">
-      <Filter>Content</Filter>
-    </ClInclude>
     <ClInclude Include="ContentLoader.h">
       <Filter>Content</Filter>
     </ClInclude>
     <ClInclude Include="TextureLoader.h">
       <Filter>Content</Filter>
     </ClInclude>
-    <ClInclude Include="ShaderLoader.h">
+    <ClInclude Include="PixelShaderLoader.h">
       <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexShaderLoader.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderLoader.h">
+      <Filter>Graphics Helpers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

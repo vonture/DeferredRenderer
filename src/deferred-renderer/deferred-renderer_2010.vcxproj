@@ -158,6 +158,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="PixelShaderLoader.cpp" />
     <ClCompile Include="Poisson.cpp" />
     <ClCompile Include="DiscDoFConfigurationPane.cpp" />
     <ClCompile Include="PostProcessSelectionPane.cpp" />
@@ -215,6 +216,7 @@
     <ClCompile Include="TextureLoader.cpp" />
     <ClCompile Include="UIPostProcess.cpp" />
     <ClCompile Include="UIRenderer.cpp" />
+    <ClCompile Include="VertexShaderLoader.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="xnaCollision.cpp" />
     <ClInclude Include="AssimpLogger.h" />
@@ -231,13 +233,13 @@
     <ClInclude Include="LogWindow.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="MotionBlurConfigurationPane.h" />
+    <ClInclude Include="PixelShaderLoader.h" />
     <ClInclude Include="Poisson.h" />
     <ClInclude Include="DiscDoFConfigurationPane.h" />
     <ClInclude Include="PostProcessSelectionPane.h" />
     <ClInclude Include="ProfilePane.h" />
     <ClInclude Include="SDKmesh.h" />
     <ClInclude Include="SDKmisc.h" />
-    <ClInclude Include="ShaderContent.h" />
     <ClInclude Include="SliderWithLabel.h" />
     <ClInclude Include="SSAOConfigurationPane.h" />
     <ClInclude Include="SSAOPostProcess.h" />
@@ -282,10 +284,10 @@
     <ClInclude Include="SpotLightRenderer.h" />
     <ClInclude Include="SpriteRenderer.h" />
     <ClInclude Include="TestingCamera.h" />
-    <ClInclude Include="TextureContent.h" />
     <ClInclude Include="TextureLoader.h" />
     <ClInclude Include="UIPostProcess.h" />
     <ClInclude Include="Utility.h" />
+    <ClInclude Include="VertexShaderLoader.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="xnaCollision.h" />
     <None Include="BoundingObject.hlsl" />
