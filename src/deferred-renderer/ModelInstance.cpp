@@ -1,13 +1,10 @@
 #include "PCH.h"
 #include "ModelInstance.h"
+#include "ModelLoader.h"
 
 ModelInstance::ModelInstance(const WCHAR* path) 
-	: _path(path), _transformedMeshOrientedBoxes(NULL), _transformedMeshAxisBoxes(NULL),
+	: _model(NULL), _path(path), _transformedMeshOrientedBoxes(NULL), _transformedMeshAxisBoxes(NULL),
 	  _position(0.0f, 0.0f, 0.0f), _scale(1.0f), _orientation(0.0f, 0.0f, 0.0f, 1.0f), _dirty(true)
-{
-}
-
-ModelInstance::~ModelInstance()
 {
 }
 
@@ -30,7 +27,7 @@ void ModelInstance::clean()
 
 	// Create an oriented box that sits in the same location as the model's boxes
 	// and then transform it
-	_transformedMainAxisBox = _model.GetAxisAlignedBox();	
+	_transformedMainAxisBox = _model->GetAxisAlignedBox();	
 	_transformedMainOrientedBox.Center = _transformedMainAxisBox.Center;
 	_transformedMainOrientedBox.Extents = _transformedMainAxisBox.Extents;
 	XMStoreFloat4(&_transformedMainOrientedBox.Orientation, XMQuaternionIdentity());
@@ -40,10 +37,10 @@ void ModelInstance::clean()
 	Collision::TransformOrientedBox(&_transformedMainOrientedBox, &_transformedMainOrientedBox, 
 		_scale, orientation, position);
 
-	UINT meshCount = _model.GetMeshCount();
+	UINT meshCount = _model->GetMeshCount();
 	for (UINT i = 0; i < meshCount; i++)
 	{
-		_transformedMeshAxisBoxes[i] = _model.GetMeshAxisAlignedBox(i);
+		_transformedMeshAxisBoxes[i] = _model->GetMeshAxisAlignedBox(i);
 		_transformedMeshOrientedBoxes[i].Center = _transformedMeshAxisBoxes[i].Center;
 		_transformedMeshOrientedBoxes[i].Extents = _transformedMeshAxisBoxes[i].Extents;
 		XMStoreFloat4(&_transformedMeshOrientedBoxes[i].Orientation, XMQuaternionIdentity());
@@ -60,9 +57,18 @@ void ModelInstance::clean()
 HRESULT ModelInstance::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
-	V_RETURN(_model.CreateFromFile(pd3dDevice, _path));
+
+	ModelOptions modelOpts;
+	ModelContent* content;
+
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, _path, &modelOpts, &content));
+
+	_model = content->Model;
+	_model->AddRef();
+
+	SAFE_RELEASE(content);
 	
-	UINT meshCount = _model.GetMeshCount();
+	UINT meshCount = _model->GetMeshCount();
 	_transformedMeshOrientedBoxes = new OrientedBox[meshCount];
 	_transformedMeshAxisBoxes = new AxisAlignedBox[meshCount];
 
@@ -73,7 +79,7 @@ HRESULT ModelInstance::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMana
 
 void ModelInstance::OnD3D11DestroyDevice()
 {
-	_model.Destroy();
+	SAFE_RELEASE(_model);
 
 	SAFE_DELETE_ARRAY(_transformedMeshOrientedBoxes);
 	SAFE_DELETE_ARRAY(_transformedMeshAxisBoxes);

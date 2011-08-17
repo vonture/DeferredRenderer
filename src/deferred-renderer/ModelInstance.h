@@ -10,7 +10,7 @@ class ModelInstance : public IHasContent
 {
 private:
 	const WCHAR* _path;
-	Model _model;
+	Model* _model;
 	
 	XMFLOAT4X4 _world;
 	XMFLOAT3 _position;
@@ -28,7 +28,6 @@ private:
 
 public:
 	ModelInstance(const WCHAR* path);
-	~ModelInstance();
 
 	const XMFLOAT3& GetPosition() const { return _position; }
 	float GetScale() const { return _scale; }
@@ -106,9 +105,9 @@ public:
 		return _transformedMainOrientedBox;
 	}
 
-	UINT GetModelMeshCount() const { return _model.GetMeshCount(); }
+	UINT GetModelMeshCount() const { return _model->GetMeshCount(); }
 
-	Model* GetModel() { return &_model; }
+	Model* GetModel() { return _model; }
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
 	void OnD3D11DestroyDevice();
