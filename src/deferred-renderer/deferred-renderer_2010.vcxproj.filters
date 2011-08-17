@@ -74,11 +74,11 @@
     <Filter Include="Utility">
       <UniqueIdentifier>{d830b4ca-7382-48aa-ad84-f0f9e77ded14}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Entity">
+      <UniqueIdentifier>{c4ea52e6-9c06-4771-b980-46c8ec9f0855}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="QuadVS.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="GBufferCombine.hlsl">
       <Filter>Shaders</Filter>
     </None>
@@ -128,6 +128,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="FXAA.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Quad.hlsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
@@ -347,6 +350,9 @@
     </ClCompile>
     <ClCompile Include="ShaderLoader.cpp">
       <Filter>Graphics Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelLoader.cpp">
+      <Filter>Content</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -598,6 +604,12 @@
     </ClInclude>
     <ClInclude Include="ShaderLoader.h">
       <Filter>Graphics Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelLoader.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="EntitySystem.h">
+      <Filter>Entity</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

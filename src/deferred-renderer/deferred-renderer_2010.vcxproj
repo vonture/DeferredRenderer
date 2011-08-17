@@ -153,6 +153,7 @@
     <ClCompile Include="LightRendererBase.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="LogWindow.cpp" />
+    <ClCompile Include="ModelLoader.cpp" />
     <ClCompile Include="MotionBlurConfigurationPane.cpp" />
     <ClCompile Include="PCH.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -224,6 +225,7 @@
     <ClInclude Include="ContentManager.h" />
     <ClInclude Include="ContentType.h" />
     <ClInclude Include="DeviceManagerConfigurationPane.h" />
+    <ClInclude Include="EntitySystem.h" />
     <ClInclude Include="FXAAConfigurationPane.h" />
     <ClInclude Include="FXAAPostProcess.h" />
     <ClInclude Include="HBAOConfigurationPane.h" />
@@ -232,6 +234,7 @@
     <ClInclude Include="LightRendererBase.h" />
     <ClInclude Include="LogWindow.h" />
     <ClInclude Include="Logger.h" />
+    <ClInclude Include="ModelLoader.h" />
     <ClInclude Include="MotionBlurConfigurationPane.h" />
     <ClInclude Include="PixelShaderLoader.h" />
     <ClInclude Include="Poisson.h" />
@@ -311,7 +314,7 @@
     <None Include="HDR.hlsl" />
     <None Include="Mesh.hlsl" />
     <None Include="PointLight.hlsl" />
-    <None Include="QuadVS.hlsl" />
+    <None Include="Quad.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DeferredRendererApplication.h" />
