@@ -4,17 +4,53 @@
 #include "SDKmisc.h"
 
 #include "assimp.hpp"      // C++ importer interface
-#include "aiScene.h"      // Output data structure
+#include "aiScene.h"       // Output data structure
 #include "aiPostProcess.h" // Post processing flags
 #include "AssimpLogger.h"
 
 Model::Model()
-	: _meshes(NULL), _meshCount(0), _materials(NULL), _materialCount(0)
+	: _refCount(1), _meshes(NULL), _meshCount(0), _materials(NULL), _materialCount(0)
 {
 }
 
 Model::~Model()
 {
+	Destroy();
+}
+
+STDMETHODIMP Model::QueryInterface(REFIID riid, void** ppvObject)
+{
+    IUnknown *punk = nullptr;
+
+    if (riid == IID_IUnknown)
+	{
+		punk = static_cast<IUnknown*>(this);
+	}
+
+    if (!punk)
+	{
+        return E_NOINTERFACE;
+	}
+
+    punk->AddRef();
+    return S_OK;
+}
+
+STDMETHODIMP_(ULONG) Model::AddRef()
+{
+    return ++_refCount;
+}
+
+STDMETHODIMP_(ULONG) Model::Release()
+{
+    ULONG cRef = --_refCount;
+
+    if (cRef == 0)
+	{
+        delete this;
+	}
+
+    return cRef;
 }
 
 IDirect3DDevice9* createD3D9Device()
