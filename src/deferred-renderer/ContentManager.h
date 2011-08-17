@@ -44,7 +44,9 @@ public:
 		WCHAR fullPath[MAX_PATH];
 		if (FAILED(getPath(path, fullPath, MAX_PATH)))
 		{
-			LOG_ERROR(L"ContentManager", L"Unable to find file.");
+			WCHAR errorMsg[MAX_LOG_LENGTH];
+			swprintf_s(errorMsg, L"Unable to find file: %s", path);
+			LOG_ERROR(L"ContentManager", errorMsg);
 			return E_FAIL;
 		}
 
