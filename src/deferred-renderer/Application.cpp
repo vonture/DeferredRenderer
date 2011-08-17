@@ -152,8 +152,9 @@ HRESULT Application::Start()
 
 	// Clean up
 	OnD3D11ReleasingSwapChain();
-	OnD3D11DestroyDevice();	
+	OnD3D11DestroyDevice();
 
+	_contentManager.ReleaseContent();
 	_deviceManager.Destroy();
 
 	return S_OK;
