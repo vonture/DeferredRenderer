@@ -63,7 +63,17 @@ HRESULT VertexShaderLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* thread
 	}
 	
 	WCHAR logMsg[MAX_LOG_LENGTH];
-	swprintf_s(logMsg, L"Loading shader: %s", path);
+	if (options->DebugName)
+	{
+		WCHAR debugNameW[256];
+		AnsiToWString(options->DebugName, debugNameW, 256);
+		
+		swprintf_s(logMsg, L"Loading - %s (path = %s)", debugNameW, path);		
+	}
+	else
+	{
+		swprintf_s(logMsg, L"Loading - %s", path);
+	}
 	LOG_INFO(L"Vertex Shader Loader", logMsg);
 
 	HRESULT hr;
@@ -104,7 +114,13 @@ HRESULT VertexShaderLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* thread
 
 	if (options->DebugName)
 	{
-		SET_DEBUG_NAME(vs, options->DebugName);
+		CHAR debugName[256];
+
+		sprintf_s(debugName, "%s %s", options->DebugName, "VS");
+		SET_DEBUG_NAME(vs, debugName);
+
+		sprintf_s(debugName, "%s %s", options->DebugName, "IL");
+		SET_DEBUG_NAME(layout, debugName);
 	}
 
 	VertexShaderContent* content = new VertexShaderContent();
@@ -112,5 +128,5 @@ HRESULT VertexShaderLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* thread
 	content->InputLayout = layout;
 
 	*contentOut = content;
-	return hr;
+	return S_OK;
 }
