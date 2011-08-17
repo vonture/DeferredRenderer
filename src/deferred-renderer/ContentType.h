@@ -9,6 +9,7 @@ private:
 
 public:
 	ContentType();
+	virtual ~ContentType();
 	
 	virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, __RPC__deref_out void __RPC_FAR *__RPC_FAR *ppvObject);
     virtual ULONG STDMETHODCALLTYPE AddRef();

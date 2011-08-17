@@ -6,6 +6,10 @@ ContentType::ContentType()
 {
 }
 
+ContentType::~ContentType()
+{
+}
+
 STDMETHODIMP ContentType::QueryInterface(REFIID riid, void** ppvObject)
 {
     IUnknown *punk = nullptr;
