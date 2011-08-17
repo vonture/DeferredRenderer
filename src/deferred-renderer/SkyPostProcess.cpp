@@ -1,6 +1,7 @@
 #include "PCH.h"
 #include "SkyPostProcess.h"
 #include "Logger.h"
+#include "PixelShaderLoader.h"
 
 const SkyPostProcess::SKY_TYPE SkyPostProcess::SKY_TYPES[SKY_TYPE_COUNT] = 
 {
@@ -110,12 +111,12 @@ HRESULT SkyPostProcess:: OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 	V_RETURN(PostProcess::OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 
 	// Load the shaders
-	ID3DBlob* pBlob = NULL;
-
+	char debugName[256];
 	char a[16], b[16], c[16], d[16], e[16];
+	char sunEnabledStr[2];
 	D3D_SHADER_MACRO skyMacros[] = 
 	{
-		{ "SUN_ENABLED", "" },
+		{ "SUN_ENABLED", sunEnabledStr },
 		{ "A", a },
 		{ "B", b },
 		{ "C", c },
@@ -124,7 +125,14 @@ HRESULT SkyPostProcess:: OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 		NULL,
 	};
 
-	char debugName[256];
+	PixelShaderOptions psOpts =
+	{
+		"PS_Sky",		// const char* EntryPoint;
+		skyMacros,	// D3D_SHADER_MACRO* Defines;
+		debugName,	// const char* DebugName;
+	};
+	PixelShaderContent* psContent = NULL;
+	
 	for (UINT i = 0; i < SKY_TYPE_COUNT; i++)
 	{
 		sprintf_s(a, "%#ff", SKY_TYPES[i].A);
@@ -133,22 +141,20 @@ HRESULT SkyPostProcess:: OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 		sprintf_s(d, "%#ff", SKY_TYPES[i].D);
 		sprintf_s(e, "%#ff", SKY_TYPES[i].E);
 
-		skyMacros[0].Definition = "0";
-		V_RETURN( CompileShaderFromFile( L"Sky.hlsl", "PS_Sky", "ps_4_0", skyMacros, &pBlob ) );   
-		V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_skyPSs[0][i]));
-		SAFE_RELEASE(pBlob);
+		for (UINT j = 0; j < 2; j++)
+		{
+			sprintf_s(sunEnabledStr, "%u", j);
+			sprintf_s(debugName, "Sky post process (sun = %u, type = %u)", j, i);
 
-		sprintf_s(debugName, "Sky post process (sun disabled, type = %u)", i);
-		SET_DEBUG_NAME(_skyPSs[0][i], debugName);
+			V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Sky.hlsl", &psOpts, &psContent));
+			
+			_skyPSs[j][i] =  psContent->PixelShader;
+			_skyPSs[j][i]->AddRef();
 
-		skyMacros[0].Definition = "1";
-		V_RETURN( CompileShaderFromFile( L"Sky.hlsl", "PS_Sky", "ps_4_0", skyMacros, &pBlob ) );   
-		V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_skyPSs[1][i]));
-		SAFE_RELEASE(pBlob);
-		
-		sprintf_s(debugName, "Sky post process (sun enabled, type = %u)", i);
-		SET_DEBUG_NAME(_skyPSs[1][i], debugName);
+			SAFE_RELEASE(psContent);
+		}
 	}
+
 	// Create the buffer
 	D3D11_BUFFER_DESC bufferDesc =
 	{
