@@ -1,6 +1,7 @@
 #include "PCH.h"
 #include "FXAAPostProcess.h"
 #include "Logger.h"
+#include "PixelShaderLoader.h"
 
 const UINT FXAAPostProcess::QUALITY_PRESETS[QUALITY_PRESET_COUNT] = 
 {
@@ -82,27 +83,33 @@ HRESULT FXAAPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 	V_RETURN(PostProcess::OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 
 	// Load the shaders
-	ID3DBlob* pBlob = NULL;
-
+	char psDebugName[256];
+	char qualPresetString[6];
 	D3D_SHADER_MACRO qualityMacros[] = 
 	{
-		{ "FXAA_QUALITY__PRESET", "" },
+		{ "FXAA_QUALITY__PRESET", qualPresetString },
 		NULL,
 	};
-
-	char qualPresetString[6];
-	char psDebugName[256];
+	
+	PixelShaderOptions psOpts =
+	{
+		"PS_FXAA",		// const char* EntryPoint;
+		qualityMacros,	// D3D_SHADER_MACRO* Defines;
+		psDebugName,	// const char* DebugName;
+	};
+	PixelShaderContent* psContent = NULL;
+		
 	for (UINT i = 0; i < QUALITY_PRESET_COUNT; i++)
 	{
 		sprintf_s(qualPresetString, "%i", QUALITY_PRESETS[i]);
-		qualityMacros[0].Definition = qualPresetString;
+		sprintf_s(psDebugName, "FXAA (quality preset = %s)", qualPresetString);
 
-		V_RETURN( CompileShaderFromFile( L"FXAA.hlsl", "PS_FXAA", "ps_5_0", qualityMacros, &pBlob ) );   
-		V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_fxaaPSs[i]));
-		SAFE_RELEASE(pBlob);
+		V_RETURN(pContentManager->LoadContent(pd3dDevice, L"FXAA.hlsl", &psOpts, &psContent));
 
-		sprintf_s(psDebugName, "FXAA (quality preset = %s) PS", qualPresetString);
-		SET_DEBUG_NAME(_fxaaPSs[i], psDebugName);
+		_fxaaPSs[i] = psContent->PixelShader;
+		_fxaaPSs[i]->AddRef();
+
+		SAFE_RELEASE(psContent);		
 	}
 
 	// Create the buffers
