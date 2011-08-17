@@ -8,10 +8,6 @@ BoundingObjectRenderer::BoundingObjectRenderer()
 {
 }
 
-BoundingObjectRenderer::~BoundingObjectRenderer()
-{
-}
-
 void BoundingObjectRenderer::Add(const AxisAlignedBox& aabb)
 {
 	if (_nextAABB < MAX_BOUNDING_OBJECTS)

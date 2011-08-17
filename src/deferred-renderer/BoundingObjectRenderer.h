@@ -75,7 +75,6 @@ protected:
 
 public:
 	BoundingObjectRenderer();
-	~BoundingObjectRenderer();
 
 	void Add(const AxisAlignedBox& aabb);
 	void Add(const OrientedBox& obb);
