@@ -50,9 +50,19 @@ HRESULT PixelShaderLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* threadP
 	}
 	
 	WCHAR logMsg[MAX_LOG_LENGTH];
-	swprintf_s(logMsg, L"Loading shader: %s", path);
+	if (options->DebugName)
+	{
+		WCHAR debugNameW[256];
+		AnsiToWString(options->DebugName, debugNameW, 256);
+		
+		swprintf_s(logMsg, L"Loading - %s (path = %s)", debugNameW, path);		
+	}
+	else
+	{
+		swprintf_s(logMsg, L"Loading - %s", path);
+	}
 	LOG_INFO(L"Pixel Shader Loader", logMsg);
-
+	
 	HRESULT hr;
 	
 	ID3DBlob* pShaderBlob = NULL;
@@ -79,12 +89,15 @@ HRESULT PixelShaderLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* threadP
 
 	if (options->DebugName)
 	{
-		SET_DEBUG_NAME(ps, options->DebugName);
+		CHAR debugName[256];
+
+		sprintf_s(debugName, "%s %s", options->DebugName, "PS");
+		SET_DEBUG_NAME(ps, debugName);
 	}
 
 	PixelShaderContent* content = new PixelShaderContent();
 	content->PixelShader = ps;
 
 	*contentOut = content;
-	return hr;
+	return S_OK;
 }
