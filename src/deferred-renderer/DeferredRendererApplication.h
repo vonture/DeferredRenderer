@@ -24,6 +24,7 @@
 #include "PixelShaderLoader.h"
 #include "VertexShaderLoader.h"
 #include "TextureLoader.h"
+#include "ModelLoader.h"
 
 #include "ConfigurationWindow.h"
 #include "PostProcessSelectionPane.h"
@@ -56,6 +57,7 @@ private:
 	TextureLoader _textureLoader;
 	PixelShaderLoader _psLoader;
 	VertexShaderLoader _vsLoader;
+	ModelLoader _modelLoader;
 
 	ConfigurationWindow* _configWindow;
 	PostProcessSelectionPane* _ppConfigPane;

@@ -88,12 +88,14 @@ void DeferredRendererApplication::OnInitialize()
 
 void DeferredRendererApplication::OnPreparingContentManager(ContentManager* contentManager)
 {	
-	contentManager->AddSearchPath(L"\\..\\..\\");					// Project root
-	contentManager->AddSearchPath(L"\\..\\deferred-renderer\\");	// source folder
+	contentManager->AddSearchPath(L"\\..\\..\\");						// Project root
+	contentManager->AddSearchPath(L"\\..\\deferred-renderer\\");		// source folder
+	contentManager->AddSearchPath(L"\\..\\deferred-renderer\\media\\");	// media folder
 
 	contentManager->AddContentLoader(&_textureLoader);
 	contentManager->AddContentLoader(&_psLoader);
 	contentManager->AddContentLoader(&_vsLoader);
+	contentManager->AddContentLoader(&_modelLoader);
 }
 
 void DeferredRendererApplication::OnPreparingDeviceSettings(DeviceManager* deviceManager)
