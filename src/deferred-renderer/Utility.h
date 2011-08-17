@@ -122,7 +122,7 @@ inline HRESULT CompileShaderFromFile(const WCHAR* szFileName, const char* szEntr
     // Setting this flag improves the shader debugging experience, but still allows 
     // the shaders to be optimized and to run exactly the way they will run in 
     // the release configuration of this program.
-    dwShaderFlags |= D3DCOMPILE_DEBUG;
+    dwShaderFlags |= D3DCOMPILE_DEBUG | D3DCOMPILE_WARNINGS_ARE_ERRORS;
 #endif
 
     ID3DBlob* pErrorBlob;
