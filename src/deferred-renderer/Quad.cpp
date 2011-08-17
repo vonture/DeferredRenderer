@@ -60,10 +60,10 @@ HRESULT Quad::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pCon
 	vsOpts.Defines = NULL;
 	vsOpts.InputElements = quadlayout;
 	vsOpts.InputElementCount = ARRAYSIZE(quadlayout);
-	vsOpts.DebugName = "Quad VS";
+	vsOpts.DebugName = "Quad";
 
 	VertexShaderContent* vsContent;
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"QuadVS.hlsl", &vsOpts, &vsContent));
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Quad.hlsl", &vsOpts, &vsContent));
 
 	_vertexShader = vsContent->VertexShader;
 	_inputLayout = vsContent->InputLayout;
