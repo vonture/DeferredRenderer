@@ -69,6 +69,8 @@ using namespace std;
 #include <functional>
 #include <string>
 #include <vector>
+#include <list>
+#include <set>
 #include <memory>
 #include <map>
 #include <cmath>
