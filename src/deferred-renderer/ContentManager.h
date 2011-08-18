@@ -8,8 +8,12 @@
 class ContentManager
 {
 private:
-	std::map<long, ContentLoaderBase*> _contentLoaders;
-	std::map<long, ContentType*> _loadedContent;
+	typedef size_t LoaderHash;
+	typedef std::map<LoaderHash, ContentLoaderBase*> LoaderMap;
+	typedef std::map<ContentHash, ContentType*> ContentMap;
+
+	LoaderMap _contentLoaders;
+	ContentMap _loadedContent;
 	std::vector<WCHAR*> _searchPaths;
 
 	static const UINT ERROR_MSG_LEN = 512;
@@ -17,7 +21,7 @@ private:
 	HRESULT getPath(const WCHAR* inPathSegment, WCHAR* outputPath, UINT outputLen);
 		
 	template <class optionsType, class contentType>
-	long getContentLoaderHash()
+	LoaderHash getContentLoaderHash()
 	{
 		size_t optionsHash = typeid(optionsType).hash_code();
 		size_t contentHash = typeid(contentType).hash_code();
@@ -51,14 +55,15 @@ public:
 		}
 
 		// Generate hash for this content
-		long hash;
-		if (FAILED(GenerateContentHash<optionsType>(fullPath, options, &hash)))
+		ContentHash hash;
+		bool hashAvailable = SUCCEEDED(GenerateContentHash<optionsType>(fullPath, options, &hash));
+		if (!hashAvailable)
 		{
-			LOG_ERROR(L"ContentManager", L"Unable to generate hash of options type.");
-			return E_FAIL;
+			LOG_INFO(L"ContentManager", L"Unable to generate hash of options type, cannot store.");
 		}
 
-		if (_loadedContent.find(hash) != _loadedContent.end())
+		// If there is no hash, cannot load a stored content or store this content after loading
+		if (hashAvailable && _loadedContent.find(hash) != _loadedContent.end())
 		{
 			ContentType* asContentBase = _loadedContent[hash];
 
@@ -79,7 +84,7 @@ public:
 		else
 		{
 			// Find the right content loader
-			long loaderLookupHash = getContentLoaderHash<optionsType, contentType>();
+			LoaderHash loaderLookupHash = getContentLoaderHash<optionsType, contentType>();
 			if (_contentLoaders.find(loaderLookupHash) == _contentLoaders.end())
 			{
 				LOG_ERROR(L"ContentManager", L"Unable find loader for the given types.");
@@ -119,9 +124,11 @@ public:
 				#endif
 			}
 
-			_loadedContent[hash] = content;
-
-			content->AddRef();
+			if (hashAvailable)
+			{
+				_loadedContent[hash] = content;
+				content->AddRef();
+			}
 			*ppContentOut = content;
 			return S_OK;
 		}
