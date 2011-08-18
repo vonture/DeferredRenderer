@@ -354,6 +354,12 @@
     <ClCompile Include="ModelLoader.cpp">
       <Filter>Content</Filter>
     </ClCompile>
+    <ClCompile Include="EntityLoader.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="FontLoader.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -610,6 +616,12 @@
     </ClInclude>
     <ClInclude Include="EntitySystem.h">
       <Filter>Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="EntityLoader.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="FontLoader.h">
+      <Filter>Content</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

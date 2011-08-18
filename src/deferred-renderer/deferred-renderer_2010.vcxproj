@@ -146,6 +146,8 @@
     <ClCompile Include="ContentManager.cpp" />
     <ClCompile Include="ContentType.cpp" />
     <ClCompile Include="DeviceManagerConfigurationPane.cpp" />
+    <ClCompile Include="EntityLoader.cpp" />
+    <ClCompile Include="FontLoader.cpp" />
     <ClCompile Include="FXAAConfigurationPane.cpp" />
     <ClCompile Include="FXAAPostProcess.cpp" />
     <ClCompile Include="HBAOConfigurationPane.cpp" />
@@ -225,7 +227,9 @@
     <ClInclude Include="ContentManager.h" />
     <ClInclude Include="ContentType.h" />
     <ClInclude Include="DeviceManagerConfigurationPane.h" />
+    <ClInclude Include="EntityLoader.h" />
     <ClInclude Include="EntitySystem.h" />
+    <ClInclude Include="FontLoader.h" />
     <ClInclude Include="FXAAConfigurationPane.h" />
     <ClInclude Include="FXAAPostProcess.h" />
     <ClInclude Include="HBAOConfigurationPane.h" />
