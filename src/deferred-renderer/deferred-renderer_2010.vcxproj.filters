@@ -74,7 +74,7 @@
     <Filter Include="Utility">
       <UniqueIdentifier>{d830b4ca-7382-48aa-ad84-f0f9e77ded14}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Entity">
+    <Filter Include="Entities">
       <UniqueIdentifier>{c4ea52e6-9c06-4771-b980-46c8ec9f0855}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -609,7 +609,7 @@
       <Filter>Content</Filter>
     </ClInclude>
     <ClInclude Include="EntitySystem.h">
-      <Filter>Entity</Filter>
+      <Filter>Entities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
