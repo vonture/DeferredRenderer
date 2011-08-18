@@ -18,41 +18,6 @@ Model::~Model()
 	Destroy();
 }
 
-STDMETHODIMP Model::QueryInterface(REFIID riid, void** ppvObject)
-{
-    IUnknown *punk = nullptr;
-
-    if (riid == IID_IUnknown)
-	{
-		punk = static_cast<IUnknown*>(this);
-	}
-
-    if (!punk)
-	{
-        return E_NOINTERFACE;
-	}
-
-    punk->AddRef();
-    return S_OK;
-}
-
-STDMETHODIMP_(ULONG) Model::AddRef()
-{
-    return ++_refCount;
-}
-
-STDMETHODIMP_(ULONG) Model::Release()
-{
-    ULONG cRef = --_refCount;
-
-    if (cRef == 0)
-	{
-        delete this;
-	}
-
-    return cRef;
-}
-
 IDirect3DDevice9* createD3D9Device()
 {
 	HRESULT hr;
