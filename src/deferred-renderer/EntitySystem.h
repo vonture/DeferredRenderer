@@ -109,6 +109,7 @@ public:
 	componentType* GetComponent(EntityID id)
 	{
 		ComponentTypeID compId = getComponentTypeID<componentType>();
+		
 		ComponentMap::iterator mapIt = _components.find(compId);
 		if (mapIt != _components.end())
 		{
