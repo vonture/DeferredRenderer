@@ -1,11 +1,12 @@
 #include "PCH.h"
 #include "UIRenderer.h"
+#include "FontLoader.h"
 #include "Gwen/Utility.h"
 #include "Gwen/Font.h"
 #include "Gwen/Texture.h"
 
 UIRenderer::UIRenderer()
-	: _uiFont(L"UI\\consolas_14_font.xml"), _graphicsDevice(NULL), _immediateContext(NULL), _swapChain(NULL)
+	: _uiFont(NULL), _graphicsDevice(NULL), _immediateContext(NULL), _swapChain(NULL)
 {
 }
 
@@ -60,7 +61,7 @@ void UIRenderer::DrawFilledRect(Gwen::Rect rect)
 
 void UIRenderer::LoadFont(Gwen::Font* pFont)
 {
-	pFont->data = &_uiFont;
+	pFont->data = _uiFont;
 }
 
 void UIRenderer::FreeFont(Gwen::Font* pFont)
@@ -73,20 +74,27 @@ void UIRenderer::RenderText(Gwen::Font* pFont, Gwen::Point pos, const Gwen::Unic
 	Translate(pos.x, pos.y);
 
 	const WCHAR* string = text.c_str();
-	XMFLOAT2 textSize = _uiFont.MeasureString(string);
+	XMFLOAT2 textSize = _uiFont->MeasureString(string);
 	
 	SPRITE_DRAW_DATA spriteData;
 	spriteData.TopLeft = XMFLOAT2(pos.x, pos.y);
 	spriteData.Size = XMFLOAT2(textSize.x, textSize.y);
 	spriteData.Color = _drawColor;
 
-	_spriteRenderer.AddTextScreenSpace(&_uiFont, text.c_str(), spriteData);
+	_spriteRenderer.AddTextScreenSpace(_uiFont, text.c_str(), spriteData);
 }
 
 Gwen::Point UIRenderer::MeasureText(Gwen::Font* pFont, const Gwen::UnicodeString& text)
 {
-	XMFLOAT2 size = _uiFont.MeasureString(text.c_str());
-	return Gwen::Point(size.x, size.y);
+	if (_uiFont)
+	{
+		XMFLOAT2 size = _uiFont->MeasureString(text.c_str());
+		return Gwen::Point(size.x, size.y);
+	}
+	else
+	{
+		return Gwen::Point(0, 0);
+	}
 }
 
 void UIRenderer::StartClip()
@@ -158,8 +166,9 @@ HRESULT UIRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager
 
 	_backBufferSurfaceDesc = *pBackBufferSurfaceDesc;
 
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"UI\\consolas_14_font.xml", (FontOptions*)NULL, &_uiFont));
+
 	V_RETURN(_spriteRenderer.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
-	V_RETURN(_uiFont.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
@@ -167,7 +176,7 @@ HRESULT UIRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager
 void UIRenderer::OnD3D11DestroyDevice()
 {
 	_spriteRenderer.OnD3D11DestroyDevice();
-	_uiFont.OnD3D11DestroyDevice();
+	SAFE_RELEASE(_uiFont);
 }
 
 HRESULT UIRenderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
@@ -180,7 +189,6 @@ HRESULT UIRenderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentMan
 	_swapChain = pSwapChain;
 
 	V_RETURN(_spriteRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_uiFont.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
@@ -188,5 +196,4 @@ HRESULT UIRenderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentMan
 void UIRenderer::OnD3D11ReleasingSwapChain()
 {
 	_spriteRenderer.OnD3D11ReleasingSwapChain();
-	_uiFont.OnD3D11ReleasingSwapChain();
 }

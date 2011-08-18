@@ -18,7 +18,7 @@ private:
 	
 	XMFLOAT4 _drawColor;
 
-	SpriteFont _uiFont;
+	SpriteFont* _uiFont;
 	SpriteRenderer _spriteRenderer;
 
 public:
