@@ -2,13 +2,14 @@
 #include "SpriteFont.h"
 #include "tinyxml.h"
 
-SpriteFont::SpriteFont(const WCHAR* path)
-	: _path(path), _textureWidth(1), _textureHeight(1), _fontSRV(NULL)
+SpriteFont::SpriteFont()
+	: _textureWidth(1), _textureHeight(1), _fontSRV(NULL)
 {
 }
 
 SpriteFont::~SpriteFont()
 {
+	Destroy();
 }
 
 bool SpriteFont::ContainsCharacter(WCHAR character)
@@ -66,15 +67,12 @@ ID3D11ShaderResourceView* SpriteFont::GetFontShaderResourceView()
 	return _fontSRV;
 }
 
-HRESULT SpriteFont::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT SpriteFont::CreateFromFile(ID3D11Device* pd3dDevice, const WCHAR* path)
 {
 	HRESULT hr;
-
-	WCHAR fullFontPath[MAX_PATH];
-	V_RETURN(DXUTFindDXSDKMediaFileCch(fullFontPath, MAX_PATH, _path));	
-
+	
 	char sPath[MAX_PATH];
-	if (!WStringToAnsi(fullFontPath, sPath, MAX_PATH))
+	if (!WStringToAnsi(path, sPath, MAX_PATH))
 	{
 		return E_FAIL;
 	}
@@ -104,7 +102,7 @@ HRESULT SpriteFont::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager
 	}
 
 	WCHAR wDirName[MAX_PATH];
-	if (!GetDirectoryFromFileNameW(fullFontPath, wDirName, MAX_PATH))
+	if (!GetDirectoryFromFileNameW(path, wDirName, MAX_PATH))
 	{
 		return E_FAIL;
 	}
@@ -179,18 +177,8 @@ HRESULT SpriteFont::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager
 	return S_OK;
 }
 
-void SpriteFont::OnD3D11DestroyDevice()
+void SpriteFont::Destroy()
 {
 	SAFE_RELEASE(_fontSRV);
 	_charMap.clear();
-}
-
-HRESULT SpriteFont::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
-	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
-{
-	return S_OK;
-}
-
-void SpriteFont::OnD3D11ReleasingSwapChain()
-{
 }

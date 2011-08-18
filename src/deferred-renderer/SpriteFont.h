@@ -2,12 +2,11 @@
 
 #include "PCH.h"
 #include "IHasContent.h"
+#include "ContentType.h"
 
-class SpriteFont : public IHasContent
+class SpriteFont : public ContentType
 {
 private:
-	const WCHAR* _path;
-
 	struct CharInfo
 	{		
 		float X, Y, Width, Height;
@@ -24,7 +23,7 @@ private:
 	ID3D11ShaderResourceView* _fontSRV;
 
 public:
-	SpriteFont(const WCHAR* path);
+	SpriteFont();
 	~SpriteFont();
 
 	bool ContainsCharacter(WCHAR character);
@@ -36,10 +35,6 @@ public:
 
 	ID3D11ShaderResourceView* GetFontShaderResourceView();
 
-	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-	void OnD3D11DestroyDevice();
-
-	HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
-		const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-	void OnD3D11ReleasingSwapChain();
+	HRESULT CreateFromFile(ID3D11Device* pd3dDevice, const WCHAR* path);
+	void Destroy();
 };
