@@ -34,18 +34,19 @@ private:
 		XMFLOAT4 Color;
 	};
 
-	static const WORD MAX_SPRITES = 4096;
-	WORD _indices[MAX_SPRITES * 6];
-	SPRITE_VERTEX _vertices[MAX_SPRITES * 4];
-	WORD _nextSprite;
+	typedef WORD SpriteIndex;
+	static const SpriteIndex MAX_SPRITES = 1 << 13;
+	SpriteIndex* _indices;
+	SPRITE_VERTEX* _vertices;
+	SpriteIndex _nextSprite;
 
 	struct TEXTURE_INDEX
 	{
-		WORD StartSprite;
-		WORD SpriteCount;
+		SpriteIndex StartSprite;
+		SpriteIndex SpriteCount;
 		ID3D11ShaderResourceView* Texture;
 	};
-	TEXTURE_INDEX _textures[MAX_SPRITES];
+	TEXTURE_INDEX* _textures;
 	int _curTexture;
 
 	ID3D11InputLayout* _inputLayout;

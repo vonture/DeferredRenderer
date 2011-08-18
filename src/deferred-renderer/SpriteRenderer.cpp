@@ -10,10 +10,16 @@ SpriteRenderer::SpriteRenderer()
 	  _vertexBuffer(NULL), _spriteVS(NULL), _spritePS(NULL), _blankTexture(NULL), _blankSRV(NULL),
 	  _begun(false)
 {
+	_indices = new SpriteIndex[MAX_SPRITES * 6];
+	_vertices = new SPRITE_VERTEX[MAX_SPRITES * 4];
+	_textures = new TEXTURE_INDEX[MAX_SPRITES];
 }
 
 SpriteRenderer::~SpriteRenderer()
 {
+	SAFE_DELETE_ARRAY(_indices);
+	SAFE_DELETE_ARRAY(_vertices);
+	SAFE_DELETE_ARRAY(_textures);
 }
 
 HRESULT SpriteRenderer::Begin()
@@ -81,8 +87,11 @@ HRESULT SpriteRenderer::End(ID3D11DeviceContext* pd3d11DeviceContext)
 	UINT stride = sizeof(SPRITE_VERTEX);
     UINT offset = 0;
 	
+	// Index size calc
+	DXGI_FORMAT indexFormat = (sizeof(SpriteIndex) == 32) ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
+
 	pd3d11DeviceContext->IASetVertexBuffers(0, 1, &_vertexBuffer, &stride, &offset);
-	pd3d11DeviceContext->IASetIndexBuffer(_indexBuffer, DXGI_FORMAT_R16_UINT, offset);
+	pd3d11DeviceContext->IASetIndexBuffer(_indexBuffer, indexFormat, offset);
     pd3d11DeviceContext->IASetInputLayout(_inputLayout);
     pd3d11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -298,7 +307,7 @@ HRESULT SpriteRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMan
 
 	D3D11_BUFFER_DESC vbDesc = 
 	{
-		sizeof(SPRITE_VERTEX) * MAX_SPRITES * 6, // INT ByteWidth;
+		sizeof(SPRITE_VERTEX) * MAX_SPRITES * 4, // INT ByteWidth;
 		D3D11_USAGE_DYNAMIC, // D3D11_USAGE Usage;
 		D3D11_BIND_VERTEX_BUFFER, // UINT BindFlags;
 		D3D11_CPU_ACCESS_WRITE, // UINT CPUAccessFlags;
@@ -310,7 +319,7 @@ HRESULT SpriteRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMan
 
 	D3D11_BUFFER_DESC ibDesc = 
 	{
-		sizeof(WORD) * MAX_SPRITES * 4, // INT ByteWidth;
+		sizeof(SpriteIndex) * MAX_SPRITES * 6, // INT ByteWidth;
 		D3D11_USAGE_DYNAMIC, // D3D11_USAGE Usage;
 		D3D11_BIND_INDEX_BUFFER, // UINT BindFlags;
 		D3D11_CPU_ACCESS_WRITE, // UINT CPUAccessFlags;
