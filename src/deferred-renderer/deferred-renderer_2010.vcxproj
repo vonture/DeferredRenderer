@@ -39,7 +39,7 @@
     <LinkIncremental>true</LinkIncremental>
     <GenerateManifest>true</GenerateManifest>
     <ExecutablePath>$(DXSDK_DIR)Utilities\bin\x86;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>$(SolutionDir)gwen/include;$(SolutionDir)assimp/include;$(SolutionDir)tinyxml/include;$(DXSDK_DIR)include;$(IncludePath);$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)gwen/include;$(SolutionDir)assimp/include;$(SolutionDir)tinyxml/include;$(DXSDK_DIR)include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)$(Configuration)-lib\;$(DXSDK_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -223,6 +223,7 @@
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="xnaCollision.cpp" />
     <ClInclude Include="AssimpLogger.h" />
+    <ClInclude Include="ComponentSystem.h" />
     <ClInclude Include="ContentLoader.h" />
     <ClInclude Include="ContentManager.h" />
     <ClInclude Include="ContentType.h" />
