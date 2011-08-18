@@ -57,16 +57,8 @@ void ModelInstance::clean()
 HRESULT ModelInstance::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
-
-	ModelOptions modelOpts;
-	ModelContent* content;
-
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, _path, &modelOpts, &content));
-
-	_model = content->Model;
-	_model->AddRef();
-
-	SAFE_RELEASE(content);
+	
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, _path, (ModelOptions*)NULL, &_model));
 	
 	UINT meshCount = _model->GetMeshCount();
 	_transformedMeshOrientedBoxes = new OrientedBox[meshCount];
