@@ -2,8 +2,10 @@
 
 #include "PCH.h"
 
+typedef long ContentHash;
+
 template <class T>
-HRESULT GenerateContentHash(const WCHAR* path, T* options, long* hash)
+HRESULT GenerateContentHash(const WCHAR* path, T* options, ContentHash* hash)
 {
 	return E_FAIL;
 }
