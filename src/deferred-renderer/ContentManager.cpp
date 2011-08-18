@@ -3,6 +3,8 @@
 
 ContentManager::ContentManager()
 {
+	HRESULT hr;
+	V(D3DX11CreateThreadPump(0, 0, &_threadPump)); 
 }
 
 ContentManager::~ContentManager()

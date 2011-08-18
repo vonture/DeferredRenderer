@@ -28,6 +28,8 @@ private:
 		return optionsHash + contentHash;
 	}
 
+	ID3DX11ThreadPump* _threadPump;
+
 public:
 	ContentManager();
 	~ContentManager();
