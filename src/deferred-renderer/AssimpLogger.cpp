@@ -6,6 +6,11 @@ AssimpLogger::AssimpLogger(Logger* logger)
 {
 }
 
+AssimpLogger::~AssimpLogger()
+{
+	Unregister();
+}
+
 void AssimpLogger::write(const char* message)
 {
 	WCHAR msg[MAX_MESSAGE_LEN];
@@ -26,11 +31,18 @@ void AssimpLogger::Register()
 {
 	if (!_registered)
 	{
-		unsigned int severity = Assimp::Logger::DEBUGGING | Assimp::Logger::INFO | 
-				Assimp::Logger::ERR | Assimp::Logger::WARN;
-
 		Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE);
-		Assimp::DefaultLogger::get()->attachStream(&_instance, severity);
+		Assimp::DefaultLogger::get()->attachStream(&_instance, LOG_SEVERITY);
 		_registered = true;
+	}
+}
+
+void AssimpLogger::Unregister()
+{
+	if (_registered)
+	{
+		Assimp::DefaultLogger::get()->detatchStream(&_instance, LOG_SEVERITY);
+		Assimp::DefaultLogger::kill();
+		_registered = false;
 	}
 }
