@@ -96,6 +96,8 @@ void DeferredRendererApplication::OnPreparingContentManager(ContentManager* cont
 	contentManager->AddContentLoader(&_psLoader);
 	contentManager->AddContentLoader(&_vsLoader);
 	contentManager->AddContentLoader(&_modelLoader);
+	contentManager->AddContentLoader(&_fontLoader);
+	contentManager->AddContentLoader(&_entityLoader);
 }
 
 void DeferredRendererApplication::OnPreparingDeviceSettings(DeviceManager* deviceManager)
