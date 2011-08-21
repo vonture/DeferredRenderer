@@ -47,7 +47,8 @@ private:
 	
 	AmbientLight _ambientLight;
 
-	std::map<size_t, LightRendererBase*> _lightRenderers;
+	typedef size_t LightTypeHash;
+	std::map<LightTypeHash, LightRendererBase*> _lightRenderers;
 	
 	void swapPPBuffers();
 
@@ -65,7 +66,7 @@ public:
 	void AddLight(lightType* light, bool shadowed = true)
 	{
 		const type_info& info = typeid(lightType);
-		size_t hash = info.hash_code();		
+		LightTypeHash hash = info.hash_code();		
 		
 		if (_lightRenderers.find(hash) != _lightRenderers.end())
 		{
