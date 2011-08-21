@@ -56,7 +56,6 @@ private:
 
 public:
 	MLAAPostProcess();
-	~MLAAPostProcess();
 	
 	float GetDepthThreshold() const { return _depthThreshold; }
 	void SetDepthThreshold(float threshold) { _depthThreshold = max(threshold, 0.0f); } 

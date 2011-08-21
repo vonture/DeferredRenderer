@@ -36,7 +36,6 @@ private:
 
 public:
 	DiscDoFPostProcess();
-	~DiscDoFPostProcess();
 
 	float GetFocalDistance() const { return _focalDistance; }
 	void SetFocalDistance(float dist) { _focalDistance = max(dist, 0.0f); }

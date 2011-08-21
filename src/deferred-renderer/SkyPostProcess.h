@@ -40,7 +40,6 @@ private:
 	
 public:
 	SkyPostProcess();
-	~SkyPostProcess();
 
 	const XMFLOAT3& GetSkyColor() const { return _skyColor; }
 	const XMFLOAT3& GetSunColor() const { return _sunColor; }

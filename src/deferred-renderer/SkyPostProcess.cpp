@@ -38,12 +38,8 @@ SkyPostProcess::SkyPostProcess()
 	SetSunDirection(XMFLOAT3(0.4f, 0.9f, 0.2f));
 	SetSunWidth(0.05f);
 	SetSunEnabled(true);
-	SetSunIntensity(4.0f);
+	SetSunIntensity(2.5f);
 	SetSkyTypeIndex(11);
-}
-
-SkyPostProcess::~SkyPostProcess()
-{
 }
 
 void SkyPostProcess::SetSunDirection(const XMFLOAT3& sunDir)
