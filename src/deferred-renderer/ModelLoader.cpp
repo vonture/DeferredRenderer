@@ -3,11 +3,11 @@
 #include "Logger.h"
 
 template <>
-HRESULT GenerateContentHash<ModelOptions>(const WCHAR* path, ModelOptions* options, long* hash)
+HRESULT GenerateContentHash<ModelOptions>(const WCHAR* path, ModelOptions* options, ContentHash* hash)
 {
 	if (!hash)
 	{
-		return E_FAIL;
+		return FWP_E_NULL_POINTER;
 	}
 
 	locale loc;
