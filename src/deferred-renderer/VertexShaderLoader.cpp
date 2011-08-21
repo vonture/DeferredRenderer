@@ -3,14 +3,14 @@
 #include "Logger.h"
 
 template <>
-HRESULT GenerateContentHash<VertexShaderOptions>(const WCHAR* path, VertexShaderOptions* options, long* hash)
+HRESULT GenerateContentHash<VertexShaderOptions>(const WCHAR* path, VertexShaderOptions* options, ContentHash* hash)
 {
 	if (!hash)
 	{
-		return E_FAIL;
+		return FWP_E_NULL_POINTER;
 	}
 
-	long retHash = 0;
+	ContentHash retHash = 0;
 
 	locale loc;
 	const collate<WCHAR>& wcoll = use_facet<collate<WCHAR>>(loc);
@@ -21,26 +21,30 @@ HRESULT GenerateContentHash<VertexShaderOptions>(const WCHAR* path, VertexShader
 	{
 		const collate<char>& acoll = use_facet<collate<char>>(loc);
 
+		retHash += acoll.hash(options->EntryPoint, options->EntryPoint + strlen(options->EntryPoint));
+
 		if (options->Defines)
 		{
+			char definesCat[1024] = "";
+			
 			UINT defineIdx = 0;
 			while (options->Defines[defineIdx].Name)
 			{
-				retHash += acoll.hash(options->Defines[defineIdx].Name,
-					options->Defines[defineIdx].Name + strlen(options->Defines[defineIdx].Name));
-
-				retHash += acoll.hash(options->Defines[defineIdx].Definition,
-					options->Defines[defineIdx].Definition + strlen(options->Defines[defineIdx].Definition));
+				strcat_s(definesCat, options->Defines[defineIdx].Name);
+				strcat_s(definesCat, options->Defines[defineIdx].Definition);
 
 				defineIdx++;
 			}
+
+			retHash += acoll.hash(definesCat, definesCat + strlen(definesCat));
 		}
 
+		char layoutCat[1024] = "";
 		for (UINT i = 0; i < options->InputElementCount; i++)
 		{
-			retHash += acoll.hash(options->InputElements[i].SemanticName, options->InputElements[i].SemanticName + 
-				strlen(options->InputElements[i].SemanticName));
+			strcat_s(layoutCat, options->InputElements[i].SemanticName);
 		}
+		retHash += acoll.hash(layoutCat, layoutCat + strlen(layoutCat));
 
 		// Not hashing the debug name since it does not affect the content that is loaded
 	}

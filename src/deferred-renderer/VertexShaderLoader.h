@@ -23,7 +23,7 @@ struct VertexShaderOptions
 };
 
 template <>
-HRESULT GenerateContentHash<VertexShaderOptions>(const WCHAR* path, VertexShaderOptions* options, long* hash);
+HRESULT GenerateContentHash<VertexShaderOptions>(const WCHAR* path, VertexShaderOptions* options, ContentHash* hash);
 
 class VertexShaderLoader : public ContentLoader<VertexShaderOptions, VertexShaderContent>
 {

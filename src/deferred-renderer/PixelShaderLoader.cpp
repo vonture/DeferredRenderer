@@ -3,14 +3,14 @@
 #include "Logger.h"
 
 template <>
-HRESULT GenerateContentHash<PixelShaderOptions>(const WCHAR* path, PixelShaderOptions* options, long* hash)
+HRESULT GenerateContentHash<PixelShaderOptions>(const WCHAR* path, PixelShaderOptions* options, ContentHash* hash)
 {
 	if (!hash)
 	{
 		return E_FAIL;
 	}
 
-	long retHash = 0;
+	ContentHash retHash = 0;
 
 	locale loc;
 	const collate<WCHAR>& wcoll = use_facet<collate<WCHAR>>(loc);
@@ -21,16 +21,22 @@ HRESULT GenerateContentHash<PixelShaderOptions>(const WCHAR* path, PixelShaderOp
 	{
 		const collate<char>& acoll = use_facet<collate<char>>(loc);
 
-		UINT defineIdx = 0;
-		while (options->Defines[defineIdx].Name)
+		retHash += acoll.hash(options->EntryPoint, options->EntryPoint + strlen(options->EntryPoint));
+		
+		if (options->Defines)
 		{
-			retHash += acoll.hash(options->Defines[defineIdx].Name,
-				options->Defines[defineIdx].Name + strlen(options->Defines[defineIdx].Name));
+			char definesCat[1024] = "";
+			
+			UINT defineIdx = 0;
+			while (options->Defines[defineIdx].Name)
+			{
+				strcat_s(definesCat, options->Defines[defineIdx].Name);
+				strcat_s(definesCat, options->Defines[defineIdx].Definition);
 
-			retHash += acoll.hash(options->Defines[defineIdx].Definition,
-				options->Defines[defineIdx].Definition + strlen(options->Defines[defineIdx].Definition));
+				defineIdx++;
+			}
 
-			defineIdx++;
+			retHash += acoll.hash(definesCat, definesCat + strlen(definesCat));
 		}
 
 		// Not hashing the debug name since it does not affect the content that is loaded

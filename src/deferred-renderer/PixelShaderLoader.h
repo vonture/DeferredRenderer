@@ -20,7 +20,7 @@ struct PixelShaderOptions
 };
 
 template <>
-HRESULT GenerateContentHash<PixelShaderOptions>(const WCHAR* path, PixelShaderOptions* options, long* hash);
+HRESULT GenerateContentHash<PixelShaderOptions>(const WCHAR* path, PixelShaderOptions* options, ContentHash* hash);
 
 class PixelShaderLoader : public ContentLoader<PixelShaderOptions, PixelShaderContent>
 {
