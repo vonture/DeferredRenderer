@@ -96,17 +96,19 @@ HRESULT Model::CreateFromFile(ID3D11Device* device, LPCWSTR fileName)
 		}
 
 		_materialCount = scene->mNumMaterials;
-		_materials = new Material[_materialCount];
+		_materials = new Material*[_materialCount];
 		for (UINT i = 0; i < _materialCount; i++)
 		{
-			V_RETURN(_materials[i].CreateFromASSIMPMaterial(device, directory, scene, i));
+			_materials[i] = new Material();
+			V_RETURN(_materials[i]->CreateFromASSIMPMaterial(device, directory, scene, i));
 		}
 
 		_meshCount = scene->mNumMeshes;
-		_meshes = new Mesh[_meshCount];
+		_meshes = new Mesh*[_meshCount];
 		for (UINT i = 0; i < _meshCount; i++)
 		{
-			V_RETURN(_meshes[i].CreateFromASSIMPMesh(device, scene, i));
+			_meshes[i] = new Mesh();
+			V_RETURN(_meshes[i]->CreateFromASSIMPMesh(device, scene, i));
 		}
 	}
 	else if (strncmp(extensionA, ".x", MAX_PATH) == 0 ||
@@ -118,10 +120,11 @@ HRESULT Model::CreateFromFile(ID3D11Device* device, LPCWSTR fileName)
 
 		// Make materials
 		_materialCount = sdkMesh.GetNumMaterials();
-		_materials = new Material[_materialCount];
+		_materials = new Material*[_materialCount];
 		for (UINT i = 0; i < _materialCount; i++)
 		{
-			V_RETURN(_materials[i].CreateFromSDKMeshMaterial(device, directory, &sdkMesh, i));
+			_materials[i] = new Material();			
+			V_RETURN(_materials[i]->CreateFromSDKMeshMaterial(device, directory, &sdkMesh, i));
 		}
 	
 		// Create a d3d9 device for loading the meshes
@@ -129,10 +132,11 @@ HRESULT Model::CreateFromFile(ID3D11Device* device, LPCWSTR fileName)
 
 		// Copy the meshes
 		_meshCount = sdkMesh.GetNumMeshes();
-		_meshes = new Mesh[_meshCount];
+		_meshes = new Mesh*[_meshCount];
 		for (UINT i = 0; i < _meshCount; i++)
 		{
-			V_RETURN(_meshes[i].CreateFromSDKMeshMesh(device, d3d9device, directory, &sdkMesh, i));
+			_meshes[i] = new Mesh();
+			V_RETURN(_meshes[i]->CreateFromSDKMeshMesh(device, d3d9device, directory, &sdkMesh, i));
 		}
 
 		SAFE_RELEASE(d3d9device);
@@ -149,11 +153,11 @@ HRESULT Model::CreateFromFile(ID3D11Device* device, LPCWSTR fileName)
 	// Compute the overall bounding box
 	if (_meshCount > 0)
 	{
-		_boundingBox = _meshes[0].GetAxisAlignedBox();
+		_boundingBox = _meshes[0]->GetAxisAlignedBox();
 
 		for (UINT i = 1; i < _meshCount; i++)
 		{
-			AxisAlignedBox aaBox = _meshes[i].GetAxisAlignedBox();
+			AxisAlignedBox aaBox = _meshes[i]->GetAxisAlignedBox();
 
 			Collision::MergeAxisAlignedBoxes(&_boundingBox, &_boundingBox, &aaBox);
 		}
@@ -166,20 +170,20 @@ void Model::Destroy()
 {
 	for (UINT i = 0; i < _materialCount; i++)
 	{
-		_materials[i].Destroy();
+		SAFE_RELEASE(_materials[i]);
 	}
 	SAFE_DELETE_ARRAY(_materials);
 	_materialCount = 0;
 
 	for (UINT i = 0; i < _meshCount; i++)
     {
-		_meshes[i].Destroy();
+		SAFE_RELEASE(_meshes[i]);
 	}
 	SAFE_DELETE_ARRAY(_meshes);
 	_meshCount = 0;
 }
 
-HRESULT Model::Render(ID3D11DeviceContext* context,  UINT materialBufferSlot, UINT diffuseSlot,
+HRESULT Model::Render(ID3D11DeviceContext* context, UINT materialBufferSlot, UINT diffuseSlot,
 	UINT normalSlot, UINT specularSlot)
 {
 	HRESULT hr;
@@ -195,44 +199,44 @@ HRESULT Model::Render(ID3D11DeviceContext* context,  UINT materialBufferSlot, UI
 HRESULT Model::RenderMesh(ID3D11DeviceContext* context, UINT meshIdx, UINT materialBufferSlot,
 	UINT diffuseSlot, UINT normalSlot, UINT specularSlot)
 {
-	const Mesh& mesh = _meshes[meshIdx];
-	UINT partCount = mesh.GetMeshPartCount();
+	const Mesh* mesh = _meshes[meshIdx];
+	UINT partCount = mesh->GetMeshPartCount();
 
-	ID3D11Buffer* vertexBuffers[1] = { mesh.GetVertexBuffer() };
-	UINT strides[1] = { mesh.GetVertexStride() };
+	ID3D11Buffer* vertexBuffers[1] = { mesh->GetVertexBuffer() };
+	UINT strides[1] = { mesh->GetVertexStride() };
 	UINT offsets[1] = { 0 };
 
 	context->IASetVertexBuffers(0, 1, vertexBuffers, strides, offsets);
-	context->IASetIndexBuffer(mesh.GetIndexBuffer(), mesh.GetIndexBufferFormat(), 0);
+	context->IASetIndexBuffer(mesh->GetIndexBuffer(), mesh->GetIndexBufferFormat(), 0);
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	
 	for (UINT i = 0; i < partCount; i++)
 	{
-		const MeshPart& part = mesh.GetMeshPart(i);
-		const Material& mat = _materials[part.MaterialIndex];
+		const MeshPart* part = mesh->GetMeshPart(i);
+		const Material* mat = _materials[part->MaterialIndex];
 
 		if (materialBufferSlot != INVALID_BUFFER_SLOT)
 		{
-			ID3D11Buffer* buf = mat.GetPropertiesBuffer();
+			ID3D11Buffer* buf = mat->GetPropertiesBuffer();
 			context->PSSetConstantBuffers(materialBufferSlot, 1, &buf);
 		}
 		if (diffuseSlot != INVALID_SAMPLER_SLOT)
 		{
-			ID3D11ShaderResourceView* srv = mat.GetDiffuseSRV();
+			ID3D11ShaderResourceView* srv = mat->GetDiffuseSRV();
 			context->PSSetShaderResources(diffuseSlot, 1, &srv);
 		}
 		if (normalSlot != INVALID_SAMPLER_SLOT)
 		{
-			ID3D11ShaderResourceView* srv = mat.GetNormalSRV();
+			ID3D11ShaderResourceView* srv = mat->GetNormalSRV();
 			context->PSSetShaderResources(normalSlot, 1, &srv);
 		}
 		if (specularSlot != INVALID_SAMPLER_SLOT)
 		{
-			ID3D11ShaderResourceView* srv = mat.GetSpecularSRV();
+			ID3D11ShaderResourceView* srv = mat->GetSpecularSRV();
 			context->PSSetShaderResources(specularSlot, 1, &srv);
 		}
 
-        context->DrawIndexed(part.IndexCount, part.IndexStart, 0);
+        context->DrawIndexed(part->IndexCount, part->IndexStart, part->VertexStart);
 	}
 
 	return S_OK;

@@ -14,10 +14,10 @@ class Model : public ContentType
 private:
 	UINT _refCount;
 
-	Mesh* _meshes;
+	Mesh** _meshes;
 	UINT _meshCount;
 
-	Material* _materials;
+	Material** _materials;
 	UINT _materialCount;
 
 	AxisAlignedBox _boundingBox;
@@ -26,13 +26,13 @@ public:
 	Model();
 	~Model();
 	
-	const Mesh& GetMesh(UINT idx) const { return _meshes[idx]; }
+	const Mesh* GetMesh(UINT idx) const { return _meshes[idx]; }
 	UINT GetMeshCount() const { return _meshCount; }
 
-	const Material& GetMaterial(UINT idx) const { return _materials[idx]; }
+	const Material* GetMaterial(UINT idx) const { return _materials[idx]; }
 	UINT GetMaterialCount() const { return _materialCount; }
 
-	const AxisAlignedBox& GetMeshAxisAlignedBox(UINT idx) const { return _meshes[idx].GetAxisAlignedBox(); }
+	const AxisAlignedBox& GetMeshAxisAlignedBox(UINT idx) const { return _meshes[idx]->GetAxisAlignedBox(); }
 	const AxisAlignedBox& GetAxisAlignedBox() const { return _boundingBox; }
 
 	HRESULT CreateFromFile(ID3D11Device* device, LPCWSTR fileName);
