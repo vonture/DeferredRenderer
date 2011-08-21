@@ -15,6 +15,9 @@ private:
 	BlendStates _blendStates;
 	RasterizerStates _rasterStates;
 
+	bool _alphaCutoutEnabled;
+	float _alphaThreshold;
+
 protected:
 	DepthStencilStates* GetDepthStencilStates() { return &_dsStates; }
 	SamplerStates* GetSamplerStates() { return &_samplerStates; }
@@ -24,6 +27,9 @@ protected:
 	virtual UINT GetMaxShadowedLights() const = 0;
 
 public:
+	LightRendererBase();
+	virtual ~LightRendererBase();
+
 	virtual HRESULT RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*>* models,
 		Camera* camera, AxisAlignedBox* sceneBounds) = 0;
 	virtual HRESULT RenderLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
@@ -33,6 +39,12 @@ public:
 	virtual UINT GetCount(bool shadowed) = 0;
 
 	virtual void Clear() = 0;
+
+	bool GetAlphaCutoutEnabled() const { return _alphaCutoutEnabled; }
+	void SetAlphaCutoutEnabled(bool enabled) { _alphaCutoutEnabled = enabled; }
+
+	float GetAlphaThreshold() const { return _alphaThreshold; }
+	void SetAlphaThreshold(float threshold) { _alphaThreshold = clamp(threshold, 0.0f, 1.0f); }
 
 	virtual HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
 	virtual void OnD3D11DestroyDevice();

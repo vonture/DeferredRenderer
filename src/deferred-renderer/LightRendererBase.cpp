@@ -1,6 +1,16 @@
 #include "PCH.h"
 #include "LightRendererBase.h"
 
+LightRendererBase::LightRendererBase()
+{
+	SetAlphaCutoutEnabled(true);
+	SetAlphaThreshold(0.05f);
+}
+
+LightRendererBase::~LightRendererBase()
+{
+}
+
 HRESULT LightRendererBase::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
