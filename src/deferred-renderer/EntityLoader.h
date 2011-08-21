@@ -32,7 +32,7 @@ struct EntityOptions
 };
 
 template <>
-HRESULT GenerateContentHash<EntityOptions>(const WCHAR* path, EntityOptions* options, long* hash);
+HRESULT GenerateContentHash<EntityOptions>(const WCHAR* path, EntityOptions* options, ContentHash* hash);
 
 class EntityLoader : public ContentLoader<EntityOptions, EntityContent>
 {

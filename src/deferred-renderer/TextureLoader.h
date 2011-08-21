@@ -12,6 +12,7 @@ struct TextureContent : public ContentType
 	TextureContent() : ShaderResourceView(NULL) { }
 	~TextureContent() {  SAFE_RELEASE(ShaderResourceView); }
 };
+
 struct TextureLoadOptions
 {
 	bool Generate3DFrom2D;
@@ -19,7 +20,7 @@ struct TextureLoadOptions
 };
 
 template <>
-HRESULT GenerateContentHash<TextureLoadOptions>(const WCHAR* path, TextureLoadOptions* options, long* hash);
+HRESULT GenerateContentHash<TextureLoadOptions>(const WCHAR* path, TextureLoadOptions* options, ContentHash* hash);
 
 class TextureLoader : public ContentLoader<TextureLoadOptions, TextureContent>
 {

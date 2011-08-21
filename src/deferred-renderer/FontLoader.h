@@ -10,7 +10,7 @@ struct FontOptions
 };
 
 template <>
-HRESULT GenerateContentHash<FontOptions>(const WCHAR* path, FontOptions* options, long* hash);
+HRESULT GenerateContentHash<FontOptions>(const WCHAR* path, FontOptions* options, ContentHash* hash);
 
 class FontLoader : public ContentLoader<FontOptions, SpriteFont>
 {

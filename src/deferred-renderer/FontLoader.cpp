@@ -2,11 +2,11 @@
 #include "FontLoader.h"
 
 template <>
-HRESULT GenerateContentHash<FontOptions>(const WCHAR* path, FontOptions* options, long* hash)
+HRESULT GenerateContentHash<FontOptions>(const WCHAR* path, FontOptions* options, ContentHash* hash)
 {
 	if (!hash)
 	{
-		return E_FAIL;
+		return FWP_E_NULL_POINTER;
 	}
 
 	locale loc;

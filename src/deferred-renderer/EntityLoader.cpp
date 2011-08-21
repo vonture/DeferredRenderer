@@ -3,11 +3,11 @@
 #include "tinyxml.h"
 
 template <>
-HRESULT GenerateContentHash<EntityOptions>(const WCHAR* path, EntityOptions* options, long* hash)
+HRESULT GenerateContentHash<EntityOptions>(const WCHAR* path, EntityOptions* options, ContentHash* hash)
 {
 	if (!hash)
 	{
-		return E_FAIL;
+		return FWP_E_NULL_POINTER;
 	}
 
 	locale loc;

@@ -4,14 +4,14 @@
 #include "DDSTextureLoader.h"
 
 template <>
-HRESULT GenerateContentHash<TextureLoadOptions>(const WCHAR* path, TextureLoadOptions* options, long* hash)
+HRESULT GenerateContentHash<TextureLoadOptions>(const WCHAR* path, TextureLoadOptions* options, ContentHash* hash)
 {
 	if (!hash)
 	{
-		return E_FAIL;
+		return FWP_E_NULL_POINTER;
 	}
 
-	long retHash = 0;
+	ContentHash retHash = 0;
 
 	locale loc;
 	const collate<WCHAR>& wcoll = use_facet<collate<WCHAR>>(loc);
