@@ -9,9 +9,17 @@
 class CascadedDirectionalLightRenderer : public LightRenderer<DirectionalLight>
 {
 private:
-	ID3D11VertexShader* _depthVS;
-	ID3D11InputLayout* _depthInput;
-	ID3D11Buffer* _depthPropertiesBuffer;
+	// No Alpha cutout shaders
+	ID3D11VertexShader* _depthVSNoAlpha;
+	ID3D11InputLayout* _depthInputNoAlpha;
+
+	// Alpha cutout shaders
+	ID3D11VertexShader* _depthVSAlpha;
+	ID3D11InputLayout* _depthInputAlpha;
+	ID3D11PixelShader* _depthPSAlpha;
+	ID3D11Buffer* _alphaCutoutProperties;
+
+	ID3D11Buffer* _depthPropertiesBuffer;	
 
 	ID3D11PixelShader* _unshadowedPS;
 	ID3D11PixelShader* _shadowedPS;
@@ -43,10 +51,16 @@ private:
 	HRESULT renderDepth(ID3D11DeviceContext* pd3dImmediateContext, DirectionalLight* dlight,
 		UINT shadowMapIdx, std::vector<ModelInstance*>* models, Camera* camera,
 		AxisAlignedBox* sceneBounds);
-
+	
 	struct CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES
 	{
 		XMFLOAT4X4 WorldViewProjection;
+	};
+
+	struct CB_DIRECTIONALLIGHT_ALPHACUTOUT_PROPERTIES
+	{
+		float AlphaThreshold;
+		XMFLOAT3 Padding;
 	};
 
 	struct CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES

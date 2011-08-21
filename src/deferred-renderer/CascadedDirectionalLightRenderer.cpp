@@ -1,13 +1,16 @@
 #include "PCH.h"
 #include "CascadedDirectionalLightRenderer.h"
 #include "Logger.h"
+#include "PixelShaderLoader.h"
+#include "VertexShaderLoader.h"
 
 const float CascadedDirectionalLightRenderer::CASCADE_SPLITS[NUM_CASCADES] = { 0.125f, 0.25f, 0.5f, 1.0f };
 const float CascadedDirectionalLightRenderer::BIAS = 0.005f;
 
 CascadedDirectionalLightRenderer::CascadedDirectionalLightRenderer()
-	: _depthVS(NULL), _depthInput(NULL), _depthPropertiesBuffer(NULL),  _unshadowedPS(NULL),
-	  _shadowedPS(NULL), _cameraPropertiesBuffer(NULL), _lightPropertiesBuffer(NULL),
+	: _depthVSNoAlpha(NULL), _depthInputNoAlpha(NULL), _alphaCutoutProperties(NULL),
+	  _depthVSAlpha(NULL), _depthInputAlpha(NULL), _depthPSAlpha(NULL), _depthPropertiesBuffer(NULL),
+	  _unshadowedPS(NULL), _shadowedPS(NULL), _cameraPropertiesBuffer(NULL), _lightPropertiesBuffer(NULL),
 	  _shadowPropertiesBuffer(NULL)
 {
 	for (int i = 0; i < NUM_SHADOW_MAPS; i++)
@@ -419,17 +422,32 @@ HRESULT CascadedDirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 	pd3dImmediateContext->OMSetRenderTargets(0, NULL, _shadowMapDSVs[shadowMapIdx]);
 	pd3dImmediateContext->ClearDepthStencilView(_shadowMapDSVs[shadowMapIdx], D3D11_CLEAR_DEPTH, 1.0f, 0);
 		
-	pd3dImmediateContext->GSSetShader(NULL, NULL, 0);
-	pd3dImmediateContext->VSSetShader(_depthVS, NULL, 0);
-	pd3dImmediateContext->PSSetShader(NULL, NULL, 0);
+	bool alphaCutoutEnabled = GetAlphaCutoutEnabled();
 
-	pd3dImmediateContext->IASetInputLayout(_depthInput);
+	pd3dImmediateContext->VSSetShader(alphaCutoutEnabled ? _depthVSAlpha : _depthVSNoAlpha, NULL, 0);
+	pd3dImmediateContext->PSSetShader(alphaCutoutEnabled ? _depthPSAlpha : NULL, NULL, 0);
+
+	pd3dImmediateContext->IASetInputLayout(alphaCutoutEnabled ? _depthInputAlpha : _depthInputNoAlpha);
 	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthWriteEnabled(), 0);
 
 	float blendFactor[4] = {1, 1, 1, 1};
 	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
 
-	pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetBackFaceCull());
+	pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetNoCull());
+
+	if (alphaCutoutEnabled)
+	{
+		ID3D11SamplerState* samplers[1] = { GetSamplerStates()->GetAnisotropic16Wrap() };
+		pd3dImmediateContext->PSSetSamplers(0, 1, samplers);
+				
+		V_RETURN(pd3dImmediateContext->Map(_alphaCutoutProperties, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+		CB_DIRECTIONALLIGHT_ALPHACUTOUT_PROPERTIES* modelProperties = (CB_DIRECTIONALLIGHT_ALPHACUTOUT_PROPERTIES*)mappedResource.pData;
+		modelProperties->AlphaThreshold = GetAlphaThreshold();
+		pd3dImmediateContext->Unmap(_alphaCutoutProperties, 0);
+
+		pd3dImmediateContext->PSSetConstantBuffers(2, 1, &_alphaCutoutProperties);			
+	}
+
 
 	// Store this for later
 	XMFLOAT4X4 fView = camera->GetView();
@@ -605,17 +623,16 @@ HRESULT CascadedDirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 			CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES* modelProperties = (CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES*)mappedResource.pData;
 			XMStoreFloat4x4(&modelProperties->WorldViewProjection, XMMatrixTranspose(wvp));
 			pd3dImmediateContext->Unmap(_depthPropertiesBuffer, 0);
-
+			
 			pd3dImmediateContext->VSSetConstantBuffers(0, 1, &_depthPropertiesBuffer);
-
+			
 			// Render the mesh parts
 			for (UINT k = 0; k < model->GetMeshCount(); k++)
 			{
 				// If the main box is completely within the frust, we can skip the mesh check
 				if (modelIntersect != COMPLETELY_INSIDE)
 				{
-					Mesh mesh = model->GetMesh(k);
-					OrientedBox meshBounds = instance->GetMeshOrientedBox(k);
+					const OrientedBox& meshBounds = instance->GetMeshOrientedBox(k);
 								
 					if (!Collision::IntersectOrientedBoxFrustum(&meshBounds, &shadowFrust))
 					{
@@ -623,7 +640,8 @@ HRESULT CascadedDirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 					}
 				}
 
-				model->RenderMesh(pd3dImmediateContext, k);
+				model->RenderMesh(pd3dImmediateContext, k, INVALID_BUFFER_SLOT, 
+					alphaCutoutEnabled ? 0 : INVALID_SAMPLER_SLOT, INVALID_SAMPLER_SLOT, INVALID_SAMPLER_SLOT);
 			}
 		}
 
@@ -772,29 +790,104 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 	// Call base function
 	V_RETURN(LightRenderer::OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 
-	// Compile both shaders from file
-	ID3DBlob* pBlob = NULL;
-	
-	V_RETURN(CompileShaderFromFile( L"DirectionalLight.hlsl", "PS_DirectionalLightUnshadowed", "ps_4_0", NULL, &pBlob ) );   
-	V_RETURN(pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_unshadowedPS));
-	SAFE_RELEASE(pBlob);
-
-	V_RETURN(CompileShaderFromFile( L"DirectionalLight.hlsl", "PS_DirectionalLightShadowed", "ps_4_0", NULL, &pBlob ) );   
-	V_RETURN(pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_shadowedPS));
-	SAFE_RELEASE(pBlob);
-	
-	V_RETURN(CompileShaderFromFile(L"Depth.hlsl", "VS_Depth", "vs_4_0", NULL, &pBlob));   
-	V_RETURN(pd3dDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_depthVS));
-
-	const D3D11_INPUT_ELEMENT_DESC layout[] =
+	// Load alpha cutout disabled vertex shader and input layout
+	D3D11_INPUT_ELEMENT_DESC noAlphaLayout[] =
 	{
-		{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};	
+
+	VertexShaderOptions vsNoAlphaOpts =
+	{
+		"VS_DepthNoAlpha",						// const char* EntryPoint;
+		NULL,									// D3D_SHADER_MACRO* Defines;
+		noAlphaLayout,							// D3D11_INPUT_ELEMENT_DESC* InputElements;
+		1,										// UINT InputElementCount;
+		"Directional Depth (alpha cutout = 0)"	// const char* DebugName;
 	};
 
-	V_RETURN( pd3dDevice->CreateInputLayout(layout, ARRAYSIZE(layout), pBlob->GetBufferPointer(),
-		pBlob->GetBufferSize(), &_depthInput));
-	SAFE_RELEASE(pBlob);
+	VertexShaderContent* vsContent = NULL;
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalDepth.hlsl", &vsNoAlphaOpts, &vsContent));
 
+	_depthVSNoAlpha = vsContent->VertexShader;
+	_depthInputNoAlpha = vsContent->InputLayout;
+
+	_depthVSNoAlpha->AddRef();
+	_depthInputNoAlpha->AddRef();
+
+	SAFE_RELEASE(vsContent);
+
+	// Load the alpha cutout enabled vertex shader and input layout
+	D3D11_INPUT_ELEMENT_DESC alphaLayout[] =
+	{
+		{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD",  0, DXGI_FORMAT_R32G32_FLOAT,    0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+
+	VertexShaderOptions vsAlphaOpts =
+	{
+		"VS_DepthAlpha",						// const char* EntryPoint;
+		NULL,									// D3D_SHADER_MACRO* Defines;
+		alphaLayout,							// D3D11_INPUT_ELEMENT_DESC* InputElements;
+		2,										// UINT InputElementCount;
+		"Directional Depth (alpha cutout = 1)"	// const char* DebugName;
+	};
+
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalDepth.hlsl", &vsAlphaOpts, &vsContent));
+	
+	_depthVSAlpha = vsContent->VertexShader;
+	_depthInputAlpha = vsContent->InputLayout;
+
+	_depthVSAlpha->AddRef();
+	_depthInputAlpha->AddRef();
+
+	SAFE_RELEASE(vsContent);
+
+	// Load the alpha cutout enabled pixel shader
+	PixelShaderOptions psAlphaOpts = 
+	{
+		"PS_DepthAlpha",					//const char* EntryPoint;
+		NULL,								// D3D_SHADER_MACRO* Defines;
+		"Directional Depth (alpha cutout = 1)"	//const char* DebugName;
+	};
+
+	PixelShaderContent* psContent = NULL;
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalDepth.hlsl", &psAlphaOpts, &psContent));
+
+	_depthPSAlpha = psContent->PixelShader;
+	_depthPSAlpha->AddRef();
+
+	SAFE_RELEASE(psContent);
+
+	// Load the pixel shaders for unshadowed light post processeses
+	PixelShaderOptions psUnshadowedOpts = 
+	{
+		"PS_DirectionalLightUnshadowed",		//const char* EntryPoint;
+		NULL,									// D3D_SHADER_MACRO* Defines;
+		"Directional Cascaded Unshadowed Light"	//const char* DebugName;
+	};
+
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalLight.hlsl", &psUnshadowedOpts, &psContent));
+
+	_unshadowedPS = psContent->PixelShader;
+	_unshadowedPS->AddRef();
+
+	SAFE_RELEASE(psContent);
+
+	// Load the pixel shaders for shadowed light post processeses
+	PixelShaderOptions psShadowedOpts = 
+	{
+		"PS_DirectionalLightShadowed",			//const char* EntryPoint;
+		NULL,									// D3D_SHADER_MACRO* Defines;
+		"Directional Cascaded Shadowed Light"	//const char* DebugName;
+	};
+
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalLight.hlsl", &psShadowedOpts, &psContent));
+
+	_shadowedPS = psContent->PixelShader;
+	_shadowedPS->AddRef();
+
+	SAFE_RELEASE(psContent);
+	
 	// Create the buffers
 	D3D11_BUFFER_DESC bufferDesc =
 	{
@@ -805,6 +898,9 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 		0, //UINT MiscFlags;
 		0, //UINT StructureByteStride;
 	};
+
+	bufferDesc.ByteWidth = sizeof(CB_DIRECTIONALLIGHT_ALPHACUTOUT_PROPERTIES);
+	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_alphaCutoutProperties));
 
 	bufferDesc.ByteWidth = sizeof(CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_depthPropertiesBuffer));
@@ -869,8 +965,14 @@ void CascadedDirectionalLightRenderer::OnD3D11DestroyDevice()
 {
 	LightRenderer::OnD3D11DestroyDevice();
 
-	SAFE_RELEASE(_depthVS);
-	SAFE_RELEASE(_depthInput);
+	SAFE_RELEASE(_depthVSNoAlpha);
+	SAFE_RELEASE(_depthInputNoAlpha);
+	SAFE_RELEASE(_alphaCutoutProperties);
+
+	SAFE_RELEASE(_depthVSAlpha);
+	SAFE_RELEASE(_depthInputAlpha);
+	SAFE_RELEASE(_depthPSAlpha);
+
 	SAFE_RELEASE(_depthPropertiesBuffer);
 
 	SAFE_RELEASE(_unshadowedPS);
