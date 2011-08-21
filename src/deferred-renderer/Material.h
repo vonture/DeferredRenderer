@@ -1,21 +1,11 @@
 #pragma once
 
 #include "PCH.h"
+#include "ContentType.h"
 #include "SDKmesh.h"
 #include "aiScene.h"
 
-struct CB_MATERIAL_PROPERTIES
-{
-	_DECLSPEC_ALIGN_16_ XMFLOAT3 AmbientColor;
-    _DECLSPEC_ALIGN_16_ XMFLOAT3 DiffuseColor;
-    _DECLSPEC_ALIGN_16_ XMFLOAT3 EmissiveColor;    
-	_DECLSPEC_ALIGN_16_ XMFLOAT3 SpecularColor;
-	float SpecularPower;
-    float Alpha;
-	XMFLOAT2 Padding;
-};
-
-class Material
+class Material : public ContentType
 {
 private:
     XMFLOAT3 _ambientColor;
@@ -29,6 +19,17 @@ private:
     ID3D11ShaderResourceView* _diffuseSRV;
     ID3D11ShaderResourceView* _normalSRV;
 	ID3D11ShaderResourceView* _specularSRV;
+
+	struct CB_MATERIAL_PROPERTIES
+	{
+		_DECLSPEC_ALIGN_16_ XMFLOAT3 AmbientColor;
+		_DECLSPEC_ALIGN_16_ XMFLOAT3 DiffuseColor;
+		_DECLSPEC_ALIGN_16_ XMFLOAT3 EmissiveColor;    
+		_DECLSPEC_ALIGN_16_ XMFLOAT3 SpecularColor;
+		float SpecularPower;
+		float Alpha;
+		XMFLOAT2 Padding;
+	};
 
 	ID3D11Buffer* _propertiesBuffer;
 

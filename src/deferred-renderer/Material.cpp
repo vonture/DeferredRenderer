@@ -10,6 +10,7 @@ Material::Material()
 
 Material::~Material()
 {
+	Destroy();
 }
 
 HRESULT loadMaterialTexture(ID3D11Device* device, const WCHAR* modelDir, const CHAR* texturePath,
@@ -148,7 +149,7 @@ HRESULT Material::CreateFromASSIMPMaterial(ID3D11Device* device, const WCHAR* mo
 	
 	// Load textures
 	aiString path;
-
+	
 	_diffuseSRV = NULL;
 	if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0)
 	{		
