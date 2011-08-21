@@ -1,14 +1,27 @@
 #include "PCH.h"
 #include "ModelRenderer.h"
+#include "PixelShaderLoader.h"
+#include "VertexShaderLoader.h"
 
 ModelRenderer::ModelRenderer()
-	: _meshVertexShader(NULL), _meshPixelShader(NULL), _meshInputLayout(NULL)
+	: _meshVertexShader(NULL),  _meshInputLayout(NULL), _alphaThresholdBuffer(NULL), _constantBuffer(NULL)
 {
+	for (UINT i = 0; i < 2; i++)
+	{
+		for (UINT j = 0; j < 2; j++)
+		{
+			for (UINT k = 0; k < 2; k++)
+			{
+				_meshPixelShader[i][j][k][0] = NULL;
+				_meshPixelShader[i][j][k][1] = NULL;
+			}
+		}		
+	}
+
+	SetAlphaCutoutEnabled(true);
+	SetAlphaThreshold(0.05f);
 }
 
-ModelRenderer::~ModelRenderer()
-{
-}
 
 HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vector<ModelInstance*>* instances, Camera* camera)
 {
@@ -23,24 +36,35 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 
 	Frustum cameraFrust;
 	Collision::ComputeFrustumFromProjection(&cameraFrust, &proj);
-	cameraFrust.Origin =  camera->GetPosition();
+	cameraFrust.Origin = camera->GetPosition();
 	cameraFrust.Orientation = camera->GetOrientation();
 
-	pd3dDeviceContext->GSSetShader(NULL, NULL, 0);
 	pd3dDeviceContext->VSSetShader(_meshVertexShader, NULL, 0);
-	pd3dDeviceContext->PSSetShader(_meshPixelShader, NULL, 0);	
 
 	pd3dDeviceContext->IASetInputLayout(_meshInputLayout);
 	pd3dDeviceContext->OMSetDepthStencilState(_dsStates.GetDepthWriteEnabled(), 0);
 
-	pd3dDeviceContext->RSSetState(_rasterStates.GetBackFaceCull());
+	pd3dDeviceContext->RSSetState(_rasterStates.GetNoCull());
 
 	float blendFactor[4] = {1, 1, 1, 1};
 	pd3dDeviceContext->OMSetBlendState(_blendStates.GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
 
 	ID3D11SamplerState* sampler = _samplerStates.GetAnisotropic16Wrap();
 	pd3dDeviceContext->PSSetSamplers(0, 1, &sampler);
-	
+
+	// if Alpha cutout is enabled, map the alpha cutout info buffer
+	if (_alphaCutoutEnabled)
+	{
+		V(pd3dDeviceContext->Map(_alphaThresholdBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+		CB_MODEL_ALPHA_THRESHOLD* cutoutProperties = (CB_MODEL_ALPHA_THRESHOLD*)mappedResource.pData;
+		cutoutProperties->AlphaThreshold = _alphaThreshold;
+		pd3dDeviceContext->Unmap(_alphaThresholdBuffer, 0);
+
+		pd3dDeviceContext->PSSetConstantBuffers(1, 1, &_alphaThresholdBuffer);
+	}
+
+	ID3D11PixelShader* prevPS = NULL;
+
 	for (UINT i = 0; i < instances->size(); i++)
 	{
 		ModelInstance* instance = instances->at(i);
@@ -73,16 +97,60 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 			// If the main box is completely within the frust, we can skip the mesh check
 			if (modelIntersect != COMPLETELY_INSIDE)
 			{
-				Mesh mesh = model->GetMesh(j);
-				OrientedBox meshBounds = instance->GetMeshOrientedBox(j);
+				const OrientedBox& meshBounds = instance->GetMeshOrientedBox(j);
 							
 				if (!Collision::IntersectOrientedBoxFrustum(&meshBounds, &cameraFrust))
 				{
 					continue;
 				}
 			}
-			model->RenderMesh(pd3dDeviceContext, j, 1, 0, 1, 2);
+
+			const Mesh* mesh = model->GetMesh(j);
+			UINT partCount = mesh->GetMeshPartCount();
+
+			ID3D11Buffer* vertexBuffers[1] = { mesh->GetVertexBuffer() };
+			UINT strides[1] = { mesh->GetVertexStride() };
+			UINT offsets[1] = { 0 };
+
+			pd3dDeviceContext->IASetVertexBuffers(0, 1, vertexBuffers, strides, offsets);
+			pd3dDeviceContext->IASetIndexBuffer(mesh->GetIndexBuffer(), mesh->GetIndexBufferFormat(), 0);
+			pd3dDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+			for (UINT k = 0; k < partCount; k++)
+			{
+				const MeshPart* part = mesh->GetMeshPart(k);
+				const Material* mat = model->GetMaterial(part->MaterialIndex);
+
+				ID3D11Buffer* buf = mat->GetPropertiesBuffer();
+				pd3dDeviceContext->PSSetConstantBuffers(0, 1, &buf);
+
+				ID3D11ShaderResourceView* diffSRV = mat->GetDiffuseSRV();
+				pd3dDeviceContext->PSSetShaderResources(0, 1, &diffSRV);
+				
+				ID3D11ShaderResourceView* normSRV = mat->GetNormalSRV();
+				pd3dDeviceContext->PSSetShaderResources(1, 1, &normSRV);
+
+				ID3D11ShaderResourceView* specSRV = mat->GetSpecularSRV();
+				pd3dDeviceContext->PSSetShaderResources(2, 1, &specSRV);
+				
+				// Set the shader if it wasn't the same for the last mesh
+				ID3D11PixelShader* ps = _meshPixelShader[diffSRV != NULL][normSRV != NULL][specSRV != NULL][_alphaCutoutEnabled];
+				if (ps != prevPS)
+				{
+					pd3dDeviceContext->PSSetShader(ps, NULL, 0);
+					prevPS = ps;
+				}
+
+				pd3dDeviceContext->DrawIndexed(part->IndexCount, part->IndexStart, part->VertexStart);
+			}
 		}
+	}
+
+	// Unset the alpha cutout buffer
+	if (_alphaCutoutEnabled)
+	{
+		ID3D11Buffer* nullBuffer[1] = { NULL };
+		pd3dDeviceContext->PSSetConstantBuffers(2, 1, nullBuffer);
 	}
 
 	return S_OK;
@@ -91,16 +159,67 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vect
 HRESULT ModelRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
-	ID3DBlob* pBlob = NULL;
 
-	V_RETURN( CompileShaderFromFile( L"Mesh.hlsl", "PS_Mesh", "ps_4_0", NULL, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_meshPixelShader));
-	SAFE_RELEASE(pBlob);	
+	PixelShaderContent* psContent;
+	VertexShaderContent* vsContent;
 
-	V_RETURN( CompileShaderFromFile( L"Mesh.hlsl", "VS_Mesh", "vs_4_0", NULL, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_meshVertexShader));
+	D3D_SHADER_MACRO alphaCutoutMacros[] = 
+	{		
+		{ "DIFFUSE_MAPPED", "" },
+		{ "NORMAL_MAPPED", "" },
+		{ "SPECULAR_MAPPED", "" },
+		{ "ALPHA_CUTOUT_ENABLED", "" },
+		NULL,
+	};
+
+	char debugName[256];
+
+	PixelShaderOptions psOpts =
+	{
+		"PS_Mesh",			// const char* EntryPoint;
+		alphaCutoutMacros,	// D3D_SHADER_MACRO* Defines;
+		debugName,			// const char* DebugName;
+	};
 	
-	const D3D11_INPUT_ELEMENT_DESC layout_mesh[] =
+	for (UINT i = 0; i < 2; i++)
+	{
+		alphaCutoutMacros[0].Definition = i ? "1" : "0";
+
+		for (UINT j = 0; j < 2; j++)
+		{
+			alphaCutoutMacros[1].Definition = j ? "1" : "0";
+
+			for (UINT k = 0; k < 2; k++)
+			{
+				alphaCutoutMacros[2].Definition = k ? "1" : "0";
+
+				// Load no alpha cutout
+				alphaCutoutMacros[3].Definition = "0";
+				sprintf_s(debugName, "G-Buffer Mesh (diffuse = %u, normal = %u, specular = %u, alpha cutout = %u)",
+					i, j, k, 0);
+				V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Mesh.hlsl", &psOpts, &psContent));
+
+				_meshPixelShader[i][j][k][0] = psContent->PixelShader;
+				_meshPixelShader[i][j][k][0]->AddRef();
+
+				SAFE_RELEASE(psContent);
+
+				// Load alpha cutout
+				alphaCutoutMacros[3].Definition = "1";
+				sprintf_s(debugName, "G-Buffer Mesh (diffuse = %u, normal = %u, specular = %u, alpha cutout = %u)",
+					i, j, k, 1);
+				V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Mesh.hlsl", &psOpts, &psContent));
+
+				_meshPixelShader[i][j][k][1] = psContent->PixelShader;
+				_meshPixelShader[i][j][k][1]->AddRef();
+
+				SAFE_RELEASE(psContent);
+			}
+		}
+	}
+
+	// Load the vertex shader
+	D3D11_INPUT_ELEMENT_DESC layout_mesh[] =
     {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -109,13 +228,28 @@ HRESULT ModelRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMana
 		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
 
-	V_RETURN( pd3dDevice->CreateInputLayout(layout_mesh, ARRAYSIZE(layout_mesh), pBlob->GetBufferPointer(),
-		pBlob->GetBufferSize(), &_meshInputLayout));
-	SAFE_RELEASE(pBlob);
+	VertexShaderOptions vsOpts =
+	{
+		"VS_Mesh",				// const char* EntryPoint;
+		NULL,					// D3D_SHADER_MACRO* Defines;
+		layout_mesh,			// D3D11_INPUT_ELEMENT_DESC* InputElements;
+		ARRAYSIZE(layout_mesh),	// UINT InputElementCount;
+		"G-Buffer Mesh"			// const char* DebugName;
+	};
 
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Mesh.hlsl", &vsOpts, &vsContent));
+
+	_meshVertexShader = vsContent->VertexShader;
+	_meshInputLayout = vsContent->InputLayout;
+
+	_meshVertexShader->AddRef();
+	_meshInputLayout->AddRef();
+
+	SAFE_RELEASE(vsContent);
+	
 	D3D11_BUFFER_DESC bufferDesc =
 	{
-		sizeof(CB_MODEL_PROPERTIES), //UINT ByteWidth;
+		0, //UINT ByteWidth;
 		D3D11_USAGE_DYNAMIC, //D3D11_USAGE Usage;
 		D3D11_BIND_CONSTANT_BUFFER, //UINT BindFlags;
 		D3D11_CPU_ACCESS_WRITE, //UINT CPUAccessFlags;
@@ -123,7 +257,11 @@ HRESULT ModelRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMana
 		0, //UINT StructureByteStride;
 	};
 
+	bufferDesc.ByteWidth = sizeof(CB_MODEL_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_constantBuffer));
+
+	bufferDesc.ByteWidth = sizeof(CB_MODEL_ALPHA_THRESHOLD);
+	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_alphaThresholdBuffer));
 	
 	V_RETURN(_dsStates.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 	V_RETURN(_samplerStates.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
@@ -135,11 +273,23 @@ HRESULT ModelRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMana
 
 void ModelRenderer::OnD3D11DestroyDevice()
 {
+	for (UINT i = 0; i < 2; i++)
+	{
+		for (UINT j = 0; j < 2; j++)
+		{
+			for (UINT k = 0; k < 2; k++)
+			{
+				SAFE_RELEASE(_meshPixelShader[i][j][k][0]);
+				SAFE_RELEASE(_meshPixelShader[i][j][k][1]);
+			}
+		}		
+	}
+
 	SAFE_RELEASE(_meshVertexShader);
-	SAFE_RELEASE(_meshPixelShader);
 	SAFE_RELEASE(_meshInputLayout);
 	
 	SAFE_RELEASE(_constantBuffer);
+	SAFE_RELEASE(_alphaThresholdBuffer);
 
 	_dsStates.OnD3D11DestroyDevice();
 	_samplerStates.OnD3D11DestroyDevice();

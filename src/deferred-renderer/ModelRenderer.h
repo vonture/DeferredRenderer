@@ -19,11 +19,27 @@ struct CB_MODEL_PROPERTIES
 class ModelRenderer : public IHasContent
 {
 private:
-	ID3D11VertexShader* _meshVertexShader;
-	ID3D11PixelShader* _meshPixelShader;
+	bool _alphaCutoutEnabled;
+	float _alphaThreshold;
+
 	ID3D11InputLayout* _meshInputLayout;
+	ID3D11VertexShader* _meshVertexShader;
+
+	// Pixel shaders for...
+	// 1: DIFFUSE_MAPPED
+	// 2: NORMAL_MAPPED
+	// 3: SPECULAR_MAPPED
+	// 4: ALPHA_CUTOUT_ENABLED
+	ID3D11PixelShader* _meshPixelShader[2][2][2][2];
 	
 	ID3D11Buffer* _constantBuffer;
+	ID3D11Buffer* _alphaThresholdBuffer;
+
+	struct CB_MODEL_ALPHA_THRESHOLD
+	{
+		float AlphaThreshold;
+		XMFLOAT3 Padding;
+	};
 
 	DepthStencilStates _dsStates;
 	SamplerStates _samplerStates;
@@ -32,7 +48,12 @@ private:
 
 public:
 	ModelRenderer();
-	~ModelRenderer();
+
+	bool GetAlphaCutoutEnabled() const { return _alphaCutoutEnabled; }
+	void SetAlphaCutoutEnabled(bool enabled) { _alphaCutoutEnabled = enabled; }
+
+	float GetAlphaThreshold() const { return _alphaThreshold; }
+	void SetAlphaThreshold(float threshold) { _alphaThreshold = clamp(threshold, 0.0f, 1.0f); }
 
 	HRESULT RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vector<ModelInstance*>* instances, Camera* camera);
 
