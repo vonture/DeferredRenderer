@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PCH.h"
+#include "ContentType.h"
 #include "SDKmesh.h"
 #include "aiScene.h"
 #include "xnaCollision.h"
@@ -8,13 +9,12 @@
 struct MeshPart
 {
 	UINT VertexStart;
-    UINT VertexCount;
     UINT IndexStart;
     UINT IndexCount;
     UINT MaterialIndex;
 };
 
-class Mesh
+class Mesh : public ContentType
 {
 private:
 	ID3D11Buffer* _indexBuffer;
@@ -39,7 +39,7 @@ public:
 	Mesh();
 	~Mesh();
 
-	const MeshPart& GetMeshPart(UINT idx) const { return _meshParts[idx]; }
+	const MeshPart* GetMeshPart(UINT idx) const { return &_meshParts[idx]; }
 	UINT GetMeshPartCount() const { return _meshPartCount; }
 
 	ID3D11Buffer* GetVertexBuffer() const { return _vertexBuffer; }
