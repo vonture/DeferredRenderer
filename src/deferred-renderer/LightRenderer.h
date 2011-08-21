@@ -7,18 +7,26 @@ template <class T>
 class LightRenderer : public LightRendererBase
 {
 private:
-	static const UINT MAX_LIGHTS = 1024;
+	static const UINT MAX_LIGHTS = 1 << 10;
 
 	UINT _shadowedCount;
-	T* _shadowed[MAX_LIGHTS];
+	T** _shadowed;
 	
 	UINT _unshadowedCount;
-	T* _unshadowed[MAX_LIGHTS];
+	T** _unshadowed;
 
 public:
 	LightRenderer()
 		: _shadowedCount(0), _unshadowedCount(0)
 	{
+		_shadowed = new T*[MAX_LIGHTS];
+		_unshadowed = new T*[MAX_LIGHTS];
+	}
+
+	virtual ~LightRenderer()
+	{
+		SAFE_DELETE_ARRAY(_shadowed);
+		SAFE_DELETE_ARRAY(_unshadowed);
 	}
 	
 	void Add(T* light, bool shadowed) 
