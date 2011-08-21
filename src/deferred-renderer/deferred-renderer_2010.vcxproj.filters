@@ -91,9 +91,6 @@
     <None Include="Mesh.hlsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Depth.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="PointLight.hlsl">
       <Filter>Shaders</Filter>
     </None>
@@ -134,6 +131,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="Quad.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="DirectionalDepth.hlsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

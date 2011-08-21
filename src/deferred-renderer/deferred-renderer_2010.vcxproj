@@ -300,7 +300,7 @@
     <ClInclude Include="xnaCollision.h" />
     <None Include="BoundingObject.hlsl" />
     <None Include="Copy.hlsl" />
-    <None Include="Depth.hlsl" />
+    <None Include="DirectionalDepth.hlsl" />
     <None Include="DirectionalLight.hlsl" />
     <None Include="FXAA.hlsl" />
     <None Include="Fxaa3_11.hlsl" />
