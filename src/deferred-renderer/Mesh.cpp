@@ -10,6 +10,7 @@ Mesh::Mesh()
 
 Mesh::~Mesh()
 {
+	Destroy();
 }
 
 static D3DXVECTOR3 Perpendicular(const D3DXVECTOR3& vec)
@@ -396,7 +397,6 @@ HRESULT Mesh::CreateFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d9
     for(UINT i = 0; i < numSubsets; ++i)
     {
         _meshParts[i].VertexStart = attributeTable[i].VertexStart;
-        _meshParts[i].VertexCount = attributeTable[i].VertexCount;
         _meshParts[i].IndexStart = attributeTable[i].FaceStart * 3;
         _meshParts[i].IndexCount = attributeTable[i].FaceCount * 3;
         _meshParts[i].MaterialIndex = attributeTable[i].AttribId;
@@ -507,7 +507,6 @@ HRESULT Mesh::CreateFromASSIMPMesh(ID3D11Device* device, const aiScene* scene, U
 	_meshParts[0].IndexCount = _indexCount;
 	_meshParts[0].MaterialIndex = mesh->mMaterialIndex;
 	_meshParts[0].VertexStart = 0;
-	_meshParts[0].VertexCount = _vertexCount;
 
 	// Create the input elements
 	_inputElementCount = 5;
