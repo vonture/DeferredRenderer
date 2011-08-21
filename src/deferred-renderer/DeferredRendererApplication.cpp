@@ -15,11 +15,17 @@
 
 DeferredRendererApplication::DeferredRendererApplication()
 	: Application(L"Deferred Renderer", NULL), _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f), 
-	  _configWindow(NULL), _logWindow(NULL), _ppConfigPane(NULL),
-	  _scene(L"\\models\\tankscene\\tankscene.sdkmesh")
+	  _configWindow(NULL), _logWindow(NULL), _ppConfigPane(NULL)
 {
-	_scene.SetScale(1.0f);
-	_scene.SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	ModelInstance* tankScene = new ModelInstance(L"\\models\\tankscene\\tankscene.sdkmesh");
+	tankScene->SetScale(1.0f);
+	tankScene->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	_models.push_back(tankScene);
+
+	ModelInstance* tree = new ModelInstance(L"\\models\\tree\\tree.obj");
+	tree->SetScale(0.5f);
+	tree->SetPosition(XMFLOAT3(3.0f, -1.0f, -3.0f));
+	_models.push_back(tree);
 	
 	//XMFLOAT4 orientation;
 	//XMStoreFloat4(&orientation, XMQuaternionRotationRollPitchYaw(PiOver2, 0.0f, 0.0f));
@@ -41,7 +47,19 @@ DeferredRendererApplication::DeferredRendererApplication()
 	_contentHolders.push_back(&_paraboloidPointLR);
 	_contentHolders.push_back(&_cascadedDirectionalLR);
 	_contentHolders.push_back(&_spotLR);
-	_contentHolders.push_back(&_scene);
+	
+	for (UINT i = 0; i < _models.size(); i++)
+	{
+		_contentHolders.push_back(_models[i]);
+	}
+}
+
+DeferredRendererApplication::~DeferredRendererApplication()
+{
+	for (UINT i = 0; i < _models.size(); i++)
+	{
+		delete _models[i];
+	}
 }
 
 void DeferredRendererApplication::OnInitialize()
@@ -60,12 +78,12 @@ void DeferredRendererApplication::OnInitialize()
 	_configWindow = new ConfigurationWindow(canvas);	
 
 	_ppConfigPane = new PostProcessSelectionPane(_configWindow);
-	_ppConfigPane->AddPostProcess(&_ssaoPP, L"SSAO", true, true);
+	_ppConfigPane->AddPostProcess(&_ssaoPP, L"SSAO", false, true);
 	_ppConfigPane->AddPostProcess(&_hbaoPP, L"HBAO", false, false);
 	_ppConfigPane->AddPostProcess(&_skyPP, L"Sky", true, true);
 	_ppConfigPane->AddPostProcess(&_mlaaPP, L"MLAA", false, true);	
 	_ppConfigPane->AddPostProcess(&_hdrPP, L"HDR", true, true);
-	_ppConfigPane->AddPostProcess(&_discDoFPP, L"Disc DoF", true, true);
+	_ppConfigPane->AddPostProcess(&_discDoFPP, L"Disc DoF", false, true);
 	_ppConfigPane->AddPostProcess(&_fxaaPP, L"FXAA", true, true);
 	_ppConfigPane->AddPostProcess(&_uiPP, L"UI", true, false);
 	_ppConfigPane->AddPostProcess(&_motionBlurPP, L"Motion blur", false, false);	
@@ -220,7 +238,10 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 
 	V_RETURN(_renderer.Begin());
 
-	_renderer.AddModel(&_scene);
+	for (UINT i = 0; i < _models.size(); i++)
+	{
+		_renderer.AddModel(_models[i]);
+	}
 
 	if (_ppConfigPane->IsPostProcessEnabled(&_skyPP) && _skyPP.GetSunEnabled())
 	{
