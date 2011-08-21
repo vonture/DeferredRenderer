@@ -17,6 +17,14 @@ ContentManager::~ContentManager()
 
 HRESULT ContentManager::getPath(const WCHAR* inPathSegment, WCHAR* outputPath, UINT outputLen)
 {
+	// See if the segment is a full path
+	if (GetFileAttributes(inPathSegment) != INVALID_FILE_ATTRIBUTES)
+	{
+		wcsncpy_s(outputPath, outputLen, inPathSegment, MAX_PATH);
+		return S_OK;
+	}
+
+	// Scan the serach paths
 	for (UINT i = 0; i < _searchPaths.size(); i++)
 	{
 		wcsncpy_s(outputPath, outputLen, _searchPaths[i], MAX_PATH);
