@@ -145,8 +145,11 @@ void Logger::AddLogMessage(UINT type, const WCHAR* sender, const WCHAR* message)
 	_messages.push_back(info);
 
 #if _DEBUG
+	UINT msgLen = wcslen(message);
+	bool endsInNewLine = (msgLen > 0) && (message[msgLen - 1] == '\n');
+
 	WCHAR msg[MAX_LOG_LENGTH];
-	swprintf_s(msg, L"%s: %s\n", sender, message);	
+	swprintf_s(msg, L"%s: %s%s", sender, message, endsInNewLine ? L"" : L"\n");
 	OutputDebugStringW(msg);
 #endif
 
