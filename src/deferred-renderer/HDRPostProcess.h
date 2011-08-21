@@ -58,7 +58,6 @@ private:
 
 public:
 	HDRPostProcess();
-	~HDRPostProcess();
 
 	float GetTimeDelta() const { return _timeDelta; }
 	void SetTimeDelta(float dt) { _timeDelta = max(dt, 0.0f); }

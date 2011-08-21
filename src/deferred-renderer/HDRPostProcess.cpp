@@ -13,7 +13,7 @@ HDRPostProcess::HDRPostProcess()
 	SetTau(0.8f);
 	SetWhiteLuminancePercentage(2.5f);
 	SetBloomThreshold(0.75f);
-	SetBloomMagnitude(1.0f);
+	SetBloomMagnitude(0.6f);
 	SetBloomBlurSigma(0.8f);
 	SetExposureKey(0.6f);
 
@@ -36,10 +36,6 @@ HDRPostProcess::HDRPostProcess()
 	_blurTempSRV = NULL;
 
 	_colorGradeSRV = NULL;
-}
-
-HDRPostProcess::~HDRPostProcess()
-{
 }
 
 HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
