@@ -1,5 +1,6 @@
 #include "PCH.h"
 #include "Material.h"
+#include "Logger.h"
 
 Material::Material()
 	: _ambientColor(0.0f, 0.0f, 0.0f), _diffuseColor(0.0f, 0.0f, 0.0f), _emissiveColor(0.0f, 0.0f, 0.0f),
@@ -14,8 +15,10 @@ Material::~Material()
 }
 
 HRESULT loadMaterialTexture(ID3D11Device* device, const WCHAR* modelDir, const CHAR* texturePath,
-	ID3D11ShaderResourceView** outSRV)
+	ID3D11ShaderResourceView** outSRV, std::map<TexturePathHash, ID3D11ShaderResourceView*>* loadedTextureMap = NULL)
 {
+	HRESULT hr;
+
 	WCHAR wtexturePath[MAX_PATH];
 	if (!AnsiToWString(texturePath, wtexturePath, MAX_PATH))
 	{
@@ -26,8 +29,31 @@ HRESULT loadMaterialTexture(ID3D11Device* device, const WCHAR* modelDir, const C
 	wcsncpy_s(fullPath, modelDir, MAX_PATH);
 	wcsncat_s(fullPath, L"\\", MAX_PATH);
 	wcsncat_s(fullPath, wtexturePath, MAX_PATH);
+	
+	// Check if this texture has already been loaded by this model
+	locale loc;
+	const collate<WCHAR>& wcoll = use_facet<collate<WCHAR>>(loc);
+	TexturePathHash hash = wcoll.hash(fullPath, fullPath + wcslen(fullPath));
+	
+	if (loadedTextureMap)
+	{
+		std::map<TexturePathHash, ID3D11ShaderResourceView*>::iterator it = loadedTextureMap->find(hash);
+		if (it != loadedTextureMap->end())
+		{
+			*outSRV = it->second;
+			(*outSRV)->AddRef();
 
-	return D3DX11CreateShaderResourceViewFromFile(device, fullPath, NULL, NULL, outSRV, NULL);
+			return S_OK;
+		}
+	}
+		
+	hr = D3DX11CreateShaderResourceViewFromFile(device, fullPath, NULL, NULL, outSRV, NULL);
+	if (SUCCEEDED(hr))
+	{
+		loadedTextureMap->insert(std::pair<TexturePathHash, ID3D11ShaderResourceView*>(hash, *outSRV));
+	}
+
+	return hr;
 }
 
 HRESULT Material::createPropertiesBuffer(ID3D11Device* device)
@@ -60,7 +86,7 @@ HRESULT Material::createPropertiesBuffer(ID3D11Device* device)
 }
 
 HRESULT Material::CreateFromSDKMeshMaterial(ID3D11Device* device, const WCHAR* modelDir, 
-	SDKMesh* model, UINT materialIdx)
+	SDKMesh* model, UINT materialIdx, std::map<TexturePathHash, ID3D11ShaderResourceView*>* loadedTextureMap)
 {
 	HRESULT hr;
 
@@ -74,19 +100,19 @@ HRESULT Material::CreateFromSDKMeshMaterial(ID3D11Device* device, const WCHAR* m
     _specularPower = sdkmat->Power;
 	
 	if (strlen(sdkmat->DiffuseTexture) > 0 && 
-		FAILED(loadMaterialTexture(device, modelDir, sdkmat->DiffuseTexture, &_diffuseSRV)))
+		FAILED(loadMaterialTexture(device, modelDir, sdkmat->DiffuseTexture, &_diffuseSRV, loadedTextureMap)))
 	{
 		_diffuseSRV = NULL;		
 	}
 
 	if (strlen(sdkmat->NormalTexture) > 0 && 
-		FAILED(loadMaterialTexture(device, modelDir, sdkmat->NormalTexture, &_normalSRV)))
+		FAILED(loadMaterialTexture(device, modelDir, sdkmat->NormalTexture, &_normalSRV, loadedTextureMap)))
 	{
 		_normalSRV = NULL;		
 	}
 
 	if (strlen(sdkmat->SpecularTexture) > 0 && 
-		FAILED(loadMaterialTexture(device, modelDir, sdkmat->SpecularTexture, &_specularSRV)))
+		FAILED(loadMaterialTexture(device, modelDir, sdkmat->SpecularTexture, &_specularSRV, loadedTextureMap)))
 	{
 		_specularSRV = NULL;		
 	}
@@ -97,7 +123,7 @@ HRESULT Material::CreateFromSDKMeshMaterial(ID3D11Device* device, const WCHAR* m
 }
 
 HRESULT Material::CreateFromASSIMPMaterial(ID3D11Device* device, const WCHAR* modelDir, 
-	const aiScene* scene, UINT materialIdx)
+	const aiScene* scene, UINT materialIdx,std::map<TexturePathHash, ID3D11ShaderResourceView*>* loadedTextureMap)
 {
 	HRESULT hr;
 
@@ -155,7 +181,7 @@ HRESULT Material::CreateFromASSIMPMaterial(ID3D11Device* device, const WCHAR* mo
 	{		
 		material->GetTexture(aiTextureType_DIFFUSE, 0, &path);
 
-		loadMaterialTexture(device, modelDir, path.data, &_diffuseSRV);
+		loadMaterialTexture(device, modelDir, path.data, &_diffuseSRV, loadedTextureMap);
 	}
 
 	_normalSRV = NULL;
@@ -163,7 +189,7 @@ HRESULT Material::CreateFromASSIMPMaterial(ID3D11Device* device, const WCHAR* mo
 	{		
 		material->GetTexture(aiTextureType_NORMALS, 0, &path);
 
-		loadMaterialTexture(device, modelDir, path.data, &_normalSRV);
+		loadMaterialTexture(device, modelDir, path.data, &_normalSRV, loadedTextureMap);
 	}
 
 	_specularSRV = NULL;
@@ -171,7 +197,7 @@ HRESULT Material::CreateFromASSIMPMaterial(ID3D11Device* device, const WCHAR* mo
 	{		
 		material->GetTexture(aiTextureType_SPECULAR, 0, &path);
 
-		loadMaterialTexture(device, modelDir, path.data, &_specularSRV);
+		loadMaterialTexture(device, modelDir, path.data, &_specularSRV, loadedTextureMap);
 	}
 
 	V_RETURN(createPropertiesBuffer(device));

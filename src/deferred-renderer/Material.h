@@ -5,6 +5,8 @@
 #include "SDKmesh.h"
 #include "aiScene.h"
 
+typedef long TexturePathHash;
+
 class Material : public ContentType
 {
 private:
@@ -53,8 +55,8 @@ public:
 	ID3D11Buffer* GetPropertiesBuffer() const { return _propertiesBuffer; }
 
 	HRESULT CreateFromSDKMeshMaterial(ID3D11Device* device, const WCHAR* modelPath, SDKMesh* model,
-		UINT materialIdx);
+		UINT materialIdx, std::map<TexturePathHash, ID3D11ShaderResourceView*>* loadedTextureMap = NULL);
 	HRESULT CreateFromASSIMPMaterial(ID3D11Device* device, const WCHAR* modelPath, const aiScene* scene,
-		UINT materialIdx);
+		UINT materialIdx, std::map<TexturePathHash, ID3D11ShaderResourceView*>* loadedTextureMap = NULL);
 	void Destroy();
 };
