@@ -16,7 +16,7 @@ HRESULT ModelLoader::GenerateContentHash(const WCHAR* path, ModelOptions* option
 	return S_OK;
 }
 
-HRESULT ModelLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
+HRESULT ModelLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
 		ModelOptions* options, WCHAR* errorMsg, UINT errorLen, Model** contentOut)
 {
 	WCHAR logMsg[MAX_LOG_LENGTH];
@@ -34,4 +34,10 @@ HRESULT ModelLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump, c
 
 	*contentOut = model;
 	return S_OK;
+}
+
+HRESULT ModelLoader::LoadFromCompiledContentFile(ID3D11Device* device, const WCHAR* path, WCHAR* errorMsg,
+		UINT errorLen, Model** contentOut)
+{
+	return E_NOTIMPL;
 }

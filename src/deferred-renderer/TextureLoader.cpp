@@ -21,7 +21,7 @@ HRESULT TextureLoader::GenerateContentHash(const WCHAR* path, TextureLoadOptions
 	return S_OK;
 }
 
-HRESULT TextureLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
+HRESULT TextureLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
 	TextureLoadOptions* options, WCHAR* errorMsg, UINT errorLen, TextureContent** contentOut)
 {
 	HRESULT hr;
@@ -60,4 +60,10 @@ HRESULT TextureLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump,
 
 	*contentOut = content;
 	return S_OK;
+}
+
+HRESULT TextureLoader::LoadFromCompiledContentFile(ID3D11Device* device, const WCHAR* path, WCHAR* errorMsg,
+		UINT errorLen, TextureContent** contentOut)
+{
+	return E_NOTIMPL;
 }

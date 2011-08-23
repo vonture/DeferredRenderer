@@ -45,7 +45,7 @@ HRESULT PixelShaderLoader::GenerateContentHash(const WCHAR* path, PixelShaderOpt
 	return S_OK;
 }
 
-HRESULT PixelShaderLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
+HRESULT PixelShaderLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
 	PixelShaderOptions* options, WCHAR* errorMsg, UINT errorLen, PixelShaderContent** contentOut)
 {
 	if (!options)
@@ -105,4 +105,10 @@ HRESULT PixelShaderLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* threadP
 
 	*contentOut = content;
 	return S_OK;
+}
+
+HRESULT PixelShaderLoader::LoadFromCompiledContentFile(ID3D11Device* device, const WCHAR* path, WCHAR* errorMsg,
+		UINT errorLen, PixelShaderContent** contentOut)
+{
+	return E_NOTIMPL;
 }

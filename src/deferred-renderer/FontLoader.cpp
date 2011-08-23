@@ -15,7 +15,7 @@ HRESULT FontLoader::GenerateContentHash(const WCHAR* path, FontOptions* options,
 	return S_OK;
 }
 
-HRESULT FontLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
+HRESULT FontLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
 		FontOptions* options, WCHAR* errorMsg, UINT errorLen, SpriteFont** contentOut)
 {
 	WCHAR logMsg[MAX_LOG_LENGTH];
@@ -33,4 +33,10 @@ HRESULT FontLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump, co
 
 	*contentOut = font;
 	return S_OK;
+}
+
+HRESULT FontLoader::LoadFromCompiledContentFile(ID3D11Device* device, const WCHAR* path, WCHAR* errorMsg,
+		UINT errorLen, SpriteFont** contentOut)
+{
+	return E_NOTIMPL;
 }

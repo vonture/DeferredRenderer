@@ -15,6 +15,10 @@ class ContentLoader : public ContentLoaderBase
 {
 public:
 	virtual HRESULT GenerateContentHash(const WCHAR* path, optionsType* options, ContentHash* hash) = 0;
-	virtual HRESULT Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
-		optionsType* options, WCHAR* errorMsg, UINT errorLen, contentType** contentOut) = 0;
+
+	virtual HRESULT LoadFromContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, 
+		const WCHAR* path, optionsType* options, WCHAR* errorMsg, UINT errorLen, contentType** contentOut) = 0;
+
+	virtual HRESULT LoadFromCompiledContentFile(ID3D11Device* device, const WCHAR* path, WCHAR* errorMsg,
+		UINT errorLen, contentType** contentOut) = 0;
 };

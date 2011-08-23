@@ -106,7 +106,7 @@ public:
 			// Load this content
 			contentType* content = NULL;
 			WCHAR errorMsg[ERROR_MSG_LEN];
-			while (FAILED(loader->Load(device, NULL, fullPath, options, errorMsg, ERROR_MSG_LEN, &content)))
+			while (FAILED(loader->LoadFromContentFile(device, NULL, fullPath, options, errorMsg, ERROR_MSG_LEN, &content)))
 			{
 				LOG_ERROR(L"ContentManager", errorMsg);
 

@@ -23,6 +23,8 @@ class PixelShaderLoader : public ContentLoader<PixelShaderOptions, PixelShaderCo
 {
 public:
 	HRESULT GenerateContentHash(const WCHAR* path, PixelShaderOptions* options, ContentHash* hash);
-	HRESULT Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
+	HRESULT LoadFromContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
 		PixelShaderOptions* options, WCHAR* errorMsg, UINT errorLen, PixelShaderContent** contentOut);
+	HRESULT LoadFromCompiledContentFile(ID3D11Device* device, const WCHAR* path, WCHAR* errorMsg,
+		UINT errorLen, PixelShaderContent** contentOut);
 };

@@ -56,7 +56,7 @@ HRESULT VertexShaderLoader::GenerateContentHash(const WCHAR* path, VertexShaderO
 //
 //	Vertex Shader Load
 //
-HRESULT VertexShaderLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
+HRESULT VertexShaderLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
 	VertexShaderOptions* options, WCHAR* errorMsg, UINT errorLen, VertexShaderContent** contentOut)
 {
 	if (!options)
@@ -132,4 +132,10 @@ HRESULT VertexShaderLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* thread
 
 	*contentOut = content;
 	return S_OK;
+}
+
+HRESULT VertexShaderLoader::LoadFromCompiledContentFile(ID3D11Device* device, const WCHAR* path, WCHAR* errorMsg,
+		UINT errorLen, VertexShaderContent** contentOut)
+{
+	return E_NOTIMPL;
 }

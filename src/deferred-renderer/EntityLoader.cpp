@@ -16,8 +16,14 @@ HRESULT EntityLoader::GenerateContentHash(const WCHAR* path, EntityOptions* opti
 	return S_OK;
 }
 
-HRESULT EntityLoader::Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
+HRESULT EntityLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
 		EntityOptions* options, WCHAR* errorMsg, UINT errorLen, EntityContent** contentOut)
+{
+	return E_NOTIMPL;
+}
+
+HRESULT EntityLoader::LoadFromCompiledContentFile(ID3D11Device* device, const WCHAR* path, WCHAR* errorMsg,
+		UINT errorLen, EntityContent** contentOut)
 {
 	return E_NOTIMPL;
 }

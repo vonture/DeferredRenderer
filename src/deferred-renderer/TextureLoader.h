@@ -23,6 +23,8 @@ class TextureLoader : public ContentLoader<TextureLoadOptions, TextureContent>
 {
 public:
 	HRESULT GenerateContentHash(const WCHAR* path, TextureLoadOptions* options, ContentHash* hash);
-	HRESULT Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
+	HRESULT LoadFromContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
 		TextureLoadOptions* options, WCHAR* errorMsg, UINT errorLen, TextureContent** contentOut);
+	HRESULT LoadFromCompiledContentFile(ID3D11Device* device, const WCHAR* path, WCHAR* errorMsg,
+		UINT errorLen, TextureContent** contentOut);
 };
