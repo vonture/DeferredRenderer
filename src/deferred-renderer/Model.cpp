@@ -75,11 +75,12 @@ HRESULT Model::CreateFromFile(ID3D11Device* device, LPCWSTR fileName)
 	}
 	
 	Assimp::Importer importer;
-	AssimpLogger::Register();
 
 	// determine if assimp can import this model
 	if (importer.IsExtensionSupported(extensionA))
 	{
+		AssimpLogger::Register();
+
 		// Get the ansi path
 		char pathA[MAX_PATH];
 		if (!WStringToAnsi(resolvedPath, pathA, MAX_PATH))
@@ -87,20 +88,31 @@ HRESULT Model::CreateFromFile(ID3D11Device* device, LPCWSTR fileName)
 			return E_FAIL;
 		}
 
+		UINT importSteps = 	
+			aiProcess_ConvertToLeftHanded	|
+			aiProcessPreset_TargetRealtime_Fast | 
+			aiProcess_FindInstances |
+			aiProcess_OptimizeMeshes;
+
 		// Load with assimp
-		const aiScene* scene = importer.ReadFile(pathA, aiProcess_ConvertToLeftHanded |
-														aiProcessPreset_TargetRealtime_Fast);
+		const aiScene* scene = importer.ReadFile(pathA, importSteps);
 		if (!scene)
 		{
+			const char* error = importer.GetErrorString();
+			WCHAR errorW[512];
+			AnsiToWString(error, errorW, 512);
+			LOG_ERROR(L"Model Load", errorW);
+
 			return E_FAIL;
 		}
 
 		_materialCount = scene->mNumMaterials;
 		_materials = new Material*[_materialCount];
+		std::map<TexturePathHash, ID3D11ShaderResourceView*> loadedTextureMap;
 		for (UINT i = 0; i < _materialCount; i++)
 		{
 			_materials[i] = new Material();
-			V_RETURN(_materials[i]->CreateFromASSIMPMaterial(device, directory, scene, i));
+			V_RETURN(_materials[i]->CreateFromASSIMPMaterial(device, directory, scene, i, &loadedTextureMap));
 		}
 
 		_meshCount = scene->mNumMeshes;
@@ -121,10 +133,11 @@ HRESULT Model::CreateFromFile(ID3D11Device* device, LPCWSTR fileName)
 		// Make materials
 		_materialCount = sdkMesh.GetNumMaterials();
 		_materials = new Material*[_materialCount];
+		std::map<TexturePathHash, ID3D11ShaderResourceView*> loadedTextureMap;
 		for (UINT i = 0; i < _materialCount; i++)
 		{
 			_materials[i] = new Material();			
-			V_RETURN(_materials[i]->CreateFromSDKMeshMaterial(device, directory, &sdkMesh, i));
+			V_RETURN(_materials[i]->CreateFromSDKMeshMaterial(device, directory, &sdkMesh, i, &loadedTextureMap));
 		}
 	
 		// Create a d3d9 device for loading the meshes
