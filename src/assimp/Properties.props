@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <SDK_BOOST>C:\Program Files (x86)\Boost\boost_1_47_0</SDK_BOOST>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemDefinitionGroup />
+  <ItemGroup>
+    <BuildMacro Include="SDK_BOOST">
+      <Value>$(SDK_BOOST)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>
