@@ -318,7 +318,6 @@ HRESULT Mesh::CreateFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d9
         attributes[i].FaceStart = static_cast<DWORD>(subset->IndexStart / 3);
         attributes[i].FaceCount = static_cast<DWORD>(subset->IndexCount / 3);
         attributes[i].VertexStart = static_cast<DWORD>(subset->VertexStart);
-        // attributes[i].VertexCount = static_cast<DWORD>(subset->VertexCount);
         attributes[i].VertexCount = numVerts;
 
         for (UINT faceIdx = attributes[i].FaceStart; faceIdx < attributes[i].FaceStart + attributes[i].FaceCount; ++faceIdx)
