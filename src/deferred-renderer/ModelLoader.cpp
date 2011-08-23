@@ -2,8 +2,7 @@
 #include "ModelLoader.h"
 #include "Logger.h"
 
-template <>
-HRESULT GenerateContentHash<ModelOptions>(const WCHAR* path, ModelOptions* options, ContentHash* hash)
+HRESULT ModelLoader::GenerateContentHash(const WCHAR* path, ModelOptions* options, ContentHash* hash)
 {
 	if (!hash)
 	{

@@ -4,12 +4,6 @@
 
 typedef long ContentHash;
 
-template <class T>
-HRESULT GenerateContentHash(const WCHAR* path, T* options, ContentHash* hash)
-{
-	return E_FAIL;
-}
-
 class ContentLoaderBase
 {
 private:
@@ -20,6 +14,7 @@ template <class optionsType, class contentType>
 class ContentLoader : public ContentLoaderBase
 {
 public:
+	virtual HRESULT GenerateContentHash(const WCHAR* path, optionsType* options, ContentHash* hash) = 0;
 	virtual HRESULT Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
 		optionsType* options, WCHAR* errorMsg, UINT errorLen, contentType** contentOut) = 0;
 };

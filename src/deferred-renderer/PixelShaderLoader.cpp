@@ -2,8 +2,7 @@
 #include "PixelShaderLoader.h"
 #include "Logger.h"
 
-template <>
-HRESULT GenerateContentHash<PixelShaderOptions>(const WCHAR* path, PixelShaderOptions* options, ContentHash* hash)
+HRESULT PixelShaderLoader::GenerateContentHash(const WCHAR* path, PixelShaderOptions* options, ContentHash* hash)
 {
 	if (!hash)
 	{

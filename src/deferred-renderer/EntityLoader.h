@@ -31,12 +31,10 @@ struct EntityOptions
 {
 };
 
-template <>
-HRESULT GenerateContentHash<EntityOptions>(const WCHAR* path, EntityOptions* options, ContentHash* hash);
-
 class EntityLoader : public ContentLoader<EntityOptions, EntityContent>
 {
 public:
+	HRESULT GenerateContentHash(const WCHAR* path, EntityOptions* options, ContentHash* hash);
 	HRESULT Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
 		EntityOptions* options, WCHAR* errorMsg, UINT errorLen, EntityContent** contentOut);
 };

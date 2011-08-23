@@ -9,12 +9,12 @@ struct ModelOptions
 {
 };
 
-template <>
-HRESULT GenerateContentHash<ModelOptions>(const WCHAR* path, ModelOptions* options, ContentHash* hash);
+
 
 class ModelLoader : public ContentLoader<ModelOptions, Model>
 {
 public:
+	HRESULT GenerateContentHash(const WCHAR* path, ModelOptions* options, ContentHash* hash);
 	HRESULT Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
 		ModelOptions* options, WCHAR* errorMsg, UINT errorLen, Model** contentOut);
 };

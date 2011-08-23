@@ -22,12 +22,10 @@ struct VertexShaderOptions
 	const char* DebugName;
 };
 
-template <>
-HRESULT GenerateContentHash<VertexShaderOptions>(const WCHAR* path, VertexShaderOptions* options, ContentHash* hash);
-
 class VertexShaderLoader : public ContentLoader<VertexShaderOptions, VertexShaderContent>
 {
 public:
+	HRESULT GenerateContentHash(const WCHAR* path, VertexShaderOptions* options, ContentHash* hash);
 	HRESULT Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
 		VertexShaderOptions* options, WCHAR* errorMsg, UINT errorLen, VertexShaderContent** contentOut);
 };

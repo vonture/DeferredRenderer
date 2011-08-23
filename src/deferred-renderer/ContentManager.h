@@ -56,9 +56,27 @@ public:
 			return E_FAIL;
 		}
 
-		// Generate hash for this content
+		// Find the loader for this content type
+		LoaderHash loaderLookupHash = getContentLoaderHash<optionsType, contentType>();
+		LoaderMap::iterator loaderIt = _contentLoaders.find(loaderLookupHash);
+		if (loaderIt == _contentLoaders.end())
+		{
+			LOG_ERROR(L"ContentManager", L"Unable find loader for the given types.");
+			return E_FAIL;
+		}
+
+		// Cast to the loader to the correct type
+		ContentLoader<optionsType, contentType>* loader = 
+				dynamic_cast<ContentLoader<optionsType, contentType>*>(loaderIt->second);
+		if (!loader)
+		{
+			LOG_ERROR(L"ContentManager", L"Unable to dynamic cast content loader to required type.");
+			return E_FAIL;
+		}
+
+		// Use the loader to generate the content hash
 		ContentHash hash;
-		bool hashAvailable = SUCCEEDED(GenerateContentHash<optionsType>(fullPath, options, &hash));
+		bool hashAvailable = SUCCEEDED(loader->GenerateContentHash(fullPath, options, &hash));
 		if (!hashAvailable)
 		{
 			LOG_INFO(L"ContentManager", L"Unable to generate hash of options type, cannot store.");
@@ -85,28 +103,10 @@ public:
 		}
 		else
 		{
-			// Find the right content loader
-			LoaderHash loaderLookupHash = getContentLoaderHash<optionsType, contentType>();
-			if (_contentLoaders.find(loaderLookupHash) == _contentLoaders.end())
-			{
-				LOG_ERROR(L"ContentManager", L"Unable find loader for the given types.");
-				return E_FAIL;
-			}
-
-			ContentLoaderBase* asLoaderBase = _contentLoaders[loaderLookupHash];
-			ContentLoader<optionsType, contentType>* castedLoader = 
-				dynamic_cast<ContentLoader<optionsType, contentType>*>(asLoaderBase);
-
-			if (!castedLoader)
-			{
-				LOG_ERROR(L"ContentManager", L"Unable to dynamic cast content loader to required type.");
-				return E_FAIL;
-			}
-
 			// Load this content
 			contentType* content = NULL;
 			WCHAR errorMsg[ERROR_MSG_LEN];
-			while (FAILED(castedLoader->Load(device, NULL, fullPath, options, errorMsg, ERROR_MSG_LEN, &content)))
+			while (FAILED(loader->Load(device, NULL, fullPath, options, errorMsg, ERROR_MSG_LEN, &content)))
 			{
 				LOG_ERROR(L"ContentManager", errorMsg);
 

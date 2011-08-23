@@ -2,8 +2,7 @@
 #include "VertexShaderLoader.h"
 #include "Logger.h"
 
-template <>
-HRESULT GenerateContentHash<VertexShaderOptions>(const WCHAR* path, VertexShaderOptions* options, ContentHash* hash)
+HRESULT VertexShaderLoader::GenerateContentHash(const WCHAR* path, VertexShaderOptions* options, ContentHash* hash)
 {
 	if (!hash)
 	{

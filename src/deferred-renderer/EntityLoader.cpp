@@ -2,8 +2,7 @@
 #include "EntityLoader.h"
 #include "tinyxml.h"
 
-template <>
-HRESULT GenerateContentHash<EntityOptions>(const WCHAR* path, EntityOptions* options, ContentHash* hash)
+HRESULT EntityLoader::GenerateContentHash(const WCHAR* path, EntityOptions* options, ContentHash* hash)
 {
 	if (!hash)
 	{

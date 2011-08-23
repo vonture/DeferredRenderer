@@ -3,8 +3,7 @@
 #include "Logger.h"
 #include "DDSTextureLoader.h"
 
-template <>
-HRESULT GenerateContentHash<TextureLoadOptions>(const WCHAR* path, TextureLoadOptions* options, ContentHash* hash)
+HRESULT TextureLoader::GenerateContentHash(const WCHAR* path, TextureLoadOptions* options, ContentHash* hash)
 {
 	if (!hash)
 	{

@@ -19,12 +19,10 @@ struct TextureLoadOptions
 	const char* DebugName;
 };
 
-template <>
-HRESULT GenerateContentHash<TextureLoadOptions>(const WCHAR* path, TextureLoadOptions* options, ContentHash* hash);
-
 class TextureLoader : public ContentLoader<TextureLoadOptions, TextureContent>
 {
 public:
+	HRESULT GenerateContentHash(const WCHAR* path, TextureLoadOptions* options, ContentHash* hash);
 	HRESULT Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
 		TextureLoadOptions* options, WCHAR* errorMsg, UINT errorLen, TextureContent** contentOut);
 };

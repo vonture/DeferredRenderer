@@ -19,12 +19,10 @@ struct PixelShaderOptions
 	const char* DebugName;
 };
 
-template <>
-HRESULT GenerateContentHash<PixelShaderOptions>(const WCHAR* path, PixelShaderOptions* options, ContentHash* hash);
-
 class PixelShaderLoader : public ContentLoader<PixelShaderOptions, PixelShaderContent>
 {
 public:
+	HRESULT GenerateContentHash(const WCHAR* path, PixelShaderOptions* options, ContentHash* hash);
 	HRESULT Load(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
 		PixelShaderOptions* options, WCHAR* errorMsg, UINT errorLen, PixelShaderContent** contentOut);
 };

@@ -1,8 +1,7 @@
 #include "PCH.h"
 #include "FontLoader.h"
 
-template <>
-HRESULT GenerateContentHash<FontOptions>(const WCHAR* path, FontOptions* options, ContentHash* hash)
+HRESULT FontLoader::GenerateContentHash(const WCHAR* path, FontOptions* options, ContentHash* hash)
 {
 	if (!hash)
 	{
