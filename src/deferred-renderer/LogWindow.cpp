@@ -34,7 +34,12 @@ void LogWindow::OnLogMessage(UINT type, const WCHAR* sender, const WCHAR* messag
 		str += Gwen::Utility::Format(L"%s: ", sender);
 	}
 
-	str += Gwen::Utility::Format(L"%s", message);
+	str += Gwen::UnicodeString(message);
+
+	if (str.size() > 0 &&  str[str.size() - 1] == '\n')
+	{
+		str.pop_back();
+	}
 	
 	//str.replace(str.begin(), str.end(), L"\n", L"");
 
