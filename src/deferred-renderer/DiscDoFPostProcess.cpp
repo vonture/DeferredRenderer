@@ -1,6 +1,7 @@
 #include "PCH.h"
 #include "DiscDoFPostProcess.h"
 #include "Logger.h"
+#include "PixelShaderLoader.h"
 
 DiscDoFPostProcess::DiscDoFPostProcess()
 	: _propertiesBuffer(NULL)
@@ -89,27 +90,34 @@ HRESULT DiscDoFPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, Conten
 	V_RETURN(PostProcess::OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 
 	// Create the shaders
-	ID3DBlob* pBlob = NULL;
-
+	char sampleCountString[6];
 	D3D_SHADER_MACRO sampleCountMacros[] = 
 	{
-		{ "DOF_SAMPLE_COUNT", "" },
+		{ "DOF_SAMPLE_COUNT", sampleCountString },
 		NULL,
 	};
 
-	char sampleCountString[6];
+	PixelShaderContent* psContent = NULL;
+
 	char dofPSDebugName[256];
+	PixelShaderOptions psOpts =
+	{
+		"PS_DoF",			// const char* EntryPoint;
+		sampleCountMacros,	// D3D_SHADER_MACRO* Defines;
+		dofPSDebugName,		// const char* DebugName;
+	};
+
 	for (UINT i = 0; i < NUM_DOF_SAMPLE_COUNTS; i++)
 	{
 		sprintf_s(sampleCountString, "%i", Poisson::GetDistributionSize(i));
-		sampleCountMacros[0].Definition = sampleCountString;
+		sprintf_s(dofPSDebugName, "Poisson DoF (sample count = %s)", sampleCountString);
+		
+		V_RETURN(pContentManager->LoadContent(pd3dDevice, L"PoissonDoF.hlsl", &psOpts, &psContent));
 
-		V_RETURN(CompileShaderFromFile( L"PoissonDoF.hlsl", "PS_DoF", "ps_4_0", sampleCountMacros, &pBlob));   
-		V_RETURN(pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_dofPSs[i]));
-		SAFE_RELEASE(pBlob);
+		_dofPSs[i] = psContent->PixelShader;
+		_dofPSs[i]->AddRef();
 
-		sprintf_s(dofPSDebugName, "Poisson DoF (sample count = %s) PS", sampleCountString);
-		SET_DEBUG_NAME(_dofPSs[i], dofPSDebugName);
+		SAFE_RELEASE(psContent);
 	}
 
 	// Create the buffers

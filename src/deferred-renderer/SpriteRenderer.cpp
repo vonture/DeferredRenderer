@@ -2,6 +2,8 @@
 #include "SpriteRenderer.h"
 #include "ShaderLoader.h"
 #include "Logger.h"
+#include "PixelShaderLoader.h"
+#include "VertexShaderLoader.h"
 
 const float SpriteRenderer::SPRITE_DEPTH = 0.5f;
 
@@ -282,29 +284,51 @@ HRESULT SpriteRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMan
 	V_RETURN(_blendStates.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 	V_RETURN(_rasterStates.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 
-	// Load the shaders
-	ID3DBlob* pBlob = NULL;
+	// Load the sprite pixel shader
+	PixelShaderContent* psContent = NULL;
+	PixelShaderOptions psOpts =
+	{
+		"PS_Sprite",// const char* EntryPoint;
+		NULL,		// D3D_SHADER_MACRO* Defines;
+		"Sprite",	// const char* DebugName;
+	};
 	
-	V_RETURN(CompileShaderFromFile( L"Sprite.hlsl", "PS_Sprite", "ps_4_0", NULL, &pBlob ) );   
-    V_RETURN(pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_spritePS));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_spritePS, "Sprite renderer PS");
-	
-	V_RETURN(CompileShaderFromFile(L"Sprite.hlsl", "VS_Sprite", "vs_4_0", NULL, &pBlob));   
-    V_RETURN(pd3dDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_spriteVS));
-	SET_DEBUG_NAME(_spriteVS, "Sprite renderer VS");
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Sprite.hlsl", &psOpts, &psContent));
 
-	// create the input layout
-    const D3D11_INPUT_ELEMENT_DESC fontlayout[] =
+	_spritePS = psContent->PixelShader;
+	_spritePS->AddRef();
+
+	SAFE_RELEASE(psContent);
+	
+	// Load the sprite vertex shader and input layout
+	D3D11_INPUT_ELEMENT_DESC spriteLayout[] =
     {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
-    V_RETURN(pd3dDevice->CreateInputLayout(fontlayout, 3, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), &_inputLayout));
-    SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_spriteVS, "Sprite renderer input layout");
 
+	VertexShaderContent* vsContent = NULL;
+	VertexShaderOptions vsOpts = 
+	{
+		"VS_Sprite",				// const char* EntryPoint;
+		NULL,						// D3D_SHADER_MACRO* Defines;
+		spriteLayout,				// D3D11_INPUT_ELEMENT_DESC* InputElements;
+		ARRAYSIZE(spriteLayout),	// UINT InputElementCount;
+		"Sprite",					// const char* DebugName;
+	};
+
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Sprite.hlsl", &vsOpts, &vsContent));
+
+	_spriteVS = vsContent->VertexShader;
+	_spriteVS->AddRef();
+
+	_inputLayout = vsContent->InputLayout;
+	_inputLayout->AddRef();
+
+	SAFE_RELEASE(vsContent);
+
+	// Create the buffers
 	D3D11_BUFFER_DESC vbDesc = 
 	{
 		sizeof(SPRITE_VERTEX) * MAX_SPRITES * 4, // INT ByteWidth;

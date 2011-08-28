@@ -1,6 +1,7 @@
 #include "PCH.h"
 #include "BoundingObjectRenderer.h"
-#include "ShaderLoader.h"
+#include "PixelShaderLoader.h"
+#include "VertexShaderLoader.h"
 
 BoundingObjectRenderer::BoundingObjectRenderer()
 	: _boxVB(NULL), _boxIB(NULL), _sphereVB(NULL), _inputLayout(NULL), _vertexShader(NULL),
@@ -191,27 +192,50 @@ void BoundingObjectRenderer::fillRingVB(BOUNDING_OBJECT_VERTEX* buffer, UINT sta
 HRESULT BoundingObjectRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
-	ID3DBlob* pBlob = NULL;
 
-	// Compile the shaders
-	V_RETURN( CompileShaderFromFile( L"BoundingObject.hlsl", "PS_BoundingObject", "ps_4_0", NULL, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_pixelShader));
-	SAFE_RELEASE(pBlob);	
+	// Load the pixel shader
+	PixelShaderContent* psContent = NULL;
+	PixelShaderOptions psOpts =
+	{
+		"PS_BoundingObject",// const char* EntryPoint;
+		NULL,				// D3D_SHADER_MACRO* Defines;
+		"Bounding Object",	// const char* DebugName;
+	};
+	
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"BoundingObject.hlsl", &psOpts, &psContent));
 
-	V_RETURN( CompileShaderFromFile( L"BoundingObject.hlsl", "VS_BoundingObject", "vs_4_0", NULL, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_vertexShader));
+	_pixelShader = psContent->PixelShader;
+	_pixelShader->AddRef();
 
-	// Create the input layout
-	const D3D11_INPUT_ELEMENT_DESC layout[] =
+	SAFE_RELEASE(psContent);
+
+	// Load the sprite vertex shader and input layout
+	D3D11_INPUT_ELEMENT_DESC layout[] =
     {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "COLOR",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
 
-	V_RETURN( pd3dDevice->CreateInputLayout(layout, ARRAYSIZE(layout), pBlob->GetBufferPointer(),
-		pBlob->GetBufferSize(), &_inputLayout));
-	SAFE_RELEASE(pBlob);
+	VertexShaderContent* vsContent = NULL;
+	VertexShaderOptions vsOpts = 
+	{
+		"VS_BoundingObject",// const char* EntryPoint;
+		NULL,				// D3D_SHADER_MACRO* Defines;
+		layout,				// D3D11_INPUT_ELEMENT_DESC* InputElements;
+		ARRAYSIZE(layout),	// UINT InputElementCount;
+		"Bounding Object",	// const char* DebugName;
+	};
 
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"BoundingObject.hlsl", &vsOpts, &vsContent));
+
+	_vertexShader = vsContent->VertexShader;
+	_vertexShader->AddRef();
+
+	_inputLayout = vsContent->InputLayout;
+	_inputLayout->AddRef();
+
+	SAFE_RELEASE(vsContent);
+	
 	// Create the constant buffer
 	D3D11_BUFFER_DESC cbDesc =
 	{

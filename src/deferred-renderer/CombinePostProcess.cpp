@@ -1,6 +1,7 @@
 #include "PCH.h"
 #include "CombinePostProcess.h"
 #include "Logger.h"
+#include "PixelShaderLoader.h"
 
 CombinePostProcess::CombinePostProcess()
 	: _pixelShader(NULL)
@@ -53,12 +54,20 @@ HRESULT CombinePostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, Conten
 
 	V_RETURN(PostProcess::OnD3D11CreateDevice(pd3dDevice, pContentManager,pBackBufferSurfaceDesc));
 
-	ID3DBlob* pBlob = NULL;
+	PixelShaderContent* psContent = NULL;
+	PixelShaderOptions psOpts =
+	{
+		"PS_Combine",		// const char* EntryPoint;
+		NULL,				// D3D_SHADER_MACRO* Defines;
+		"G-buffer combine",	// const char* DebugName;
+	};
 
-	V_RETURN(CompileShaderFromFile( L"GBufferCombine.hlsl", "PS_Combine", "ps_4_0", NULL, &pBlob ) );   
-    V_RETURN(pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_pixelShader));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_pixelShader, "G-buffer combine pixel shader");
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"GBufferCombine.hlsl", &psOpts, &psContent));
+
+	_pixelShader = psContent->PixelShader;
+	_pixelShader->AddRef();
+
+	SAFE_RELEASE(psContent);
 
 	return S_OK;
 }
