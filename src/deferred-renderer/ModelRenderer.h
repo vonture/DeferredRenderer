@@ -4,7 +4,6 @@
 #include "IHasContent.h"
 #include "ModelInstance.h"
 #include "Camera.h"
-#include "ShaderLoader.h"
 #include "DeviceStates.h"
 #include <vector>
 

@@ -2,7 +2,6 @@
 
 #include "PCH.h"
 #include "IHasContent.h"
-#include "ShaderLoader.h"
 
 struct QUAD_VERTEX
 {

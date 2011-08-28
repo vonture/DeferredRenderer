@@ -1,6 +1,5 @@
 #include "PCH.h"
 #include "SpriteRenderer.h"
-#include "ShaderLoader.h"
 #include "Logger.h"
 #include "PixelShaderLoader.h"
 #include "VertexShaderLoader.h"
