@@ -167,7 +167,6 @@
     <ClCompile Include="PostProcessSelectionPane.cpp" />
     <ClCompile Include="ProfilePane.cpp" />
     <ClCompile Include="SDKmesh.cpp" />
-    <ClCompile Include="SDKmisc.cpp" />
     <ClCompile Include="SliderWithLabel.cpp" />
     <ClCompile Include="SSAOConfigurationPane.cpp" />
     <ClCompile Include="SSAOPostProcess.cpp" />
@@ -210,7 +209,6 @@
     <ClCompile Include="PostProcess.cpp" />
     <ClCompile Include="Quad.cpp" />
     <ClCompile Include="Renderer.cpp" />
-    <ClCompile Include="ShaderLoader.cpp" />
     <ClCompile Include="SkyConfigurationPane.cpp" />
     <ClCompile Include="SkyPostProcess.cpp" />
     <ClCompile Include="SpotLightRenderer.cpp" />
@@ -247,7 +245,6 @@
     <ClInclude Include="PostProcessSelectionPane.h" />
     <ClInclude Include="ProfilePane.h" />
     <ClInclude Include="SDKmesh.h" />
-    <ClInclude Include="SDKmisc.h" />
     <ClInclude Include="SliderWithLabel.h" />
     <ClInclude Include="SSAOConfigurationPane.h" />
     <ClInclude Include="SSAOPostProcess.h" />
@@ -286,7 +283,6 @@
     <ClInclude Include="OrthographicCamera.h" />
     <ClInclude Include="PerspectiveCamera.h" />
     <ClInclude Include="DualParaboloidPointLightRenderer.h" />
-    <ClInclude Include="ShaderLoader.h" />
     <ClInclude Include="SkyConfigurationPane.h" />
     <ClInclude Include="SkyPostProcess.h" />
     <ClInclude Include="SpotLightRenderer.h" />

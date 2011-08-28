@@ -302,9 +302,6 @@
     <ClCompile Include="LightRendererBase.cpp">
       <Filter>Lights\Renderers</Filter>
     </ClCompile>
-    <ClCompile Include="SDKmisc.cpp">
-      <Filter>DXUT</Filter>
-    </ClCompile>
     <ClCompile Include="SDKmesh.cpp">
       <Filter>DXUT</Filter>
     </ClCompile>
@@ -350,9 +347,6 @@
     </ClCompile>
     <ClCompile Include="VertexShaderLoader.cpp">
       <Filter>Content</Filter>
-    </ClCompile>
-    <ClCompile Include="ShaderLoader.cpp">
-      <Filter>Graphics Helpers</Filter>
     </ClCompile>
     <ClCompile Include="ModelLoader.cpp">
       <Filter>Content</Filter>
@@ -566,9 +560,6 @@
     <ClInclude Include="SDKmesh.h">
       <Filter>DXUT</Filter>
     </ClInclude>
-    <ClInclude Include="SDKmisc.h">
-      <Filter>DXUT</Filter>
-    </ClInclude>
     <ClInclude Include="SpriteFont.h">
       <Filter>Sprites</Filter>
     </ClInclude>
@@ -610,9 +601,6 @@
     </ClInclude>
     <ClInclude Include="VertexShaderLoader.h">
       <Filter>Content</Filter>
-    </ClInclude>
-    <ClInclude Include="ShaderLoader.h">
-      <Filter>Graphics Helpers</Filter>
     </ClInclude>
     <ClInclude Include="ModelLoader.h">
       <Filter>Content</Filter>
