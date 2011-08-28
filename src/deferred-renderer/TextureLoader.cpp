@@ -3,7 +3,7 @@
 #include "Logger.h"
 #include "DDSTextureLoader.h"
 
-HRESULT TextureLoader::GenerateContentHash(const WCHAR* path, TextureLoadOptions* options, ContentHash* hash)
+HRESULT TextureLoader::GenerateContentHash(const WCHAR* path, TextureOptions* options, ContentHash* hash)
 {
 	if (!hash)
 	{
@@ -22,13 +22,13 @@ HRESULT TextureLoader::GenerateContentHash(const WCHAR* path, TextureLoadOptions
 }
 
 HRESULT TextureLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
-	TextureLoadOptions* options, WCHAR* errorMsg, UINT errorLen, TextureContent** contentOut)
+	TextureOptions* options, WCHAR* errorMsg, UINT errorLen, TextureContent** contentOut)
 {
 	HRESULT hr;
 
 	WCHAR logMsg[MAX_LOG_LENGTH];
-	swprintf_s(logMsg, L"Loading texture: %s", path);
-	LOG_INFO(L"Texture2DLoader", logMsg);
+	swprintf_s(logMsg, L"Loading - %s", path);
+	LOG_INFO(L"Texture Loader", logMsg);
 	
 	TextureContent* content = new TextureContent();
 
@@ -55,7 +55,10 @@ HRESULT TextureLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11ThreadPu
 
 	if (options && options->DebugName)
 	{
-		SET_DEBUG_NAME(content->ShaderResourceView, options->DebugName);
+		CHAR debugName[256];
+
+		sprintf_s(debugName, "%s %s", options->DebugName, "SRV");
+		SET_DEBUG_NAME(content->ShaderResourceView, debugName);
 	}
 
 	*contentOut = content;

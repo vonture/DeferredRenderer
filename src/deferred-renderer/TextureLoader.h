@@ -13,18 +13,18 @@ struct TextureContent : public ContentType
 	~TextureContent() {  SAFE_RELEASE(ShaderResourceView); }
 };
 
-struct TextureLoadOptions
+struct TextureOptions
 {
 	bool Generate3DFrom2D;
 	const char* DebugName;
 };
 
-class TextureLoader : public ContentLoader<TextureLoadOptions, TextureContent>
+class TextureLoader : public ContentLoader<TextureOptions, TextureContent>
 {
 public:
-	HRESULT GenerateContentHash(const WCHAR* path, TextureLoadOptions* options, ContentHash* hash);
+	HRESULT GenerateContentHash(const WCHAR* path, TextureOptions* options, ContentHash* hash);
 	HRESULT LoadFromContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
-		TextureLoadOptions* options, WCHAR* errorMsg, UINT errorLen, TextureContent** contentOut);
+		TextureOptions* options, WCHAR* errorMsg, UINT errorLen, TextureContent** contentOut);
 	HRESULT LoadFromCompiledContentFile(ID3D11Device* device, const WCHAR* path, WCHAR* errorMsg,
 		UINT errorLen, TextureContent** contentOut);
 };
