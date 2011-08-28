@@ -1,3 +1,7 @@
+#ifndef ALPHA_CUTOUT
+#define ALPHA_CUTOUT 0
+#endif
+
 cbuffer cbDepthProperties : register(b0)
 {
     float4x4 WorldViewProjection;
@@ -6,14 +10,25 @@ cbuffer cbDepthProperties : register(b0)
 	float Padding;
 }
 
+cbuffer cbAlphaCutoutProperties : register(c1)
+{
+    float AlphaThreshold	: packoffset(c0);
+}
+
 struct VS_In_Depth
 {
 	float4 vPositionOS	: POSITION;
+#if ALPHA_CUTOUT
+	float2 vTexCoord	: TEXCOORD;
+#endif
 };
 
 struct VS_Out_Depth
 {
 	float4 vPositionCS	: SV_POSITION;
+#if ALPHA_CUTOUT
+	float2 vTexCoord	: TEXCOORD;
+#endif
 };
 
 VS_Out_Depth VS_Depth(VS_In_Depth input)
@@ -39,5 +54,23 @@ VS_Out_Depth VS_Depth(VS_In_Depth input)
 						   (CameraClips.y - CameraClips.x);	
 	output.vPositionCS.w = 1;											// set w to 1 so there is no w divide
 	
+#if ALPHA_CUTOUT
+	output.vTexCoord = input.vTexCoord;
+#endif
+
     return output;
 }
+
+#if ALPHA_CUTOUT
+// ALPHA CUTOUTS
+Texture2D DiffuseMap	: register(t0);
+SamplerState Sampler	: register(s0);
+
+float4 PS_Depth(VS_Out_Depth input) : SV_TARGET
+{
+	float alpha = DiffuseMap.SampleLevel(Sampler, input.vTexCoord, 0).a;
+	clip(alpha - AlphaThreshold);
+
+	return float4(0.0f, 0.0f, 0.0f, 1.0f);
+}
+#endif
