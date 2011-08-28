@@ -11,6 +11,61 @@
 #include "DDS.h"
 
 //--------------------------------------------------------------------------------------
+// Helper functions to create SRGB formats from typeless formats and vice versa
+//--------------------------------------------------------------------------------------
+DXGI_FORMAT MAKE_SRGB( DXGI_FORMAT format )
+{
+    switch( format )
+    {
+        case DXGI_FORMAT_R8G8B8A8_TYPELESS:
+        case DXGI_FORMAT_R8G8B8A8_UNORM:
+        case DXGI_FORMAT_R8G8B8A8_UINT:
+        case DXGI_FORMAT_R8G8B8A8_SNORM:
+        case DXGI_FORMAT_R8G8B8A8_SINT:
+            return DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+
+        case DXGI_FORMAT_BC1_TYPELESS:
+        case DXGI_FORMAT_BC1_UNORM:
+            return DXGI_FORMAT_BC1_UNORM_SRGB;
+        case DXGI_FORMAT_BC2_TYPELESS:
+        case DXGI_FORMAT_BC2_UNORM:
+            return DXGI_FORMAT_BC2_UNORM_SRGB;
+        case DXGI_FORMAT_BC3_TYPELESS:
+        case DXGI_FORMAT_BC3_UNORM:
+            return DXGI_FORMAT_BC3_UNORM_SRGB;
+
+    };
+
+    return format;
+}
+
+//--------------------------------------------------------------------------------------
+DXGI_FORMAT MAKE_TYPELESS( DXGI_FORMAT format )
+{
+    switch( format )
+    {
+        case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
+        case DXGI_FORMAT_R8G8B8A8_UNORM:
+        case DXGI_FORMAT_R8G8B8A8_UINT:
+        case DXGI_FORMAT_R8G8B8A8_SNORM:
+        case DXGI_FORMAT_R8G8B8A8_SINT:
+            return DXGI_FORMAT_R8G8B8A8_TYPELESS;
+
+        case DXGI_FORMAT_BC1_UNORM_SRGB:
+        case DXGI_FORMAT_BC1_UNORM:
+            return DXGI_FORMAT_BC1_TYPELESS;
+        case DXGI_FORMAT_BC2_UNORM_SRGB:
+        case DXGI_FORMAT_BC2_UNORM:
+            return DXGI_FORMAT_BC2_TYPELESS;
+        case DXGI_FORMAT_BC3_UNORM_SRGB:
+        case DXGI_FORMAT_BC3_UNORM:
+            return DXGI_FORMAT_BC3_TYPELESS;
+    };
+
+    return format;
+}
+
+//--------------------------------------------------------------------------------------
 static HRESULT LoadTextureDataFromFile( __in_z const WCHAR* szFileName, BYTE** ppHeapData,
                                         DDS_HEADER** ppHeader,
                                         BYTE** ppBitData, UINT* pBitSize )
