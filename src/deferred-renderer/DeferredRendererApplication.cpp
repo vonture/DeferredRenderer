@@ -78,12 +78,12 @@ void DeferredRendererApplication::OnInitialize()
 	_configWindow = new ConfigurationWindow(canvas);	
 
 	_ppConfigPane = new PostProcessSelectionPane(_configWindow);
-	_ppConfigPane->AddPostProcess(&_ssaoPP, L"SSAO", false, true);
+	_ppConfigPane->AddPostProcess(&_ssaoPP, L"SSAO", true, true);
 	_ppConfigPane->AddPostProcess(&_hbaoPP, L"HBAO", false, false);
 	_ppConfigPane->AddPostProcess(&_skyPP, L"Sky", true, true);
 	_ppConfigPane->AddPostProcess(&_mlaaPP, L"MLAA", false, true);	
 	_ppConfigPane->AddPostProcess(&_hdrPP, L"HDR", true, true);
-	_ppConfigPane->AddPostProcess(&_discDoFPP, L"Disc DoF", false, true);
+	_ppConfigPane->AddPostProcess(&_discDoFPP, L"Disc DoF", true, true);
 	_ppConfigPane->AddPostProcess(&_fxaaPP, L"FXAA", true, true);
 	_ppConfigPane->AddPostProcess(&_uiPP, L"UI", true, false);
 	_ppConfigPane->AddPostProcess(&_motionBlurPP, L"Motion blur", false, false);	
