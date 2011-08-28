@@ -2,6 +2,7 @@
 #include "UIPostProcess.h"
 #include "ShaderLoader.h"
 #include "Logger.h"
+#include "PixelShaderLoader.h"
 
 UIPostProcess::UIPostProcess()
 {
@@ -67,14 +68,6 @@ HRESULT UIPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMana
 	V_RETURN(PostProcess::OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 	_uiRenderer.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc);
 
-	// Load the shaders
-	ID3DBlob* pBlob = NULL;
-
-	V_RETURN( CompileShaderFromFile( L"Copy.hlsl", "PS_Copy", "ps_4_0", NULL, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_copyPS));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_copyPS, "UI post process copy pixel shader");
-	
 	_canvas->SetPos(0, 0);
 	_canvas->SetSize(pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height);	
 
@@ -85,8 +78,6 @@ void UIPostProcess::OnD3D11DestroyDevice()
 {
 	PostProcess::OnD3D11DestroyDevice();
 	_uiRenderer.OnD3D11DestroyDevice();
-
-	SAFE_RELEASE(_copyPS);
 }
 
 HRESULT UIPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,

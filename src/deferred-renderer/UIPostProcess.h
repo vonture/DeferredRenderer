@@ -19,8 +19,6 @@ private:
 
 	UIRenderer _uiRenderer;
 
-	ID3D11PixelShader* _copyPS;
-
 public:
 	UIPostProcess();
 	~UIPostProcess();
