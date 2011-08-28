@@ -37,8 +37,8 @@ public:
 	void DrawLine(int x, int y, int a, int b);
 	void DrawFilledRect(Gwen::Rect rect);
 
-	virtual void LoadFont( Gwen::Font* pFont );
-	virtual void FreeFont( Gwen::Font* pFont );
+	virtual void LoadFont(Gwen::Font* pFont);
+	virtual void FreeFont(Gwen::Font* pFont);
 	void RenderText(Gwen::Font* pFont, Gwen::Point pos, const Gwen::UnicodeString& text);
 	Gwen::Point MeasureText(Gwen::Font* pFont, const Gwen::UnicodeString& text);
 
