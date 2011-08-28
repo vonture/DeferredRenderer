@@ -445,7 +445,7 @@ HRESULT CascadedDirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 		modelProperties->AlphaThreshold = GetAlphaThreshold();
 		pd3dImmediateContext->Unmap(_alphaCutoutProperties, 0);
 
-		pd3dImmediateContext->PSSetConstantBuffers(2, 1, &_alphaCutoutProperties);			
+		pd3dImmediateContext->PSSetConstantBuffers(1, 1, &_alphaCutoutProperties);			
 	}
 
 
