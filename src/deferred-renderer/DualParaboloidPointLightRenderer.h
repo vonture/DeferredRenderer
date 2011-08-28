@@ -8,15 +8,17 @@
 class DualParaboloidPointLightRenderer : public LightRenderer<PointLight>
 {
 private:
-	ID3D11VertexShader* _depthVS;
-	ID3D11InputLayout* _depthInput;
+	ID3D11VertexShader* _depthVS[2]; // alphacutout disabled/enabled
+	ID3D11InputLayout* _depthInput[2]; // alphacutout disabled/enabled
+	ID3D11PixelShader* _depthPS; // alphacutout enabled
 	ID3D11Buffer* _depthPropertiesBuffer;
+	ID3D11Buffer* _alphaCutoutPropertiesBuffer;
 
 	ID3D11VertexShader* _vertexShader;
 	ID3D11PixelShader* _unshadowedPS;
 	ID3D11PixelShader* _shadowedPS;	
-
-	ID3D11Buffer* _modelPropertiesBuffer;
+		
+	ID3D11Buffer* _modelPropertiesBuffer;	
 	ID3D11Buffer* _lightPropertiesBuffer;
 	ID3D11Buffer* _cameraPropertiesBuffer;
 	ID3D11Buffer* _shadowPropertiesBuffer;
@@ -35,6 +37,12 @@ private:
 	HRESULT renderDepth(ID3D11DeviceContext* pd3dImmediateContext, PointLight* light,
 		UINT shadowMapIdx, std::vector<ModelInstance*>* models, Camera* camera,
 		AxisAlignedBox* sceneBounds);
+
+	struct CB_POINTLIGHT_ALPHACUTOUT_PROPERTIES
+	{
+		float AlphaThreshold;
+		XMFLOAT3 Padding;
+	};
 
 	struct CB_POINTLIGHT_DEPTH_PROPERTIES
 	{
