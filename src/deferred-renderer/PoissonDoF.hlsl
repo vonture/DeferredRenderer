@@ -60,13 +60,13 @@ float4 PS_DoF(PS_In_Quad input) : SV_TARGET0
 	if (fCenterBlur > 0.0f)
 	{
 		// Compute CoC size based on blurriness
-		float fSizeCoC = fCenterBlur * CircleOfConfusionScale * InvSceneResolution;
+		float2 fSizeCoC = (fCenterBlur * CircleOfConfusionScale) * InvSceneResolution;
 
 		// Run through all filter taps
 		for (int i = 0; i < DOF_SAMPLE_COUNT; i++)
 		{
 			// Compute sample coordinates
-			float2 vTapCoord = input.vTexCoord + (SampleDirections[i] * fSizeCoC);
+			float2 vTapCoord = input.vTexCoord + (SampleDirections[i].xy * fSizeCoC);
 
 			// Fetch filter tap sample
 			float4 vTapColor = SceneTexture.SampleLevel(PointSampler, vTapCoord, 0);
