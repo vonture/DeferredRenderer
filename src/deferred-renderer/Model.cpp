@@ -1,7 +1,6 @@
 #include "PCH.h"
 #include "Model.h"
 #include "SDKmesh.h"
-#include "SDKmisc.h"
 
 #include "assimp.hpp"      // C++ importer interface
 #include "aiScene.h"       // Output data structure
@@ -52,17 +51,14 @@ HRESULT Model::CreateFromFile(ID3D11Device* device, LPCWSTR fileName)
 {
 	HRESULT hr;	
 	
-	WCHAR resolvedPath[MAX_PATH];
-	V_RETURN(DXUTFindDXSDKMediaFileCch(resolvedPath, MAX_PATH, fileName));
-
 	WCHAR directory[MAX_PATH];
-	if (!GetDirectoryFromFileNameW(resolvedPath, directory, MAX_PATH))
+	if (!GetDirectoryFromFileNameW(fileName, directory, MAX_PATH))
 	{
 		return E_FAIL;
 	}
 
 	WCHAR extensionW[MAX_PATH];
-	if (!GetExtensionFromFileNameW(resolvedPath, extensionW, MAX_PATH))
+	if (!GetExtensionFromFileNameW(fileName, extensionW, MAX_PATH))
 	{
 		return E_FAIL;
 	}
@@ -83,7 +79,7 @@ HRESULT Model::CreateFromFile(ID3D11Device* device, LPCWSTR fileName)
 
 		// Get the ansi path
 		char pathA[MAX_PATH];
-		if (!WStringToAnsi(resolvedPath, pathA, MAX_PATH))
+		if (!WStringToAnsi(fileName, pathA, MAX_PATH))
 		{
 			return E_FAIL;
 		}
@@ -128,7 +124,7 @@ HRESULT Model::CreateFromFile(ID3D11Device* device, LPCWSTR fileName)
 	{
 		// load with sdkmesh
 		SDKMesh sdkMesh;
-		V_RETURN(sdkMesh.Create(resolvedPath));
+		V_RETURN(sdkMesh.Create(fileName));
 
 		// Make materials
 		_materialCount = sdkMesh.GetNumMaterials();

@@ -77,8 +77,6 @@ using namespace std;
 #include <sstream>
 #include <fstream>
 
-#include "SDKmisc.h"
-
 // Some utility functions
 #include "Utility.h"
 
