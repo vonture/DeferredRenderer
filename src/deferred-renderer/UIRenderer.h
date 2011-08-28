@@ -10,6 +10,7 @@
 class UIRenderer : public Gwen::Renderer::Base, public IHasContent
 {
 private:
+	ContentManager* _contentManager;
 	ID3D11Device* _graphicsDevice;
 	ID3D11DeviceContext* _immediateContext;
 

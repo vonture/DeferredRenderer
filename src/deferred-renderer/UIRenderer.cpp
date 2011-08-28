@@ -4,6 +4,7 @@
 #include "Gwen/Utility.h"
 #include "Gwen/Font.h"
 #include "Gwen/Texture.h"
+#include "TextureLoader.h"
 
 UIRenderer::UIRenderer()
 	: _uiFont(NULL), _graphicsDevice(NULL), _immediateContext(NULL), _swapChain(NULL)
@@ -137,19 +138,19 @@ void UIRenderer::DrawTexturedRect(Gwen::Texture* pTexture, Gwen::Rect pTargetRec
 void UIRenderer::LoadTexture(Gwen::Texture* pTexture)
 {
 	HRESULT hr;
-	WCHAR str[MAX_PATH];
-    V(DXUTFindDXSDKMediaFileCch(str, MAX_PATH, pTexture->name.GetUnicode().c_str()));	
-	
-	ID3D11ShaderResourceView* srv;
-	V(D3DX11CreateShaderResourceViewFromFile(_graphicsDevice, str, NULL, NULL, &srv, NULL));
 
-	D3DX11_IMAGE_INFO info;
-	V(D3DX11GetImageInfoFromFile(str, NULL, &info, NULL));
+	TextureContent* pContent;
+	V(_contentManager->LoadContent(_graphicsDevice, pTexture->name.GetUnicode().c_str(), 
+		(TextureOptions*)NULL, &pContent));
 
-	pTexture->data = srv;
+	pContent->ShaderResourceView->AddRef();
+
+	pTexture->data = pContent->ShaderResourceView;
 	pTexture->failed = false;
-	pTexture->width = info.Width;
-	pTexture->height = info.Height;
+	pTexture->width = pContent->Info.Width;
+	pTexture->height = pContent->Info.Height;
+
+	SAFE_RELEASE(pContent);
 }
 
 void UIRenderer::FreeTexture(Gwen::Texture* pTexture)
@@ -163,7 +164,7 @@ HRESULT UIRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager
 	HRESULT hr;
 
 	_graphicsDevice = pd3dDevice;
-
+	_contentManager = pContentManager;
 	_backBufferSurfaceDesc = *pBackBufferSurfaceDesc;
 
 	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"UI\\consolas_14_font.xml", (FontOptions*)NULL, &_uiFont));
