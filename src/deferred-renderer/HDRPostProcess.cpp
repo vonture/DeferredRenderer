@@ -2,6 +2,8 @@
 #include "HDRPostProcess.h"
 #include "DDSTextureLoader.h"
 #include "Logger.h"
+#include "PixelShaderLoader.h"
+#include "TextureLoader.h"
 
 HDRPostProcess::HDRPostProcess()
 	: _timeDelta(0.0f), _lumMapSize(0), _mipLevels(0), _luminanceMapPS(NULL), _toneMapPS(NULL), 
@@ -64,6 +66,7 @@ HRESULT HDRPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	hdrProperties->BloomMagnitude = _bloomMagnitude;
 	hdrProperties->BloomBlurSigma = _bloomBlurSigma;
 	hdrProperties->GaussianNumerator = 1.0f / sqrt(2.0f * Pi * _bloomBlurSigma * _bloomBlurSigma);
+	hdrProperties->InverseSceneSize = _invSceneSize;
 
 	pd3dImmediateContext->Unmap(_hdrPropertiesBuffer, 0);
 
@@ -253,37 +256,77 @@ HRESULT HDRPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMan
 	V_RETURN(PostProcess::OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 	
 	// Load the shaders
-	ID3DBlob* pBlob = NULL;
+	PixelShaderContent* psContent = NULL;
+	char entryPoint[256];
+	char debugName[512];	
 
-	V_RETURN( CompileShaderFromFile( L"HDR.hlsl", "PS_LuminanceMap", "ps_4_0", NULL, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_luminanceMapPS));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_luminanceMapPS, "HDR Luminance Map PS");
+	PixelShaderOptions psOpts = 
+	{
+		entryPoint, // const char* EntryPoint;
+		NULL, // D3D_SHADER_MACRO* Defines;
+		debugName // const char* DebugName;
+	};
 
-	V_RETURN( CompileShaderFromFile( L"HDR.hlsl", "PS_ToneMap", "ps_4_0", NULL, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_toneMapPS));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_toneMapPS, "HDR Tone Map PS");
+	// Lumiance map
+	sprintf_s(entryPoint, "PS_LuminanceMap");
+	sprintf_s(debugName, "HDR Luminance Map");
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"HDR.hlsl", &psOpts, &psContent));
+	
+	_luminanceMapPS = psContent->PixelShader;
+	_luminanceMapPS->AddRef();
 
-	V_RETURN( CompileShaderFromFile( L"HDR.hlsl", "PS_Scale", "ps_4_0", NULL, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_scalePS));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_scalePS, "HDR Scale PS");
+	SAFE_RELEASE(psContent);
 
-	V_RETURN( CompileShaderFromFile( L"HDR.hlsl", "PS_Threshold", "ps_4_0", NULL, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_thresholdPS));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_thresholdPS, "HDR Threshold PS");
 
-	V_RETURN( CompileShaderFromFile( L"HDR.hlsl", "PS_BlurHorizontal", "ps_4_0", NULL, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_hBlurPS));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_hBlurPS, "HDR Horizontal Blur PS");
+	// Tone map
+	sprintf_s(entryPoint, "PS_ToneMap");
+	sprintf_s(debugName, "HDR Tone Map");
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"HDR.hlsl", &psOpts, &psContent));
+	
+	_toneMapPS = psContent->PixelShader;
+	_toneMapPS->AddRef();
 
-	V_RETURN( CompileShaderFromFile( L"HDR.hlsl", "PS_BlurVertical", "ps_4_0", NULL, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_vBlurPS));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_vBlurPS, "HDR Vertical Blur PS");
+	SAFE_RELEASE(psContent);
+
+	// Scale
+	sprintf_s(entryPoint, "PS_Scale");
+	sprintf_s(debugName, "HDR Scale");
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"HDR.hlsl", &psOpts, &psContent));
+	
+	_scalePS = psContent->PixelShader;
+	_scalePS->AddRef();
+
+	SAFE_RELEASE(psContent);
+
+	// Threshold
+	sprintf_s(entryPoint, "PS_Threshold");
+	sprintf_s(debugName, "HDR Threshold");
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"HDR.hlsl", &psOpts, &psContent));
+	
+	_thresholdPS = psContent->PixelShader;
+	_thresholdPS->AddRef();
+
+	SAFE_RELEASE(psContent);
+
+	// HBlur
+	sprintf_s(entryPoint, "PS_BlurHorizontal");
+	sprintf_s(debugName, "HDR Horizontal Blur");
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"HDR.hlsl", &psOpts, &psContent));
+	
+	_hBlurPS = psContent->PixelShader;
+	_hBlurPS->AddRef();
+
+	SAFE_RELEASE(psContent);
+
+	// VBlur
+	sprintf_s(entryPoint, "PS_BlurVertical");
+	sprintf_s(debugName, "HDR Vertical Blur");
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"HDR.hlsl", &psOpts, &psContent));
+	
+	_vBlurPS = psContent->PixelShader;
+	_vBlurPS->AddRef();
+
+	SAFE_RELEASE(psContent);
 
 	// Create the buffer
 	D3D11_BUFFER_DESC bufferDesc =
@@ -300,11 +343,24 @@ HRESULT HDRPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMan
 	SET_DEBUG_NAME(_hdrPropertiesBuffer, "HDR Properties Buffer");
 
 	// Load the color grading texture
-	WCHAR str[MAX_PATH];
-    V_RETURN(DXUTFindDXSDKMediaFileCch(str, MAX_PATH, L"ColorGrades\\color_grade_default.dds"));	
-	V_RETURN(CreateDDSTexture3DFromFile(pd3dDevice, str, &_colorGradeSRV));
-	SET_DEBUG_NAME(_colorGradeSRV, "HDR Color Grade SRV");
-	
+	TextureContent* texContent = NULL;
+	TextureOptions texOptions = 
+	{
+		true, // bool Generate3DFrom2D;
+		debugName // const char* DebugName;
+	};
+
+	sprintf_s(debugName, "HDR Color Grade");
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"ColorGrades\\color_grade_default.dds", &texOptions, &texContent));
+
+	_colorGradeSRV = texContent->ShaderResourceView;
+	_colorGradeSRV->AddRef();
+
+	SAFE_RELEASE(texContent);
+
+	_invSceneSize.x = 1.0f / pBackBufferSurfaceDesc->Width;
+	_invSceneSize.y = 1.0f / pBackBufferSurfaceDesc->Height;
+
 	return S_OK;
 }
 
@@ -468,6 +524,9 @@ HRESULT HDRPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Conten
 	SET_DEBUG_NAME(_downScaleSRVs[1], "HDR 1/4 Downsample SRV");
 	SET_DEBUG_NAME(_downScaleSRVs[2], "HDR 1/8 Downsample SRV");
 	SET_DEBUG_NAME(_blurTempSRV, "HDR Blur Temporary SRV");
+
+	_invSceneSize.x = 1.0f / pBackBufferSurfaceDesc->Width;
+	_invSceneSize.y = 1.0f / pBackBufferSurfaceDesc->Height;
 
 	return S_OK;
 }

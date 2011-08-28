@@ -40,6 +40,8 @@ private:
 
 	ID3D11Buffer* _hdrPropertiesBuffer;
 
+	XMFLOAT2 _invSceneSize;
+
 	struct CB_HDR_PROPERTIES
 	{
 		float Tau;
@@ -51,7 +53,8 @@ private:
 		float BloomMagnitude;
 		float BloomBlurSigma;
 		float GaussianNumerator;
-		XMFLOAT3 Padding;
+		XMFLOAT2 InverseSceneSize;
+		float Padding;
 	};
 
 	void swapLuminanceBuffers();

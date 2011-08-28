@@ -1,6 +1,8 @@
 #include "PCH.h"
 #include "MLAAPostProcess.h"
 #include "Logger.h"
+#include "PixelShaderLoader.h"
+#include "TextureLoader.h"
 
 const UINT MLAAPostProcess::WEIGHT_TEXTURE_SIZES[NUM_WEIGHT_TEXTURES] = { 9, 17, 33, 65, 129 };
 const WCHAR* MLAAPostProcess::WEIGHT_TEXTURE_PATH = L"media\\MLAA\\AreaMap";
@@ -179,8 +181,9 @@ HRESULT MLAAPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 	V_RETURN(PostProcess::OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 
 	// Load the shaders
-	ID3DBlob* pBlob = NULL;
+	PixelShaderContent* psContent = NULL;
 	
+	char debugName[512];
 	D3D_SHADER_MACRO edgeDetectMacros[] = 
 	{
 		{ "EDGE_DETECT_DEPTH", "" },
@@ -189,8 +192,14 @@ HRESULT MLAAPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 		NULL,
 	};
 
+	PixelShaderOptions edgeDetectPSOpts = 
+	{
+		"PS_EdgeDetect", // const char* EntryPoint;
+		edgeDetectMacros, // D3D_SHADER_MACRO* Defines;
+		debugName // const char* DebugName;
+	};
+
 	// Load the various edge detection pixel shaders
-	char edgeDetectDebugName[MAX_PATH];
 	for (UINT i = 0; i < 2; i++)
 	{
 		for (UINT j = 0; j < 2; j++)
@@ -201,55 +210,91 @@ HRESULT MLAAPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 				edgeDetectMacros[1].Definition = j ? "1" : "0";
 				edgeDetectMacros[2].Definition = k ? "1" : "0";
 
-				V_RETURN(CompileShaderFromFile(L"MLAA.hlsl", "PS_EdgeDetect", "ps_4_0", edgeDetectMacros, &pBlob));  
-				V_RETURN(pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_edgeDetectPSs[i][j][k]));
-				SAFE_RELEASE(pBlob);
-				
-				sprintf_s(edgeDetectDebugName, "MLAA Edge Detect (%s%s%s) PS",
-					i ? " Depth " : "", j ? " Normal " : "", k ? " Luminance " : "");
-				SET_DEBUG_NAME(_edgeDetectPSs[i][j][k], edgeDetectDebugName);
+				sprintf_s(debugName, "MLAA Edge Detect (depth = %u, normal = %u, luminance = %u)", i, j, k);
+
+				V_RETURN(pContentManager->LoadContent(pd3dDevice, L"MLAA.hlsl", &edgeDetectPSOpts, &psContent));
+
+				_edgeDetectPSs[i][j][k] = psContent->PixelShader;
+				_edgeDetectPSs[i][j][k]->AddRef();
+
+				SAFE_RELEASE(psContent);
 			}
 		}
 	}
 
+	char distanceStr[16];
 	D3D_SHADER_MACRO blendWeightMacros[] = 
 	{
-		{ "MAX_DISTANCE", "" },
+		{ "MAX_DISTANCE", distanceStr },
 		NULL,
 	};
 
-	char distanceStr[16];
+	PixelShaderOptions edgeWeightPSOpts = 
+	{
+		"PS_BlendWeight", // const char* EntryPoint;
+		blendWeightMacros, // D3D_SHADER_MACRO* Defines;
+		debugName // const char* DebugName;
+	};
+
+	TextureContent* texContent = NULL;
+	TextureOptions texOptions = 
+	{
+		false, // bool Generate3DFrom2D;
+		debugName // const char* DebugName;
+	};
+	
 	WCHAR texturePath[MAX_PATH];
-	char blendWeightDebugName[MAX_PATH];
 	for (UINT i = 0; i < NUM_WEIGHT_TEXTURES; i++)
 	{
+		// Edge weight shader
 		sprintf_s(distanceStr, "%i", WEIGHT_TEXTURE_SIZES[i]);
-		blendWeightMacros[0].Definition = distanceStr;
+		sprintf_s(debugName, "MLAA Blend Weight (MAX_DISTANCE = %i)", WEIGHT_TEXTURE_SIZES[i]);
 
-		V_RETURN(CompileShaderFromFile(L"MLAA.hlsl", "PS_BlendWeight", "ps_4_0", blendWeightMacros, &pBlob));   
-		V_RETURN(pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_blendWeightPSs[i]));
-		SAFE_RELEASE(pBlob);
-				
-		sprintf_s(blendWeightDebugName, "MLAA Blend Weight (MAX_DISTANCE = %i) PS", WEIGHT_TEXTURE_SIZES[i]);
-		SET_DEBUG_NAME(_blendWeightPSs[i], blendWeightDebugName);
+		V_RETURN(pContentManager->LoadContent(pd3dDevice, L"MLAA.hlsl", &edgeWeightPSOpts, &psContent));
 
+		_blendWeightPSs[i] = psContent->PixelShader;
+		_blendWeightPSs[i]->AddRef();
+
+		SAFE_RELEASE(psContent);
+
+		// Edge weight texture
+		sprintf_s(debugName, "MLAA Blend Weight (Size = %i)", WEIGHT_TEXTURE_SIZES[i]);
 		swprintf_s(texturePath, L"%s%i.dds", WEIGHT_TEXTURE_PATH, WEIGHT_TEXTURE_SIZES[i]);
-		V_RETURN(DXUTFindDXSDKMediaFileCch(texturePath, MAX_PATH, texturePath));
-		V_RETURN(D3DX11CreateShaderResourceViewFromFile(pd3dDevice, texturePath, NULL, NULL, &_weightSRVs[i], NULL));
 
-		sprintf_s(blendWeightDebugName, "MLAA Blend Weight (Size = %i) SRV", WEIGHT_TEXTURE_SIZES[i]);
-		SET_DEBUG_NAME(_weightSRVs[i], blendWeightDebugName);
+		V_RETURN(pContentManager->LoadContent(pd3dDevice, texturePath, &texOptions, &texContent));
+
+		_weightSRVs[i] = texContent->ShaderResourceView;
+		_weightSRVs[i]->AddRef();
+
+		SAFE_RELEASE(texContent);
 	}
 
-	V_RETURN(CompileShaderFromFile(L"MLAA.hlsl", "PS_CopyBackground", "ps_4_0", NULL, &pBlob));   
-    V_RETURN(pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_copyBackgroundPS));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_copyBackgroundPS, "MLAA Copy Background PS");
-	
-	V_RETURN(CompileShaderFromFile(L"MLAA.hlsl", "PS_NeighborhoodBlend", "ps_4_0", NULL, &pBlob));   
-    V_RETURN(pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_neighborhoodBlendPS));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_neighborhoodBlendPS, "MLAA Neighborhood Blend PS");
+	PixelShaderOptions finalPassPSOpts = 
+	{
+		"", // const char* EntryPoint;
+		NULL, // D3D_SHADER_MACRO* Defines;
+		debugName // const char* DebugName;
+	};
+
+	// Copy shader
+	finalPassPSOpts.EntryPoint = "PS_CopyBackground";
+	sprintf_s(debugName, "MLAA Copy Background PS");
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"MLAA.hlsl", &finalPassPSOpts, &psContent));
+
+	_copyBackgroundPS = psContent->PixelShader;
+	_copyBackgroundPS->AddRef();
+
+	SAFE_RELEASE(psContent);
+
+	// Neighborhood blend
+	finalPassPSOpts.EntryPoint = "PS_NeighborhoodBlend";
+	sprintf_s(debugName, "MLAA Neighborhood Blend PS");
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"MLAA.hlsl", &finalPassPSOpts, &psContent));
+
+	_neighborhoodBlendPS = psContent->PixelShader;
+	_neighborhoodBlendPS->AddRef();
+
+	SAFE_RELEASE(psContent);
 
 	// create the buffer
 	D3D11_BUFFER_DESC bufferDesc =

@@ -28,7 +28,7 @@ private:
 	ID3D11RenderTargetView* _blurTempRTV;
 	ID3D11ShaderResourceView* _blurTempSRV;
 
-	static const int RANDOM_TEXTURE_SIZE = 32;	
+	static const UINT RANDOM_TEXTURE_SIZE = 32;	
 	ID3D11Texture2D* _randomTexture;
 	ID3D11ShaderResourceView* _randomSRV;
 

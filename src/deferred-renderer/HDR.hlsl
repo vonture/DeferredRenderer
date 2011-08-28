@@ -15,7 +15,8 @@ cbuffer cbHDRProperties : register(b0)
 	float BloomMagnitude;
     float BloomBlurSigma;
 	float GaussianNumerator;
-	float3 Padding;
+	float2 InverseSceneSize;
+	float Padding;
 }
 
 Texture2D Texture0 : register(t0);
@@ -116,11 +117,14 @@ float CalcGaussianWeight(int sampleDist, float sigma)
 // Performs a gaussian blur in one direction
 float4 Blur(float2 texCoord, int2 direction, float sigma)
 {
+	// Bluring happens at 1/8 scene size
+	float2 step = (InverseSceneSize / 8.0f) * direction;
+	
     float4 color = 0;
     for (int i = -BLUR_RADIUS; i < BLUR_RADIUS; i++)
     {
 		float weight = CalcGaussianWeight(i, sigma);
-		float4 sample = Texture0.SampleLevel(PointSampler, texCoord, 0, direction * i);
+		float4 sample = Texture0.SampleLevel(PointSampler, texCoord + (i * step), 0);
 		color += sample * weight;
     }
 

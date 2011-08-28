@@ -1,6 +1,7 @@
 #include "PCH.h"
 #include "SSAOPostProcess.h"
 #include "Logger.h"
+#include "PixelShaderLoader.h"
 
 const UINT SSAOPostProcess::SSAO_SAMPLE_COUNTS[NUM_SSAO_SAMPLE_COUNTS] = 
 {
@@ -178,33 +179,42 @@ HRESULT SSAOPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 
 	V_RETURN(PostProcess::OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 
-	// Load the shaders
-	ID3DBlob* pBlob = NULL;
-	
+	PixelShaderContent* psContent = NULL;	
+
+	char debugName[512];
 	D3D_SHADER_MACRO sampleCountMacros[] = 
 	{
 		{ "SSAO_SAMPLE_COUNT", "" },
 		{ "RAND_TEX_SIZE", "" },
 		NULL,
 	};
+
+	// Load the shaders
+	PixelShaderOptions aoPSOpts = 
+	{
+		"PS_SSAO", // const char* EntryPoint;
+		sampleCountMacros, // D3D_SHADER_MACRO* Defines;
+		debugName // const char* DebugName;
+	};
 	
 	char randTexSizeString[6];
-	sprintf_s(randTexSizeString, "%i", RANDOM_TEXTURE_SIZE);
+	sprintf_s(randTexSizeString, "%u", RANDOM_TEXTURE_SIZE);
 	sampleCountMacros[1].Definition = randTexSizeString;
-
+	
 	char sampleCountString[6];
-	char aoPSDebugName[256];
 	for (UINT i = 0; i < NUM_SSAO_SAMPLE_COUNTS; i++)
 	{
 		sprintf_s(sampleCountString, "%i", SSAO_SAMPLE_COUNTS[i]);
 		sampleCountMacros[0].Definition = sampleCountString;
 
-		V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_SSAO", "ps_4_0", sampleCountMacros, &pBlob ) );   
-		V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_aoPSs[i]));
-		SAFE_RELEASE(pBlob);
+		sprintf_s(debugName, "SSAO AO (sample count = %s) PS", sampleCountString);
 
-		sprintf_s(aoPSDebugName, "SSAO AO (sample count = %s) PS", sampleCountString);
-		SET_DEBUG_NAME(_aoPSs[i], aoPSDebugName);
+		V_RETURN(pContentManager->LoadContent(pd3dDevice, L"SSAO.hlsl", &aoPSOpts, &psContent));
+		
+		_aoPSs[i] = psContent->PixelShader;
+		_aoPSs[i]->AddRef();
+
+		SAFE_RELEASE(psContent);
 	}
 
 	D3D_SHADER_MACRO resMacros[] = 
@@ -213,39 +223,45 @@ HRESULT SSAOPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 		NULL,
 	};
 
-	// full res shaders
-	resMacros[0].Definition = "0";
-	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_BlurHorizontal", "ps_4_0", resMacros, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_hBlurPS[0]));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_hBlurPS[0], "SSAO horizontal blur (full resolution) PS");
+	// Load the shaders
+	PixelShaderOptions otherPSOpts = 
+	{
+		"", // const char* EntryPoint;
+		resMacros, // D3D_SHADER_MACRO* Defines;
+		debugName // const char* DebugName;
+	};
+	
+	for (UINT i = 0; i < 2; i++)
+	{
+		resMacros[0].Definition = (i == 0) ? "0" : "1";
 
-	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_BlurVertical", "ps_4_0", resMacros, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_vBlurPS[0]));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_vBlurPS[0], "SSAO vertical blur (full resolution) PS");
+		// hblur
+		sprintf_s(debugName, "SSAO horizontal blur (half resolution = %u)", i);
+		otherPSOpts.EntryPoint = "PS_BlurHorizontal";
+		V_RETURN(pContentManager->LoadContent(pd3dDevice, L"SSAO.hlsl", &otherPSOpts, &psContent));
 
-	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_SSAO_Composite", "ps_4_0", resMacros, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_compositePS[0]));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_compositePS[0], "SSAO composite (full resolution) PS");
+		_hBlurPS[i] = psContent->PixelShader;
+		_hBlurPS[i]->AddRef();
+		SAFE_RELEASE(psContent);
 
-	// half res shaders
-	resMacros[0].Definition = "1";
-	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_BlurHorizontal", "ps_4_0", resMacros, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_hBlurPS[1]));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_hBlurPS[1], "SSAO horizontal blur (half resolution) PS");
+		// vblur
+		sprintf_s(debugName, "SSAO vertical blur (half resolution = %u)", i);
+		otherPSOpts.EntryPoint = "PS_BlurVertical";
+		V_RETURN(pContentManager->LoadContent(pd3dDevice, L"SSAO.hlsl", &otherPSOpts, &psContent));
 
-	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_BlurVertical", "ps_4_0", resMacros, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_vBlurPS[1]));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_vBlurPS[1], "SSAO vertical blur (half resolution) PS");
+		_vBlurPS[i] = psContent->PixelShader;
+		_vBlurPS[i]->AddRef();
+		SAFE_RELEASE(psContent);
 
-	V_RETURN( CompileShaderFromFile( L"SSAO.hlsl", "PS_SSAO_Composite", "ps_4_0", resMacros, &pBlob ) );   
-    V_RETURN( pd3dDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &_compositePS[1]));
-	SAFE_RELEASE(pBlob);
-	SET_DEBUG_NAME(_compositePS[1], "SSAO composite (half resolution) PS");
+		// composite
+		sprintf_s(debugName, "SSAO composite  (half resolution = %u)", i);
+		otherPSOpts.EntryPoint = "PS_SSAO_Composite";
+		V_RETURN(pContentManager->LoadContent(pd3dDevice, L"SSAO.hlsl", &otherPSOpts, &psContent));
+
+		_compositePS[i] = psContent->PixelShader;
+		_compositePS[i]->AddRef();
+		SAFE_RELEASE(psContent);
+	}
 
 	// Create the buffers
 	D3D11_BUFFER_DESC bufferDesc =

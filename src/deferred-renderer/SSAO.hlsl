@@ -108,7 +108,7 @@ float4 PS_SSAO(PS_In_Quad input) : SV_TARGET0
 		float fRaySampleDist = fRayLinearDepth - fSampleLinearDepth;
 		if (fRaySampleDist < SampleRadius && fRaySampleDist > 0.0f && fSampleDepth < 1.0f)
 		{
-			fOcclusion = pow(fRaySampleDist / SampleRadius, SamplePower);
+			fOcclusion = pow(abs(fRaySampleDist / SampleRadius), SamplePower);
 		}
 
 		fAOSum += fOcclusion;
@@ -121,7 +121,7 @@ float4 PS_SSAO(PS_In_Quad input) : SV_TARGET0
 
 float4 PS_SSAO_Composite(PS_In_Quad input) : SV_TARGET0
 {
-	float3 vSceneColor = Texture0.SampleLevel(PointSampler, input.vTexCoord, 0);
+	float3 vSceneColor = Texture0.SampleLevel(PointSampler, input.vTexCoord, 0).rgb;
 	
 #if SSAO_HALF_RES
 	float fAO = Texture1.SampleLevel(LinearSampler, input.vTexCoord * 0.5f, 0).x;
