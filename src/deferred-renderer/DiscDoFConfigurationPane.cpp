@@ -3,7 +3,7 @@
 
 DiscDoFConfigurationPane::DiscDoFConfigurationPane(Gwen::Controls::Base* parent, 
 	DiscDoFPostProcess* pp)
-	: ConfigurationPane(parent, L"Poisson DoF", pp)
+	: ConfigurationPane(parent, L"Disc DoF", pp)
 {
 	_focalDistSlider = new SliderWithLabel(this);
 	_focalDistSlider->Slider()->SetRange(0.0f, 100.0f);
