@@ -16,6 +16,10 @@ OrthographicCamera::OrthographicCamera(float nearClip, float farClip, float minX
 	UpdateProjection();
 }
 
+OrthographicCamera::~OrthographicCamera()
+{
+}
+
 void OrthographicCamera::BuildProjection(XMMATRIX* outProj, float nearClip, float farClip)
 {
 	*outProj = XMMatrixOrthographicOffCenterLH(_xMin, _xMax, _yMin, _yMax, nearClip, farClip);

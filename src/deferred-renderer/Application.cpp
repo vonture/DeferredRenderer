@@ -10,6 +10,10 @@ Application::Application(const WCHAR* title, const WCHAR* icon)
 {
 }
 
+Application::~Application()
+{
+}
+
 LRESULT Application::OnMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	HRESULT hr;

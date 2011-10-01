@@ -5,8 +5,10 @@
 
 class DeferredBuffer : public IHasContent
 {
-
 public:
+	DeferredBuffer() { }
+	virtual ~DeferredBuffer() { }
+
 	virtual ID3D11ShaderResourceView* GetShaderResourceView(int idx) = 0;
 	virtual ID3D11ShaderResourceView*const* GetShaderResourceViews() = 0;	
 	virtual int GetShaderResourceCount() = 0;

@@ -17,6 +17,7 @@ protected:
 public:
 	OrthographicCamera();
 	OrthographicCamera(float nearClip, float farClip, float minX, float minY, float maxX, float maxY);
+	virtual ~OrthographicCamera();
 
 	float GetMinX() const;
     void SetMinX(float minX);

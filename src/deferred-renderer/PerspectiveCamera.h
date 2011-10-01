@@ -15,6 +15,7 @@ protected:
 public:
 	PerspectiveCamera();
 	PerspectiveCamera(float nearClip, float farClip, float fov, float aspect);
+	virtual ~PerspectiveCamera();
 
 	float GetFieldOfView();
 	void SetFieldOfView(float fov);

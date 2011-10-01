@@ -29,6 +29,7 @@ protected:
 
 public:
 	PostProcess() : _isAdditive(false) { }
+	virtual ~PostProcess() { }
 
 	bool GetIsAdditive() const { return _isAdditive; }
 

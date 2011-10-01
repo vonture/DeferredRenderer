@@ -12,6 +12,7 @@ private:
 public:
 	TestingCamera();
 	TestingCamera(float nearClip, float farClip, float fov, float aspect);
+	virtual ~TestingCamera();
 
 	float GetMovementSpeed() const;
 	void SetMovementSpeed(float speed);

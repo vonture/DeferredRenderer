@@ -23,6 +23,7 @@ protected:
 public:
 	Camera();
 	Camera(float nearClip, float farClip);
+	virtual ~Camera();
 
 	virtual void BuildProjection(XMMATRIX* outProj, float nearClip, float farClip) = 0;
 

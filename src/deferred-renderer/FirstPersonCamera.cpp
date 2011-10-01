@@ -8,6 +8,10 @@ FirstPersonCamera::FirstPersonCamera()
 	UpdateProjection();
 }
 
+FirstPersonCamera::~FirstPersonCamera()
+{
+}
+
 FirstPersonCamera::FirstPersonCamera(float nearClip, float farClip, float fov, float aspect)
 	: PerspectiveCamera(nearClip, farClip, fov, aspect)
 {

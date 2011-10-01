@@ -7,6 +7,10 @@ Quad::Quad()
 {
 }
 
+Quad::~Quad() 
+{
+}
+
 HRESULT Quad::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11PixelShader* pixelShader)
 {
     UINT strides = sizeof(QUAD_VERTEX);

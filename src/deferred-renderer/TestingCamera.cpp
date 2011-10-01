@@ -15,6 +15,10 @@ TestingCamera::TestingCamera(float nearClip, float farClip, float fov, float asp
 	SetRotationSpeed(0.002f);
 }
 
+TestingCamera::~TestingCamera()
+{
+}
+
 float TestingCamera::GetMovementSpeed() const 
 { 
 	return _moveSpeed;

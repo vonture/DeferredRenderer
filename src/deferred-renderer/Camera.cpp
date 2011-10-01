@@ -17,6 +17,10 @@ Camera::Camera(float nearClip, float farClip)
 	worldMatrixChanged();
 }
 
+Camera::~Camera()
+{
+}
+
 void Camera::worldMatrixChanged()
 {	
 	XMMATRIX world = XMLoadFloat4x4(&_world);

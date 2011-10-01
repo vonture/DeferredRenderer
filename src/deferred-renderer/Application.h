@@ -25,7 +25,8 @@ protected:
 
 public:
 	Application(const WCHAR* title, const WCHAR* icon);
-	
+	virtual ~Application();
+
 	HRESULT Start();
 	void Exit();
 
