@@ -111,7 +111,7 @@ PS_Out_Mesh PS_Mesh(VS_Out_Mesh input)
 	float3 vNormalTS = (NormalMap.Sample(Sampler, input.vTexCoord).xyz * 2.0f) - 1.0f;
 	float3 vNormal = normalize(mul(vNormalTS, mTangentToWorld));
 #else
-	float3 vNormal = input.vNormalWS;
+	float3 vNormal = normalize(input.vNormalWS);
 #endif
 
 	float3 vEmissive = EmissiveColor;
