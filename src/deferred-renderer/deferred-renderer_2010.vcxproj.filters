@@ -121,9 +121,6 @@
     <None Include="Copy.hlsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="PoissonDoF.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="Fxaa3_11.hlsl">
       <Filter>Shaders</Filter>
     </None>
@@ -134,6 +131,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="DirectionalDepth.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="DiscDoF.hlsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
