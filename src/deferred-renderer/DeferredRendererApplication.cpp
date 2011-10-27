@@ -243,13 +243,13 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 		_renderer.AddModel(_models[i]);
 	}
 
-	PointLight pLight = 
+	/*PointLight pLight = 
 	{
 		XMFLOAT3(3.0f, 4.0f, 0.0f),	// XMFLOAT3 Position;
 		25,								// float Radius;
 		XMFLOAT3(1.0f, 1.0f, 1.0f),		// XMFLOAT3 Color;	
 	};
-	_renderer.AddLight(&pLight);
+	_renderer.AddLight(&pLight);*/
 
 	if (_ppConfigPane->IsPostProcessEnabled(&_skyPP) && _skyPP.GetSunEnabled())
 	{
@@ -259,10 +259,11 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 		DirectionalLight sun = 
 		{
 			sunDir,
-			XMFLOAT3(sunColor.x * sunIntensity, sunColor.y * sunIntensity, sunColor.z * sunIntensity)
+			XMFLOAT3(sunColor.x * sunIntensity, sunColor.y * sunIntensity,
+				sunColor.z * sunIntensity)
 		};
 		
-		//_renderer.AddLight(&sun, true);
+		_renderer.AddLight(&sun, true);
 	}
 	
 	float ambientIntesity = 1.0f;
