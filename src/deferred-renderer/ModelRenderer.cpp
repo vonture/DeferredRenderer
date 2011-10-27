@@ -23,7 +23,8 @@ ModelRenderer::ModelRenderer()
 }
 
 
-HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext, vector<ModelInstance*>* instances, Camera* camera)
+HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext,
+	vector<ModelInstance*>* instances, Camera* camera)
 {
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;	
