@@ -110,9 +110,9 @@ HRESULT DiscDoFPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, Conten
 	for (UINT i = 0; i < NUM_DOF_SAMPLE_COUNTS; i++)
 	{
 		sprintf_s(sampleCountString, "%i", Poisson::GetDistributionSize(i));
-		sprintf_s(dofPSDebugName, "Poisson DoF (sample count = %s)", sampleCountString);
+		sprintf_s(dofPSDebugName, "Disc DoF (sample count = %s)", sampleCountString);
 		
-		V_RETURN(pContentManager->LoadContent(pd3dDevice, L"PoissonDoF.hlsl", &psOpts, &psContent));
+		V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DiscDoF.hlsl", &psOpts, &psContent));
 
 		_dofPSs[i] = psContent->PixelShader;
 		_dofPSs[i]->AddRef();
@@ -144,13 +144,13 @@ HRESULT DiscDoFPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, Conten
 
 		V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, &sampleInitData, &_sampleBuffers[i]));
 
-		sprintf_s(bufferDebugName, "DoF sample buffer (samples = %u)", Poisson::GetDistributionSize(i));
+		sprintf_s(bufferDebugName, "Disc DoF sample buffer (samples = %u)", Poisson::GetDistributionSize(i));
 		SET_DEBUG_NAME(_sampleBuffers[i], bufferDebugName);
 	}
 
 	bufferDesc.ByteWidth = sizeof(CB_DOF_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_propertiesBuffer));
-	SET_DEBUG_NAME(_propertiesBuffer, "DoF Properties Buffer");
+	SET_DEBUG_NAME(_propertiesBuffer, "Disc DoF Properties Buffer");
 
 	// Store the resolution
 	_sceneWidth = pBackBufferSurfaceDesc->Width;

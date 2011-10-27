@@ -19,7 +19,11 @@ private:
 		const WCHAR* Description;
 	};
 
+#ifdef ALL_PRESETS
 	static const UINT SKY_TYPE_COUNT = 15;
+#else
+	static const UINT SKY_TYPE_COUNT = 2;
+#endif
 	static const SKY_TYPE SKY_TYPES[SKY_TYPE_COUNT];
 	UINT _skyTypeIndex;	
 

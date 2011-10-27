@@ -16,7 +16,11 @@ private:
 	UINT _sceneWidth;
 	UINT _sceneHeight;
 
-	static const UINT NUM_DOF_SAMPLE_COUNTS = 5; // Same as Poisson::DISTRIBUTION_COUNT
+#ifdef ALL_PRESETS
+	static const UINT NUM_DOF_SAMPLE_COUNTS = 5;
+#else
+	static const UINT NUM_DOF_SAMPLE_COUNTS = 3;
+#endif
 
 	ID3D11PixelShader* _dofPSs[NUM_DOF_SAMPLE_COUNTS];
 

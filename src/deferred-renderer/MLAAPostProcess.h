@@ -30,7 +30,11 @@ private:
 	ID3D11RenderTargetView* _blendWeightRTV;
 	ID3D11ShaderResourceView* _blendWeightSRV;
 
+#ifdef ALL_PRESETS
 	static const UINT NUM_WEIGHT_TEXTURES = 5;
+#else
+	static const UINT NUM_WEIGHT_TEXTURES = 2;
+#endif
 	static const UINT WEIGHT_TEXTURE_SIZES[NUM_WEIGHT_TEXTURES];
 
 	static const WCHAR* WEIGHT_TEXTURE_PATH;

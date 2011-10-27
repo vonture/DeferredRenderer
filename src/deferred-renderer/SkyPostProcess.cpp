@@ -5,6 +5,7 @@
 
 const SkyPostProcess::SKY_TYPE SkyPostProcess::SKY_TYPES[SKY_TYPE_COUNT] = 
 {
+#ifdef ALL_PRESETS
 	{  4.0f, -0.70f,  0.0f, -1.0f, 0.00f, L"CIE Standard Overcast Sky, steep luminance gradation towards zenith, azimuthal uniformity" },
 	{  4.0f, -0.70f,  2.0f, -1.5f, 0.15f, L"Overcast, with steep luminance gradation and slight brightening towards the sun" },
 	{  1.1f, -0.80f,  0.0f, -1.0f, 0.00f, L"Overcast, moderately graded with azimuthal uniformity" },
@@ -20,6 +21,10 @@ const SkyPostProcess::SKY_TYPE SkyPostProcess::SKY_TYPES[SKY_TYPE_COUNT] =
 	{ -1.0f, -0.32f, 16.0f, -3.0f, 0.30f, L"CIE Standard Clear Sky, polluted atmosphere" },
 	{ -1.0f, -0.15f, 16.0f, -3.0f, 0.30f, L"Cloudless turbid sky with broad solar corona" },
 	{ -1.0f, -0.15f, 24.0f, -2.8f, 0.15f, L"White-blue turbid sky with broad solar corona" },
+#else
+	{  4.0f, -0.70f,  0.0f, -1.0f, 0.00f, L"CIE Standard Overcast Sky, steep luminance gradation towards zenith, azimuthal uniformity" },
+	{ -1.0f, -0.32f, 10.0f, -3.0f, 0.45f, L"CIE Standard Clear Sky, low illuminance turbidity" },
+#endif
 };
 
 SkyPostProcess::SkyPostProcess()
@@ -39,7 +44,12 @@ SkyPostProcess::SkyPostProcess()
 	SetSunWidth(0.05f);
 	SetSunEnabled(true);
 	SetSunIntensity(2.5f);
+
+#ifdef ALL_PRESETS
 	SetSkyTypeIndex(11);
+#else
+	SetSkyTypeIndex(1);
+#endif
 }
 
 void SkyPostProcess::SetSunDirection(const XMFLOAT3& sunDir)

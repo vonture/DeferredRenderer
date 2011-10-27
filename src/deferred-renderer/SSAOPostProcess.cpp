@@ -5,6 +5,7 @@
 
 const UINT SSAOPostProcess::SSAO_SAMPLE_COUNTS[NUM_SSAO_SAMPLE_COUNTS] = 
 {
+#ifdef ALL_PRESETS
 	SSAO_SAMPLE_COUNT_MAX / 64,
 	SSAO_SAMPLE_COUNT_MAX / 32,
 	SSAO_SAMPLE_COUNT_MAX / 16,
@@ -12,6 +13,10 @@ const UINT SSAOPostProcess::SSAO_SAMPLE_COUNTS[NUM_SSAO_SAMPLE_COUNTS] =
 	SSAO_SAMPLE_COUNT_MAX / 4, 
 	SSAO_SAMPLE_COUNT_MAX / 2, 
 	SSAO_SAMPLE_COUNT_MAX / 1
+#else
+	SSAO_SAMPLE_COUNT_MAX / 2,
+	SSAO_SAMPLE_COUNT_MAX / 1
+#endif
 };
 
 SSAOPostProcess::SSAOPostProcess()
@@ -36,9 +41,14 @@ SSAOPostProcess::SSAOPostProcess()
 	// Initialize some parameters to default values
 	SetSampleRadius(0.4f);
 	SetBlurSigma(1.5f);
-	SetSamplePower(4.5f);
-	SetSampleCountIndex(3);
+	SetSamplePower(4.5f);	
 	SetHalfResolution(true);
+
+#ifdef ALL_PRESETS
+	SetSampleCountIndex(3);
+#else
+	SetSampleCountIndex(0);
+#endif
 }
 
 HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,

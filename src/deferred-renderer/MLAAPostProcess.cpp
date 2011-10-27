@@ -4,7 +4,14 @@
 #include "PixelShaderLoader.h"
 #include "TextureLoader.h"
 
-const UINT MLAAPostProcess::WEIGHT_TEXTURE_SIZES[NUM_WEIGHT_TEXTURES] = { 9, 17, 33, 65, 129 };
+const UINT MLAAPostProcess::WEIGHT_TEXTURE_SIZES[NUM_WEIGHT_TEXTURES] = 
+{ 
+#ifdef ALL_PRESETS
+	9, 17, 33, 65, 129
+#else
+	17, 33
+#endif
+};
 const WCHAR* MLAAPostProcess::WEIGHT_TEXTURE_PATH = L"media\\MLAA\\AreaMap";
 
 MLAAPostProcess::MLAAPostProcess()

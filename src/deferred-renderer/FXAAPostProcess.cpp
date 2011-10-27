@@ -3,11 +3,16 @@
 #include "Logger.h"
 #include "PixelShaderLoader.h"
 
+
 const UINT FXAAPostProcess::QUALITY_PRESETS[QUALITY_PRESET_COUNT] = 
 {
+#ifdef ALL_PRESETS
 	10, 11, 12, 13, 14, 15,
 	20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
 	39
+#else
+	12, 22, 39
+#endif
 };
 
 FXAAPostProcess::FXAAPostProcess()
@@ -22,7 +27,12 @@ FXAAPostProcess::FXAAPostProcess()
 	SetSubpixelAliasingRemoval(0.75f);
 	SetEdgeThreshold(0.166f);
 	SetMinimumEdgeThreshold(0.0f);
+
+#ifdef ALL_PRESETS
 	SetQualityPresetIndex(2);
+#else
+	SetQualityPresetIndex(1);
+#endif
 }
 
 HRESULT FXAAPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,

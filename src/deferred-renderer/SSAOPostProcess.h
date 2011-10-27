@@ -13,10 +13,16 @@ private:
 	UINT _sampleCountIndex;
 
 	XMFLOAT2 _invSceneSize;
-	
+
+#ifdef ALL_PRESETS
 	static const UINT NUM_SSAO_SAMPLE_COUNTS = 7;
-	static const UINT SSAO_SAMPLE_COUNTS[NUM_SSAO_SAMPLE_COUNTS];
 	static const UINT SSAO_SAMPLE_COUNT_MAX = 256;
+#else
+	static const UINT NUM_SSAO_SAMPLE_COUNTS = 2;
+	static const UINT SSAO_SAMPLE_COUNT_MAX = 64;
+#endif
+	static const UINT SSAO_SAMPLE_COUNTS[NUM_SSAO_SAMPLE_COUNTS];
+	
 	
 	XMFLOAT4 _sampleDirections[SSAO_SAMPLE_COUNT_MAX];
 

@@ -6,7 +6,12 @@
 class FXAAPostProcess : public PostProcess
 {
 private:
+
+#ifdef ALL_PRESETS
 	static const UINT QUALITY_PRESET_COUNT = 17;
+#else
+	static const UINT QUALITY_PRESET_COUNT = 3;
+#endif
 	static const UINT QUALITY_PRESETS[QUALITY_PRESET_COUNT];
 	UINT _qualityIndex;
 
