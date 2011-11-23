@@ -16,20 +16,60 @@
 DeferredRendererApplication::DeferredRendererApplication()
 	: Application(L"Deferred Renderer", NULL), _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f), 
 	  _configWindow(NULL), _logWindow(NULL), _ppConfigPane(NULL)
-{
-	ModelInstance* tankScene = new ModelInstance(L"\\models\\tankscene\\tankscene.sdkmesh");
+{	
+	
+	ModelInstance* tankScene = new ModelInstance(L"\\models\\tankscene\\TankScene.sdkmesh");
 	tankScene->SetScale(1.0f);
 	tankScene->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	_models.push_back(tankScene);
+	
+	/*
+	ModelInstance* scanner = new ModelInstance(L"\\models\\MicroscopeCity\\scanner.sdkmesh");
+	scanner->SetScale(1.0f);
+	scanner->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	_models.push_back(scanner);
 
+	ModelInstance* column = new ModelInstance(L"\\models\\MicroscopeCity\\column.sdkmesh");
+	column->SetScale(1.0f);
+	column->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	_models.push_back(column);
+
+	ModelInstance* occcity = new ModelInstance(L"\\models\\MicroscopeCity\\occcity.sdkmesh");
+	occcity->SetScale(1.0f);
+	occcity->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	_models.push_back(occcity);
+	*/
+	ModelInstance* soldier = new ModelInstance(L"\\models\\soldier\\soldier.sdkmesh");
+	soldier->SetScale(1.0f);
+	soldier->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	_models.push_back(soldier);
+
+	//ModelInstance* occluder = new ModelInstance(L"\\models\\MicroscopeCity\\occluder.sdkmesh");
+	//occluder->SetScale(1.0f);
+	//occluder->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	//_models.push_back(occluder);
+
+	/*
+	ModelInstance* sponza = new ModelInstance(L"D:\\Program Files (x86)\\NVIDIA Corporation\\NVIDIA Direct3D SDK 11\\Media\\sponza\\Sponza.obj");
+	sponza->SetScale(0.02f);
+	sponza->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	_models.push_back(sponza);
+	*/
+
+	
 	ModelInstance* tree = new ModelInstance(L"\\models\\tree\\tree.obj");
 	tree->SetScale(0.5f);
 	tree->SetPosition(XMFLOAT3(3.0f, -1.0f, -3.0f));
 	_models.push_back(tree);
 	
-	//XMFLOAT4 orientation;
-	//XMStoreFloat4(&orientation, XMQuaternionRotationRollPitchYaw(PiOver2, 0.0f, 0.0f));
-	//_scene.SetOrientation(orientation);
+	ModelInstance* troll = new ModelInstance(L"D:\\Temp\\cave_troll\\cave-troll-armor-obj.obj");
+	troll->SetScale(0.01f);	
+	troll->SetPosition(XMFLOAT3(10.0f, 0.2f, -10.0f));	
+	XMFLOAT4 orientation;
+	XMStoreFloat4(&orientation, XMQuaternionRotationRollPitchYaw(0.0f, Pi - PiOver4, 0.0f));
+	troll->SetOrientation(orientation);
+	_models.push_back(troll);
+	
 
 	_camera.SetPosition(XMFLOAT3(1.0f, 4.0f, -6.0f));
 	_camera.SetRotation(XMFLOAT2(-0.1f, 0.35f));
@@ -75,7 +115,7 @@ void DeferredRendererApplication::OnInitialize()
 	Gwen::Controls::Canvas* canvas = _uiPP.GetCanvas();
 
 	// Create the configuration window and its panes
-	_configWindow = new ConfigurationWindow(canvas);	
+	_configWindow = new ConfigurationWindow(canvas);
 
 	_ppConfigPane = new PostProcessSelectionPane(_configWindow);
 	_ppConfigPane->AddPostProcess(&_ssaoPP, L"SSAO", true, true);
@@ -83,10 +123,12 @@ void DeferredRendererApplication::OnInitialize()
 	_ppConfigPane->AddPostProcess(&_skyPP, L"Sky", true, true);
 	_ppConfigPane->AddPostProcess(&_mlaaPP, L"MLAA", false, true);	
 	_ppConfigPane->AddPostProcess(&_hdrPP, L"HDR", true, true);
-	_ppConfigPane->AddPostProcess(&_discDoFPP, L"Disc DoF", true, true);
+	_ppConfigPane->AddPostProcess(&_discDoFPP, L"Disc DoF", false, true);
 	_ppConfigPane->AddPostProcess(&_fxaaPP, L"FXAA", true, true);
 	_ppConfigPane->AddPostProcess(&_uiPP, L"UI", true, false);
 	_ppConfigPane->AddPostProcess(&_motionBlurPP, L"Motion blur", false, false);	
+
+	_modelConfigPane = new ModelConfigurationPane(_configWindow);
 
 	new ProfilePane(_configWindow, Logger::GetInstance());
 	new DeviceManagerConfigurationPane(_configWindow, GetDeviceManager());		
@@ -238,9 +280,9 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 
 	V_RETURN(_renderer.Begin());
 
-	for (UINT i = 0; i < _models.size(); i++)
+	for (UINT i = 0; i < _modelConfigPane->GetModelInstanceCount(); i++)
 	{
-		_renderer.AddModel(_models[i]);
+		_renderer.AddModel(_modelConfigPane->GetModelInstance(i));
 	}
 
 	/*PointLight pLight = 
@@ -306,6 +348,11 @@ HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 	_configWindow->SetBounds(padding, padding, configWidth, pBackBufferSurfaceDesc->Height - (padding * 2));
 	_logWindow->SetBounds(_configWindow->Right() + padding, pBackBufferSurfaceDesc->Height - logHeight - padding, 
 		pBackBufferSurfaceDesc->Width - _configWindow->Right() - (padding * 2), logHeight);
+
+	for (UINT i = 0; i < _models.size(); i++)
+	{
+		_modelConfigPane->AddModelInstance(_models[i]);
+	}
 
 	return S_OK;
 }

@@ -155,6 +155,7 @@
     <ClCompile Include="LightRendererBase.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="LogWindow.cpp" />
+    <ClCompile Include="ModelConfigurationPane.cpp" />
     <ClCompile Include="ModelLoader.cpp" />
     <ClCompile Include="MotionBlurConfigurationPane.cpp" />
     <ClCompile Include="PCH.cpp">
@@ -237,6 +238,7 @@
     <ClInclude Include="LightRendererBase.h" />
     <ClInclude Include="LogWindow.h" />
     <ClInclude Include="Logger.h" />
+    <ClInclude Include="ModelConfigurationPane.h" />
     <ClInclude Include="ModelLoader.h" />
     <ClInclude Include="MotionBlurConfigurationPane.h" />
     <ClInclude Include="PixelShaderLoader.h" />

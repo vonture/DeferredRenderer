@@ -30,6 +30,7 @@
 
 #include "ConfigurationWindow.h"
 #include "PostProcessSelectionPane.h"
+#include "ModelConfigurationPane.h"
 #include "LogWindow.h"
 
 class DeferredRendererApplication : public Application
@@ -64,6 +65,7 @@ private:
 
 	ConfigurationWindow* _configWindow;
 	PostProcessSelectionPane* _ppConfigPane;
+	ModelConfigurationPane* _modelConfigPane;
 
 	LogWindow* _logWindow;
 

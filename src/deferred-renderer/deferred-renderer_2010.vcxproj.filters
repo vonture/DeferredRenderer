@@ -357,6 +357,9 @@
     <ClCompile Include="FontLoader.cpp">
       <Filter>Content</Filter>
     </ClCompile>
+    <ClCompile Include="ModelConfigurationPane.cpp">
+      <Filter>Models</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -616,6 +619,9 @@
     </ClInclude>
     <ClInclude Include="ComponentSystem.h">
       <Filter>Entities\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelConfigurationPane.h">
+      <Filter>Models</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
