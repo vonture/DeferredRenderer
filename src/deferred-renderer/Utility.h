@@ -5,7 +5,7 @@ const float PiOver2 = Pi / 2.0f;
 const float PiOver4 = Pi / 4.0f;
 const float PiOver8 = Pi / 8.0f;
 
-#define EPSILON 0.00001f
+#define EPSILON 0.00002f
 
 #ifndef clamp
 #define clamp(val, min, max) (((val) < (min)) ? (min) : (((val) > (max)) ? (max) : (val)))
@@ -72,6 +72,32 @@ inline int GetExtensionFromFileNameW(const WCHAR* fileName, WCHAR* output, UINT 
 	{
 		return 0;
 	}
+}
+
+inline int GetFileNameWithoutExtension(const WCHAR* fileName, WCHAR* output, UINT outputLength)
+{
+	_ASSERT(fileName);
+
+	std::wstring str = std::wstring(fileName);
+	
+	UINT dotIdx = str.find_last_of(L".");
+	if (dotIdx == std::wstring::npos)
+	{
+		dotIdx = str.size();
+	}
+
+	size_t pathIdx = str.find_last_of(L'\\');
+	if (pathIdx == std::wstring::npos)
+	{
+		pathIdx = 0;
+	}
+	else
+	{
+		pathIdx++;
+	}
+
+	wcsncpy_s(output, outputLength, str.substr(pathIdx, dotIdx - pathIdx).c_str(), outputLength);
+	return 1;
 }
 
 inline int GetDirectoryFromFileNameW(const WCHAR* fileName, WCHAR* output, UINT outputLength)
