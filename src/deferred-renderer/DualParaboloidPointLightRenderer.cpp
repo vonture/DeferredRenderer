@@ -26,8 +26,8 @@ DualParaboloidPointLightRenderer::DualParaboloidPointLightRenderer()
 	}
 }
 
-HRESULT DualParaboloidPointLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*>* models,
-	Camera* camera, AxisAlignedBox* sceneBounds)
+HRESULT DualParaboloidPointLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, 
+	std::vector<ModelInstance*>* models, Camera* camera, AxisAlignedBox* sceneBounds)
 {
 	if (GetCount(true) > 0)
 	{
@@ -677,12 +677,14 @@ void DualParaboloidPointLightRenderer::OnD3D11DestroyDevice()
 		SAFE_RELEASE(_depthVS[i])
 		SAFE_RELEASE(_depthInput[i]);
 	}
-	SAFE_RELEASE(_alphaCutoutPropertiesBuffer);
+	SAFE_RELEASE(_depthPS);
 	SAFE_RELEASE(_depthPropertiesBuffer);
-
+	SAFE_RELEASE(_alphaCutoutPropertiesBuffer);
+	
 	SAFE_RELEASE(_vertexShader);
 	SAFE_RELEASE(_unshadowedPS);
 	SAFE_RELEASE(_shadowedPS);
+
 	SAFE_RELEASE(_modelPropertiesBuffer);
 	SAFE_RELEASE(_lightPropertiesBuffer);
 	SAFE_RELEASE(_cameraPropertiesBuffer);
