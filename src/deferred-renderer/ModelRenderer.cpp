@@ -126,16 +126,15 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext,
 				pd3dDeviceContext->PSSetConstantBuffers(0, 1, &buf);
 
 				ID3D11ShaderResourceView* diffSRV = mat->GetDiffuseSRV();
-				pd3dDeviceContext->PSSetShaderResources(0, 1, &diffSRV);
-				
 				ID3D11ShaderResourceView* normSRV = mat->GetNormalSRV();
-				pd3dDeviceContext->PSSetShaderResources(1, 1, &normSRV);
-
 				ID3D11ShaderResourceView* specSRV = mat->GetSpecularSRV();
-				pd3dDeviceContext->PSSetShaderResources(2, 1, &specSRV);
+
+				ID3D11ShaderResourceView* srvs[3] = { diffSRV, normSRV, specSRV };
+				pd3dDeviceContext->PSSetShaderResources(0, 3, srvs);
 				
 				// Set the shader if it wasn't the same for the last mesh
-				ID3D11PixelShader* ps = _meshPixelShader[diffSRV != NULL][normSRV != NULL][specSRV != NULL][_alphaCutoutEnabled];
+				ID3D11PixelShader* ps = _meshPixelShader[diffSRV != NULL]
+					[normSRV != NULL][specSRV != NULL][_alphaCutoutEnabled && mesh->GetAlphaCutoutEnabled()];
 				if (ps != prevPS)
 				{
 					pd3dDeviceContext->PSSetShader(ps, NULL, 0);
@@ -164,7 +163,7 @@ HRESULT ModelRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMana
 	PixelShaderContent* psContent;
 	VertexShaderContent* vsContent;
 
-	D3D_SHADER_MACRO alphaCutoutMacros[] = 
+	D3D_SHADER_MACRO meshMacros[] = 
 	{		
 		{ "DIFFUSE_MAPPED", "" },
 		{ "NORMAL_MAPPED", "" },
@@ -177,25 +176,25 @@ HRESULT ModelRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMana
 
 	PixelShaderOptions psOpts =
 	{
-		"PS_Mesh",			// const char* EntryPoint;
-		alphaCutoutMacros,	// D3D_SHADER_MACRO* Defines;
-		debugName,			// const char* DebugName;
+		"PS_Mesh",	// const char* EntryPoint;
+		meshMacros,	// D3D_SHADER_MACRO* Defines;
+		debugName,	// const char* DebugName;
 	};
 	
 	for (UINT i = 0; i < 2; i++)
 	{
-		alphaCutoutMacros[0].Definition = i ? "1" : "0";
+		meshMacros[0].Definition = i ? "1" : "0";
 
 		for (UINT j = 0; j < 2; j++)
 		{
-			alphaCutoutMacros[1].Definition = j ? "1" : "0";
+			meshMacros[1].Definition = j ? "1" : "0";
 
 			for (UINT k = 0; k < 2; k++)
 			{
-				alphaCutoutMacros[2].Definition = k ? "1" : "0";
+				meshMacros[2].Definition = k ? "1" : "0";
 
 				// Load no alpha cutout
-				alphaCutoutMacros[3].Definition = "0";
+				meshMacros[3].Definition = "0";
 				sprintf_s(debugName, "G-Buffer Mesh (diffuse = %u, normal = %u, specular = %u, alpha cutout = %u)",
 					i, j, k, 0);
 				V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Mesh.hlsl", &psOpts, &psContent));
@@ -206,7 +205,7 @@ HRESULT ModelRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMana
 				SAFE_RELEASE(psContent);
 
 				// Load alpha cutout
-				alphaCutoutMacros[3].Definition = "1";
+				meshMacros[3].Definition = "1";
 				sprintf_s(debugName, "G-Buffer Mesh (diffuse = %u, normal = %u, specular = %u, alpha cutout = %u)",
 					i, j, k, 1);
 				V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Mesh.hlsl", &psOpts, &psContent));
