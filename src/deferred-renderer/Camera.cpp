@@ -4,7 +4,7 @@
 Camera::Camera()
 {
 	_nearClip = max(0.1f, EPSILON);
-	_farClip = max(_nearClip, 100.0f);
+	_farClip = max(_nearClip + EPSILON, 100.0f);
 
 	XMStoreFloat4x4(&_world, XMMatrixIdentity());
 	worldMatrixChanged();
@@ -13,7 +13,7 @@ Camera::Camera()
 Camera::Camera(float nearClip, float farClip)
 {
 	_nearClip = max(nearClip, EPSILON);
-	_farClip = max(_nearClip, farClip);
+	_farClip = max(_nearClip + EPSILON, farClip);
 
 	XMStoreFloat4x4(&_world, XMMatrixIdentity());
 	worldMatrixChanged();
@@ -134,7 +134,7 @@ XMFLOAT4 Camera::GetOrientation() const
 void Camera::SetClips(float nearClip, float farClip)
 {
 	_nearClip = max(nearClip, EPSILON);
-	_farClip = max(_nearClip, farClip);
+	_farClip = max(_nearClip + EPSILON, farClip);
 
 	UpdateProjection();
 }

@@ -34,7 +34,7 @@ CameraConfigurationPane::CameraConfigurationPane(Gwen::Controls::Base* parent, T
 	
 	// far
 	_cameraFarClipSlider = new SliderWithLabel(this);
-	_cameraFarClipSlider->Slider()->SetRange(EPSILON, 100.0f);
+	_cameraFarClipSlider->Slider()->SetRange(EPSILON, 500.0f);
 	_cameraFarClipSlider->Slider()->SetValue(cam->GetFarClip());
 	_cameraFarClipSlider->Slider()->onValueChanged.Add(this, &CameraConfigurationPane::onValueChanged);
 	_cameraFarClipSlider->Dock(Gwen::Pos::Top);
