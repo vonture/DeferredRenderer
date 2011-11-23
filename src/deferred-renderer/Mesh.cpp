@@ -4,7 +4,7 @@
 
 Mesh::Mesh()
 	: _indexBuffer(NULL), _indexCount(0), _vertexBuffer(NULL), _vertexCount(0), _vertexStride(0), 
-	  _meshParts(NULL), _meshPartCount(0), _inputElements(NULL)
+	  _meshParts(NULL), _meshPartCount(0), _inputElements(NULL), _alphaCutoutEnabled(false), _name(NULL)
 {
 }
 
@@ -32,7 +32,7 @@ static D3DXVECTOR3 Perpendicular(const D3DXVECTOR3& vec)
 	}
     else if(minVal == y)
 	{
-		D3DXVECTOR3 unitY = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+		D3DXVECTOR3 unitY = D3DXVECTOR3(0.0f, 1.0f, 0.0f); 
         D3DXVec3Cross(&perp, &vec, &unitY);
 	}
     else
@@ -119,7 +119,7 @@ ID3DXMesh* GenerateTangentFrame(ID3DXMesh* mesh, UINT numVertices, UINT numIndic
     WORD* indices16 = reinterpret_cast<WORD*>(indices);
 
     // Loop through each triangle
-    for (UINT i = 0; i < numIndices; i += 3)
+	for (UINT i = 0; i < numIndices; i += 3)
     {
         UINT i1, i2, i3;
         if (indexType == DXGI_FORMAT_R32_UINT)
@@ -167,17 +167,20 @@ ID3DXMesh* GenerateTangentFrame(ID3DXMesh* mesh, UINT numVertices, UINT numIndic
         bitangents[i2] += tDir;
         bitangents[i3] += tDir;
     }
-
+	
     for (UINT i = 0; i < numVertices; ++i)
     {
         D3DXVECTOR3& n = vertices[i].Normal;
+
         D3DXVECTOR3& t = tangents[i];
 
         // Gram-Schmidt orthogonalize
         D3DXVECTOR3 tangent = (t - n * D3DXVec3Dot(&n, &t));
         bool zeroTangent = false;
         if(D3DXVec3Length(&tangent) > EPSILON)
+		{
             D3DXVec3Normalize(&tangent, &tangent);
+		}
         else if(D3DXVec3Length(&n) > EPSILON)
         {
             tangent = Perpendicular(n);
@@ -282,6 +285,7 @@ HRESULT Mesh::CreateFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d9
     UINT vbIndex = model->GetMesh(meshIdx)->VertexBuffers[0];
     UINT ibIndex = model->GetMesh(meshIdx)->IndexBuffer;
     const D3DVERTEXELEMENT9* vbElements = model->VBElements(vbIndex);
+	
     V_RETURN(D3DXCreateMesh(numPrims, numVerts, ops, vbElements, d3d9Device, &d3dxMesh));
 
     // Copy in vertex data
@@ -385,6 +389,19 @@ HRESULT Mesh::CreateFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d9
 
     V_RETURN(d3dxMesh->UnlockIndexBuffer());
 
+	// Copy the name
+	UINT nameLen = strlen(model->GetMesh(meshIdx)->Name);
+	if (nameLen > 0)
+	{
+		_name = new WCHAR[nameLen];
+		AnsiToWString(model->GetMesh(meshIdx)->Name, _name, nameLen);
+	}
+	else
+	{
+		_name = new WCHAR[MAX_PATH];
+		swprintf_s(_name, MAX_PATH, L"Mesh %u", meshIdx);
+	}
+
 	// Copy in the subset info
     DWORD subsetCount = 0;
     V_RETURN(d3dxMesh->GetAttributeTable(NULL, &subsetCount));
@@ -443,7 +460,7 @@ HRESULT Mesh::CreateFromASSIMPMesh(ID3D11Device* device, const aiScene* scene, U
 		verts[i].Bitangent = XMFLOAT3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
 	}
 
-	// Compute the bounding box for the verticies
+	// Compute the bounding box for the vertices
 	Collision::ComputeBoundingAxisAlignedBoxFromPoints(&_boundingBox, _vertexCount, (XMFLOAT3*)verts, 
 		sizeof(Vertex));
 	
@@ -507,6 +524,18 @@ HRESULT Mesh::CreateFromASSIMPMesh(ID3D11Device* device, const aiScene* scene, U
 	_meshParts[0].MaterialIndex = mesh->mMaterialIndex;
 	_meshParts[0].VertexStart = 0;
 
+	// Copy the name
+	if (mesh->mName.length > 0)
+	{
+		_name = new WCHAR[mesh->mName.length];
+		AnsiToWString(mesh->mName.data, _name, mesh->mName.length);
+	}
+	else
+	{
+		_name = new WCHAR[MAX_PATH];
+		swprintf_s(_name, MAX_PATH, L"Mesh %u", meshIdx);
+	}
+
 	// Create the input elements
 	_inputElementCount = 5;
 	const D3D11_INPUT_ELEMENT_DESC layout_mesh[] =
@@ -538,4 +567,6 @@ void Mesh::Destroy()
 
 	SAFE_DELETE_ARRAY(_inputElements);
 	_inputElementCount = 0;
+
+	SAFE_DELETE(_name);
 }

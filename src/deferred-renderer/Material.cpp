@@ -5,7 +5,7 @@
 Material::Material()
 	: _ambientColor(0.0f, 0.0f, 0.0f), _diffuseColor(0.0f, 0.0f, 0.0f), _emissiveColor(0.0f, 0.0f, 0.0f),
 	  _specularColor(0.0f, 0.0f, 0.0f), _specularPower(0.0f), _alpha(1.0f), _diffuseSRV(NULL), 
-	  _normalSRV(NULL), _specularSRV(NULL)
+	  _normalSRV(NULL), _specularSRV(NULL), _name(NULL)
 {
 }
 
@@ -92,6 +92,19 @@ HRESULT Material::CreateFromSDKMeshMaterial(ID3D11Device* device, const WCHAR* m
 
 	SDKMESH_MATERIAL* sdkmat = model->GetMaterial(materialIdx);
 
+	// Copy the name
+	UINT nameLen = strlen(sdkmat->Name);
+	if (nameLen > 0)
+	{
+		_name = new WCHAR[nameLen];
+		AnsiToWString(sdkmat->Name, _name, nameLen);
+	}
+	else
+	{
+		_name = new WCHAR[MAX_PATH];
+		swprintf_s(_name, MAX_PATH, L"Material %u", materialIdx);
+	}	
+
 	_ambientColor = XMFLOAT3(sdkmat->Ambient.x, sdkmat->Ambient.y, sdkmat->Ambient.z);
 	_diffuseColor = XMFLOAT3(sdkmat->Diffuse.x, sdkmat->Diffuse.y, sdkmat->Diffuse.z);
 	_specularColor = XMFLOAT3(sdkmat->Specular.x, sdkmat->Specular.y, sdkmat->Specular.z);
@@ -128,6 +141,19 @@ HRESULT Material::CreateFromASSIMPMaterial(ID3D11Device* device, const WCHAR* mo
 	HRESULT hr;
 
 	aiMaterial* material = scene->mMaterials[materialIdx];
+	
+	// Get the name
+	aiString name;
+	if (material->Get(AI_MATKEY_NAME, name) == aiReturn_SUCCESS && name.length > 0)
+	{
+		_name = new WCHAR[name.length];
+		AnsiToWString(name.data, _name, name.length);
+	}
+	else
+	{
+		_name = new WCHAR[MAX_PATH];
+		swprintf_s(_name, MAX_PATH, L"Material %u", materialIdx);
+	}
 
 	// Gather material colors
 	aiColor3D col;
@@ -207,6 +233,7 @@ HRESULT Material::CreateFromASSIMPMaterial(ID3D11Device* device, const WCHAR* mo
 
 void Material::Destroy()
 {
+	SAFE_DELETE(_name);
 	SAFE_RELEASE(_diffuseSRV);
 	SAFE_RELEASE(_normalSRV);
 	SAFE_RELEASE(_specularSRV);

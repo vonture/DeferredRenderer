@@ -17,6 +17,8 @@ struct MeshPart
 class Mesh : public ContentType
 {
 private:
+	WCHAR* _name;
+
 	ID3D11Buffer* _indexBuffer;
 	UINT _indexCount;
 	DXGI_FORMAT _indexBufferFormat;
@@ -32,6 +34,8 @@ private:
 	UINT _inputElementCount;
 
 	AxisAlignedBox _boundingBox;
+
+	bool _alphaCutoutEnabled;
 
 	void CreateInputElements(D3DVERTEXELEMENT9* declaration);
 
@@ -53,6 +57,10 @@ public:
 	UINT GetInputElementCount() const { return _inputElementCount; }
 
 	const AxisAlignedBox& GetAxisAlignedBox() const { return _boundingBox; }
+
+	bool GetAlphaCutoutEnabled() const { return _alphaCutoutEnabled; }
+
+	const WCHAR* GetName() const { return _name; }
 	
 	HRESULT CreateFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d9Device, 
 		const WCHAR* modelPath, SDKMesh* model,	UINT meshIdx);

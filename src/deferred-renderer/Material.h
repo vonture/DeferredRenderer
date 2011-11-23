@@ -10,6 +10,8 @@ typedef long TexturePathHash;
 class Material : public ContentType
 {
 private:
+	WCHAR* _name;
+
     XMFLOAT3 _ambientColor;
     XMFLOAT3 _diffuseColor;
     XMFLOAT3 _emissiveColor;    
@@ -32,7 +34,6 @@ private:
 		float Alpha;
 		XMFLOAT2 Padding;
 	};
-
 	ID3D11Buffer* _propertiesBuffer;
 
 	HRESULT createPropertiesBuffer(ID3D11Device* device);
@@ -40,6 +41,8 @@ private:
 public:
 	Material();
 	~Material();
+
+	const WCHAR* GetName() const { return _name; }
 
 	const XMFLOAT3& GetAmbientColor() const { return _ambientColor; }
 	const XMFLOAT3& GetDiffuseColor() const { return _diffuseColor; }

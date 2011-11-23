@@ -86,6 +86,7 @@ HRESULT Model::CreateFromFile(ID3D11Device* device, LPCWSTR fileName)
 
 		UINT importSteps = 	
 			aiProcess_ConvertToLeftHanded	|
+			aiProcess_FixInfacingNormals |
 			aiProcessPreset_TargetRealtime_Fast | 
 			aiProcess_FindInstances |
 			aiProcess_OptimizeMeshes;
@@ -172,11 +173,17 @@ HRESULT Model::CreateFromFile(ID3D11Device* device, LPCWSTR fileName)
 		}
 	}
 
+	// Get the name
+	_name = new WCHAR[MAX_PATH];
+	GetFileNameWithoutExtension(fileName, _name, MAX_PATH);
+
 	return S_OK;
 }
 
 void Model::Destroy()
 {
+	SAFE_DELETE(_name);
+
 	for (UINT i = 0; i < _materialCount; i++)
 	{
 		SAFE_RELEASE(_materials[i]);

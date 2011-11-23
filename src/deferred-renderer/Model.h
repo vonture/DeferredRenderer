@@ -14,6 +14,8 @@ class Model : public ContentType
 private:
 	UINT _refCount;
 
+	WCHAR* _name;
+
 	Mesh** _meshes;
 	UINT _meshCount;
 
@@ -25,6 +27,8 @@ private:
 public:
 	Model();
 	~Model();
+
+	const WCHAR* GetName() const { return _name; }
 	
 	const Mesh* GetMesh(UINT idx) const { return _meshes[idx]; }
 	UINT GetMeshCount() const { return _meshCount; }
