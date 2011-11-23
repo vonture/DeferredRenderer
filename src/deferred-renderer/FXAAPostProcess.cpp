@@ -11,7 +11,7 @@ const UINT FXAAPostProcess::QUALITY_PRESETS[QUALITY_PRESET_COUNT] =
 	20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
 	39
 #else
-	12, 22, 39
+	12
 #endif
 };
 
@@ -31,7 +31,7 @@ FXAAPostProcess::FXAAPostProcess()
 #ifdef ALL_PRESETS
 	SetQualityPresetIndex(2);
 #else
-	SetQualityPresetIndex(1);
+	SetQualityPresetIndex(0);
 #endif
 }
 
@@ -82,7 +82,7 @@ HRESULT FXAAPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 	ID3D11ShaderResourceView* ppSRVNULL[1] = { NULL };
 	pd3dImmediateContext->PSSetShaderResources(0, 1, ppSRVNULL);
 	
-	END_EVENT(L"");
+	END_EVENT_D3D(L"");
 	return S_OK;
 }
 
