@@ -2,7 +2,7 @@
 
 #include "PCH.h"
 
-typedef long ContentHash;
+typedef std::wstring ContentHash;
 
 class ContentLoaderBase
 {

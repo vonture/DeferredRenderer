@@ -8,36 +8,31 @@ HRESULT PixelShaderLoader::GenerateContentHash(const WCHAR* path, PixelShaderOpt
 	{
 		return E_FAIL;
 	}
-
-	ContentHash retHash = 0;
-
-	locale loc;
-	const collate<WCHAR>& wcoll = use_facet<collate<WCHAR>>(loc);
-
-	retHash += wcoll.hash(path, path + wcslen(path));
+	
+	ContentHash retHash;
+	retHash.append(path);
 
 	if (options)
 	{
-		const collate<char>& acoll = use_facet<collate<char>>(loc);
+		WCHAR wBuff[1024];
+		AnsiToWString(options->EntryPoint, wBuff, 1024);
+		retHash.append(wBuff);
 
-		retHash += acoll.hash(options->EntryPoint, options->EntryPoint + strlen(options->EntryPoint));
-		
 		if (options->Defines)
 		{
-			char definesCat[1024] = "";
-			
 			UINT defineIdx = 0;
 			while (options->Defines[defineIdx].Name)
 			{
-				strcat_s(definesCat, options->Defines[defineIdx].Name);
-				strcat_s(definesCat, options->Defines[defineIdx].Definition);
+				AnsiToWString(options->Defines[defineIdx].Name, wBuff, 1024);
+				retHash.append(wBuff);
+
+				AnsiToWString(options->Defines[defineIdx].Definition, wBuff, 1024);
+				retHash.append(wBuff);
 
 				defineIdx++;
 			}
-
-			retHash += acoll.hash(definesCat, definesCat + strlen(definesCat));
 		}
-
+		
 		// Not hashing the debug name since it does not affect the content that is loaded
 	}
 

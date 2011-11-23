@@ -9,10 +9,10 @@ HRESULT EntityLoader::GenerateContentHash(const WCHAR* path, EntityOptions* opti
 		return FWP_E_NULL_POINTER;
 	}
 
-	locale loc;
-	const collate<WCHAR>& wcoll = use_facet<collate<WCHAR>>(loc);
+	ContentHash retHash;
+	retHash.append(path);
 
-	*hash = wcoll.hash(path, path + wcslen(path));
+	*hash = retHash;
 	return S_OK;
 }
 

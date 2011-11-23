@@ -10,13 +10,9 @@ HRESULT TextureLoader::GenerateContentHash(const WCHAR* path, TextureOptions* op
 		return FWP_E_NULL_POINTER;
 	}
 
-	ContentHash retHash = 0;
-
-	locale loc;
-	const collate<WCHAR>& wcoll = use_facet<collate<WCHAR>>(loc);
-
-	retHash += wcoll.hash(path, path + wcslen(path));
-
+	ContentHash retHash;
+	retHash.append(path);
+	
 	*hash = retHash;
 	return S_OK;
 }

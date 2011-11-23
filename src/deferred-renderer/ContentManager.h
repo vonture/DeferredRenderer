@@ -8,7 +8,7 @@
 class ContentManager
 {
 private:
-	typedef size_t LoaderHash;
+	typedef std::string LoaderHash;
 	typedef std::map<LoaderHash, ContentLoaderBase*> LoaderMap;
 	typedef std::map<ContentHash, ContentType*> ContentMap;
 
@@ -23,8 +23,8 @@ private:
 	template <class optionsType, class contentType>
 	LoaderHash getContentLoaderHash()
 	{
-		size_t optionsHash = typeid(optionsType).hash_code();
-		size_t contentHash = typeid(contentType).hash_code();
+		std::string optionsHash = typeid(optionsType).raw_name();
+		std::string contentHash = typeid(contentType).raw_name();
 		return optionsHash + contentHash;
 	}
 
@@ -39,7 +39,7 @@ public:
 	template <class optionsType, class contentType>
 	void AddContentLoader(ContentLoader<optionsType, contentType>* loader)
 	{
-		long hash = getContentLoaderHash<optionsType, contentType>();
+		LoaderHash hash = getContentLoaderHash<optionsType, contentType>();
 		_contentLoaders[hash] = loader;
 	}
 	

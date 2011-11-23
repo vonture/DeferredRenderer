@@ -9,41 +9,36 @@ HRESULT VertexShaderLoader::GenerateContentHash(const WCHAR* path, VertexShaderO
 		return FWP_E_NULL_POINTER;
 	}
 
-	ContentHash retHash = 0;
-
-	locale loc;
-	const collate<WCHAR>& wcoll = use_facet<collate<WCHAR>>(loc);
-
-	retHash += wcoll.hash(path, path + wcslen(path));
+	ContentHash retHash;
+	retHash.append(path);
 
 	if (options)
 	{
-		const collate<char>& acoll = use_facet<collate<char>>(loc);
+		WCHAR wBuff[1024];
 
-		retHash += acoll.hash(options->EntryPoint, options->EntryPoint + strlen(options->EntryPoint));
+		AnsiToWString(options->EntryPoint, wBuff, 1024);
+		retHash.append(wBuff);
 
 		if (options->Defines)
 		{
-			char definesCat[1024] = "";
-			
 			UINT defineIdx = 0;
 			while (options->Defines[defineIdx].Name)
 			{
-				strcat_s(definesCat, options->Defines[defineIdx].Name);
-				strcat_s(definesCat, options->Defines[defineIdx].Definition);
+				AnsiToWString(options->Defines[defineIdx].Name, wBuff, 1024);
+				retHash.append(wBuff);
+
+				AnsiToWString(options->Defines[defineIdx].Definition, wBuff, 1024);
+				retHash.append(wBuff);
 
 				defineIdx++;
 			}
-
-			retHash += acoll.hash(definesCat, definesCat + strlen(definesCat));
 		}
 
-		char layoutCat[1024] = "";
 		for (UINT i = 0; i < options->InputElementCount; i++)
 		{
-			strcat_s(layoutCat, options->InputElements[i].SemanticName);
+			AnsiToWString(options->InputElements[i].SemanticName, wBuff, 1024);
+			retHash.append(wBuff);
 		}
-		retHash += acoll.hash(layoutCat, layoutCat + strlen(layoutCat));
 
 		// Not hashing the debug name since it does not affect the content that is loaded
 	}

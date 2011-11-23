@@ -53,7 +53,7 @@ void ContentManager::AddSearchPath(const WCHAR* path)
 
 void ContentManager::ReleaseContent()
 {
-	std::map<long, ContentType*>::iterator i;
+	ContentMap::iterator i;
 	for (i = _loadedContent.begin(); i != _loadedContent.end(); i++)
 	{
 		SAFE_RELEASE(i->second);
