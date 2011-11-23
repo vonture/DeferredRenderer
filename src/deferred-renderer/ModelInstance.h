@@ -22,7 +22,7 @@ private:
 
 	AxisAlignedBox _transformedMainAxisBox;
 	AxisAlignedBox* _transformedMeshAxisBoxes;
-
+	
 	bool _dirty;
 	void clean();
 
@@ -109,10 +109,11 @@ public:
 
 	Model* GetModel() { return _model; }
 
-	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
+	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, 
+		const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
 	void OnD3D11DestroyDevice();
 
-	HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
-                            const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
+	HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, 
+		IDXGISwapChain* pSwapChain, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
 	void OnD3D11ReleasingSwapChain();
 };
