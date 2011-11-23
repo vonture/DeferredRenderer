@@ -421,13 +421,7 @@ HRESULT CascadedDirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 	// Set up the render targets for the shadow map and clear them
 	pd3dImmediateContext->OMSetRenderTargets(0, NULL, _shadowMapDSVs[shadowMapIdx]);
 	pd3dImmediateContext->ClearDepthStencilView(_shadowMapDSVs[shadowMapIdx], D3D11_CLEAR_DEPTH, 1.0f, 0);
-		
-	bool alphaCutoutEnabled = GetAlphaCutoutEnabled();
-
-	pd3dImmediateContext->VSSetShader(alphaCutoutEnabled ? _depthVSAlpha : _depthVSNoAlpha, NULL, 0);
-	pd3dImmediateContext->PSSetShader(alphaCutoutEnabled ? _depthPSAlpha : NULL, NULL, 0);
-
-	pd3dImmediateContext->IASetInputLayout(alphaCutoutEnabled ? _depthInputAlpha : _depthInputNoAlpha);
+	
 	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthWriteEnabled(), 0);
 
 	float blendFactor[4] = {1, 1, 1, 1};
@@ -435,19 +429,16 @@ HRESULT CascadedDirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 
 	pd3dImmediateContext->RSSetState(GetRasterizerStates()->GetNoCull());
 
-	if (alphaCutoutEnabled)
-	{
-		ID3D11SamplerState* samplers[1] = { GetSamplerStates()->GetAnisotropic16Wrap() };
-		pd3dImmediateContext->PSSetSamplers(0, 1, samplers);
+	// Set alpha cutout properties, even if they arn't used
+	ID3D11SamplerState* samplers[1] = { GetSamplerStates()->GetAnisotropic16Wrap() };
+	pd3dImmediateContext->PSSetSamplers(0, 1, samplers);
 				
-		V_RETURN(pd3dImmediateContext->Map(_alphaCutoutProperties, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
-		CB_DIRECTIONALLIGHT_ALPHACUTOUT_PROPERTIES* modelProperties = (CB_DIRECTIONALLIGHT_ALPHACUTOUT_PROPERTIES*)mappedResource.pData;
-		modelProperties->AlphaThreshold = GetAlphaThreshold();
-		pd3dImmediateContext->Unmap(_alphaCutoutProperties, 0);
+	V_RETURN(pd3dImmediateContext->Map(_alphaCutoutProperties, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+	CB_DIRECTIONALLIGHT_ALPHACUTOUT_PROPERTIES* modelProperties = (CB_DIRECTIONALLIGHT_ALPHACUTOUT_PROPERTIES*)mappedResource.pData;
+	modelProperties->AlphaThreshold = GetAlphaThreshold();
+	pd3dImmediateContext->Unmap(_alphaCutoutProperties, 0);
 
-		pd3dImmediateContext->PSSetConstantBuffers(1, 1, &_alphaCutoutProperties);			
-	}
-
+	pd3dImmediateContext->PSSetConstantBuffers(1, 1, &_alphaCutoutProperties);
 
 	// Store this for later
 	XMFLOAT4X4 fView = camera->GetView();
@@ -586,7 +577,7 @@ HRESULT CascadedDirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
                 vLightCameraOrthographicMax, vSceneAABBPointsLightSpace);
 		
 
-		// Craete the orthographic projection for this cascade.
+		// Create the orthographic projection for this cascade.
 		XMMATRIX shadowProj = XMMatrixOrthographicOffCenterLH(
 			XMVectorGetX(vLightCameraOrthographicMin), XMVectorGetX(vLightCameraOrthographicMax), 
             XMVectorGetY(vLightCameraOrthographicMin), XMVectorGetY(vLightCameraOrthographicMax), 
@@ -640,6 +631,13 @@ HRESULT CascadedDirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 					}
 				}
 
+				bool alphaCutoutEnabled = GetAlphaCutoutEnabled() && model->GetMesh(k)->GetAlphaCutoutEnabled();
+
+				pd3dImmediateContext->VSSetShader(alphaCutoutEnabled ? _depthVSAlpha : _depthVSNoAlpha, NULL, 0);
+				pd3dImmediateContext->PSSetShader(alphaCutoutEnabled ? _depthPSAlpha : NULL, NULL, 0);
+
+				pd3dImmediateContext->IASetInputLayout(alphaCutoutEnabled ? _depthInputAlpha : _depthInputNoAlpha);
+				
 				model->RenderMesh(pd3dImmediateContext, k, INVALID_BUFFER_SLOT, 
 					alphaCutoutEnabled ? 0 : INVALID_SAMPLER_SLOT, INVALID_SAMPLER_SLOT, INVALID_SAMPLER_SLOT);
 			}
