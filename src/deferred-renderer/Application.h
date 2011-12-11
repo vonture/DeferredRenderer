@@ -40,6 +40,9 @@ public:
 
 	HWND GetHWND() const;
 
+	UINT GetWidth() const;
+	UINT GetHeight() const;
+
 	virtual LRESULT OnMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 	virtual void OnFrameMove(double totalTime, float dt) = 0;

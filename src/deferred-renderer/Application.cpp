@@ -210,6 +210,16 @@ bool Application::IsActive() const
 	return _window.IsActive();
 }
 
+UINT Application::GetWidth() const
+{
+	return _deviceManager.GetBackBufferWidth();
+}
+
+UINT Application::GetHeight() const
+{
+	return _deviceManager.GetBackBufferHeight();
+}
+
 HRESULT Application::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	return S_OK;
