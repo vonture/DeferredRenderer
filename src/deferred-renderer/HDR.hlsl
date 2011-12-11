@@ -109,22 +109,22 @@ float4 PS_Scale(PS_In_Quad input) : SV_TARGET0
 }
 
 // Calculates the gaussian blur weight for a given distance and sigmas
-float CalcGaussianWeight(int sampleDist, float sigma)
+float CalcGaussianWeight(float sampleDist)
 {
-	return (GaussianNumerator * exp(-(sampleDist * sampleDist) / (2 * sigma * sigma)));
+	return (GaussianNumerator * exp(-(sampleDist * sampleDist) / (2 * BloomBlurSigma * BloomBlurSigma)));
 }
 
 // Performs a gaussian blur in one direction
-float4 Blur(float2 texCoord, int2 direction, float sigma)
+float4 Blur(float2 texCoord, int2 direction)
 {
-	// Bluring happens at 1/8 scene size
-	float2 step = (InverseSceneSize / 8.0f) * direction;
-	
     float4 color = 0;
-    for (int i = -BLUR_RADIUS; i < BLUR_RADIUS; i++)
+
+	[unroll]
+    for (int i = -BLUR_RADIUS; i <= BLUR_RADIUS; i++)
     {
-		float weight = CalcGaussianWeight(i, sigma);
-		float4 sample = Texture0.SampleLevel(PointSampler, texCoord + (i * step), 0);
+		float weight = CalcGaussianWeight((float)i);
+		float4 sample = Texture0.SampleLevel(PointSampler, texCoord, 0, direction * i);
+		
 		color += sample * weight;
     }
 
@@ -134,11 +134,11 @@ float4 Blur(float2 texCoord, int2 direction, float sigma)
 // Horizontal gaussian blur
 float4 PS_BlurHorizontal(PS_In_Quad input) : SV_TARGET0
 {
-    return Blur(input.vTexCoord, int2(1, 0), BloomBlurSigma);
+    return Blur(input.vTexCoord, int2(1, 0));
 }
 
 // Vertical gaussian blur
 float4 PS_BlurVertical(PS_In_Quad input) : SV_TARGET0
 {
-    return Blur(input.vTexCoord, int2(0, 1), BloomBlurSigma);
+    return Blur(input.vTexCoord, int2(0, 1));
 }
