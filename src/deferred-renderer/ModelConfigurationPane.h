@@ -8,12 +8,13 @@
 
 class ModelConfigurationPane : public ConfigurationPaneBase
 {
-	std::vector<ModelInstance*> _models;
+	std::vector<ModelInstance*> _modelVec;
+	std::map<ModelInstance*, Gwen::Controls::TreeNode*> _modelMap;
 
 	Gwen::Controls::TreeControl* _tree;
 	Gwen::Controls::Properties* _properties;
 
-	void buildTree(ModelInstance* instance);
+	Gwen::Controls::TreeNode* buildTree(ModelInstance* instance);
 	void removeTree(ModelInstance* instance);
 
 	void onModelSelect(Gwen::Controls::Base* control);
@@ -26,6 +27,8 @@ public:
 	ModelConfigurationPane(Gwen::Controls::Base* parent);
 
 	void AddModelInstance(ModelInstance* model);
+
+	void SelectModelInstance(ModelInstance* model);
 
 	ModelInstance* GetModelInstance(UINT idx);
 	UINT GetModelInstanceCount() const;

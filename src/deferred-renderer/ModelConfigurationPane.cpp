@@ -16,7 +16,7 @@ ModelConfigurationPane::ModelConfigurationPane(Gwen::Controls::Base* parent)
 	_properties->Dock(Gwen::Pos::Top);
 }
 
-void ModelConfigurationPane::buildTree(ModelInstance* instance)
+Gwen::Controls::TreeNode* ModelConfigurationPane::buildTree(ModelInstance* instance)
 {
 	const Model* model = instance->GetModel();
 	Gwen::Controls::TreeNode* modelNode = _tree->AddNode(Gwen::UnicodeString(model->GetName()));
@@ -72,7 +72,9 @@ void ModelConfigurationPane::buildTree(ModelInstance* instance)
 			specNode->onSelect.Add(this, &ModelConfigurationPane::onTextureSelect);
 			specNode->SetUserData((void*)specSRV);
 		}
-	}	
+	}
+
+	return modelNode;
 }
 
 void ModelConfigurationPane::removeTree(ModelInstance* instance)
@@ -81,18 +83,28 @@ void ModelConfigurationPane::removeTree(ModelInstance* instance)
 
 void ModelConfigurationPane::AddModelInstance(ModelInstance* model)
 {
-	_models.push_back(model);
-	buildTree(model);
+	_modelVec.push_back(model);
+	_modelMap[model] = buildTree(model);
+}
+
+void ModelConfigurationPane::SelectModelInstance(ModelInstance* model)
+{
+	std::map<ModelInstance*, Gwen::Controls::TreeNode*>::iterator i = _modelMap.find(model);
+	if (i != _modelMap.end())
+	{
+		_tree->DeselectAll();
+		i->second->SetSelected(true);
+	}
 }
 
 ModelInstance* ModelConfigurationPane::GetModelInstance(UINT idx)
 {
-	return (idx < _models.size()) ? _models[idx] : NULL;
+	return (idx < _modelVec.size()) ? _modelVec[idx] : NULL;
 }
 
 UINT ModelConfigurationPane::GetModelInstanceCount() const
 {
-	return _models.size();
+	return _modelVec.size();
 }
 
 void ModelConfigurationPane::onModelSelect(Gwen::Controls::Base* control)
