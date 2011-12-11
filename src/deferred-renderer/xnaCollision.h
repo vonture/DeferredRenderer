@@ -53,6 +53,12 @@ _DECLSPEC_ALIGN_16_ struct Frustum
     FLOAT Near, Far;            // Z of the near plane and far plane.
 };
 
+_DECLSPEC_ALIGN_16_ struct Ray
+{
+	XMFLOAT3 Origin;
+	XMFLOAT3 Direction;
+};
+
 #pragma warning(pop)
 
 
