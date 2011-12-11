@@ -178,9 +178,6 @@
     <ClCompile Include="Mesh.cpp">
       <Filter>Models</Filter>
     </ClCompile>
-    <ClCompile Include="BoundingObjectRenderer.cpp">
-      <Filter>Collision</Filter>
-    </ClCompile>
     <ClCompile Include="xnaCollision.cpp">
       <Filter>Collision</Filter>
     </ClCompile>
@@ -360,6 +357,12 @@
     <ClCompile Include="ModelConfigurationPane.cpp">
       <Filter>Models</Filter>
     </ClCompile>
+    <ClCompile Include="BoundingObjectPostProcess.cpp">
+      <Filter>Post Process</Filter>
+    </ClCompile>
+    <ClCompile Include="LiveTextureControl.cpp">
+      <Filter>UI\Controls</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -422,9 +425,6 @@
     </ClInclude>
     <ClInclude Include="Mesh.h">
       <Filter>Models</Filter>
-    </ClInclude>
-    <ClInclude Include="BoundingObjectRenderer.h">
-      <Filter>Collision</Filter>
     </ClInclude>
     <ClInclude Include="xnaCollision.h">
       <Filter>Collision</Filter>
@@ -622,6 +622,12 @@
     </ClInclude>
     <ClInclude Include="ModelConfigurationPane.h">
       <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="BoundingObjectPostProcess.h">
+      <Filter>Post Process</Filter>
+    </ClInclude>
+    <ClInclude Include="LiveTextureControl.h">
+      <Filter>UI\Controls</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

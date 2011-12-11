@@ -153,6 +153,7 @@
     <ClCompile Include="HBAOConfigurationPane.cpp" />
     <ClCompile Include="HBAOPostProcess.cpp" />
     <ClCompile Include="LightRendererBase.cpp" />
+    <ClCompile Include="LiveTextureControl.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="LogWindow.cpp" />
     <ClCompile Include="ModelConfigurationPane.cpp" />
@@ -174,7 +175,7 @@
     <ClCompile Include="MLAAConfigurationPane.cpp" />
     <ClCompile Include="MLAAPostProcess.cpp" />
     <ClCompile Include="Application.cpp" />
-    <ClCompile Include="BoundingObjectRenderer.cpp" />
+    <ClCompile Include="BoundingObjectPostProcess.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CameraConfigurationPane.cpp" />
     <ClCompile Include="CombinePostProcess.cpp" />
@@ -236,6 +237,7 @@
     <ClInclude Include="HBAOPostProcess.h" />
     <ClInclude Include="LightRenderer.h" />
     <ClInclude Include="LightRendererBase.h" />
+    <ClInclude Include="LiveTextureControl.h" />
     <ClInclude Include="LogWindow.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="ModelConfigurationPane.h" />
@@ -253,7 +255,7 @@
     <ClInclude Include="MLAAConfigurationPane.h" />
     <ClInclude Include="MLAAPostProcess.h" />
     <ClInclude Include="Application.h" />
-    <ClInclude Include="BoundingObjectRenderer.h" />
+    <ClInclude Include="BoundingObjectPostProcess.h" />
     <ClInclude Include="ButtonState.h" />
     <ClInclude Include="CombinePostProcess.h" />
     <ClInclude Include="ConfigurationPane.h" />
