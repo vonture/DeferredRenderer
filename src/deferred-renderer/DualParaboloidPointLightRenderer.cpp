@@ -294,7 +294,7 @@ HRESULT DualParaboloidPointLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 			{
 				continue;
 			}
-
+			
 			// Depending on if the camera is within the light, flip the vertex winding
 			if (Collision::IntersectPointSphere(cameraPos, &lightBounds))
 			{
@@ -546,8 +546,8 @@ HRESULT DualParaboloidPointLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 
 	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"PointLight.hlsl", &psOpts, &psContent));
 
-	_unshadowedPS = psContent->PixelShader;
-	_unshadowedPS->AddRef();
+	_shadowedPS = psContent->PixelShader;
+	_shadowedPS->AddRef();
 
 	SAFE_RELEASE(psContent);
 	
