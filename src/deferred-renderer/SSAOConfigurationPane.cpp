@@ -19,16 +19,16 @@ SSAOConfigurationPane::SSAOConfigurationPane(Gwen::Controls::Base* parent, SSAOP
 	_sampleCountSlider->Dock(Gwen::Pos::Top);
 
 	_sampleRadiusSlider = new SliderWithLabel(this);
-	_sampleRadiusSlider->Slider()->SetRange(0.0f, 5.0f);
+	_sampleRadiusSlider->Slider()->SetRange(0.0f, 50.0f);
 	_sampleRadiusSlider->Slider()->SetValue(pp->GetSampleRadius());	
 	_sampleRadiusSlider->Slider()->onValueChanged.Add(this, &SSAOConfigurationPane::OnValueChanged);
 	_sampleRadiusSlider->Dock(Gwen::Pos::Top);
 
-	_samplePowerSlider = new SliderWithLabel(this);
-	_samplePowerSlider->Slider()->SetRange(EPSILON, 5.0f);
-	_samplePowerSlider->Slider()->SetValue(pp->GetSamplePower());	
-	_samplePowerSlider->Slider()->onValueChanged.Add(this, &SSAOConfigurationPane::OnValueChanged);
-	_samplePowerSlider->Dock(Gwen::Pos::Top);
+	_depthThresholdSlider = new SliderWithLabel(this);
+	_depthThresholdSlider->Slider()->SetRange(EPSILON, 10.0f);
+	_depthThresholdSlider->Slider()->SetValue(pp->GetDepthThreshold());	
+	_depthThresholdSlider->Slider()->onValueChanged.Add(this, &SSAOConfigurationPane::OnValueChanged);
+	_depthThresholdSlider->Dock(Gwen::Pos::Top);
 
 	_blurSigmaSlider = new SliderWithLabel(this);
 	_blurSigmaSlider->Slider()->SetRange(EPSILON, 4.0f);
@@ -53,9 +53,9 @@ void SSAOConfigurationPane::OnValueChanged(Gwen::Controls::Base *control)
 	{
 		pp->SetSampleRadius(_sampleRadiusSlider->Slider()->GetValue());
 	}
-	else if (control == _samplePowerSlider->Slider())
+	else if (control == _depthThresholdSlider->Slider())
 	{
-		pp->SetSamplePower(_samplePowerSlider->Slider()->GetValue());
+		pp->SetDepthTreshold(_depthThresholdSlider->Slider()->GetValue());
 	}
 	else if (control == _blurSigmaSlider->Slider())
 	{
@@ -75,8 +75,8 @@ void SSAOConfigurationPane::OnFrameMove(double totalTime, float dt)
 	_sampleRadiusSlider->Slider()->SetValue(pp->GetSampleRadius());
 	_sampleRadiusSlider->Label()->SetText("Sample radius: " + Gwen::Utility::ToString(pp->GetSampleRadius())); 
 
-	_samplePowerSlider->Slider()->SetValue(pp->GetSamplePower());
-	_samplePowerSlider->Label()->SetText("Sample power: " + Gwen::Utility::ToString(pp->GetSamplePower())); 
+	_depthThresholdSlider->Slider()->SetValue(pp->GetDepthThreshold());
+	_depthThresholdSlider->Label()->SetText("Depth Threshold: " + Gwen::Utility::ToString(pp->GetDepthThreshold())); 
 
 	_blurSigmaSlider->Slider()->SetValue(pp->GetBlurSigma());
 	_blurSigmaSlider->Label()->SetText("Blur sigma: " + Gwen::Utility::ToString(pp->GetBlurSigma())); 

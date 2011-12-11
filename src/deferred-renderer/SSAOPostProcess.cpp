@@ -39,15 +39,15 @@ SSAOPostProcess::SSAOPostProcess()
 	}
 	
 	// Initialize some parameters to default values
-	SetSampleRadius(0.4f);
-	SetBlurSigma(1.5f);
-	SetSamplePower(4.5f);	
-	SetHalfResolution(true);
+	SetSampleRadius(30.0f);
+	SetBlurSigma(1.8f);
+	SetDepthTreshold(4.0f);	
+	SetHalfResolution(false);
 
 #ifdef ALL_PRESETS
 	SetSampleCountIndex(3);
 #else
-	SetSampleCountIndex(0);
+	SetSampleCountIndex(1);
 #endif
 }
 
@@ -81,7 +81,7 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 	aoProperties->GaussianNumerator = 1.0f / sqrt(2.0f * Pi * _blurSigma * _blurSigma);
 	aoProperties->CameraNearClip = camera->GetNearClip();
 	aoProperties->CameraFarClip = camera->GetFarClip();
-	aoProperties->SamplePower = _samplePower;
+	aoProperties->DepthThreshold = _depthThreshold;
 	aoProperties->InverseSceneSize = _invSceneSize;
 
 	pd3dImmediateContext->Unmap(_aoPropertiesBuffer, 0);
@@ -128,24 +128,23 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 
 	pd3dImmediateContext->OMSetRenderTargets(1, &_aoRTV, NULL);
 
-	ID3D11ShaderResourceView* ppSRVAO[3] =
+	ID3D11ShaderResourceView* ppSRVAO[2] =
 	{ 
-		gBuffer->GetShaderResourceView(1),
 		gBuffer->GetShaderResourceView(3),
 		_randomSRV
 	};
-	pd3dImmediateContext->PSSetShaderResources(0, 3, ppSRVAO);	
+	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVAO);	
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _aoPSs[_sampleCountIndex]));
 
 	END_EVENT_D3D(L"");
 	
 	// Blur AO texture using normals for edge detection
-	ID3D11ShaderResourceView* pphBlurSRVs[3] = { _aoSRV, gBuffer->GetShaderResourceView(1), NULL };
+	ID3D11ShaderResourceView* pphBlurSRVs[2] = { _aoSRV, gBuffer->GetShaderResourceView(1) };
 
 	BEGIN_EVENT_D3D(L"Blur horizontal");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_blurTempRTV, NULL);
-	pd3dImmediateContext->PSSetShaderResources(0, 3, pphBlurSRVs);
+	pd3dImmediateContext->PSSetShaderResources(0, 2, pphBlurSRVs);
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _hBlurPS[_halfRes ? 1 : 0]));
 	END_EVENT_D3D(L"");
 
@@ -292,16 +291,10 @@ HRESULT SSAOPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 	XMFLOAT4 sampleDirections[SSAO_SAMPLE_COUNT_MAX];	
 	for (UINT i = 0; i < SSAO_SAMPLE_COUNT_MAX; i++)
 	{
-		float randPitch = (rand() / (float)RAND_MAX) * 2.0f * Pi;
-		float randYaw = (rand() / (float)RAND_MAX) * 2.0f * Pi;
-		float length = ((rand() / (float)RAND_MAX) * 0.9f) + 0.1f;
+		float randAngle = (rand() / (float)RAND_MAX) * 2.0f * Pi;
+		float randLen = (rand() / (float)RAND_MAX);
 
-		XMVECTOR unitVec = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-		XMMATRIX transform = XMMatrixMultiply(
-			XMMatrixRotationRollPitchYaw(randPitch, randYaw, 0.0f),
-			XMMatrixScaling(length, length, length));
-
-		XMStoreFloat4(&sampleDirections[i], XMVector3TransformCoord(unitVec, transform));
+		sampleDirections[i] = XMFLOAT4(sinf(randAngle) * randLen, cosf(randAngle) * randLen, 0.0f, 0.0f);
 	}
 
 	D3D11_SUBRESOURCE_DATA directionInitData;
@@ -327,7 +320,7 @@ HRESULT SSAOPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
         RANDOM_TEXTURE_SIZE,//UINT Height;
         1,//UINT MipLevels;
         1,//UINT ArraySize;
-        DXGI_FORMAT_R16G16B16A16_FLOAT,//DXGI_FORMAT Format;
+        DXGI_FORMAT_R32_FLOAT,//DXGI_FORMAT Format;
         1,//DXGI_SAMPLE_DESC SampleDesc;
         0,
         D3D11_USAGE_DEFAULT,//D3D11_USAGE Usage;
@@ -336,23 +329,15 @@ HRESULT SSAOPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
         0//UINT MiscFlags;    
     };
 	
-	XMHALF4 randomData[RANDOM_TEXTURE_SIZE * RANDOM_TEXTURE_SIZE];
+	float randomData[RANDOM_TEXTURE_SIZE * RANDOM_TEXTURE_SIZE];
 	for (UINT i = 0; i < RANDOM_TEXTURE_SIZE * RANDOM_TEXTURE_SIZE; i++)
 	{
-		float randPitch = (rand() / (float)RAND_MAX) * 2.0f * Pi;
-		float randYaw = (rand() / (float)RAND_MAX) * 2.0f * Pi;
-
-		randomData[i] = XMHALF4(0.0f, 0.0f, 1.0f, 0.0f);
-		XMVECTOR vector = XMLoadHalf4(&randomData[i]);
-
-		XMMATRIX transform = XMMatrixRotationRollPitchYaw(randPitch, randYaw, 0.0f);
-
-		XMStoreHalf4(&randomData[i], XMVector3TransformCoord(vector, transform));
+		randomData[i] = (rand() / (float)RAND_MAX) * 2.0f * Pi;
 	}
 
 	D3D11_SUBRESOURCE_DATA randomInitData;
 	randomInitData.pSysMem = &randomData;
-	randomInitData.SysMemPitch = RANDOM_TEXTURE_SIZE * sizeof(XMHALF4);
+	randomInitData.SysMemPitch = RANDOM_TEXTURE_SIZE * sizeof(float);
 	randomInitData.SysMemSlicePitch = 0;
 
 	V_RETURN(pd3dDevice->CreateTexture2D(&randomTextureDesc, &randomInitData, &_randomTexture));
@@ -361,7 +346,7 @@ HRESULT SSAOPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 	// Create the shader resource view
 	D3D11_SHADER_RESOURCE_VIEW_DESC randomSRVDesc = 
     {
-        DXGI_FORMAT_R16G16B16A16_FLOAT,
+        DXGI_FORMAT_R32_FLOAT,
         D3D11_SRV_DIMENSION_TEXTURE2D,
         0,
         0

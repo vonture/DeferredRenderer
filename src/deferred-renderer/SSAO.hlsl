@@ -7,11 +7,19 @@
 #endif
 
 #ifndef BLUR_RADIUS
-#define BLUR_RADIUS 3
+#define BLUR_RADIUS 4
 #endif
 
 #ifndef RAND_TEX_SIZE
 #define RAND_TEX_SIZE 32
+#endif
+
+#ifndef DEPTH_BIAS
+#define DEPTH_BIAS 0.001f
+#endif
+
+#ifndef SMOOTHSTEP_OFFSET
+#define SMOOTHSTEP_OFFSET 0.15f
 #endif
 
 cbuffer cbSSAOProperties : register(cb0)
@@ -23,7 +31,7 @@ cbuffer cbSSAOProperties : register(cb0)
 	float GaussianNumerator			: packoffset(c8.z);
 	float CameraNearClip			: packoffset(c8.w);
 	float CameraFarClip				: packoffset(c9.x);
-	float SamplePower				: packoffset(c9.y);
+	float DepthThreshold			: packoffset(c9.y);
 	float2 InverseSceneSize			: packoffset(c9.z);
 }
 
@@ -61,61 +69,41 @@ float GetLinearDepth(float nonLinearDepth, float nearClip, float farClip)
 	return ( -nearClip * fPercFar ) / ( nonLinearDepth - fPercFar);
 }
 
+float smootherstep(float x)
+{
+    // Evaluate polynomial
+    return x*x*x*(x*(x*6.0f - 15.0f) + 10.0f);
+}
+
 float4 PS_SSAO(PS_In_Quad input) : SV_TARGET0
 {
-	// Texture0 = Normals
-	// Texture1 = Depth
-	// Texture2 = Random noise
-	float3 vNormal = Texture0.SampleLevel(PointSampler, input.vTexCoord, 0).xyz;
+	// Texture0 = Depth
+	// Texture1 = Random noise
+	float fCenterDepth = GetLinearDepth(Texture0.SampleLevel(PointSampler, input.vTexCoord, 0).x, CameraNearClip, CameraFarClip);
 	
-	float fDepth = Texture1.SampleLevel(PointSampler, input.vTexCoord, 0).x;
-	float4 vPositionWS = GetPositionWS(input.vPosition2, fDepth);
-
 	// Sample the random texture so that this location will always yeild the same
 	// random direction (so that there is no flickering)
-	float3 vRandomDirection = Texture2.SampleLevel(PointSampler, frac(input.vTexCoord * RAND_TEX_SIZE), 0).xyz;
+	float fRandomRotation = Texture1.SampleLevel(PointSampler, frac(input.vTexCoord * RAND_TEX_SIZE), 0).x;
 	
-	float fAOSum = 0.0f;
+	float fUnoccludedSamples = 1;
+
 	[unroll]
 	for (int i = 0; i < SSAO_SAMPLE_COUNT; i++)
 	{
-		// Create the ray
-		float3 ray = reflect(SampleDirections[i].xyz, vRandomDirection) * SampleRadius;
-		
-		// Invert the ray if it points into the surface
-		ray = ray * sign(dot(ray, vNormal));
-		
-		// Calculate the position to be sampled
-		float4 vSamplePositionWS = float4(vPositionWS.xyz + ray, 1.0f);
+		float2 vRayDirBase = SampleDirections[i].xy * InverseSceneSize * SampleRadius;
+		float2 vRayDirRot = vRayDirBase * float2(sin(fRandomRotation), cos(fRandomRotation));
 
-		// Determine the screen space location of the sample
-		float4 vSamplePositionCS = mul(vSamplePositionWS, ViewProjection);
-		vSamplePositionCS.xyz = vSamplePositionCS.xyz / vSamplePositionCS.w;
-		vSamplePositionCS.w = 1.0f;
-		
-		// Transform the camera space position to a texture coordinate
-		float2 vSampleTexCoord = (0.5f * vSamplePositionCS.xy) + float2(0.5f, 0.5f);
-		vSampleTexCoord.y = 1.0f - vSampleTexCoord.y;
+		float2 vRayTexCoord = input.vTexCoord + vRayDirRot;
+		float fRayDepth = GetLinearDepth(Texture0.SampleLevel(PointSampler, vRayTexCoord, 0).x, CameraNearClip, CameraFarClip);
 
-		// Sample the depth of the new location
-		float fSampleDepth = Texture1.SampleLevel(PointSampler, vSampleTexCoord, 0).x;
-		
-		float fSampleLinearDepth = GetLinearDepth(fSampleDepth, CameraNearClip, CameraFarClip);
-		float fRayLinearDepth = GetLinearDepth(vSamplePositionCS.z, CameraNearClip, CameraFarClip);
-
-		// Calculate the occlusion
-		float fOcclusion = 1.0f;
-
-		float fRaySampleDist = fRayLinearDepth - fSampleLinearDepth;
-		if (fRaySampleDist < SampleRadius && fRaySampleDist > 0.0f && fSampleDepth < 1.0f)
+		if (abs(fRayDepth - fCenterDepth) > DepthThreshold || (fRayDepth + DEPTH_BIAS) >= fCenterDepth)
 		{
-			fOcclusion = pow(abs(fRaySampleDist / SampleRadius), SamplePower);
+			fUnoccludedSamples++;
 		}
-
-		fAOSum += fOcclusion;
 	}
 
-	float fAO = fAOSum / SSAO_SAMPLE_COUNT;
+	//float fAO = max((fUnoccludedSamples / fTotalSamples) + 0.5f, 0.0f) * 2.0f;
+	float fAO = saturate(smootherstep((fUnoccludedSamples / SSAO_SAMPLE_COUNT) + SMOOTHSTEP_OFFSET));
 
 	return float4(fAO, 0.0f, 0.0f, 1.0f);
 }
@@ -140,38 +128,53 @@ float CalcGaussianWeight(int sampleDist)
 }
 
 // Performs a gaussian blur in one direction
-float Blur(float2 texCoord, int2 direction)
+float Blur(float2 vTexCoord, float2 vDirection)
 {
+	// Texture0 = AO
+	// Texture1 = Normals
+
+	float2 vNormStep = InverseSceneSize;
 #if SSAO_HALF_RES
-	texCoord = texCoord * 0.5f;
+	float2 vAOTexCoord = vTexCoord * 0.5f;
+	float2 vAOStep = InverseSceneSize * 0.5f;
+#else
+	float2 vAOTexCoord = vTexCoord + (InverseSceneSize * 0.5f);
+	float2 vAOStep = InverseSceneSize;
 #endif
 
-	float weightMid = CalcGaussianWeight(0);
-	float sampleMid = Texture0.SampleLevel(PointSampler, texCoord, 0).x;
-    float value = sampleMid * weightMid;
+    float fTotalValue = 0.0f;
+	float fTotalWeight = 1.0f;
+
+	float3 fCenterNormal = Texture1.SampleLevel(PointSampler, vTexCoord, 0).xyz;
 
 	[unroll]
-    for (int i = 1; i <= BLUR_RADIUS; i++)
+    for (int i = -BLUR_RADIUS; i <= BLUR_RADIUS; i++)
     {
-		float weight = CalcGaussianWeight(i);
+		float fWeight = CalcGaussianWeight(i);
+		float3 fNormalSample = Texture1.SampleLevel(PointSampler, vTexCoord + (vNormStep * vDirection * i), 0).xyz;
 
-		float sampleDown = Texture0.SampleLevel(PointSampler, texCoord, 0, direction * i).x;
-		float sampleUp = Texture0.SampleLevel(PointSampler, texCoord, 0, direction * i).x;
-
-		value = value + (sampleDown + sampleUp) * weight;
+		if (dot(fNormalSample, fCenterNormal) > 0.85f)
+		{
+			float fAOSample = Texture0.SampleLevel(LinearSampler, vAOTexCoord + (vAOStep * vDirection * i), 0).x;
+			fTotalValue += fAOSample * fWeight;
+		}
+		else
+		{
+			fTotalWeight -= fWeight;
+		}
     }
 
-    return value;
+    return fTotalValue / fTotalWeight;
 }
 
 // Horizontal gaussian blur
 float4 PS_BlurHorizontal(PS_In_Quad input) : SV_TARGET0
 {
-    return float4(Blur(input.vTexCoord, int2(2, 0)), 0.0f, 0.0f, 1.0f);
+    return float4(Blur(input.vTexCoord, float2(2.0f, 0.0f)), 0.0f, 0.0f, 1.0f);
 }
 
 // Vertical gaussian blur
 float4 PS_BlurVertical(PS_In_Quad input) : SV_TARGET0
 {
-	return float4(Blur(input.vTexCoord, int2(0, 2)), 0.0f, 0.0f, 1.0f);
+	return float4(Blur(input.vTexCoord, float2(0.0f, 2.0f)), 0.0f, 0.0f, 1.0f);
 }

@@ -8,7 +8,7 @@ class SSAOPostProcess : public PostProcess
 private:
 	float _sampleRadius;
 	float _blurSigma;
-	float _samplePower;
+	float _depthThreshold;
 	bool _halfRes;
 	UINT _sampleCountIndex;
 
@@ -55,7 +55,7 @@ private:
 		float GaussianNumerator;
 		float CameraNearClip;
 		float CameraFarClip;
-		float SamplePower;
+		float DepthThreshold;
 		XMFLOAT2 InverseSceneSize;
 	};
 
@@ -66,10 +66,10 @@ public:
 	void SetSampleRadius(float radius) { _sampleRadius = max(radius, 0.0f); }
 
 	float GetBlurSigma() const { return _blurSigma; }
-	void SetBlurSigma(float sigma) { _blurSigma = max(sigma, EPSILON); }
+	void SetBlurSigma(float sigma) { _blurSigma = max(sigma, 0.1f); }
 
-	float GetSamplePower() const { return _samplePower; }
-	void SetSamplePower(float power) { _samplePower = max(power, EPSILON); }
+	float GetDepthThreshold() const { return _depthThreshold; }
+	void SetDepthTreshold(float thresh) { _depthThreshold = max(thresh, EPSILON); }
 
 	bool GetHalfResolution() const { return _halfRes; }
 	void SetHalfResolution(bool val) { _halfRes = val; }
