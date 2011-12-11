@@ -36,6 +36,7 @@ private:
 	AxisAlignedBox _boundingBox;
 
 	bool _alphaCutoutEnabled;
+	bool _drawBackFaces;
 
 	void CreateInputElements(D3DVERTEXELEMENT9* declaration);
 
@@ -59,6 +60,7 @@ public:
 	const AxisAlignedBox& GetAxisAlignedBox() const { return _boundingBox; }
 
 	bool GetAlphaCutoutEnabled() const { return _alphaCutoutEnabled; }
+	bool GetDrawBackFaces() const { return _drawBackFaces; }
 
 	const WCHAR* GetName() const { return _name; }
 	

@@ -4,7 +4,8 @@
 
 Mesh::Mesh()
 	: _indexBuffer(NULL), _indexCount(0), _vertexBuffer(NULL), _vertexCount(0), _vertexStride(0), 
-	  _meshParts(NULL), _meshPartCount(0), _inputElements(NULL), _alphaCutoutEnabled(false), _name(NULL)
+	  _meshParts(NULL), _meshPartCount(0), _inputElements(NULL), _alphaCutoutEnabled(true), _drawBackFaces(false), 
+	  _name(NULL)
 {
 }
 
