@@ -1,38 +1,41 @@
 #pragma once
 
 #include "PCH.h"
+#include "PostProcess.h"
 #include "IHasContent.h"
-#include "Camera.h"
-#include "DeviceStates.h"
 #include "xnaCollision.h"
 
-struct BOUNDING_OBJECT_VERTEX
-{
-	XMFLOAT3 Position;
-	XMFLOAT3 Color;
-};
-
-struct CB_BOUNDING_OBJECT_PROPERTIES
-{
-	XMFLOAT4X4 WorldViewProjection;
-};
-
-class BoundingObjectRenderer : public IHasContent
+class BoundingObjectPostProcess : public PostProcess
 {
 private:
+	struct BOUNDING_OBJECT_VERTEX
+	{
+		XMFLOAT3 Position;
+	};
+
+	struct CB_BOUNDING_OBJECT_PROPERTIES
+	{
+		XMFLOAT4X4 WorldViewProjection;
+	};
+
+	struct CB_BOUNDING_OBJECT_COLOR
+	{
+		XMFLOAT4 Color;
+	};
+
 	static const UINT MAX_BOUNDING_OBJECTS = 512;
 
 	UINT _nextAABB;
-	AxisAlignedBox _aabbs[MAX_BOUNDING_OBJECTS];
+	AxisAlignedBox* _aabbs;
 
 	UINT _nextOBB;
-	OrientedBox _obbs[MAX_BOUNDING_OBJECTS];
+	OrientedBox* _obbs;
 
 	UINT _nextSphere;
-	Sphere _spheres[MAX_BOUNDING_OBJECTS];
+	Sphere* _spheres;
 
 	UINT _nextFrust;
-	Frustum _frustums[MAX_BOUNDING_OBJECTS];
+	Frustum* _frustums;
 
 	ID3D11Buffer* _boxVB;
 	ID3D11Buffer* _boxIB;
@@ -45,45 +48,30 @@ private:
 	ID3D11VertexShader* _vertexShader;
 	ID3D11PixelShader* _pixelShader;
 		
-	ID3D11Buffer* _constantBuffer;
+	ID3D11Buffer* _wvpConstantBuffer;
+	ID3D11Buffer* _colorConstantBuffer;
+
+	XMFLOAT4 _boColor;
 
 	void fillRingVB(BOUNDING_OBJECT_VERTEX* buffer, UINT startIdx, UINT numSegments, const XMFLOAT3& Origin, 
-		const XMFLOAT3& MajorAxis, const XMFLOAT3& MinorAxis, const XMFLOAT3& Color );
-
-	DepthStencilStates _dsStates;
-	SamplerStates _samplerStates;
-	BlendStates _blendStates;
-	RasterizerStates _rasterStates;
-
-protected:
-	DepthStencilStates* GetDepthStencilStates()
-	{
-		return &_dsStates;
-	}
-	SamplerStates* GetSamplerStates()
-	{
-		return &_samplerStates;
-	}
-	BlendStates* GetBlendStates()
-	{
-		return &_blendStates;
-	}
-	RasterizerStates* GetRasterizerStates()
-	{
-		return &_rasterStates;
-	}
+		const XMFLOAT3& MajorAxis, const XMFLOAT3& MinorAxis);
 
 public:
-	BoundingObjectRenderer();
+	BoundingObjectPostProcess();
+	~BoundingObjectPostProcess();
 
 	void Add(const AxisAlignedBox& aabb);
 	void Add(const OrientedBox& obb);
 	void Add(const Sphere& sphere);
 	void Add(const Frustum& frust);
 
+	void SetColor(const XMFLOAT4& color) { _boColor = color; }
+	const XMFLOAT4& GetColor() const { return _boColor; }
+
 	void Clear();
 
-	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera);
+	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
+		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
 	void OnD3D11DestroyDevice();
