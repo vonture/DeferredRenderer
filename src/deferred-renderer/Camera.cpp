@@ -209,3 +209,39 @@ XMFLOAT3 Camera::GetDown() const
 {
 	return XMFLOAT3(-_world._21, -_world._22, -_world._23);
 }
+
+Ray Camera::Unproject(const XMFLOAT2& screenPos, const XMFLOAT2& viewPortSize) const
+{
+	XMFLOAT2 viewPortPos = XMFLOAT2((screenPos.x / viewPortSize.x) * 2.0f - 1.0f,
+		-((screenPos.y / viewPortSize.y) * 2.0f - 1.0f));
+
+	//XMFLOAT2 viewPortPos = XMFLOAT2((screenPos.x / viewPortSize.x),
+	//	(screenPos.y / viewPortSize.y));
+
+	XMVECTOR start = XMVectorSet(viewPortPos.x, viewPortPos.y, 0.0f, 1.0f);
+	XMVECTOR end = XMVectorSet(viewPortPos.x, viewPortPos.y, 1.0f, 1.0f);
+
+	XMMATRIX invViewProj = XMLoadFloat4x4(&_invViewProj);
+
+	start = XMVector3TransformCoord(start, invViewProj);
+	end = XMVector3TransformCoord(end, invViewProj);
+	
+	Ray r;
+	XMStoreFloat3(&r.Origin, start);
+	XMStoreFloat3(&r.Direction, XMVector3Normalize(end - start));
+
+	return r;
+}
+
+Frustum Camera::CreateFrustum() const
+{
+	XMMATRIX proj = XMLoadFloat4x4(&_proj);
+
+	Frustum f;
+	Collision::ComputeFrustumFromProjection(&f, &proj);
+
+	f.Origin = GetPosition();
+	f.Orientation = GetOrientation();
+	
+	return f;
+}

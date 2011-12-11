@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PCH.h"
+#include "xnaCollision.h"
 
 class Camera
 {
@@ -54,4 +55,7 @@ public:
 	XMFLOAT3 GetLeft() const;
 	XMFLOAT3 GetUp() const;
 	XMFLOAT3 GetDown() const;
+
+	Ray Unproject(const XMFLOAT2& screenPos, const XMFLOAT2& viewPortSize) const;
+	Frustum CreateFrustum() const;
 };
