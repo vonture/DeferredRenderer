@@ -3,7 +3,7 @@
 #include "Logger.h"
 
 Renderer::Renderer() 
-	: _begun(false), _boDrawTypes(BoundingObjectDrawType::None)
+	: _begun(false)
 {
 	_ambientLight.Color = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
@@ -65,13 +65,11 @@ HRESULT Renderer::Begin()
 	_postProcesses.push_back(&_combinePP);
 
 	_ambientLight.Color = XMFLOAT3(0.0f, 0.0f, 0.0f);
-
-	_boRenderer.Clear();
-
+	
 	return S_OK;
 }
 
-HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
+HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* viewCamera, Camera* clipCamera)
 {
 	HRESULT hr;
 
@@ -80,6 +78,11 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 		return E_FAIL;
 	}
 	_begun = false;
+
+	if (!clipCamera)
+	{
+		clipCamera = viewCamera;
+	}
 	
 	ID3D11RenderTargetView* pOrigRTV = NULL;
     ID3D11DepthStencilView* pOrigDSV = NULL;
@@ -102,7 +105,7 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 	BEGIN_EVENT_D3D(L"Shadow Maps");
 	for (std::map<size_t, LightRendererBase*>::iterator it = _lightRenderers.begin(); it != _lightRenderers.end(); it++)
 	{
-		V_RETURN(it->second->RenderShadowMaps(pd3dImmediateContext, &_models, camera, &sceneBounds));
+		V_RETURN(it->second->RenderShadowMaps(pd3dImmediateContext, &_models, viewCamera, &sceneBounds));
 	}
 	END_EVENT_D3D(L"");
 
@@ -111,7 +114,7 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 	V_RETURN(_gBuffer.SetRenderTargetsAndDepthStencil(pd3dImmediateContext));
 	V_RETURN(_gBuffer.Clear(pd3dImmediateContext));
 
-	V_RETURN(_modelRenderer.RenderModels(pd3dImmediateContext, &_models, camera));
+	V_RETURN(_modelRenderer.RenderModels(pd3dImmediateContext, &_models, viewCamera));
 
 	V_RETURN(_gBuffer.UnsetRenderTargetsAndDepthStencil(pd3dImmediateContext));
 	END_EVENT_D3D(L"");
@@ -125,7 +128,7 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 
 	for (std::map<size_t, LightRendererBase*>::iterator it = _lightRenderers.begin(); it != _lightRenderers.end(); it++)
 	{
-		V_RETURN(it->second->RenderLights(pd3dImmediateContext, camera, &_gBuffer));
+		V_RETURN(it->second->RenderLights(pd3dImmediateContext, viewCamera, &_gBuffer));
 	}
 	END_EVENT_D3D(L"");
 
@@ -173,7 +176,7 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 		}
 
 		// Render the post process
-		V_RETURN(pp->Render(pd3dImmediateContext, srcSRV, dstRTV, camera, &_gBuffer, &_lightBuffer));
+		V_RETURN(pp->Render(pd3dImmediateContext, srcSRV, dstRTV, viewCamera, &_gBuffer, &_lightBuffer));
 
 		if (!isAdditive)
 		{
@@ -182,50 +185,6 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera)
 	}
 	END_EVENT_D3D(L"");
 
-	// Render the bounding shapes
-	if (_boDrawTypes != BoundingObjectDrawType::None)
-	{
-		BEGIN_EVENT_D3D(L"Bounding Objects");
-		
-		if (_boDrawTypes & BoundingObjectDrawType::Models ||
-			_boDrawTypes & BoundingObjectDrawType::ModelMeshes)
-		{
-			for (UINT i = 0; i < _models.size(); i++)
-			{
-				if (_boDrawTypes & BoundingObjectDrawType::Models)
-				{
-					OrientedBox obb = _models[i]->GetOrientedBox();
-				}
-				if (_boDrawTypes & BoundingObjectDrawType::ModelMeshes)
-				{
-					UINT meshCount = _models[i]->GetModelMeshCount();
-					for (UINT j = 0; j < meshCount; j++)
-					{
-						OrientedBox obb = _models[i]->GetMeshOrientedBox(j);
-						_boRenderer.Add(obb);
-					}
-				}				
-			}
-		}
-
-		if (_boDrawTypes & BoundingObjectDrawType::CameraFrustums)
-		{
-			XMFLOAT4X4 fCameraProj = camera->GetProjection();
-			XMMATRIX cameraProj = XMLoadFloat4x4(&fCameraProj);
-		
-			Frustum cameraFrust;
-			Collision::ComputeFrustumFromProjection(&cameraFrust, &cameraProj);
-			cameraFrust.Origin = camera->GetPosition();
-			cameraFrust.Orientation = camera->GetOrientation();
-
-			_boRenderer.Add(cameraFrust);
-		}
-
-		V_RETURN(_boRenderer.Render(pd3dImmediateContext, camera));
-		
-		END_EVENT_D3D(L"");
-	}
-	
 	SAFE_RELEASE(pOrigRTV);
     SAFE_RELEASE(pOrigDSV);
 		
@@ -241,7 +200,6 @@ HRESULT Renderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* 
 	V_RETURN(_lightBuffer.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 	V_RETURN(_modelRenderer.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 	V_RETURN(_combinePP.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
-	V_RETURN(_boRenderer.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
@@ -252,7 +210,6 @@ void Renderer::OnD3D11DestroyDevice()
 	_lightBuffer.OnD3D11DestroyDevice();
 	_modelRenderer.OnD3D11DestroyDevice();
 	_combinePP.OnD3D11DestroyDevice();
-	_boRenderer.OnD3D11DestroyDevice();
 }
 
 HRESULT Renderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
@@ -317,7 +274,6 @@ HRESULT Renderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManag
 	V_RETURN(_lightBuffer.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_modelRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_combinePP.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
-	V_RETURN(_boRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
@@ -335,5 +291,4 @@ void Renderer::OnD3D11ReleasingSwapChain()
 	_lightBuffer.OnD3D11ReleasingSwapChain();
 	_modelRenderer.OnD3D11ReleasingSwapChain();
 	_combinePP.OnD3D11ReleasingSwapChain();
-	_boRenderer.OnD3D11ReleasingSwapChain();
 }
