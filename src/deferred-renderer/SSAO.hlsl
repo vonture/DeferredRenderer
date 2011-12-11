@@ -7,7 +7,7 @@
 #endif
 
 #ifndef BLUR_RADIUS
-#define BLUR_RADIUS 5
+#define BLUR_RADIUS 3
 #endif
 
 #ifndef RAND_TEX_SIZE
@@ -76,6 +76,7 @@ float4 PS_SSAO(PS_In_Quad input) : SV_TARGET0
 	float3 vRandomDirection = Texture2.SampleLevel(PointSampler, frac(input.vTexCoord * RAND_TEX_SIZE), 0).xyz;
 	
 	float fAOSum = 0.0f;
+	[unroll]
 	for (int i = 0; i < SSAO_SAMPLE_COUNT; i++)
 	{
 		// Create the ray
@@ -139,7 +140,7 @@ float CalcGaussianWeight(int sampleDist)
 }
 
 // Performs a gaussian blur in one direction
-float Blur(float2 texCoord, float2 direction)
+float Blur(float2 texCoord, int2 direction)
 {
 #if SSAO_HALF_RES
 	texCoord = texCoord * 0.5f;
@@ -149,15 +150,15 @@ float Blur(float2 texCoord, float2 direction)
 	float sampleMid = Texture0.SampleLevel(PointSampler, texCoord, 0).x;
     float value = sampleMid * weightMid;
 
+	[unroll]
     for (int i = 1; i <= BLUR_RADIUS; i++)
     {
-		float2 offset = i * (InverseSceneSize * direction);
 		float weight = CalcGaussianWeight(i);
 
-		float sampleDown = Texture0.SampleLevel(PointSampler, texCoord - offset, 0).x;
-		float sampleUp = Texture0.SampleLevel(PointSampler, texCoord + offset, 0).x;
+		float sampleDown = Texture0.SampleLevel(PointSampler, texCoord, 0, direction * i).x;
+		float sampleUp = Texture0.SampleLevel(PointSampler, texCoord, 0, direction * i).x;
 
-		value = value + (sampleDown * weight) + (sampleUp * weight);
+		value = value + (sampleDown + sampleUp) * weight;
     }
 
     return value;
@@ -166,11 +167,11 @@ float Blur(float2 texCoord, float2 direction)
 // Horizontal gaussian blur
 float4 PS_BlurHorizontal(PS_In_Quad input) : SV_TARGET0
 {
-    return float4(Blur(input.vTexCoord, float2(1.0f, 0.0f)), 0.0f, 0.0f, 1.0f);
+    return float4(Blur(input.vTexCoord, int2(2, 0)), 0.0f, 0.0f, 1.0f);
 }
 
 // Vertical gaussian blur
 float4 PS_BlurVertical(PS_In_Quad input) : SV_TARGET0
 {
-	return float4(Blur(input.vTexCoord, float2(0.0f, 1.0f)), 0.0f, 0.0f, 1.0f);
+	return float4(Blur(input.vTexCoord, int2(0, 2)), 0.0f, 0.0f, 1.0f);
 }
