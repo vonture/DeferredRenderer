@@ -102,15 +102,16 @@ PS_Out_Mesh PS_Mesh(VS_Out_Mesh input)
 	float4 vDiffuse = float4(DiffuseColor, Alpha);
 #endif
 		
+#if NORMAL_MAPPED
 	float3 vNormalWS = normalize(input.vNormalWS);
 	float3 vTangentWS = normalize(input.vTangentWS);
 	float3 vBinormalWS = normalize(input.vBinormalWS);
 	float3x3 mTangentToWorld = float3x3(vTangentWS, vBinormalWS, vNormalWS);
-#if NORMAL_MAPPED
+
 	float3 vNormalTS = (NormalMap.Sample(Sampler, input.vTexCoord).xyz * 2.0f) - 1.0f;
 	float3 vNormal = normalize(mul(vNormalTS, mTangentToWorld));
 #else
-	float3 vNormal = normalize(mul(float3(0.0f, 0.0f, 1.0f), mTangentToWorld));
+	float3 vNormal = normalize(input.vNormalWS);
 #endif
 
 	float3 vEmissive = EmissiveColor;
