@@ -11,7 +11,6 @@
 #include "IHasContent.h"
 #include "ModelRenderer.h"
 #include "SpotLightRenderer.h"
-#include "BoundingObjectRenderer.h"
 #include "xnaCollision.h"
 
 namespace BoundingObjectDrawType
@@ -19,10 +18,10 @@ namespace BoundingObjectDrawType
 	enum
 	{
 		None			= 0,
-		Lights			= (1 << 1),
-		Models			= (1 << 2),
-		ModelMeshes		= (1 << 3),
-		CameraFrustums	= (1 << 4),
+		Lights			= (1 << 0),
+		Models			= (1 << 1),
+		ModelMeshes		= (1 << 2),
+		CameraFrustums	= (1 << 3),
 		All				= Lights | Models | ModelMeshes | CameraFrustums
 	};
 };
@@ -37,10 +36,7 @@ private:
 	std::vector<PostProcess*> _postProcesses;
 	ModelRenderer _modelRenderer;
 	CombinePostProcess _combinePP;
-
-	UINT _boDrawTypes;
-	BoundingObjectRenderer _boRenderer;
-	
+		
 	ID3D11Texture2D* _ppTextures[2];
 	ID3D11ShaderResourceView* _ppShaderResourceViews[2];
 	ID3D11RenderTargetView* _ppRenderTargetViews[2];
@@ -93,11 +89,8 @@ public:
 	void AddModel(ModelInstance* model);
 	void AddPostProcess(PostProcess* postProcess);
 
-	UINT GetBoundingObjectDrawTypes() const { return _boDrawTypes; }
-	void SetBoundingObjectDrawTypes(UINT types) { _boDrawTypes = types; }
-
 	HRESULT Begin();
-	HRESULT End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera);
+	HRESULT End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera, Camera* clipCamera = NULL);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
 	void OnD3D11DestroyDevice();
