@@ -20,6 +20,7 @@ class MouseState
 {
 private:
 	int _x, _y, _dx, _dy;
+	int _scroll, _dscroll;
 	bool _overWindow;
 	ButtonState _buttonStates[5];
 
@@ -36,6 +37,9 @@ public:
 	int GetY();
 	int GetDX();
 	int GetDY();
+
+	int GetScroll();
+	int GetDScroll();
 
 	bool IsOverWindow();
 	bool IsJustOverWindow();

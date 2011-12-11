@@ -32,6 +32,16 @@ int MouseState::GetDY()
 	return _dy;
 }
 
+int MouseState::GetScroll()
+{
+	return _scroll;
+}
+
+int MouseState::GetDScroll()
+{
+	return _dscroll;
+}
+
 bool MouseState::IsOverWindow()
 {
 	return _overWindow;
@@ -109,8 +119,11 @@ MouseState MouseState::GetState(HWND hwnd)
 	MouseState newState;
 	newState._x = pos.x;
 	newState._y = pos.y;
-	newState._dx = pos.x - _prevState._x;
-	newState._dy = pos.y - _prevState._y;
+	newState._dx = newState._x - _prevState._x;
+	newState._dy = newState._y - _prevState._y;
+	
+	newState._scroll = 0;
+	newState._dscroll = newState._scroll - _prevState._scroll;
 
 	newState._buttonStates[MouseButton::LeftButton].Pressed = (GetKeyState(VK_LBUTTON) & KF_UP) != 0;
 	newState._buttonStates[MouseButton::LeftButton].JustPressed = 
