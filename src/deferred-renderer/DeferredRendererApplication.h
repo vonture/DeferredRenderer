@@ -16,6 +16,7 @@
 #include "MotionBlurPostProcess.h"
 #include "UIPostProcess.h"
 #include "FXAAPostProcess.h"
+#include "BoundingObjectPostProcess.h"
 
 #include "DualParaboloidPointLightRenderer.h"
 #include "CascadedDirectionalLightRenderer.h"
@@ -42,6 +43,8 @@ private:
 	std::vector<ModelInstance*> _models;
 	std::vector<IHasContent*> _contentHolders;
 
+	ModelInstance* _selectedModel;
+
 	DualParaboloidPointLightRenderer _paraboloidPointLR;
 	CascadedDirectionalLightRenderer _cascadedDirectionalLR;
 	SpotLightRenderer _spotLR;
@@ -54,6 +57,7 @@ private:
 	HBAOPostProcess _hbaoPP;
 	DiscDoFPostProcess _discDoFPP;
 	MotionBlurPostProcess _motionBlurPP;
+	BoundingObjectPostProcess _boPP;
 	UIPostProcess _uiPP;
 
 	TextureLoader _textureLoader;

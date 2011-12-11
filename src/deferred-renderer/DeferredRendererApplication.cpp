@@ -14,7 +14,7 @@
 #include "ProfilePane.h"
 
 DeferredRendererApplication::DeferredRendererApplication()
-	: Application(L"Deferred Renderer", NULL), _renderer(), _camera(0.1f, 40.0f, 1.0f, 1.0f), 
+	: Application(L"Deferred Renderer", NULL), _camera(0.1f, 40.0f, 1.0f, 1.0f), _selectedModel(NULL),
 	  _configWindow(NULL), _logWindow(NULL), _ppConfigPane(NULL)
 {	
 	
@@ -38,18 +38,12 @@ DeferredRendererApplication::DeferredRendererApplication()
 	occcity->SetScale(1.0f);
 	occcity->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	_models.push_back(occcity);
-	*/
+	
 	ModelInstance* soldier = new ModelInstance(L"\\models\\soldier\\soldier.sdkmesh");
 	soldier->SetScale(1.0f);
 	soldier->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	_models.push_back(soldier);
-
-	//ModelInstance* occluder = new ModelInstance(L"\\models\\MicroscopeCity\\occluder.sdkmesh");
-	//occluder->SetScale(1.0f);
-	//occluder->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
-	//_models.push_back(occluder);
-
-	/*
+		
 	ModelInstance* sponza = new ModelInstance(L"D:\\Program Files (x86)\\NVIDIA Corporation\\NVIDIA Direct3D SDK 11\\Media\\sponza\\Sponza.obj");
 	sponza->SetScale(0.02f);
 	sponza->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
@@ -83,6 +77,7 @@ DeferredRendererApplication::DeferredRendererApplication()
 	_contentHolders.push_back(&_hbaoPP);
 	_contentHolders.push_back(&_discDoFPP);
 	_contentHolders.push_back(&_motionBlurPP);
+	_contentHolders.push_back(&_boPP);
 	_contentHolders.push_back(&_uiPP);
 	_contentHolders.push_back(&_paraboloidPointLR);
 	_contentHolders.push_back(&_cascadedDirectionalLR);
@@ -105,15 +100,13 @@ DeferredRendererApplication::~DeferredRendererApplication()
 void DeferredRendererApplication::OnInitialize()
 {		
 	// Set some properties of the renderer
-	_renderer.SetBoundingObjectDrawTypes(BoundingObjectDrawType::None);
-
 	_renderer.AddLightRenderer(&_paraboloidPointLR);
 	_renderer.AddLightRenderer(&_cascadedDirectionalLR);
 	_renderer.AddLightRenderer(&_spotLR);
 	
 	// Create all the UI elements
 	Gwen::Controls::Canvas* canvas = _uiPP.GetCanvas();
-
+	
 	// Create the configuration window and its panes
 	_configWindow = new ConfigurationWindow(canvas);
 
@@ -125,6 +118,7 @@ void DeferredRendererApplication::OnInitialize()
 	_ppConfigPane->AddPostProcess(&_hdrPP, L"HDR", true, true);
 	_ppConfigPane->AddPostProcess(&_discDoFPP, L"Disc DoF", false, true);
 	_ppConfigPane->AddPostProcess(&_fxaaPP, L"FXAA", true, true);
+	_ppConfigPane->AddPostProcess(&_boPP, L"Bounding objects", true, true);
 	_ppConfigPane->AddPostProcess(&_uiPP, L"UI", true, false);
 	_ppConfigPane->AddPostProcess(&_motionBlurPP, L"Motion blur", false, false);	
 
@@ -177,7 +171,7 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 	KeyboardState kb = KeyboardState::GetState();
 	MouseState mouse = MouseState::GetState(hwnd);
 	END_EVENT(L"");
-
+	
 	if (IsActive() && mouse.IsOverWindow())
 	{
 		BEGIN_EVENT(L"Process input");
@@ -210,10 +204,7 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 			rotation.x += mouse.GetDX() * mouseRotateSpeed;
 			rotation.y += mouse.GetDY() * mouseRotateSpeed;
 			_camera.SetRotation(rotation);
-
-			// Set the mouse back one frame
-			//MouseState::SetCursorPosition(mouse.GetX() - mouse.GetDX(), mouse.GetY() - mouse.GetDY(), hwnd);
-
+			
 			XMFLOAT2 moveDir = XMFLOAT2(0.0f, 0.0f);
 			if (kb.IsKeyDown(Keys::W) || kb.IsKeyDown(Keys::Up))
 			{
@@ -246,6 +237,61 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 			XMStoreFloat3(&camPos, position);
 			_camera.SetPosition(camPos);
 		}
+
+		if (mouse.IsButtonJustPressed(MouseButton::LeftButton))
+		{
+			XMFLOAT2 mousePos = XMFLOAT2(mouse.GetX(), mouse.GetY());
+			XMFLOAT2 viewSize = XMFLOAT2(GetWidth(), GetHeight());
+
+			Ray mouseRay = _camera.Unproject(mousePos, viewSize);
+
+			XMVECTOR rayOrigin = XMLoadFloat3(&mouseRay.Origin);
+			XMVECTOR rayDir = XMLoadFloat3(&mouseRay.Direction);
+
+			float minDist = _camera.GetFarClip();
+			ModelInstance* minModel = NULL;
+
+			for (UINT i = 0; i < _models.size(); i++)
+			{
+				for (UINT j = 0; j < _models[i]->GetModelMeshCount(); j++)
+				{
+					float dist;
+					if (Collision::IntersectRayOrientedBox(rayOrigin, rayDir, &_models[i]->GetMeshOrientedBox(j), &dist) &&
+						dist < minDist)
+					{
+						minDist = dist;
+						minModel = _models[i];
+					}
+				}
+			}
+
+			if (minModel)
+			{
+				_modelConfigPane->SelectModelInstance(minModel);
+			}
+			_selectedModel = minModel;
+		}
+
+		if (mouse.IsButtonDown(MouseButton::LeftButton))
+		{
+			if (_selectedModel)
+			{
+				XMFLOAT3 curModelPos = _selectedModel->GetPosition();
+				XMFLOAT3 camUp = _camera.GetUp();
+				XMFLOAT3 camRight = _camera.GetRight();				
+
+				XMVECTOR pos = XMLoadFloat3(&curModelPos);
+				XMVECTOR up = XMLoadFloat3(&camUp);
+				XMVECTOR right = XMLoadFloat3(&camRight);
+
+				pos += (((-mouse.GetDY() * up) + (mouse.GetDX() * right)) * 0.01f);
+
+				XMStoreFloat3(&curModelPos, pos);
+				_selectedModel->SetPosition(curModelPos);
+			}
+			
+		}
+
 		END_EVENT(L"");
 	}
 	
@@ -280,18 +326,27 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 
 	V_RETURN(_renderer.Begin());
 
+	_boPP.Clear();
 	for (UINT i = 0; i < _modelConfigPane->GetModelInstanceCount(); i++)
 	{
-		_renderer.AddModel(_modelConfigPane->GetModelInstance(i));
+		ModelInstance* instance = _modelConfigPane->GetModelInstance(i);
+
+		_renderer.AddModel(instance);
+
+		_boPP.Add(instance->GetOrientedBox());
+		for (UINT j = 0; j < instance->GetModelMeshCount(); j++)
+		{
+			_boPP.Add(instance->GetMeshOrientedBox(j));
+		}
 	}
 
-	/*PointLight pLight = 
+	PointLight pLight = 
 	{
 		XMFLOAT3(3.0f, 4.0f, 0.0f),	// XMFLOAT3 Position;
-		25,								// float Radius;
-		XMFLOAT3(1.0f, 1.0f, 1.0f),		// XMFLOAT3 Color;	
+		15,							// float Radius;
+		XMFLOAT3(3.0f, 3.0f, 3.0f),	// XMFLOAT3 Color;	
 	};
-	_renderer.AddLight(&pLight);*/
+	_renderer.AddLight(&pLight, true);
 
 	if (_ppConfigPane->IsPostProcessEnabled(&_skyPP) && _skyPP.GetSunEnabled())
 	{
@@ -308,7 +363,7 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 		_renderer.AddLight(&sun, true);
 	}
 	
-	float ambientIntesity = 1.0f;
+	float ambientIntesity = 0.5f;
 	AmbientLight ambientLight = 
 	{
 		XMFLOAT3(ambientIntesity, ambientIntesity, ambientIntesity)
