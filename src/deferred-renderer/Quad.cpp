@@ -17,13 +17,13 @@ HRESULT Quad::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11PixelShade
     UINT offsets = 0;
     ID3D11Buffer* pBuffers[1] = { _vertexBuffer };
 
-    pd3dImmediateContext->IASetInputLayout( _inputLayout );
-    pd3dImmediateContext->IASetVertexBuffers( 0, 1, pBuffers, &strides, &offsets );
-    pd3dImmediateContext->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP );
+    pd3dImmediateContext->IASetInputLayout(_inputLayout);
+    pd3dImmediateContext->IASetVertexBuffers(0, 1, pBuffers, &strides, &offsets);
+    pd3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
-    pd3dImmediateContext->VSSetShader( _vertexShader, NULL, 0 );
-    pd3dImmediateContext->PSSetShader( pixelShader, NULL, 0 );
-    pd3dImmediateContext->Draw( 4, 0 );
+    pd3dImmediateContext->VSSetShader(_vertexShader, NULL, 0);
+    pd3dImmediateContext->PSSetShader(pixelShader, NULL, 0);
+    pd3dImmediateContext->Draw(4, 0);
 
 	return S_OK;
 }
