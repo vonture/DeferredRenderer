@@ -102,7 +102,7 @@ HRESULT Application::Start()
 		return E_FAIL;
 	}
 	INT64 startTime = largeInt.QuadPart;
-	INT64 prevTime = startTime;
+	INT64 prevTime = 0;
 	INT64 inactiveTime = 0;
 
 	if (!QueryPerformanceFrequency(&largeInt))

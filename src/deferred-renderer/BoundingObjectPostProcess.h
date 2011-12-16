@@ -3,6 +3,7 @@
 #include "PCH.h"
 #include "PostProcess.h"
 #include "IHasContent.h"
+#include "BoundingObjectSet.h"
 #include "xnaCollision.h"
 
 class BoundingObjectPostProcess : public PostProcess
@@ -22,20 +23,8 @@ private:
 	{
 		XMFLOAT4 Color;
 	};
-
-	static const UINT MAX_BOUNDING_OBJECTS = 512;
-
-	UINT _nextAABB;
-	AxisAlignedBox* _aabbs;
-
-	UINT _nextOBB;
-	OrientedBox* _obbs;
-
-	UINT _nextSphere;
-	Sphere* _spheres;
-
-	UINT _nextFrust;
-	Frustum* _frustums;
+	
+	BoundingObjectSet _objects;
 
 	ID3D11Buffer* _boxVB;
 	ID3D11Buffer* _boxIB;
@@ -64,6 +53,7 @@ public:
 	void Add(const OrientedBox& obb);
 	void Add(const Sphere& sphere);
 	void Add(const Frustum& frust);
+	void Add(BoundingObjectSet* objectSet);
 
 	void SetColor(const XMFLOAT4& color) { _boColor = color; }
 	const XMFLOAT4& GetColor() const { return _boColor; }

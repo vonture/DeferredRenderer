@@ -8,7 +8,7 @@
 #include "AssimpLogger.h"
 
 Model::Model()
-	: _refCount(1), _meshes(NULL), _meshCount(0), _materials(NULL), _materialCount(0)
+	: _meshes(NULL), _meshCount(0), _materials(NULL), _materialCount(0)
 {
 }
 
@@ -47,7 +47,7 @@ IDirect3DDevice9* createD3D9Device()
     return d3d9Device;
 }
 
-HRESULT Model::CreateFromFile(ID3D11Device* device, LPCWSTR fileName)
+HRESULT Model::CreateFromFile(ID3D11Device* device, const WCHAR* fileName)
 {
 	HRESULT hr;	
 	

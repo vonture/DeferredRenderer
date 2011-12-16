@@ -43,7 +43,7 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext,
 	pd3dDeviceContext->VSSetShader(_meshVertexShader, NULL, 0);
 
 	pd3dDeviceContext->IASetInputLayout(_meshInputLayout);
-	pd3dDeviceContext->OMSetDepthStencilState(_dsStates.GetDepthWriteEnabled(), 0);
+	pd3dDeviceContext->OMSetDepthStencilState(_dsStates.GetDepthWriteStencilSetDesc(), 1);
 
 	pd3dDeviceContext->RSSetState(_rasterStates.GetNoCull());
 
@@ -56,7 +56,7 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext,
 	// if Alpha cutout is enabled, map the alpha cutout info buffer
 	if (_alphaCutoutEnabled)
 	{
-		V(pd3dDeviceContext->Map(_alphaThresholdBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+		V_RETURN(pd3dDeviceContext->Map(_alphaThresholdBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 		CB_MODEL_ALPHA_THRESHOLD* cutoutProperties = (CB_MODEL_ALPHA_THRESHOLD*)mappedResource.pData;
 		cutoutProperties->AlphaThreshold = _alphaThreshold;
 		pd3dDeviceContext->Unmap(_alphaThresholdBuffer, 0);

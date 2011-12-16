@@ -54,7 +54,7 @@ HRESULT TextureLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11ThreadPu
 		CHAR debugName[256];
 
 		sprintf_s(debugName, "%s %s", options->DebugName, "SRV");
-		SET_DEBUG_NAME(content->ShaderResourceView, debugName);
+		V_RETURN(SetDXDebugName(content->ShaderResourceView, debugName));
 	}
 
 	*contentOut = content;

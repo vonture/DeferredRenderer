@@ -25,6 +25,12 @@ SkyConfigurationPane::SkyConfigurationPane(Gwen::Controls::Base* parent, SkyPost
 	_skyColorPicker->Dock(Gwen::Pos::Top);
 	_skyColorPicker->onColorChanged.Add(this, &SkyConfigurationPane::OnValueChanged);
 
+	_skyBrightnessSlider = new SliderWithLabel(this);
+	_skyBrightnessSlider->Slider()->SetRange(0.0f, 10.0f);
+	_skyBrightnessSlider->Slider()->SetValue(pp->GetSkyBrightness());		
+	_skyBrightnessSlider->Slider()->onValueChanged.Add(this, &SkyConfigurationPane::OnValueChanged);
+	_skyBrightnessSlider->Dock(Gwen::Pos::Top);
+
 	_sunEnabledCheckBox = new Gwen::Controls::CheckBoxWithLabel(this);
 	_sunEnabledCheckBox->Label()->SetText("Sun enabled");
 	_sunEnabledCheckBox->Checkbox()->SetChecked(pp->GetSunEnabled());
@@ -42,11 +48,11 @@ SkyConfigurationPane::SkyConfigurationPane(Gwen::Controls::Base* parent, SkyPost
 	_sunColorPicker->Dock(Gwen::Pos::Top);
 	_sunColorPicker->onColorChanged.Add(this, &SkyConfigurationPane::OnValueChanged);
 	
-	_sunIntensitySlider = new SliderWithLabel(this);
-	_sunIntensitySlider->Slider()->SetRange(0.0f, 25.0f);
-	_sunIntensitySlider->Slider()->SetValue(pp->GetSunIntensity());		
-	_sunIntensitySlider->Slider()->onValueChanged.Add(this, &SkyConfigurationPane::OnValueChanged);
-	_sunIntensitySlider->Dock(Gwen::Pos::Top);
+	_sunBrightnessSlider = new SliderWithLabel(this);
+	_sunBrightnessSlider->Slider()->SetRange(0.0f, 25.0f);
+	_sunBrightnessSlider->Slider()->SetValue(pp->GetSunBrightness());		
+	_sunBrightnessSlider->Slider()->onValueChanged.Add(this, &SkyConfigurationPane::OnValueChanged);
+	_sunBrightnessSlider->Dock(Gwen::Pos::Top);
 
 	_sunDirLabel = new Gwen::Controls::Label(this);
 	_sunDirLabel->SetAlignment(Gwen::Pos::Bottom | Gwen::Pos::Left);
@@ -92,6 +98,10 @@ void SkyConfigurationPane::OnValueChanged(Gwen::Controls::Base *control)
 	{
 		pp->SetSkyColor(gwenColorToVector(_skyColorPicker->GetColor()));
 	}
+	else if (control == _skyBrightnessSlider->Slider())
+	{
+		pp->SetSkyBrightness(_skyBrightnessSlider->Slider()->GetValue());
+	}
 	else if (control == _sunEnabledCheckBox->Checkbox())
 	{
 		pp->SetSunEnabled(_sunEnabledCheckBox->Checkbox()->IsChecked());
@@ -104,9 +114,9 @@ void SkyConfigurationPane::OnValueChanged(Gwen::Controls::Base *control)
 	{
 		pp->SetSunWidth(_sunWidthSlider->Slider()->GetValue());
 	}
-	else if (control == _sunIntensitySlider->Slider())
+	else if (control == _sunBrightnessSlider->Slider())
 	{
-		pp->SetSunIntensity(_sunIntensitySlider->Slider()->GetValue());
+		pp->SetSunBrightness(_sunBrightnessSlider->Slider()->GetValue());
 	}
 	else if (control == _sunDirSelector)
 	{
@@ -124,11 +134,13 @@ void SkyConfigurationPane::OnFrameMove(double totalTime, float dt)
 	_skyTypeSlider->Label()->SetText("Sky type: " + Gwen::Utility::UnicodeToString(pp->GetSkyTypeDescription()));
 
 	_skyColorPicker->SetColor(vectorToGwenColor(pp->GetSkyColor()));
+	_skyBrightnessSlider->Label()->SetText("Sky Brightness: " + Gwen::Utility::ToString(pp->GetSkyBrightness()));
+
 	_sunEnabledCheckBox->Checkbox()->SetChecked(pp->GetSunEnabled());
 	_sunColorPicker->SetColor(vectorToGwenColor(pp->GetSunColor()));
 
-	_sunIntensitySlider->Slider()->SetValue(pp->GetSunIntensity());
-	_sunIntensitySlider->Label()->SetText("Sun Intensity: " + Gwen::Utility::ToString(pp->GetSunIntensity()));
+	_sunBrightnessSlider->Slider()->SetValue(pp->GetSunBrightness());
+	_sunBrightnessSlider->Label()->SetText("Sun Brightness: " + Gwen::Utility::ToString(pp->GetSunBrightness()));
 
 	_sunWidthSlider->Slider()->SetValue(pp->GetSunWidth());
 	_sunWidthSlider->Label()->SetText("Sun width: " + Gwen::Utility::ToString(pp->GetSunWidth()));

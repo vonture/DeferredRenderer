@@ -80,6 +80,9 @@
     <Filter Include="Entities\Components">
       <UniqueIdentifier>{f8ef2fd1-23bd-4203-bd3e-500117eb3e76}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Particles">
+      <UniqueIdentifier>{a0458f14-e840-43ab-86b7-9963733637b8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="GBufferCombine.hlsl">
@@ -134,6 +137,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="DiscDoF.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Particle.hlsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
@@ -362,6 +368,27 @@
     </ClCompile>
     <ClCompile Include="LiveTextureControl.cpp">
       <Filter>UI\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleSystem.cpp">
+      <Filter>Particles</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleSystemInstance.cpp">
+      <Filter>Particles</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleSystemLoader.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="GeometryShaderLoader.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleRenderer.cpp">
+      <Filter>Particles</Filter>
+    </ClCompile>
+    <ClCompile Include="Lights.cpp">
+      <Filter>Lights\Light Types</Filter>
+    </ClCompile>
+    <ClCompile Include="BoundingObjectSet.cpp">
+      <Filter>Collision</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -628,6 +655,30 @@
     </ClInclude>
     <ClInclude Include="LiveTextureControl.h">
       <Filter>UI\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleSystem.h">
+      <Filter>Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="Particle.h">
+      <Filter>Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleSystemInstance.h">
+      <Filter>Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleSystemLoader.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="IDragable.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleRenderer.h">
+      <Filter>Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="GeometryShaderLoader.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="BoundingObjectSet.h">
+      <Filter>Collision</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

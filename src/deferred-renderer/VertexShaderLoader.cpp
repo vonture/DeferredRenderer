@@ -115,10 +115,10 @@ HRESULT VertexShaderLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11Thr
 		CHAR debugName[256];
 
 		sprintf_s(debugName, "%s %s", options->DebugName, "VS");
-		SET_DEBUG_NAME(vs, debugName);
+		V_RETURN(SetDXDebugName(vs, debugName));
 
 		sprintf_s(debugName, "%s %s", options->DebugName, "IL");
-		SET_DEBUG_NAME(layout, debugName);
+		V_RETURN(SetDXDebugName(layout, debugName));
 	}
 
 	VertexShaderContent* content = new VertexShaderContent();

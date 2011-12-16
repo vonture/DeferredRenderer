@@ -96,8 +96,8 @@ HRESULT Material::CreateFromSDKMeshMaterial(ID3D11Device* device, const WCHAR* m
 	UINT nameLen = strlen(sdkmat->Name);
 	if (nameLen > 0)
 	{
-		_name = new WCHAR[nameLen];
-		AnsiToWString(sdkmat->Name, _name, nameLen);
+		_name = new WCHAR[nameLen + 1];
+		AnsiToWString(sdkmat->Name, _name, nameLen + 1);
 	}
 	else
 	{
@@ -146,8 +146,8 @@ HRESULT Material::CreateFromASSIMPMaterial(ID3D11Device* device, const WCHAR* mo
 	aiString name;
 	if (material->Get(AI_MATKEY_NAME, name) == aiReturn_SUCCESS && name.length > 0)
 	{
-		_name = new WCHAR[name.length];
-		AnsiToWString(name.data, _name, name.length);
+		_name = new WCHAR[name.length + 1];
+		AnsiToWString(name.data, _name, name.length + 1);
 	}
 	else
 	{

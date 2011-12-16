@@ -19,6 +19,8 @@ private:
 	static D3D11_BLEND_DESC getColorWriteDisabledDesc();
 
 public:
+	BlendStates();
+
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
 	void OnD3D11DestroyDevice();
 	HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
@@ -55,6 +57,8 @@ private:
 	static D3D11_RASTERIZER_DESC getWireframeDesc();
 
 public:
+	RasterizerStates();
+
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
 	void OnD3D11DestroyDevice();
 	HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
@@ -84,6 +88,8 @@ private:
 	ID3D11DepthStencilState* _depthWriteEnabled;
 	ID3D11DepthStencilState* _revDepthWriteEnabled;
 
+	ID3D11DepthStencilState* _depthWriteStencilSet;
+
 	static D3D11_DEPTH_STENCIL_DESC getStencilReplaceDesc();
 	static D3D11_DEPTH_STENCIL_DESC getStencilEqualDesc();
 	static D3D11_DEPTH_STENCIL_DESC getStencilNotEqualDesc();
@@ -94,7 +100,11 @@ private:
 	static D3D11_DEPTH_STENCIL_DESC getDepthWriteEnabledDesc();
 	static D3D11_DEPTH_STENCIL_DESC getReverseDepthWriteEnabledDesc();
 
+	static D3D11_DEPTH_STENCIL_DESC getDepthWriteStencilSetDesc();
+
 public:
+	DepthStencilStates();
+
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
 	void OnD3D11DestroyDevice();
 	HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
@@ -109,6 +119,7 @@ public:
 	ID3D11DepthStencilState* GetReverseDepthEnabled() { return _revDepthEnabled; };
 	ID3D11DepthStencilState* GetDepthWriteEnabled() { return _depthWriteEnabled; };
 	ID3D11DepthStencilState* GetReverseDepthWriteEnabled() { return _revDepthWriteEnabled; };
+	ID3D11DepthStencilState* GetDepthWriteStencilSetDesc() { return _depthWriteStencilSet; };
 };
 
 
@@ -132,6 +143,8 @@ private:
 	static D3D11_SAMPLER_DESC getShadowMapDesc();
 
 public:
+	SamplerStates();
+
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
 	void OnD3D11DestroyDevice();
 	HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,

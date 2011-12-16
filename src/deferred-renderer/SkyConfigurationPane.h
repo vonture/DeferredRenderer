@@ -15,13 +15,14 @@ private:
 
 	Gwen::Controls::Label* _skyColorLabel;
 	Gwen::Controls::ColorPicker* _skyColorPicker;
+	SliderWithLabel* _skyBrightnessSlider;
 
 	Gwen::Controls::CheckBoxWithLabel* _sunEnabledCheckBox;
 
 	Gwen::Controls::Label* _sunColorLabel;
 	Gwen::Controls::ColorPicker* _sunColorPicker;
 
-	SliderWithLabel* _sunIntensitySlider;
+	SliderWithLabel* _sunBrightnessSlider;
 
 	Gwen::Controls::Label* _sunWidthLabel;
 	SliderWithLabel* _sunWidthSlider;

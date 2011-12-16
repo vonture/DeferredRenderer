@@ -135,11 +135,11 @@ float Blur(float2 vTexCoord, float2 vDirection)
 
 	float2 vNormStep = InverseSceneSize;
 #if SSAO_HALF_RES
-	float2 vAOTexCoord = vTexCoord * 0.5f;
-	float2 vAOStep = InverseSceneSize * 0.5f;
+	float2 vAOTexCoord = (vTexCoord * 0.5f) + (InverseSceneSize * 0.25f);
+	float2 vAOStep = (InverseSceneSize * 0.5f) * vDirection;
 #else
 	float2 vAOTexCoord = vTexCoord + (InverseSceneSize * 0.5f);
-	float2 vAOStep = InverseSceneSize;
+	float2 vAOStep = InverseSceneSize * vDirection;
 #endif
 
     float fTotalValue = 0.0f;
@@ -151,11 +151,11 @@ float Blur(float2 vTexCoord, float2 vDirection)
     for (int i = -BLUR_RADIUS; i <= BLUR_RADIUS; i++)
     {
 		float fWeight = CalcGaussianWeight(i);
-		float3 fNormalSample = Texture1.SampleLevel(PointSampler, vTexCoord + (vNormStep * vDirection * i), 0).xyz;
+		float3 fNormalSample = Texture1.SampleLevel(PointSampler, vTexCoord + (vNormStep * i), 0).xyz;
 
 		if (dot(fNormalSample, fCenterNormal) > 0.85f)
 		{
-			float fAOSample = Texture0.SampleLevel(LinearSampler, vAOTexCoord + (vAOStep * vDirection * i), 0).x;
+			float fAOSample = Texture0.SampleLevel(LinearSampler, vAOTexCoord + (vAOStep * i), 0).x;
 			fTotalValue += fAOSample * fWeight;
 		}
 		else

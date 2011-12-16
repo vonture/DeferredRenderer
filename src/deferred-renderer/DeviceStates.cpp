@@ -1,6 +1,11 @@
 #include "PCH.h"
 #include "DeviceStates.h"
 
+BlendStates::BlendStates()
+	: _blendDisabled(NULL), _additiveBlend(NULL), _alphaBlend(NULL), _pmAlphaBlend(NULL), _noColor(NULL)
+{
+}
+
 HRESULT BlendStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
@@ -141,6 +146,12 @@ D3D11_BLEND_DESC BlendStates::getColorWriteDisabledDesc()
 	}
 
 	return blendDesc;
+}
+
+RasterizerStates::RasterizerStates()
+	: _noCull(NULL), _cullBackFaces(NULL), _cullBackFacesScissor(NULL), _cullFrontFaces(NULL),
+	_cullFrontFacesScissor(NULL), _noCullNoMS(NULL), _noCullScissor(NULL), _wireframe(NULL)
+{
 }
 
 HRESULT RasterizerStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
@@ -341,6 +352,13 @@ D3D11_RASTERIZER_DESC RasterizerStates::getWireframeDesc()
 	return rastDesc;
 }
 
+DepthStencilStates::DepthStencilStates()
+	: _stencilReplace(NULL), _stencilEqual(NULL), _stencilNotEqual(NULL), _depthDisabled(NULL),
+	  _depthEnabled(NULL), _revDepthEnabled(NULL), _depthWriteEnabled(NULL), _revDepthWriteEnabled(NULL),
+	  _depthWriteStencilSet(NULL)
+{
+}
+
 HRESULT DepthStencilStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
@@ -370,6 +388,9 @@ HRESULT DepthStencilStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, Conten
 	desc = getReverseDepthWriteEnabledDesc();
 	V_RETURN(pd3dDevice->CreateDepthStencilState(&desc, &_revDepthWriteEnabled));
 
+	desc = getDepthWriteStencilSetDesc();
+	V_RETURN(pd3dDevice->CreateDepthStencilState(&desc, &_depthWriteStencilSet));
+
 	return S_OK;
 }
 void DepthStencilStates::OnD3D11DestroyDevice()
@@ -382,6 +403,7 @@ void DepthStencilStates::OnD3D11DestroyDevice()
 	SAFE_RELEASE(_revDepthEnabled);
 	SAFE_RELEASE(_depthWriteEnabled);
 	SAFE_RELEASE(_revDepthWriteEnabled);
+	SAFE_RELEASE(_depthWriteStencilSet);
 }
 
 HRESULT DepthStencilStates::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
@@ -536,6 +558,30 @@ D3D11_DEPTH_STENCIL_DESC DepthStencilStates::getReverseDepthWriteEnabledDesc()
 	dsDesc.BackFace = dsDesc.FrontFace;
 
 	return dsDesc;
+}
+
+D3D11_DEPTH_STENCIL_DESC DepthStencilStates::getDepthWriteStencilSetDesc()
+{
+	D3D11_DEPTH_STENCIL_DESC dsDesc;
+	dsDesc.DepthEnable = true;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+	dsDesc.StencilEnable = true;
+	dsDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
+	dsDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
+	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
+	dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+	dsDesc.BackFace = dsDesc.FrontFace;
+
+	return dsDesc;
+}
+
+SamplerStates::SamplerStates()
+	: _linearClamp(NULL), _pointClamp(NULL), _anisotropic16Clamp(NULL), _linearWrap(NULL), _pointWrap(NULL),
+	  _anisotropic16Wrap(NULL), _shadowMap(NULL)
+{ 
 }
 
 HRESULT SamplerStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)

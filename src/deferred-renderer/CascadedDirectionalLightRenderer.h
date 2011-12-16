@@ -30,7 +30,7 @@ private:
 	
 	static const UINT NUM_SHADOW_MAPS = 3;
 	static const UINT NUM_CASCADES = 4;
-	static const UINT SHADOW_MAP_SIZE = 2048;
+	static const UINT SHADOW_MAP_SIZE = 1024;
 	static const float CASCADE_SPLITS[NUM_CASCADES];
 	static const float BIAS;
 	ID3D11Texture2D* _shadowMapTextures[NUM_SHADOW_MAPS];
@@ -65,8 +65,10 @@ private:
 
 	struct CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES
 	{
-		_DECLSPEC_ALIGN_16_ XMFLOAT3 LightDirection;
-		_DECLSPEC_ALIGN_16_ XMFLOAT3 LightColor;
+		XMFLOAT3 LightDirection;
+		float Padding;
+		XMFLOAT3 LightColor;
+		float LightBrightness;
 	};
 
 	struct CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES

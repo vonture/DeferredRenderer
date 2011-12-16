@@ -12,6 +12,7 @@ private:
 	ID3D11RenderTargetView* _renderTargetView;
 
 	XMFLOAT3 _ambientColor;
+	float _ambientBrightness;
 
 public:
 	LightBuffer()
@@ -21,6 +22,9 @@ public:
 
 	const XMFLOAT3& GetAmbientColor() const { return _ambientColor; }
 	void SetAmbientColor(const XMFLOAT3& color) { _ambientColor = color; }
+
+	float GetAmbientBrightness() const { return _ambientBrightness; }
+	void SetAmbientBrightness(float brightness) { _ambientBrightness = brightness; }
 
 	ID3D11ShaderResourceView* GetShaderResourceView(int idx)
 	{

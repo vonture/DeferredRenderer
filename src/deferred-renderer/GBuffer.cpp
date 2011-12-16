@@ -57,7 +57,7 @@ HRESULT GBuffer::Clear(ID3D11DeviceContext* pd3dImmediateContext)
 	pd3dImmediateContext->ClearRenderTargetView(_renderTargetViews[0], rt0clear);
 	pd3dImmediateContext->ClearRenderTargetView(_renderTargetViews[1], rt1clear);
 	pd3dImmediateContext->ClearRenderTargetView(_renderTargetViews[2], rt2clear);
-	pd3dImmediateContext->ClearDepthStencilView(_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	pd3dImmediateContext->ClearDepthStencilView(_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	return S_OK;
 }
@@ -115,7 +115,7 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
         pBackBufferSurfaceDesc->Height,//UINT Height;
         1,//UINT MipLevels;
         1,//UINT ArraySize;
-        DXGI_FORMAT_R32G32B32A32_FLOAT,//DXGI_FORMAT Format;
+        DXGI_FORMAT_R16G16B16A16_FLOAT,//DXGI_FORMAT Format;
         1,//DXGI_SAMPLE_DESC SampleDesc;
         0,
         D3D11_USAGE_DEFAULT,//D3D11_USAGE Usage;
@@ -130,7 +130,7 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
         pBackBufferSurfaceDesc->Height,//UINT Height;
         1,//UINT MipLevels;
         1,//UINT ArraySize;
-        DXGI_FORMAT_R32_TYPELESS,//DXGI_FORMAT Format;
+        DXGI_FORMAT_R24G8_TYPELESS,//DXGI_FORMAT Format;
         1,//DXGI_SAMPLE_DESC SampleDesc;
         0,
         D3D11_USAGE_DEFAULT,//D3D11_USAGE Usage;
@@ -144,15 +144,15 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
 	V_RETURN(pd3dDevice->CreateTexture2D(&rt012Desc, NULL, &_textures[2]));
 	V_RETURN(pd3dDevice->CreateTexture2D(&rt3Desc,   NULL, &_textures[3]));
 
-	SET_DEBUG_NAME(_textures[0], "RT0 Texture");
-	SET_DEBUG_NAME(_textures[1], "RT1 Texture");
-	SET_DEBUG_NAME(_textures[2], "RT2 Texture");
-	SET_DEBUG_NAME(_textures[3], "RT3 Texture");
+	V_RETURN(SetDXDebugName(_textures[0], "RT0 Texture"));
+	V_RETURN(SetDXDebugName(_textures[1], "RT1 Texture"));
+	V_RETURN(SetDXDebugName(_textures[2], "RT2 Texture"));
+	V_RETURN(SetDXDebugName(_textures[3], "RT3 Texture"));
 
 	// Create the shader resource views
 	D3D11_SHADER_RESOURCE_VIEW_DESC rt012rvd = 
     {
-        DXGI_FORMAT_R32G32B32A32_FLOAT,
+        DXGI_FORMAT_R16G16B16A16_FLOAT,
         D3D11_SRV_DIMENSION_TEXTURE2D,
         0,
         0
@@ -161,7 +161,7 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC rt3rvd = 
     {
-        DXGI_FORMAT_R32_FLOAT,
+        DXGI_FORMAT_R24_UNORM_X8_TYPELESS,
         D3D11_SRV_DIMENSION_TEXTURE2D,
         0,
         0
@@ -173,15 +173,15 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
 	V_RETURN(pd3dDevice->CreateShaderResourceView(_textures[2], &rt012rvd, &_shaderResourceViews[2]));
 	V_RETURN(pd3dDevice->CreateShaderResourceView(_textures[3], &rt3rvd,   &_shaderResourceViews[3]));
 
-	SET_DEBUG_NAME(_shaderResourceViews[0], "RT0 SRV");
-	SET_DEBUG_NAME(_shaderResourceViews[1], "RT1 SRV");
-	SET_DEBUG_NAME(_shaderResourceViews[2], "RT2 SRV");
-	SET_DEBUG_NAME(_shaderResourceViews[3], "RT3 SRV");
+	V_RETURN(SetDXDebugName(_shaderResourceViews[0], "RT0 SRV"));
+	V_RETURN(SetDXDebugName(_shaderResourceViews[1], "RT1 SRV"));
+	V_RETURN(SetDXDebugName(_shaderResourceViews[2], "RT2 SRV"));
+	V_RETURN(SetDXDebugName(_shaderResourceViews[3], "RT3 SRV"));
 
 	// Create the render targets
 	D3D11_RENDER_TARGET_VIEW_DESC rt012rtvd = 
 	{
-        DXGI_FORMAT_R32G32B32A32_FLOAT,
+        DXGI_FORMAT_R16G16B16A16_FLOAT,
         D3D11_RTV_DIMENSION_TEXTURE2D,
         0,
         0
@@ -191,33 +191,33 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
 	V_RETURN(pd3dDevice->CreateRenderTargetView(_textures[1], &rt012rtvd, &_renderTargetViews[1]));
 	V_RETURN(pd3dDevice->CreateRenderTargetView(_textures[2], &rt012rtvd, &_renderTargetViews[2]));
 
-	SET_DEBUG_NAME(_renderTargetViews[0], "RT0 RTV");
-	SET_DEBUG_NAME(_renderTargetViews[1], "RT1 RTV");
-	SET_DEBUG_NAME(_renderTargetViews[2], "RT2 RTV");
+	V_RETURN(SetDXDebugName(_renderTargetViews[0], "RT0 RTV"));
+	V_RETURN(SetDXDebugName(_renderTargetViews[1], "RT1 RTV"));
+	V_RETURN(SetDXDebugName(_renderTargetViews[2], "RT2 RTV"));
 
 	// Create the depth stencil view
 	D3D11_DEPTH_STENCIL_VIEW_DESC dsvd =
 	{
-		DXGI_FORMAT_D32_FLOAT,
+		DXGI_FORMAT_D24_UNORM_S8_UINT,
 		D3D11_DSV_DIMENSION_TEXTURE2D,
 		0,
 	};
 
 	V_RETURN(pd3dDevice->CreateDepthStencilView(_textures[3], &dsvd, &_depthStencilView));
 	
-	SET_DEBUG_NAME(_renderTargetViews[3], "RT3 DSV");
+	V_RETURN(SetDXDebugName(_renderTargetViews[3], "RT3 DSV"));
 
 	// Create the readonly depth stencil view
 	D3D11_DEPTH_STENCIL_VIEW_DESC rodsvd =
 	{
-		DXGI_FORMAT_D32_FLOAT,
+		DXGI_FORMAT_D24_UNORM_S8_UINT,
 		D3D11_DSV_DIMENSION_TEXTURE2D,
 		D3D11_DSV_READ_ONLY_DEPTH,
 	};
 
 	V_RETURN(pd3dDevice->CreateDepthStencilView(_textures[3], &rodsvd, &_readonlyDepthStencilView));
 	
-	SET_DEBUG_NAME(_renderTargetViews[3], "RT3 DSV");
+	V_RETURN(SetDXDebugName(_renderTargetViews[3], "RT3 Read Only DSV"));
 	return S_OK;
 }
 

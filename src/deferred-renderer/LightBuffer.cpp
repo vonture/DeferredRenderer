@@ -48,7 +48,13 @@ HRESULT LightBuffer::PSUnsetShaderResources(ID3D11DeviceContext* pd3dImmediateCo
 
 HRESULT LightBuffer::Clear(ID3D11DeviceContext* pd3dImmediateContext)
 {
-	const float rtclear[] = { _ambientColor.x, _ambientColor.y, _ambientColor.z, 0.0f };
+	const float rtclear[] =
+	{ 
+		_ambientColor.x * _ambientBrightness,
+		_ambientColor.y * _ambientBrightness,
+		_ambientColor.z * _ambientBrightness, 
+		0.0f 
+	};
 	pd3dImmediateContext->ClearRenderTargetView(_renderTargetView, rtclear);
 
 	return S_OK;
@@ -90,6 +96,7 @@ HRESULT LightBuffer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManage
 {
 	return S_OK;
 }
+
 void LightBuffer::OnD3D11DestroyDevice()
 {
 }
@@ -106,7 +113,7 @@ HRESULT LightBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentMa
         pBackBufferSurfaceDesc->Height,//UINT Height;
         1,//UINT MipLevels;
         1,//UINT ArraySize;
-        DXGI_FORMAT_R32G32B32A32_FLOAT,//DXGI_FORMAT Format;
+        DXGI_FORMAT_R16G16B16A16_FLOAT,//DXGI_FORMAT Format;
         1,//DXGI_SAMPLE_DESC SampleDesc;
         0,
         D3D11_USAGE_DEFAULT,//D3D11_USAGE Usage;
@@ -116,11 +123,12 @@ HRESULT LightBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentMa
     };
 
 	V_RETURN(pd3dDevice->CreateTexture2D(&textureDesc, NULL, &_texture));
+	V_RETURN(SetDXDebugName(_texture, "Light Buffer Texture"));
 
 	// Create the shader resource view
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = 
     {
-        DXGI_FORMAT_R32G32B32A32_FLOAT,
+        DXGI_FORMAT_R16G16B16A16_FLOAT,
         D3D11_SRV_DIMENSION_TEXTURE2D,
         0,
         0
@@ -128,17 +136,19 @@ HRESULT LightBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentMa
 	srvDesc.Texture2D.MipLevels = 1;
 
 	V_RETURN(pd3dDevice->CreateShaderResourceView(_texture, &srvDesc, &_shaderResourceView));
+	V_RETURN(SetDXDebugName(_shaderResourceView, "Light Buffer SRV"));
 
 	// Create the render target
 	D3D11_RENDER_TARGET_VIEW_DESC rtDesc = 
 	{
-        DXGI_FORMAT_R32G32B32A32_FLOAT,
+        DXGI_FORMAT_R16G16B16A16_FLOAT,
         D3D11_RTV_DIMENSION_TEXTURE2D,
         0,
         0
     };
 
 	V_RETURN(pd3dDevice->CreateRenderTargetView(_texture, &rtDesc, &_renderTargetView));
+	V_RETURN(SetDXDebugName(_renderTargetView, "Light Buffer RTV"));
 
 	return S_OK;
 }

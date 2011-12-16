@@ -31,13 +31,15 @@
 
 cbuffer cbSkyProperties : register(cb0)
 {
-	float SunWidth					: packoffset(c0.x);
-	float SunIntensity				: packoffset(c0.y);
-	float3 SkyColor					: packoffset(c1.x);
-	float3 SunColor					: packoffset(c2.x);
-	float3 SunDirection				: packoffset(c3.x);	
-	float3 CameraPosition			: packoffset(c4.x);
-	float4x4 InverseViewProjection	: packoffset(c5.x);
+	float3 SunDirection				: packoffset(c0.x);
+	float SunWidth					: packoffset(c0.w);
+	float3 SunColor					: packoffset(c1.x);	
+	float SunBrightness				: packoffset(c1.w);
+	float3 SkyColor					: packoffset(c2.x);
+	float SkyBrightness				: packoffset(c2.w);
+	float3 CameraPosition			: packoffset(c3.x);
+	float Padding					: packoffset(c3.w);
+	float4x4 InverseViewProjection	: packoffset(c4.x);
 }
 
 struct PS_In_Quad
@@ -75,7 +77,7 @@ float F(float gamma)
 	return 1.0f + (C * (exp(D * gamma) - exp(D * PI_OVER_TWO))) + (E * cosGamma * cosGamma);
 }
 
-float3 CIEClearSky(float3 dir, float3 sunDir)
+float3 CIEClearSky(float3 dir)
 {
 	float3 skyDir = float3(dir.x, abs(dir.y), dir.z);	
 	float theta = AngleBetween(skyDir, UP);
@@ -83,16 +85,16 @@ float3 CIEClearSky(float3 dir, float3 sunDir)
 	float zenithContribution = Phi(theta) / Phi(0.0f);
 	
 #if SUN_ENABLED
-	float gamma = AngleBetween(skyDir, sunDir);	
-	float sunGamma = AngleBetween(dir, sunDir);
-	float S = AngleBetween(sunDir, UP);
+	float gamma = AngleBetween(skyDir, SunDirection);	
+	float sunGamma = AngleBetween(dir, SunDirection);
+	float S = AngleBetween(SunDirection, UP);
 
 	float sunContribution = F(gamma) / F(S);
 
-	float3 color = lerp(SkyColor, SunColor, sunContribution / (zenithContribution + sunContribution + EPSILON));
+	float3 color = lerp(SkyColor, SunColor, sunContribution / (zenithContribution + sunContribution + EPSILON)) * SkyBrightness;
 	float luminance = sunContribution * zenithContribution;
 		
-	return lerp(SunColor * SunIntensity, color, saturate(abs(sunGamma) / SunWidth)) * luminance;
+	return lerp(SunColor * SunBrightness, color, saturate(abs(sunGamma) / SunWidth)) * luminance;
 #else
 	return SkyColor * zenithContribution;
 #endif
@@ -101,7 +103,5 @@ float3 CIEClearSky(float3 dir, float3 sunDir)
 float4 PS_Sky(PS_In_Quad input) : SV_TARGET0
 {
 	float3 vSkyDirection = normalize(GetPositionWS(input.vPosition2, 1.0f).xyz - CameraPosition);
-	float3 CIESkyColor = CIEClearSky(vSkyDirection, SunDirection);
-
-	return float4(CIESkyColor, 1.0f);
+	return float4(CIEClearSky(vSkyDirection), 1.0f);
 }

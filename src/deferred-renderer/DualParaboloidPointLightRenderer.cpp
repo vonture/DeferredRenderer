@@ -60,8 +60,8 @@ HRESULT DualParaboloidPointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 
 	// Create a bounding sphere for the light
 	Sphere lightSphere;
-	lightSphere.Center = light->Position;
-	lightSphere.Radius = light->Radius;
+	lightSphere.Center = light->GetPosition();
+	lightSphere.Radius = light->GetRadius();
 
 	// Make sure this light is in the view fustrum
 	XMFLOAT4X4 fProj = camera->GetProjection();
@@ -106,7 +106,7 @@ HRESULT DualParaboloidPointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 	}
 
 	// Create view matrix
-	XMVECTOR lightPos = XMLoadFloat3(&light->Position);
+	XMVECTOR lightPos = XMLoadFloat3(&light->GetPosition());
 	XMVECTOR lightForward = XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f);
 	XMVECTOR lightUp = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
 
@@ -144,7 +144,7 @@ HRESULT DualParaboloidPointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 
 		XMStoreFloat4x4(&depthProperties->WorldView, XMMatrixTranspose(wv));
 		depthProperties->Direction = 1.0f;
-		depthProperties->CameraClips = XMFLOAT2(0.1f, light->Radius);
+		depthProperties->CameraClips = XMFLOAT2(0.1f, light->GetRadius());
 
 		pd3dImmediateContext->Unmap(_depthPropertiesBuffer, 0);
 
@@ -186,7 +186,7 @@ HRESULT DualParaboloidPointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 
 		XMStoreFloat4x4(&depthProperties->WorldView, XMMatrixTranspose(wv));
 		depthProperties->Direction = -1.0f;
-		depthProperties->CameraClips = XMFLOAT2(0.1f, light->Radius);
+		depthProperties->CameraClips = XMFLOAT2(0.1f, light->GetRadius());
 
 		pd3dImmediateContext->Unmap(_depthPropertiesBuffer, 0);
 
@@ -287,8 +287,8 @@ HRESULT DualParaboloidPointLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 
 			// Verify that the light is visible
 			Sphere lightBounds;
-			lightBounds.Center = light->Position;
-			lightBounds.Radius = light->Radius;
+			lightBounds.Center = light->GetPosition();
+			lightBounds.Radius = light->GetRadius();
 
 			if (!Collision::IntersectSphereFrustum(&lightBounds, &cameraFrust))
 			{
@@ -311,8 +311,8 @@ HRESULT DualParaboloidPointLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 			XMFLOAT4X4 fViewProj = camera->GetViewProjection();
 			XMMATRIX viewProj = XMLoadFloat4x4(&fViewProj);
 
-			_lightModel.SetPosition(light->Position);
-			_lightModel.SetScale(light->Radius);
+			_lightModel.SetPosition(light->GetPosition());
+			_lightModel.SetScale(light->GetRadius());
 
 			XMFLOAT4X4 fWorld = _lightModel.GetWorld();
 			XMMATRIX world = XMLoadFloat4x4(&fWorld);
@@ -334,10 +334,11 @@ HRESULT DualParaboloidPointLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 			V_RETURN(pd3dImmediateContext->Map(_lightPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 			CB_POINTLIGHT_LIGHT_PROPERTIES* lightProperties = 
 				(CB_POINTLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
-
-			lightProperties->LightColor = light->Color;
-			lightProperties->LightPosition = light->Position;
-			lightProperties->LightRadius = light->Radius;
+						
+			lightProperties->LightPosition = light->GetPosition();
+			lightProperties->LightRadius = light->GetRadius();
+			lightProperties->LightColor = light->GetColor();
+			lightProperties->LightBrightness = light->GetBrightness();
 
 			pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
 				
@@ -357,8 +358,8 @@ HRESULT DualParaboloidPointLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 
 			// Verify that the light is visible
 			Sphere lightBounds;
-			lightBounds.Center = light->Position;
-			lightBounds.Radius = light->Radius;
+			lightBounds.Center = light->GetPosition();
+			lightBounds.Radius = light->GetRadius();
 			
 			if (!Collision::IntersectSphereFrustum(&lightBounds, &cameraFrust))
 			{
@@ -381,8 +382,8 @@ HRESULT DualParaboloidPointLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 			XMFLOAT4X4 fViewProj = camera->GetViewProjection();
 			XMMATRIX viewProj = XMLoadFloat4x4(&fViewProj);
 
-			_lightModel.SetPosition(light->Position);
-			_lightModel.SetScale(light->Radius);
+			_lightModel.SetPosition(light->GetPosition());
+			_lightModel.SetScale(light->GetRadius());
 
 			XMFLOAT4X4 fWorld = _lightModel.GetWorld();
 			XMMATRIX world = XMLoadFloat4x4(&fWorld);
@@ -405,9 +406,10 @@ HRESULT DualParaboloidPointLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 			CB_POINTLIGHT_LIGHT_PROPERTIES* lightProperties = 
 				(CB_POINTLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
 
-			lightProperties->LightColor = light->Color;
-			lightProperties->LightPosition = light->Position;
-			lightProperties->LightRadius = light->Radius;
+			lightProperties->LightPosition = light->GetPosition();
+			lightProperties->LightRadius = light->GetRadius();
+			lightProperties->LightColor = light->GetColor();
+			lightProperties->LightBrightness = light->GetBrightness();
 
 			pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
 
@@ -420,7 +422,7 @@ HRESULT DualParaboloidPointLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 		
 			// Shadow matrix is already transposed
 			shadowProperties->ShadowMatrix = _shadowMatricies[i];
-			shadowProperties->CameraClips = XMFLOAT2(0.1f, light->Radius);
+			shadowProperties->CameraClips = XMFLOAT2(0.1f, light->GetRadius());
 			shadowProperties->ShadowMapSize = XMFLOAT2((float)SHADOW_MAP_SIZE, (float)SHADOW_MAP_SIZE * 0.5f);
 			shadowProperties->Bias = BIAS;			
 
@@ -474,27 +476,27 @@ HRESULT DualParaboloidPointLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 
 	bufferDesc.ByteWidth = sizeof(CB_POINTLIGHT_MODEL_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_modelPropertiesBuffer));
-	SET_DEBUG_NAME(_modelPropertiesBuffer, "DP Light model properties buffer");
+	V_RETURN(SetDXDebugName(_modelPropertiesBuffer, "DP Light model CB"));
 
 	bufferDesc.ByteWidth = sizeof(CB_POINTLIGHT_ALPHACUTOUT_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_alphaCutoutPropertiesBuffer));
-	SET_DEBUG_NAME(_modelPropertiesBuffer, "DP Light alpha cutout properties buffer");
+	V_RETURN(SetDXDebugName(_modelPropertiesBuffer, "DP Light alpha cutout CB"));
 
 	bufferDesc.ByteWidth = sizeof(CB_POINTLIGHT_LIGHT_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_lightPropertiesBuffer));
-	SET_DEBUG_NAME(_modelPropertiesBuffer, "DP Light light properties buffer");
+	V_RETURN(SetDXDebugName(_modelPropertiesBuffer, "DP Light light CB"));
 
 	bufferDesc.ByteWidth = sizeof(CB_POINTLIGHT_CAMERA_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_cameraPropertiesBuffer));
-	SET_DEBUG_NAME(_modelPropertiesBuffer, "DP Light camera properties buffer");
+	V_RETURN(SetDXDebugName(_modelPropertiesBuffer, "DP Light camera CB"));
 
 	bufferDesc.ByteWidth = sizeof(CB_POINTLIGHT_SHADOW_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_shadowPropertiesBuffer));
-	SET_DEBUG_NAME(_modelPropertiesBuffer, "DP Light shadow properties buffer");
+	V_RETURN(SetDXDebugName(_modelPropertiesBuffer, "DP Light shadow CB"));
 
 	bufferDesc.ByteWidth = sizeof(CB_POINTLIGHT_DEPTH_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_depthPropertiesBuffer));
-	SET_DEBUG_NAME(_modelPropertiesBuffer, "DP Light depth properties buffer");
+	V_RETURN(SetDXDebugName(_modelPropertiesBuffer, "DP Light depth CB"));
 
 	// Create the shaders and input layout
 	PixelShaderContent* psContent = NULL;
@@ -659,8 +661,16 @@ HRESULT DualParaboloidPointLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 	for (UINT i = 0; i < NUM_SHADOW_MAPS; i++)
 	{
 		V_RETURN(pd3dDevice->CreateTexture2D(&shadowMapTextureDesc, NULL, &_shadowMapTextures[i]));
+		sprintf_s(debugName, "DP shadow map %i texture", i);
+		V_RETURN(SetDXDebugName(_shadowMapTextures[i], debugName));
+
 		V_RETURN(pd3dDevice->CreateShaderResourceView(_shadowMapTextures[i], &shadowMapSRVDesc, &_shadowMapSRVs[i]));		
+		sprintf_s(debugName, "DP shadow map %i SRV", i);
+		V_RETURN(SetDXDebugName(_shadowMapSRVs[i], debugName));
+
 		V_RETURN(pd3dDevice->CreateDepthStencilView(_shadowMapTextures[i], &shadowMapDSVDesc, &_shadowMapDSVs[i]));
+		sprintf_s(debugName, "DP shadow map %i DSV", i);
+		V_RETURN(SetDXDebugName(_shadowMapDSVs[i], debugName));
 	}
 
 	return S_OK;

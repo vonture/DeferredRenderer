@@ -394,8 +394,8 @@ HRESULT Mesh::CreateFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d9
 	UINT nameLen = strlen(model->GetMesh(meshIdx)->Name);
 	if (nameLen > 0)
 	{
-		_name = new WCHAR[nameLen];
-		AnsiToWString(model->GetMesh(meshIdx)->Name, _name, nameLen);
+		_name = new WCHAR[nameLen + 1];
+		AnsiToWString(model->GetMesh(meshIdx)->Name, _name, nameLen + 1);
 	}
 	else
 	{
@@ -528,8 +528,8 @@ HRESULT Mesh::CreateFromASSIMPMesh(ID3D11Device* device, const aiScene* scene, U
 	// Copy the name
 	if (mesh->mName.length > 0)
 	{
-		_name = new WCHAR[mesh->mName.length];
-		AnsiToWString(mesh->mName.data, _name, mesh->mName.length);
+		_name = new WCHAR[mesh->mName.length + 1];
+		AnsiToWString(mesh->mName.data, _name, mesh->mName.length + 1);
 	}
 	else
 	{

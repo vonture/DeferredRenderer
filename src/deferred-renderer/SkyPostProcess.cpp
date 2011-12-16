@@ -40,10 +40,11 @@ SkyPostProcess::SkyPostProcess()
 
 	SetSunColor(XMFLOAT3(1.0f, 0.8f, 0.5f));
 	SetSkyColor(XMFLOAT3(0.2f, 0.5f, 1.0f));
+	SetSkyBrightness(1.0f);
 	SetSunDirection(XMFLOAT3(0.4f, 0.9f, 0.2f));
 	SetSunWidth(0.05f);
 	SetSunEnabled(true);
-	SetSunIntensity(2.5f);
+	SetSunBrightness(2.5f);
 
 #ifdef ALL_PRESETS
 	SetSkyTypeIndex(11);
@@ -79,12 +80,16 @@ HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	V_RETURN(pd3dImmediateContext->Map(_skyProperties, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 	CB_SKY_PROPERTIES* skyProperties = (CB_SKY_PROPERTIES*)mappedResource.pData;
 		
-	skyProperties->SkyColor = _skyColor;
-	skyProperties->SunColor = _sunColor;
 	skyProperties->SunDirection = _sunDirection;
 	skyProperties->SunWidth = _sunWidth;
-	skyProperties->SunIntensity = _sunIntensity;
+	skyProperties->SunColor = _sunColor;
+	skyProperties->SunBrightness = _sunBrightness;
+
+	skyProperties->SkyColor = _skyColor;
+	skyProperties->SkyBrightness = _skyBrightness;
+	
 	skyProperties->CameraPosition = camera->GetPosition();
+
 	XMStoreFloat4x4(&skyProperties->InverseViewProjection, XMMatrixTranspose(invViewProj));
 
 	pd3dImmediateContext->Unmap(_skyProperties, 0);
@@ -95,7 +100,7 @@ HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, gBuffer->GetReadOnlyDepthStencilView());
 
 	// Prepare the blend, depth and sampler
-	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthEnabled(), 0);
+	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetStencilEqual(), 0);
 
 	float blendFactor[4] = {1, 1, 1, 1};
 	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
@@ -173,7 +178,7 @@ HRESULT SkyPostProcess:: OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 	};
 
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_skyProperties));
-	SET_DEBUG_NAME(_skyProperties, "Sky post process properties buffer");
+	V_RETURN(SetDXDebugName(_skyProperties, "Sky post process properties buffer"));
 
 	return S_OK;
 }

@@ -27,7 +27,7 @@ private:
 	ID3D11InputLayout* _lightInputLayout;
 
 	static const UINT NUM_SHADOW_MAPS = 3;
-	static const UINT SHADOW_MAP_SIZE = 4096;
+	static const UINT SHADOW_MAP_SIZE = 2048;
 	static const float BIAS;
 	ID3D11Texture2D* _shadowMapTextures[NUM_SHADOW_MAPS];
 	ID3D11DepthStencilView* _shadowMapDSVs[NUM_SHADOW_MAPS];
@@ -63,7 +63,7 @@ private:
 		XMFLOAT3 LightPosition;
 		float LightRadius;
 		XMFLOAT3 LightColor;
-		float Padding;
+		float LightBrightness;
 	};
 
 	struct CB_POINTLIGHT_CAMERA_PROPERTIES

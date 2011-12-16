@@ -143,6 +143,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AssimpLogger.cpp" />
+    <ClCompile Include="BoundingObjectSet.cpp" />
     <ClCompile Include="ContentManager.cpp" />
     <ClCompile Include="ContentType.cpp" />
     <ClCompile Include="DeviceManagerConfigurationPane.cpp" />
@@ -150,15 +151,21 @@
     <ClCompile Include="FontLoader.cpp" />
     <ClCompile Include="FXAAConfigurationPane.cpp" />
     <ClCompile Include="FXAAPostProcess.cpp" />
+    <ClCompile Include="GeometryShaderLoader.cpp" />
     <ClCompile Include="HBAOConfigurationPane.cpp" />
     <ClCompile Include="HBAOPostProcess.cpp" />
     <ClCompile Include="LightRendererBase.cpp" />
+    <ClCompile Include="Lights.cpp" />
     <ClCompile Include="LiveTextureControl.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="LogWindow.cpp" />
     <ClCompile Include="ModelConfigurationPane.cpp" />
     <ClCompile Include="ModelLoader.cpp" />
     <ClCompile Include="MotionBlurConfigurationPane.cpp" />
+    <ClCompile Include="ParticleRenderer.cpp" />
+    <ClCompile Include="ParticleSystemInstance.cpp" />
+    <ClCompile Include="ParticleSystem.cpp" />
+    <ClCompile Include="ParticleSystemLoader.cpp" />
     <ClCompile Include="PCH.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -223,6 +230,7 @@
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="xnaCollision.cpp" />
     <ClInclude Include="AssimpLogger.h" />
+    <ClInclude Include="BoundingObjectSet.h" />
     <ClInclude Include="ComponentSystem.h" />
     <ClInclude Include="ContentLoader.h" />
     <ClInclude Include="ContentManager.h" />
@@ -233,8 +241,10 @@
     <ClInclude Include="FontLoader.h" />
     <ClInclude Include="FXAAConfigurationPane.h" />
     <ClInclude Include="FXAAPostProcess.h" />
+    <ClInclude Include="GeometryShaderLoader.h" />
     <ClInclude Include="HBAOConfigurationPane.h" />
     <ClInclude Include="HBAOPostProcess.h" />
+    <ClInclude Include="IDragable.h" />
     <ClInclude Include="LightRenderer.h" />
     <ClInclude Include="LightRendererBase.h" />
     <ClInclude Include="LiveTextureControl.h" />
@@ -243,6 +253,11 @@
     <ClInclude Include="ModelConfigurationPane.h" />
     <ClInclude Include="ModelLoader.h" />
     <ClInclude Include="MotionBlurConfigurationPane.h" />
+    <ClInclude Include="Particle.h" />
+    <ClInclude Include="ParticleRenderer.h" />
+    <ClInclude Include="ParticleSystem.h" />
+    <ClInclude Include="ParticleSystemInstance.h" />
+    <ClInclude Include="ParticleSystemLoader.h" />
     <ClInclude Include="PixelShaderLoader.h" />
     <ClInclude Include="Poisson.h" />
     <ClInclude Include="DiscDoFConfigurationPane.h" />
@@ -309,6 +324,7 @@
     <ClInclude Include="DeferredBuffer.h" />
     <ClInclude Include="Camera.h" />
     <None Include="MLAA.hlsl" />
+    <None Include="Particle.hlsl" />
     <None Include="Sky.hlsl" />
     <None Include="Sprite.hlsl" />
     <None Include="SSAO.hlsl" />

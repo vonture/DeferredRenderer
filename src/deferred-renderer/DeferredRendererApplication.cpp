@@ -14,7 +14,7 @@
 #include "ProfilePane.h"
 
 DeferredRendererApplication::DeferredRendererApplication()
-	: Application(L"Deferred Renderer", NULL), _camera(0.1f, 40.0f, 1.0f, 1.0f), _selectedModel(NULL),
+	: Application(L"Deferred Renderer", NULL), _camera(0.1f, 40.0f, 1.0f, 1.0f), _selectedItem(NULL),
 	  _configWindow(NULL), _logWindow(NULL), _ppConfigPane(NULL)
 {	
 	
@@ -50,7 +50,7 @@ DeferredRendererApplication::DeferredRendererApplication()
 	_models.push_back(sponza);
 	*/
 
-	
+	/*
 	ModelInstance* tree = new ModelInstance(L"\\models\\tree\\tree.obj");
 	tree->SetScale(0.5f);
 	tree->SetPosition(XMFLOAT3(3.0f, -1.0f, -3.0f));
@@ -63,11 +63,18 @@ DeferredRendererApplication::DeferredRendererApplication()
 	XMStoreFloat4(&orientation, XMQuaternionRotationRollPitchYaw(0.0f, Pi - PiOver4, 0.0f));
 	troll->SetOrientation(orientation);
 	_models.push_back(troll);
+	*/
+		
+	ParticleSystemInstance* smoke = new ParticleSystemInstance(L"\\particles\\smoke.xml");
+	smoke->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	smoke->SetScale(1.0f);
+	_particles.push_back(smoke);
 	
+	_pointLightsShadowed.push_back(new PointLight(XMFLOAT3(3.0f, 4.0f, 0.0f), 5.0f, XMFLOAT3(1.0f, 1.0f, 1.0f), 2.0f));
 
 	_camera.SetPosition(XMFLOAT3(1.0f, 4.0f, -6.0f));
 	_camera.SetRotation(XMFLOAT2(-0.1f, 0.35f));
-	
+		
 	_contentHolders.push_back(&_renderer);
 	_contentHolders.push_back(&_hdrPP);
 	_contentHolders.push_back(&_skyPP);
@@ -86,6 +93,21 @@ DeferredRendererApplication::DeferredRendererApplication()
 	for (UINT i = 0; i < _models.size(); i++)
 	{
 		_contentHolders.push_back(_models[i]);
+		_dragables.push_back(_models[i]);
+	}
+	for (UINT i = 0; i < _particles.size(); i++)
+	{
+		_contentHolders.push_back(_particles[i]);
+		_dragables.push_back(_particles[i]);
+	}
+
+	for (UINT i = 0; i < _pointLightsShadowed.size(); i++)
+	{
+		_dragables.push_back(_pointLightsShadowed[i]);
+	}
+	for (UINT i = 0; i < _pointLightsUnshadowed.size(); i++)
+	{
+		_dragables.push_back(_pointLightsUnshadowed[i]);
 	}
 }
 
@@ -94,6 +116,26 @@ DeferredRendererApplication::~DeferredRendererApplication()
 	for (UINT i = 0; i < _models.size(); i++)
 	{
 		delete _models[i];
+	}
+	for (UINT i = 0; i < _particles.size(); i++)
+	{
+		delete _particles[i];
+	}
+	for (UINT i = 0; i < _pointLightsShadowed.size(); i++)
+	{
+		delete _pointLightsShadowed[i];
+	}
+	for (UINT i = 0; i < _pointLightsUnshadowed.size(); i++)
+	{
+		delete _pointLightsUnshadowed[i];
+	}
+	for (UINT i = 0; i < _dirLightsShadowed.size(); i++)
+	{
+		delete _dirLightsShadowed[i];
+	}
+	for (UINT i = 0; i < _dirLightsUnshadowed.size(); i++)
+	{
+		delete _dirLightsUnshadowed[i];
 	}
 }
 
@@ -148,8 +190,10 @@ void DeferredRendererApplication::OnPreparingContentManager(ContentManager* cont
 
 	contentManager->AddContentLoader(&_textureLoader);
 	contentManager->AddContentLoader(&_psLoader);
+	contentManager->AddContentLoader(&_gsLoader);
 	contentManager->AddContentLoader(&_vsLoader);
 	contentManager->AddContentLoader(&_modelLoader);
+	contentManager->AddContentLoader(&_particleLoader);
 	contentManager->AddContentLoader(&_fontLoader);
 	contentManager->AddContentLoader(&_entityLoader);
 }
@@ -245,38 +289,27 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 
 			Ray mouseRay = _camera.Unproject(mousePos, viewSize);
 
-			XMVECTOR rayOrigin = XMLoadFloat3(&mouseRay.Origin);
-			XMVECTOR rayDir = XMLoadFloat3(&mouseRay.Direction);
+			float minDist = FLT_MAX;
+			IDragable* minDragable = NULL;
 
-			float minDist = _camera.GetFarClip();
-			ModelInstance* minModel = NULL;
-
-			for (UINT i = 0; i < _models.size(); i++)
+			for (UINT i = 0; i < _dragables.size(); i++)
 			{
-				for (UINT j = 0; j < _models[i]->GetModelMeshCount(); j++)
+				float dist;
+				if (_dragables[i]->RayIntersect(mouseRay, &dist))
 				{
-					float dist;
-					if (Collision::IntersectRayOrientedBox(rayOrigin, rayDir, &_models[i]->GetMeshOrientedBox(j), &dist) &&
-						dist < minDist)
-					{
-						minDist = dist;
-						minModel = _models[i];
-					}
+					minDist = dist;
+					minDragable = _dragables[i];
 				}
 			}
 
-			if (minModel)
-			{
-				_modelConfigPane->SelectModelInstance(minModel);
-			}
-			_selectedModel = minModel;
+			_selectedItem = minDragable;
 		}
 
 		if (mouse.IsButtonDown(MouseButton::LeftButton))
 		{
-			if (_selectedModel)
+			if (_selectedItem)
 			{
-				XMFLOAT3 curModelPos = _selectedModel->GetPosition();
+				XMFLOAT3 curModelPos = _selectedItem->GetPosition();
 				XMFLOAT3 camUp = _camera.GetUp();
 				XMFLOAT3 camRight = _camera.GetRight();				
 
@@ -287,14 +320,20 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 				pos += (((-mouse.GetDY() * up) + (mouse.GetDX() * right)) * 0.01f);
 
 				XMStoreFloat3(&curModelPos, pos);
-				_selectedModel->SetPosition(curModelPos);
+				_selectedItem->SetPosition(curModelPos);
 			}
-			
 		}
 
 		END_EVENT(L"");
 	}
 	
+	BEGIN_EVENT(L"Update Particles");
+	for (UINT i = 0; i < _particles.size(); i++)
+	{
+		_particles[i]->AdvanceSystem(dt);
+	}
+	END_EVENT(L"");
+
 	if (_ppConfigPane->IsPostProcessEnabled(&_uiPP))
 	{
 		BEGIN_EVENT(L"Update UI");
@@ -326,49 +365,52 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 
 	V_RETURN(_renderer.Begin());
 
+	BoundingObjectSet boSet;
+	for (UINT i = 0; i < _dragables.size(); i++)
+	{
+		_dragables[i]->FillBoundingObjectSet(&boSet);
+	}
 	_boPP.Clear();
+	_boPP.Add(&boSet);
+
 	for (UINT i = 0; i < _modelConfigPane->GetModelInstanceCount(); i++)
 	{
-		ModelInstance* instance = _modelConfigPane->GetModelInstance(i);
-
-		_renderer.AddModel(instance);
-
-		_boPP.Add(instance->GetOrientedBox());
-		for (UINT j = 0; j < instance->GetModelMeshCount(); j++)
-		{
-			_boPP.Add(instance->GetMeshOrientedBox(j));
-		}
+		_renderer.AddModel(_modelConfigPane->GetModelInstance(i));
 	}
 
-	PointLight pLight = 
+	for (UINT i = 0; i < _particles.size(); i++)
 	{
-		XMFLOAT3(3.0f, 4.0f, 0.0f),	// XMFLOAT3 Position;
-		15,							// float Radius;
-		XMFLOAT3(3.0f, 3.0f, 3.0f),	// XMFLOAT3 Color;	
-	};
-	_renderer.AddLight(&pLight, true);
+		_renderer.AddParticleSystem(_particles[i]);
+	}
+
+	for (UINT i = 0; i < _pointLightsShadowed.size(); i++)
+	{
+		_renderer.AddLight(_pointLightsShadowed[i], true);
+	}
+	for (UINT i = 0; i < _pointLightsUnshadowed.size(); i++)
+	{
+		_renderer.AddLight(_pointLightsUnshadowed[i], false);
+	}
+
+	for (UINT i = 0; i < _dirLightsShadowed.size(); i++)
+	{
+		_renderer.AddLight(_dirLightsShadowed[i], true);
+	}
+	for (UINT i = 0; i < _dirLightsUnshadowed.size(); i++)
+	{
+		_renderer.AddLight(_dirLightsUnshadowed[i], false);
+	}
 
 	if (_ppConfigPane->IsPostProcessEnabled(&_skyPP) && _skyPP.GetSunEnabled())
 	{
-		const float sunIntensity = _skyPP.GetSunIntensity();
-		const XMFLOAT3 sunColor = _skyPP.GetSunColor();
-		const XMFLOAT3 sunDir = _skyPP.GetSunDirection();
-		DirectionalLight sun = 
-		{
-			sunDir,
-			XMFLOAT3(sunColor.x * sunIntensity, sunColor.y * sunIntensity,
-				sunColor.z * sunIntensity)
-		};
+		DirectionalLight sun = DirectionalLight(_skyPP.GetSunDirection(), _skyPP.GetSunColor(),
+			_skyPP.GetSunBrightness());
 		
 		_renderer.AddLight(&sun, true);
 	}
 	
-	float ambientIntesity = 0.5f;
-	AmbientLight ambientLight = 
-	{
-		XMFLOAT3(ambientIntesity, ambientIntesity, ambientIntesity)
-	};
-	_renderer.AddLight(&ambientLight);
+	AmbientLight ambientLight = AmbientLight(XMFLOAT3(1.0f, 1.0f, 1.0f), 0.5f);
+	//_renderer.AddLight(&ambientLight);
 
 	UINT ppCount = _ppConfigPane->GetSelectedPostProcessCount();
 	for (UINT i = 0; i < ppCount; i++)

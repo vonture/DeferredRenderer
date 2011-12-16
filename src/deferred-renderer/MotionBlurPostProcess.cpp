@@ -37,7 +37,7 @@ HRESULT MotionBlurPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, Con
 	};
 
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_propertiesBuffer));
-	SET_DEBUG_NAME(_propertiesBuffer, "Motion blur properties buffer");
+	V_RETURN(SetDXDebugName(_propertiesBuffer, "Motion blur properties buffer"));
 
 	return S_OK;
 }

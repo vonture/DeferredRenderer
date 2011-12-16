@@ -23,9 +23,11 @@
 #include "SpotLightRenderer.h"
 
 #include "PixelShaderLoader.h"
+#include "GeometryShaderLoader.h"
 #include "VertexShaderLoader.h"
 #include "TextureLoader.h"
 #include "ModelLoader.h"
+#include "ParticleSystemLoader.h"
 #include "FontLoader.h"
 #include "EntityLoader.h"
 
@@ -40,10 +42,20 @@ private:
 	Renderer _renderer;
 	TestingCamera _camera;
 
+	std::vector<PointLight*> _pointLightsShadowed;
+	std::vector<PointLight*> _pointLightsUnshadowed;
+
+	std::vector<DirectionalLight*> _dirLightsShadowed;
+	std::vector<DirectionalLight*> _dirLightsUnshadowed;
+
 	std::vector<ModelInstance*> _models;
+	std::vector<ParticleSystemInstance*> _particles;
+
+	std::vector<IDragable*> _dragables;
+
 	std::vector<IHasContent*> _contentHolders;
 
-	ModelInstance* _selectedModel;
+	IDragable* _selectedItem;
 
 	DualParaboloidPointLightRenderer _paraboloidPointLR;
 	CascadedDirectionalLightRenderer _cascadedDirectionalLR;
@@ -62,10 +74,13 @@ private:
 
 	TextureLoader _textureLoader;
 	PixelShaderLoader _psLoader;
+	GeometryShaderLoader _gsLoader;
 	VertexShaderLoader _vsLoader;
 	ModelLoader _modelLoader;
+	ParticleSystemLoader _particleLoader;
 	FontLoader _fontLoader;
 	EntityLoader _entityLoader;
+
 
 	ConfigurationWindow* _configWindow;
 	PostProcessSelectionPane* _ppConfigPane;

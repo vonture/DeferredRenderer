@@ -115,7 +115,7 @@ HRESULT SpriteFont::CreateFromFile(ID3D11Device* pd3dDevice, const WCHAR* path)
 	V_RETURN(D3DX11CreateShaderResourceViewFromFile(pd3dDevice, fullPath, NULL, NULL, &_fontSRV, NULL));
 	char debugName[MAX_PATH];
 	sprintf_s(debugName, "%s font SRV", texName);
-	SET_DEBUG_NAME(_fontSRV, debugName);
+	V_RETURN(SetDXDebugName(_fontSRV, debugName));
 
 	D3DX11_IMAGE_INFO info;
 	V_RETURN(D3DX11GetImageInfoFromFile(fullPath, NULL, &info, NULL));

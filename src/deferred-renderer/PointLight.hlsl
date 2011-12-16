@@ -17,7 +17,7 @@ cbuffer cbLightProperties : register(b2)
 	float3 LightPosition	: packoffset(c0);
 	float  LightRadius		: packoffset(c0.w);
 	float3 LightColor		: packoffset(c1);	
-	float  Padding1			: packoffset(c1.w);	
+	float  LightBrightness	: packoffset(c1.w);	
 }
 
 cbuffer cbShadowProperties : register(b3)
@@ -76,16 +76,15 @@ float2 GetScreenTexCoord(float2 vPositionCS)
 
 float4 PS_PointLightCommon(VS_Out_PointLight input, float4 vPositionWS, float2 vTexCoord)
 {
-	float4 vColorData = RT0.Sample(SceneSampler, vTexCoord);
     float4 vNormalData = RT1.Sample(SceneSampler, vTexCoord);
 
-	float fSpecularIntensity = vColorData.a;
+	float fSpecularIntensity = RT0.Sample(SceneSampler, vTexCoord).a;
 	float fSpecularPower = vNormalData.a;	
 
     float3 vLightDir = LightPosition - vPositionWS.xyz;
 
-	float fAttenuation = saturate(1.0f - (length(vLightDir) / LightRadius));
-	fAttenuation = fAttenuation * fAttenuation;
+	float fAttenuation = 1.0f - saturate(length(vLightDir) / LightRadius);
+	//fAttenuation = fAttenuation * fAttenuation;
 
 	float3 N = vNormalData.xyz;
     float3 L = normalize(vLightDir);
@@ -96,7 +95,7 @@ float4 PS_PointLightCommon(VS_Out_PointLight input, float4 vPositionWS, float2 v
     float fDiffuseTerm = saturate(dot(N, L));
 	float fSpecularTerm = fSpecularIntensity * pow(clamp(dot(R, L), EPSILON, 1.0f), fSpecularPower);
 
-	return fAttenuation * float4(fDiffuseTerm * LightColor, fSpecularTerm);
+	return fAttenuation * float4(fDiffuseTerm * LightColor * LightBrightness, fSpecularTerm);
 }
 
 float4 PS_PointLightUnshadowed(VS_Out_PointLight input) : SV_TARGET0

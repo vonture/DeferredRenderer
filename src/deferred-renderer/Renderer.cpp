@@ -3,10 +3,8 @@
 #include "Logger.h"
 
 Renderer::Renderer() 
-	: _begun(false)
+	: _begun(false), _ambientLight(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f)
 {
-	_ambientLight.Color = XMFLOAT3(0.0f, 0.0f, 0.0f);
-
 	for (UINT i = 0; i < 2; i++)
 	{
 		_ppTextures[i] = NULL;
@@ -38,6 +36,15 @@ void Renderer::AddModel(ModelInstance* model)
 	}
 }
 
+void Renderer::AddParticleSystem(ParticleSystemInstance* particleSystem)
+{
+	if (particleSystem && _begun)
+	{
+		_particleSystems.push_back(particleSystem);
+	}
+}
+
+
 void Renderer::AddPostProcess(PostProcess* postProcess)
 {
 	if (postProcess && _begun)
@@ -62,9 +69,11 @@ HRESULT Renderer::Begin()
 	}
 
 	_postProcesses.clear();
+	_particleSystems.clear();
 	_postProcesses.push_back(&_combinePP);
 
-	_ambientLight.Color = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	_ambientLight.SetColor(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	_ambientLight.SetBrightness(0.0f);
 	
 	return S_OK;
 }
@@ -116,6 +125,8 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* viewCam
 
 	V_RETURN(_modelRenderer.RenderModels(pd3dImmediateContext, &_models, viewCamera));
 
+	V_RETURN(_particleRenderer.RenderParticles(pd3dImmediateContext, &_particleSystems, viewCamera));
+
 	V_RETURN(_gBuffer.UnsetRenderTargetsAndDepthStencil(pd3dImmediateContext));
 	END_EVENT_D3D(L"");
 
@@ -123,7 +134,8 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* viewCam
 	BEGIN_EVENT_D3D(L"Lights");
 	V_RETURN(_lightBuffer.SetRenderTargets(pd3dImmediateContext, _gBuffer.GetReadOnlyDepthStencilView()));
 
-	_lightBuffer.SetAmbientColor(_ambientLight.Color);
+	_lightBuffer.SetAmbientColor(_ambientLight.GetColor());
+	_lightBuffer.SetAmbientBrightness(_ambientLight.GetBrightness());
 	V_RETURN(_lightBuffer.Clear(pd3dImmediateContext));
 
 	for (std::map<size_t, LightRendererBase*>::iterator it = _lightRenderers.begin(); it != _lightRenderers.end(); it++)
@@ -199,6 +211,7 @@ HRESULT Renderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* 
 	V_RETURN(_gBuffer.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 	V_RETURN(_lightBuffer.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 	V_RETURN(_modelRenderer.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
+	V_RETURN(_particleRenderer.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 	V_RETURN(_combinePP.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 
 	return S_OK;
@@ -209,6 +222,7 @@ void Renderer::OnD3D11DestroyDevice()
 	_gBuffer.OnD3D11DestroyDevice();
 	_lightBuffer.OnD3D11DestroyDevice();
 	_modelRenderer.OnD3D11DestroyDevice();
+	_particleRenderer.OnD3D11DestroyDevice();
 	_combinePP.OnD3D11DestroyDevice();
 }
 
@@ -224,7 +238,7 @@ HRESULT Renderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManag
         pBackBufferSurfaceDesc->Height,//UINT Height;
         1,//UINT MipLevels;
         1,//UINT ArraySize;
-        DXGI_FORMAT_R32G32B32A32_FLOAT,//DXGI_FORMAT Format;
+        DXGI_FORMAT_R16G16B16A16_FLOAT,//DXGI_FORMAT Format;
         1,//DXGI_SAMPLE_DESC SampleDesc;
         0,
         D3D11_USAGE_DEFAULT,//D3D11_USAGE Usage;
@@ -234,15 +248,15 @@ HRESULT Renderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManag
     };
 
 	V_RETURN(pd3dDevice->CreateTexture2D(&ppTextureDesc, NULL, &_ppTextures[0]));
-	SET_DEBUG_NAME(_ppTextures[0], "Renderer post process texture 0");
+	V_RETURN(SetDXDebugName(_ppTextures[0], "Renderer post process texture 0"));
 
 	V_RETURN(pd3dDevice->CreateTexture2D(&ppTextureDesc, NULL, &_ppTextures[1]));
-	SET_DEBUG_NAME(_ppTextures[1], "Renderer post process texture 1");
+	V_RETURN(SetDXDebugName(_ppTextures[1], "Renderer post process texture 1"));
 
 	// Create the shader resource views
 	D3D11_SHADER_RESOURCE_VIEW_DESC ppSRVDesc = 
     {
-        DXGI_FORMAT_R32G32B32A32_FLOAT,
+        DXGI_FORMAT_R16G16B16A16_FLOAT,
         D3D11_SRV_DIMENSION_TEXTURE2D,
         0,
         0
@@ -250,29 +264,30 @@ HRESULT Renderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManag
 	ppSRVDesc.Texture2D.MipLevels = 1;
 
 	V_RETURN(pd3dDevice->CreateShaderResourceView(_ppTextures[0], &ppSRVDesc, &_ppShaderResourceViews[0]));
-	SET_DEBUG_NAME(_ppShaderResourceViews[0], "Renderer post process SRV 0");
+	V_RETURN(SetDXDebugName(_ppShaderResourceViews[0], "Renderer post process SRV 0"));
 
 	V_RETURN(pd3dDevice->CreateShaderResourceView(_ppTextures[1], &ppSRVDesc, &_ppShaderResourceViews[1]));
-	SET_DEBUG_NAME(_ppShaderResourceViews[1], "Renderer post process SRV 1");
+	V_RETURN(SetDXDebugName(_ppShaderResourceViews[1], "Renderer post process SRV 1"));
 
 	// create the render target views
 	D3D11_RENDER_TARGET_VIEW_DESC ppRTVDesc = 
 	{
-        DXGI_FORMAT_R32G32B32A32_FLOAT,
+        DXGI_FORMAT_R16G16B16A16_FLOAT,
         D3D11_RTV_DIMENSION_TEXTURE2D,
         0,
         0
     };
 
 	V_RETURN(pd3dDevice->CreateRenderTargetView(_ppTextures[0], &ppRTVDesc, &_ppRenderTargetViews[0]));
-	SET_DEBUG_NAME(_ppRenderTargetViews[0], "Renderer post process RTV 0");
+	V_RETURN(SetDXDebugName(_ppRenderTargetViews[0], "Renderer post process RTV 0"));
 
 	V_RETURN(pd3dDevice->CreateRenderTargetView(_ppTextures[1], &ppRTVDesc, &_ppRenderTargetViews[1]));
-	SET_DEBUG_NAME(_ppRenderTargetViews[1], "Renderer post process RTV 1");
+	V_RETURN(SetDXDebugName(_ppRenderTargetViews[1], "Renderer post process RTV 1"));
 
 	V_RETURN(_gBuffer.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_lightBuffer.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_modelRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_particleRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_combinePP.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 
 	return S_OK;
@@ -290,5 +305,6 @@ void Renderer::OnD3D11ReleasingSwapChain()
 	_gBuffer.OnD3D11ReleasingSwapChain();
 	_lightBuffer.OnD3D11ReleasingSwapChain();
 	_modelRenderer.OnD3D11ReleasingSwapChain();
+	_particleRenderer.OnD3D11ReleasingSwapChain();
 	_combinePP.OnD3D11ReleasingSwapChain();
 }

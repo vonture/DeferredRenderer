@@ -11,37 +11,26 @@
 
 #include "PCH.h"
 
-//-----------------------------------------------------------------------------
-// Bounding volumes structures.
-//
-// The bounding volume structures are setup for near minimum size because there
-// are likely to be many of them, and memory bandwidth and space will be at a
-// premium relative to CPU cycles on Xbox 360.
-//-----------------------------------------------------------------------------
-
-#pragma warning(push)
-#pragma warning(disable: 4324)
-
-_DECLSPEC_ALIGN_16_ struct Sphere
+struct Sphere
 {
     XMFLOAT3 Center;            // Center of the sphere.
     FLOAT Radius;               // Radius of the sphere.
 };
 
-_DECLSPEC_ALIGN_16_ struct AxisAlignedBox
+struct AxisAlignedBox
 {
     XMFLOAT3 Center;            // Center of the box.
     XMFLOAT3 Extents;           // Distance from the center to each side.
 };
 
-_DECLSPEC_ALIGN_16_ struct OrientedBox
+struct OrientedBox
 {
     XMFLOAT3 Center;            // Center of the box.
     XMFLOAT3 Extents;           // Distance from the center to each side.
     XMFLOAT4 Orientation;       // Unit quaternion representing rotation (box -> world).
 };
 
-_DECLSPEC_ALIGN_16_ struct Frustum
+struct Frustum
 {
     XMFLOAT3 Origin;            // Origin of the frustum (and projection).
     XMFLOAT4 Orientation;       // Unit quaternion representing rotation.
@@ -53,14 +42,11 @@ _DECLSPEC_ALIGN_16_ struct Frustum
     FLOAT Near, Far;            // Z of the near plane and far plane.
 };
 
-_DECLSPEC_ALIGN_16_ struct Ray
+struct Ray
 {
 	XMFLOAT3 Origin;
 	XMFLOAT3 Direction;
 };
-
-#pragma warning(pop)
-
 
 // Some xna collision defines
 #define NO_INTERSECTION 0

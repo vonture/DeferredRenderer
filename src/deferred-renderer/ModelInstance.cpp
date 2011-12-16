@@ -14,7 +14,7 @@ void ModelInstance::clean()
 	XMVECTOR position = XMLoadFloat3(&_position);
 	XMVECTOR orientation = XMLoadFloat4(&_orientation);
 
-	// Create the matricies for translation, rotation and scaling
+	// Create the matrices for translation, rotation and scaling
 	XMMATRIX translate = XMMatrixTranslationFromVector(position);
 	XMMATRIX rotate = XMMatrixRotationQuaternion(orientation);
 	XMMATRIX scale = XMMatrixScaling(_scale, _scale, _scale);
@@ -53,6 +53,43 @@ void ModelInstance::clean()
 
 	_dirty = false;
 }
+
+void ModelInstance::FillBoundingObjectSet(BoundingObjectSet* set)
+{
+	for (UINT i = 0; i < _model->GetMeshCount(); i++)
+	{
+		set->AddOrientedBox(_transformedMeshOrientedBoxes[i]);
+	}
+}
+
+bool ModelInstance::RayIntersect(const Ray& ray, float* dist)
+{
+	if (_dirty)
+	{
+		clean();
+	}
+
+	XMVECTOR rayOrigin = XMLoadFloat3(&ray.Origin);
+	XMVECTOR rayDir = XMLoadFloat3(&ray.Direction);	
+
+	float minDist = FLT_MAX;
+	bool found = false;
+	for (UINT i = 0; i < _model->GetMeshCount(); i++)
+	{
+		float dist;
+		if (!Collision::IntersectPointOrientedBox(rayOrigin, &_transformedMeshOrientedBoxes[i]) &&
+			Collision::IntersectRayOrientedBox(rayOrigin, rayDir, &_transformedMeshOrientedBoxes[i], &dist) &&
+			dist < minDist)
+		{
+			minDist = dist;
+			found = true;
+		}
+	}
+
+	*dist = minDist;
+	return found;
+}
+
 
 HRESULT ModelInstance::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {

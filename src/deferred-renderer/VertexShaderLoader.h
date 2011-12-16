@@ -9,7 +9,7 @@ struct VertexShaderContent : public ContentType
 	ID3D11VertexShader* VertexShader;
 	ID3D11InputLayout* InputLayout;
 
-	VertexShaderContent() : VertexShader(NULL) { }
+	VertexShaderContent() : VertexShader(NULL), InputLayout(NULL) { }
 	~VertexShaderContent() { SAFE_RELEASE(InputLayout); SAFE_RELEASE(VertexShader); }
 };
 

@@ -5,69 +5,44 @@
 
 BoundingObjectPostProcess::BoundingObjectPostProcess()
 	: _boxVB(NULL), _boxIB(NULL), _sphereVB(NULL), _inputLayout(NULL), _vertexShader(NULL),
-	  _pixelShader(NULL), _wvpConstantBuffer(NULL), _colorConstantBuffer(NULL), _nextAABB(0), _nextOBB(0),
-	  _nextSphere(0), _nextFrust(0)
+	  _pixelShader(NULL), _wvpConstantBuffer(NULL), _colorConstantBuffer(NULL)
 {
-	_aabbs = new AxisAlignedBox[MAX_BOUNDING_OBJECTS];
-	_obbs = new OrientedBox[MAX_BOUNDING_OBJECTS];
-	_spheres = new Sphere[MAX_BOUNDING_OBJECTS];
-	_frustums = new Frustum[MAX_BOUNDING_OBJECTS];
-
 	SetIsAdditive(true);
-
 	SetColor(XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f));
 }
 
 BoundingObjectPostProcess::~BoundingObjectPostProcess()
 {
-	SAFE_DELETE_ARRAY(_aabbs);
-	SAFE_DELETE_ARRAY(_obbs);
-	SAFE_DELETE_ARRAY(_spheres);
-	SAFE_DELETE_ARRAY(_frustums);
 }
 
 void BoundingObjectPostProcess::Add(const AxisAlignedBox& aabb)
 {
-	if (_nextAABB < MAX_BOUNDING_OBJECTS)
-	{
-		_aabbs[_nextAABB] = aabb;
-		_nextAABB++;
-	}
+	_objects.AddAxisAlignedBox(aabb);
 }
 
 void BoundingObjectPostProcess::Add(const OrientedBox& obb)
 {
-	if (_nextOBB < MAX_BOUNDING_OBJECTS)
-	{
-		_obbs[_nextOBB] = obb;
-		_nextOBB++;
-	}
+	_objects.AddOrientedBox(obb);
 }
 
 void BoundingObjectPostProcess::Add(const Sphere& sphere)
 {
-	if (_nextSphere < MAX_BOUNDING_OBJECTS)
-	{
-		_spheres[_nextSphere] = sphere;
-		_nextSphere++;
-	}
+	_objects.AddSphere(sphere);
 }
 
 void BoundingObjectPostProcess::Add(const Frustum& frust)
 {
-	if (_nextFrust < MAX_BOUNDING_OBJECTS)
-	{
-		_frustums[_nextFrust] = frust;
-		_nextFrust++;
-	}
+	_objects.AddFrustum(frust);
+}
+
+void BoundingObjectPostProcess::Add(BoundingObjectSet* objectSet)
+{
+	_objects.Merge(objectSet);
 }
 
 void BoundingObjectPostProcess::Clear()
 {
-	_nextAABB = 0;
-	_nextOBB = 0;
-	_nextSphere = 0;
-	_nextFrust = 0;
+	_objects.Clear();
 }
 
 HRESULT BoundingObjectPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
@@ -111,11 +86,13 @@ HRESULT BoundingObjectPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCont
 	pd3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 	pd3dImmediateContext->IASetIndexBuffer(_boxIB, DXGI_FORMAT_R16_UINT, 0);
     pd3dImmediateContext->IASetVertexBuffers(0, 1, boxVBs, &strides, &offsets);
-	for (UINT i = 0; i < _nextAABB; i++)
+	for (UINT i = 0; i < _objects.GetAxisAlignedBoxeCount(); i++)
 	{
+		AxisAlignedBox* aabb = _objects.GetAxisAlignedBox(i);
+
 		// Calculate the world matrix
-		XMMATRIX scale = XMMatrixScalingFromVector(XMLoadFloat3(&_aabbs[i].Extents));
-		XMMATRIX trans = XMMatrixTranslationFromVector(XMLoadFloat3(&_aabbs[i].Center));
+		XMMATRIX scale = XMMatrixScalingFromVector(XMLoadFloat3(&aabb->Extents));
+		XMMATRIX trans = XMMatrixTranslationFromVector(XMLoadFloat3(&aabb->Center));
 
 		XMMATRIX world = XMMatrixMultiply(scale, trans);
 		XMMATRIX wvp = XMMatrixMultiply(world, viewProj);
@@ -132,15 +109,17 @@ HRESULT BoundingObjectPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCont
 	END_EVENT_D3D(L"");
 
 	BEGIN_EVENT_D3D(L"OBBs");
-	for (UINT i = 0; i < _nextOBB; i++)
+	for (UINT i = 0; i < _objects.GetOrientedBoxCount(); i++)
 	{
+		OrientedBox* obb = _objects.GetOrientedBox(i);
+
 		// Calculate the world matrix
-		XMMATRIX rot = XMMatrixRotationQuaternion(XMLoadFloat4( &_obbs[i].Orientation));
-		XMMATRIX scale = XMMatrixScalingFromVector(XMLoadFloat3(&_obbs[i].Extents));
+		XMMATRIX rot = XMMatrixRotationQuaternion(XMLoadFloat4(&obb->Orientation));
+		XMMATRIX scale = XMMatrixScalingFromVector(XMLoadFloat3(&obb->Extents));
 
 		XMMATRIX world = XMMatrixMultiply(rot, scale);
 
-		XMVECTOR position = XMLoadFloat3(&_obbs[i].Center);
+		XMVECTOR position = XMLoadFloat3(&obb->Center);
 		world.r[3] = XMVectorSelect(world.r[3], position, XMVectorSelectControl(1, 1, 1, 0));
 
 		XMMATRIX wvp = XMMatrixMultiply(world, viewProj);
@@ -157,21 +136,24 @@ HRESULT BoundingObjectPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCont
 	END_EVENT_D3D(L"");
 
 	BEGIN_EVENT_D3D(L"Frustums");
-	for (UINT i = 0; i < _nextFrust; i++)
+	for (UINT i = 0; i < _objects.GetFrustumCount(); i++)
 	{
+		//Frustum* frust = _objects.GetFrustum(i);
 	}
 	END_EVENT_D3D(L"");
 
 	BEGIN_EVENT_D3D(L"Spheres");
 	pd3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
     pd3dImmediateContext->IASetVertexBuffers(0, 1, sphereVBs, &strides, &offsets);	
-	for (UINT i = 0; i < _nextSphere; i++)
+	for (UINT i = 0; i < _objects.GetSphereCount(); i++)
 	{
+		Sphere* sphere = _objects.GetSphere(i);
+
 		// Calculate the world matrix
-		float rad = _spheres[i].Radius;
+		float rad = sphere->Radius;
 
 		XMMATRIX scale = XMMatrixScaling(rad, rad, rad);
-		XMMATRIX trans = XMMatrixTranslationFromVector(XMLoadFloat3(&_spheres[i].Center));
+		XMMATRIX trans = XMMatrixTranslationFromVector(XMLoadFloat3(&sphere->Center));
 
 		XMMATRIX world = XMMatrixMultiply(scale, trans);
 		XMMATRIX wvp = XMMatrixMultiply(world, viewProj);
@@ -197,16 +179,16 @@ HRESULT BoundingObjectPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCont
 void BoundingObjectPostProcess::fillRingVB(BOUNDING_OBJECT_VERTEX* buffer, UINT startIdx, UINT numSegments,
 	const XMFLOAT3& Origin, const XMFLOAT3& MajorAxis, const XMFLOAT3& MinorAxis)
 {
-    XMVECTOR vOrigin = XMLoadFloat3( &Origin );
-    XMVECTOR vMajor = XMLoadFloat3( &MajorAxis );
-    XMVECTOR vMinor = XMLoadFloat3( &MinorAxis );
+    XMVECTOR vOrigin = XMLoadFloat3( &Origin);
+    XMVECTOR vMajor = XMLoadFloat3(&MajorAxis);
+    XMVECTOR vMinor = XMLoadFloat3(&MinorAxis);
 
     FLOAT fAngleDelta = XM_2PI / (float)(numSegments - 1);
     // Instead of calling cos/sin for each segment we calculate
     // the sign of the angle delta and then incrementally calculate sin
     // and cosine from then on.
-    XMVECTOR cosDelta = XMVectorReplicate( cosf( fAngleDelta ) );
-    XMVECTOR sinDelta = XMVectorReplicate( sinf( fAngleDelta ) );
+    XMVECTOR cosDelta = XMVectorReplicate(cosf(fAngleDelta));
+    XMVECTOR sinDelta = XMVectorReplicate(sinf(fAngleDelta));
     XMVECTOR incrementalSin = XMVectorZero();
     static const XMVECTOR initialCos =
     {
@@ -216,9 +198,9 @@ void BoundingObjectPostProcess::fillRingVB(BOUNDING_OBJECT_VERTEX* buffer, UINT 
     for(UINT i = startIdx; i < startIdx + numSegments - 1; i++ )
     {
         XMVECTOR Pos;
-        Pos = XMVectorMultiplyAdd( vMajor, incrementalCos, vOrigin );
-        Pos = XMVectorMultiplyAdd( vMinor, incrementalSin, Pos );
-        XMStoreFloat3(&buffer[i].Position, Pos );
+        Pos = XMVectorMultiplyAdd(vMajor, incrementalCos, vOrigin);
+        Pos = XMVectorMultiplyAdd(vMinor, incrementalSin, Pos);
+        XMStoreFloat3(&buffer[i].Position, Pos);
 
         // Standard formula to rotate a vector.
         XMVECTOR newCos = incrementalCos * cosDelta - incrementalSin * sinDelta;

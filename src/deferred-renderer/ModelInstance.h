@@ -2,11 +2,11 @@
 
 #include "PCH.h"
 #include "IHasContent.h"
+#include "IDragable.h"
 #include "Model.h"
 #include "xnaCollision.h"
-#include <map>
 
-class ModelInstance : public IHasContent
+class ModelInstance : public IHasContent, public IDragable
 {
 private:
 	const WCHAR* _path;
@@ -84,7 +84,6 @@ public:
 		return _transformedMainAxisBox;
 	}
 
-
 	const OrientedBox& GetMeshOrientedBox(UINT meshIdx)
 	{
 		if (_dirty)
@@ -108,6 +107,9 @@ public:
 	UINT GetModelMeshCount() const { return _model->GetMeshCount(); }
 
 	Model* GetModel() { return _model; }
+
+	void FillBoundingObjectSet(BoundingObjectSet* set);
+	bool RayIntersect(const Ray& ray, float* dist);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, 
 		const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	

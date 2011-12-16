@@ -7,10 +7,12 @@ class SkyPostProcess : public PostProcess
 {
 private:
 	XMFLOAT3 _skyColor;
+	float _skyBrightness;
+
 	XMFLOAT3 _sunColor;
 	XMFLOAT3 _sunDirection;
 	float _sunWidth;
-	float _sunIntensity;
+	float _sunBrightness;
 	bool _enableSun;
 
 	struct SKY_TYPE
@@ -33,31 +35,35 @@ private:
 
 	struct CB_SKY_PROPERTIES
 	{
+		XMFLOAT3 SunDirection;
 		float SunWidth;
-		float SunIntensity;
-		_DECLSPEC_ALIGN_16_ XMFLOAT3 SkyColor;
-		_DECLSPEC_ALIGN_16_ XMFLOAT3 SunColor;	
-		_DECLSPEC_ALIGN_16_ XMFLOAT3 SunDirection;
-		_DECLSPEC_ALIGN_16_ XMFLOAT3 CameraPosition;	
-		_DECLSPEC_ALIGN_16_ XMFLOAT4X4 InverseViewProjection;
+		XMFLOAT3 SunColor;
+		float SunBrightness;
+		XMFLOAT3 SkyColor;
+		float SkyBrightness;
+		XMFLOAT3 CameraPosition;
+		float Padding;
+		XMFLOAT4X4 InverseViewProjection;
 	};
 	
 public:
 	SkyPostProcess();
 
 	const XMFLOAT3& GetSkyColor() const { return _skyColor; }
+	float GetSkyBrightness() const { return _skyBrightness; }
 	const XMFLOAT3& GetSunColor() const { return _sunColor; }
 	const XMFLOAT3& GetSunDirection() const { return _sunDirection; }
 	float GetSunWidth() const { return _sunWidth; }
 	bool GetSunEnabled() const { return _enableSun; }
-	float GetSunIntensity() const { return _sunIntensity; }
+	float GetSunBrightness() const { return _sunBrightness; }
 
 	void SetSkyColor(const XMFLOAT3& skyCol) { _skyColor = skyCol; }
+	void SetSkyBrightness(float skyBrightness) { _skyBrightness = skyBrightness; }
 	void SetSunColor(const XMFLOAT3& sunCol) { _sunColor = sunCol; }
 	void SetSunDirection(const XMFLOAT3& sunDir);
 	void SetSunWidth(float width) { _sunWidth = max(width, EPSILON); }
 	void SetSunEnabled(bool enable) { _enableSun = enable; }
-	void SetSunIntensity(float intensity) { _sunIntensity = max(intensity, 0.0f); }
+	void SetSunBrightness(float intensity) { _sunBrightness = max(intensity, 0.0f); }
 
 	void SetSkyTypeIndex(UINT idx) { _skyTypeIndex = clamp(idx, 0, SKY_TYPE_COUNT - 1); }
 	UINT GetSkyTypeIndex() const { return _skyTypeIndex; }

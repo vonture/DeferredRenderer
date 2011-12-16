@@ -455,7 +455,7 @@ HRESULT CascadedDirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 	XMMATRIX inverseCameraView = XMMatrixInverse(&det, cameraView);	
 
 	// Calculate the scene aabb in light space
-	XMVECTOR lightDir = XMLoadFloat3(&dlight->Direction);
+	XMVECTOR lightDir = XMLoadFloat3(&dlight->GetDirection());
 	XMFLOAT3 lightOrigin = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
 
@@ -717,8 +717,9 @@ HRESULT CascadedDirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 			CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES* lightProperties = 
 				(CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
 
-			lightProperties->LightColor = light->Color;
-			lightProperties->LightDirection = light->Direction;
+			lightProperties->LightColor = light->GetColor();
+			lightProperties->LightBrightness = light->GetBrightness();
+			lightProperties->LightDirection = light->GetDirection();
 
 			pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
 
@@ -738,8 +739,9 @@ HRESULT CascadedDirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 			CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES* lightProperties = 
 				(CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
 
-			lightProperties->LightColor = light->Color;
-			lightProperties->LightDirection = light->Direction;
+			lightProperties->LightColor = light->GetColor();
+			lightProperties->LightBrightness = light->GetBrightness();
+			lightProperties->LightDirection = light->GetDirection();
 
 			pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
 		
@@ -946,11 +948,21 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 		0,
 	};
 
+
+	char debugName[MAX_PATH];
 	for (UINT i = 0; i < NUM_SHADOW_MAPS; i++)
 	{
 		V_RETURN(pd3dDevice->CreateTexture2D(&shadowMapTextureDesc, NULL, &_shadowMapTextures[i]));
+		sprintf_s(debugName, "Cascaded shadow map %i texture", i);
+		V_RETURN(SetDXDebugName(_shadowMapTextures[i], debugName));
+
 		V_RETURN(pd3dDevice->CreateShaderResourceView(_shadowMapTextures[i], &shadowMapSRVDesc, &_shadowMapSRVs[i]));
+		sprintf_s(debugName, "Cascaded shadow map %i SRV", i);
+		V_RETURN(SetDXDebugName(_shadowMapSRVs[i], debugName));
+		
 		V_RETURN(pd3dDevice->CreateDepthStencilView(_shadowMapTextures[i], &shadowMapDSVDesc, &_shadowMapDSVs[i]));
+		sprintf_s(debugName, "Cascaded shadow map %i DSV", i);
+		V_RETURN(SetDXDebugName(_shadowMapDSVs[i], debugName));
 	}
 
 	// Load the other IHasContents

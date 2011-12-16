@@ -215,9 +215,6 @@ Ray Camera::Unproject(const XMFLOAT2& screenPos, const XMFLOAT2& viewPortSize) c
 	XMFLOAT2 viewPortPos = XMFLOAT2((screenPos.x / viewPortSize.x) * 2.0f - 1.0f,
 		-((screenPos.y / viewPortSize.y) * 2.0f - 1.0f));
 
-	//XMFLOAT2 viewPortPos = XMFLOAT2((screenPos.x / viewPortSize.x),
-	//	(screenPos.y / viewPortSize.y));
-
 	XMVECTOR start = XMVectorSet(viewPortPos.x, viewPortPos.y, 0.0f, 1.0f);
 	XMVECTOR end = XMVectorSet(viewPortPos.x, viewPortPos.y, 1.0f, 1.0f);
 

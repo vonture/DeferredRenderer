@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PCH.h"
+#include "LightRenderer.h"
 #include "Lights.h"
 #include "Camera.h"
 #include "PostProcess.h"
@@ -10,21 +11,8 @@
 #include "LightBuffer.h"
 #include "IHasContent.h"
 #include "ModelRenderer.h"
-#include "SpotLightRenderer.h"
+#include "ParticleRenderer.h"
 #include "xnaCollision.h"
-
-namespace BoundingObjectDrawType
-{
-	enum
-	{
-		None			= 0,
-		Lights			= (1 << 0),
-		Models			= (1 << 1),
-		ModelMeshes		= (1 << 2),
-		CameraFrustums	= (1 << 3),
-		All				= Lights | Models | ModelMeshes | CameraFrustums
-	};
-};
 
 class Renderer : public IHasContent
 {
@@ -32,9 +20,13 @@ private:
 	bool _begun;
 	GBuffer _gBuffer;
 	LightBuffer _lightBuffer;
+	
 	std::vector<ModelInstance*> _models;
+	std::vector<ParticleSystemInstance*> _particleSystems;
 	std::vector<PostProcess*> _postProcesses;
+		
 	ModelRenderer _modelRenderer;
+	ParticleRenderer _particleRenderer;
 	CombinePostProcess _combinePP;
 		
 	ID3D11Texture2D* _ppTextures[2];
@@ -81,12 +73,11 @@ public:
 	template<>
 	void AddLight<AmbientLight>(AmbientLight* light, bool shadowed)
 	{
-		_ambientLight.Color.x += light->Color.x;
-		_ambientLight.Color.y += light->Color.y;
-		_ambientLight.Color.z += light->Color.z;	
+		_ambientLight.MergeColor(light);
 	}
 	
 	void AddModel(ModelInstance* model);
+	void AddParticleSystem(ParticleSystemInstance* particleSystem);
 	void AddPostProcess(PostProcess* postProcess);
 
 	HRESULT Begin();

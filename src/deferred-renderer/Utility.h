@@ -15,6 +15,12 @@ const float PiOver8 = Pi / 8.0f;
 #define saturate(val) clamp((val), 0, 1)
 #endif
 
+inline float RandomBetween(float min, float max)
+{
+	float perc = (float)(rand() % 10000) / 10000.0f;
+	return min + ((max - min) * perc);
+}
+
 inline HRESULT FormatHRESULTErrorMessageW(HRESULT errorId, WCHAR* msgBuffer, UINT msgLen)
 {
 	return FormatMessageW(
@@ -173,7 +179,30 @@ inline HRESULT CompileShaderFromFile(const WCHAR* szFileName, const char* szEntr
     return S_OK;
 }
 
-#define SET_DEBUG_NAME(obj, name) ((obj)->SetPrivateData(WKPDID_D3DDebugObjectName, lstrlenA(name), (name)))
+
+#if defined(PROFILE) || defined(DEBUG) || defined(_DEBUG)
+	inline HRESULT SetDXDebugName(IDirect3DResource9* pObj, const CHAR* pstrName)
+	{
+		return pObj ? pObj->SetPrivateData(WKPDID_D3DDebugObjectName, pstrName, lstrlenA(pstrName), 0) : E_FAIL;
+	}
+
+	inline HRESULT SetDXDebugName(IDXGIObject* pObj, const CHAR* pstrName)
+	{
+		return pObj ? pObj->SetPrivateData(WKPDID_D3DDebugObjectName, lstrlenA(pstrName), pstrName) : E_FAIL;
+	}
+
+	inline HRESULT SetDXDebugName(ID3D11Device* pObj, const CHAR* pstrName)
+	{
+		return pObj ? pObj->SetPrivateData(WKPDID_D3DDebugObjectName, lstrlenA(pstrName), pstrName) : E_FAIL;
+	}
+
+	inline HRESULT SetDXDebugName(ID3D11DeviceChild* pObj, const CHAR* pstrName)
+	{
+		return pObj ? pObj->SetPrivateData(WKPDID_D3DDebugObjectName, lstrlenA(pstrName), pstrName) : E_FAIL;
+	}
+#else
+	#define SetDXDebugName(pObj, pstrName)
+#endif
 
 #if defined(DEBUG) || defined(_DEBUG)
 	#ifndef V

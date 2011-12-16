@@ -145,12 +145,12 @@ HRESULT DiscDoFPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, Conten
 		V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, &sampleInitData, &_sampleBuffers[i]));
 
 		sprintf_s(bufferDebugName, "Disc DoF sample buffer (samples = %u)", Poisson::GetDistributionSize(i));
-		SET_DEBUG_NAME(_sampleBuffers[i], bufferDebugName);
+		V_RETURN(SetDXDebugName(_sampleBuffers[i], bufferDebugName));
 	}
 
 	bufferDesc.ByteWidth = sizeof(CB_DOF_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_propertiesBuffer));
-	SET_DEBUG_NAME(_propertiesBuffer, "Disc DoF Properties Buffer");
+	V_RETURN(SetDXDebugName(_propertiesBuffer, "Disc DoF Properties Buffer"));
 
 	// Store the resolution
 	_sceneWidth = pBackBufferSurfaceDesc->Width;

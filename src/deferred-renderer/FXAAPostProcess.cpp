@@ -134,7 +134,7 @@ HRESULT FXAAPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 	};
 
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_propertiesBuffer));
-	SET_DEBUG_NAME(_propertiesBuffer, "FXAA properties buffer");
+	V_RETURN(SetDXDebugName(_propertiesBuffer, "FXAA properties buffer"));
 
 	_invSceneSize.x = 1.0f / pBackBufferSurfaceDesc->Width;
 	_invSceneSize.y = 1.0f / pBackBufferSurfaceDesc->Height;

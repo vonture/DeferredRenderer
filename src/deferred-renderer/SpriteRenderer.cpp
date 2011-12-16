@@ -338,7 +338,7 @@ HRESULT SpriteRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMan
 		0, // UINT StructureByteStride;
 	};
 	V_RETURN(pd3dDevice->CreateBuffer(&vbDesc, NULL, &_vertexBuffer));
-	SET_DEBUG_NAME(_vertexBuffer, "Sprite renderer VB");
+	V_RETURN(SetDXDebugName(_vertexBuffer, "Sprite renderer VB"));
 
 	D3D11_BUFFER_DESC ibDesc = 
 	{
@@ -350,7 +350,7 @@ HRESULT SpriteRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMan
 		0, // UINT StructureByteStride;
 	};
 	V_RETURN(pd3dDevice->CreateBuffer(&ibDesc, NULL, &_indexBuffer));
-	SET_DEBUG_NAME(_indexBuffer, "Sprite renderer IB");
+	V_RETURN(SetDXDebugName(_indexBuffer, "Sprite renderer IB"));
 
 	// create the blank texture
 	D3D11_TEXTURE2D_DESC blankTextureDesc = 
@@ -376,7 +376,7 @@ HRESULT SpriteRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMan
 	initData.SysMemSlicePitch = 0;
 
 	V_RETURN(pd3dDevice->CreateTexture2D(&blankTextureDesc, &initData, &_blankTexture));
-	SET_DEBUG_NAME(_blankTexture, "Sprite renderer blank texture");
+	V_RETURN(SetDXDebugName(_blankTexture, "Sprite renderer blank texture"));
 
 	// create the blank srv
 	D3D11_SHADER_RESOURCE_VIEW_DESC blankSRVDesc = 
@@ -389,7 +389,7 @@ HRESULT SpriteRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMan
 	blankSRVDesc.Texture2D.MipLevels = 1;
 
 	V_RETURN(pd3dDevice->CreateShaderResourceView(_blankTexture, &blankSRVDesc, &_blankSRV));
-	SET_DEBUG_NAME(_blankTexture, "Sprite renderer blank SRV");
+	V_RETURN(SetDXDebugName(_blankTexture, "Sprite renderer blank SRV"));
 	
 	// Store backbuffer size
 	_bbWidth = pBackBufferSurfaceDesc->Width;

@@ -92,7 +92,7 @@ HRESULT PixelShaderLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11Thre
 		CHAR debugName[256];
 
 		sprintf_s(debugName, "%s %s", options->DebugName, "PS");
-		SET_DEBUG_NAME(ps, debugName);
+		V_RETURN(SetDXDebugName(ps, debugName));
 	}
 
 	PixelShaderContent* content = new PixelShaderContent();
