@@ -694,7 +694,13 @@ HRESULT CascadedDirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 		float blendFactor[4] = {1, 1, 1, 1};
 		pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetAdditiveBlend(), blendFactor, 0xFFFFFFFF);
 
-		V_RETURN(gBuffer->PSSetShaderResources(pd3dImmediateContext, 0));
+		ID3D11ShaderResourceView* gBufferSRVs[3] = 
+		{
+			gBuffer->GetDiffuseSRV(),
+			gBuffer->GetNormalSRV(),
+			gBuffer->GetDepthSRV(),
+		};
+		pd3dImmediateContext->PSSetShaderResources(0, 3, gBufferSRVs);
 
 		// map the camera properties
 		V_RETURN(pd3dImmediateContext->Map(_cameraPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
@@ -767,15 +773,15 @@ HRESULT CascadedDirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 			pd3dImmediateContext->PSSetConstantBuffers(1, 2, constantBuffers);
 
 			// Set the shadow map SRV
-			pd3dImmediateContext->PSSetShaderResources(4, 1, &_shadowMapSRVs[i]);
+			pd3dImmediateContext->PSSetShaderResources(3, 1, &_shadowMapSRVs[i]);
 
 			// Finally, render the quad
 			_fsQuad.Render(pd3dImmediateContext, _shadowedPS);
 		}
 
 		// Null all the SRVs
-		ID3D11ShaderResourceView* nullSRV[5] = { NULL, NULL, NULL, NULL, NULL };
-		pd3dImmediateContext->PSSetShaderResources(0, 5, nullSRV);
+		ID3D11ShaderResourceView* nullSRV[4] = { NULL, NULL, NULL, NULL };
+		pd3dImmediateContext->PSSetShaderResources(0, 4, nullSRV);
 
 		END_EVENT_D3D(L"");
 	}

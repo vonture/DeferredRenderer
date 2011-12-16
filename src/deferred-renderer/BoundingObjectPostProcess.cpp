@@ -52,7 +52,7 @@ HRESULT BoundingObjectPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCont
 
 	HRESULT hr;
 	
-	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, gBuffer->GetReadOnlyDepthStencilView());
+	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, gBuffer->GetReadOnlyDepthDSV());
 
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 

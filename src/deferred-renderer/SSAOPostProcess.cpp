@@ -130,7 +130,7 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 
 	ID3D11ShaderResourceView* ppSRVAO[2] =
 	{ 
-		gBuffer->GetShaderResourceView(3),
+		gBuffer->GetDepthSRV(),
 		_randomSRV
 	};
 	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVAO);	
@@ -140,7 +140,7 @@ HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 	END_EVENT_D3D(L"");
 	
 	// Blur AO texture using normals for edge detection
-	ID3D11ShaderResourceView* pphBlurSRVs[2] = { _aoSRV, gBuffer->GetShaderResourceView(1) };
+	ID3D11ShaderResourceView* pphBlurSRVs[2] = { _aoSRV, gBuffer->GetNormalSRV() };
 
 	BEGIN_EVENT_D3D(L"Blur horizontal");
 	pd3dImmediateContext->OMSetRenderTargets(1, &_blurTempRTV, NULL);

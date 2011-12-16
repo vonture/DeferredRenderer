@@ -120,32 +120,47 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* viewCam
 
 	// Render the scene to the gbuffer
 	BEGIN_EVENT_D3D(L"G-Buffer");
-	V_RETURN(_gBuffer.SetRenderTargetsAndDepthStencil(pd3dImmediateContext));
+
 	V_RETURN(_gBuffer.Clear(pd3dImmediateContext));
+
+	ID3D11RenderTargetView* gBufferRTVs[3] = 
+	{
+		_gBuffer.GetDiffuseRTV(),
+		_gBuffer.GetNormalRTV(),
+		_gBuffer.GetVelocityRTV(),
+	};	
+	pd3dImmediateContext->OMSetRenderTargets(3, gBufferRTVs, _gBuffer.GetDepthDSV());
 
 	V_RETURN(_modelRenderer.RenderModels(pd3dImmediateContext, &_models, viewCamera));
 
 	V_RETURN(_particleRenderer.RenderParticles(pd3dImmediateContext, &_particleSystems, viewCamera));
-
-	V_RETURN(_gBuffer.UnsetRenderTargetsAndDepthStencil(pd3dImmediateContext));
 	END_EVENT_D3D(L"");
 
 	// render the lights
 	BEGIN_EVENT_D3D(L"Lights");
-	V_RETURN(_lightBuffer.SetRenderTargets(pd3dImmediateContext, _gBuffer.GetReadOnlyDepthStencilView()));
 
 	_lightBuffer.SetAmbientColor(_ambientLight.GetColor());
 	_lightBuffer.SetAmbientBrightness(_ambientLight.GetBrightness());
 	V_RETURN(_lightBuffer.Clear(pd3dImmediateContext));
 
+	ID3D11RenderTargetView* lightBufferRTVs[3] = 
+	{
+		_lightBuffer.GetLightRTV(),
+		NULL,
+		NULL,
+	};	
+	pd3dImmediateContext->OMSetRenderTargets(3, lightBufferRTVs, _gBuffer.GetReadOnlyDepthDSV());
+	
 	for (std::map<size_t, LightRendererBase*>::iterator it = _lightRenderers.begin(); it != _lightRenderers.end(); it++)
 	{
 		V_RETURN(it->second->RenderLights(pd3dImmediateContext, viewCamera, &_gBuffer));
 	}
+
+	ID3D11RenderTargetView* nullRTV[1] = { NULL };
+	pd3dImmediateContext->OMSetRenderTargets(1, nullRTV, NULL);
+
 	END_EVENT_D3D(L"");
-
-	V_RETURN(_lightBuffer.UnsetRenderTargetsAndDepthStencil(pd3dImmediateContext));
-
+	
 	BEGIN_EVENT_D3D(L"Post-Processes");
 	
 	// Find the final non-additive pp

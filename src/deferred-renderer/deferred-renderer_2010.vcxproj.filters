@@ -411,9 +411,6 @@
     <ClInclude Include="ModelInstance.h">
       <Filter>Models</Filter>
     </ClInclude>
-    <ClInclude Include="DeferredBuffer.h">
-      <Filter>Buffers</Filter>
-    </ClInclude>
     <ClInclude Include="GBuffer.h">
       <Filter>Buffers</Filter>
     </ClInclude>

@@ -97,7 +97,7 @@ HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	pd3dImmediateContext->PSSetConstantBuffers(0, 1, &_skyProperties);
 
 	// Set the render targets
-	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, gBuffer->GetReadOnlyDepthStencilView());
+	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, gBuffer->GetReadOnlyDepthDSV());
 
 	// Prepare the blend, depth and sampler
 	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetStencilEqual(), 0);

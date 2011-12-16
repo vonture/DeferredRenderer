@@ -1,101 +1,32 @@
 #pragma once
 
 #include "PCH.h"
-#include "DeferredBuffer.h"
+#include "IHasContent.h"
 
-class LightBuffer : public DeferredBuffer
+class LightBuffer : public IHasContent
 {
 private:
 	// LightRT =   Light.r  | Light.g   | Light.b   | 
-	ID3D11Texture2D* _texture;
-	ID3D11ShaderResourceView* _shaderResourceView;
-	ID3D11RenderTargetView* _renderTargetView;
+	ID3D11Texture2D* _tex;
+	ID3D11ShaderResourceView* _srv;
+	ID3D11RenderTargetView* _rtv;
 
 	XMFLOAT3 _ambientColor;
 	float _ambientBrightness;
 
 public:
-	LightBuffer()
-		: _texture(NULL), _shaderResourceView(NULL), _renderTargetView(NULL), _ambientColor(0.0f, 0.0f, 0.0f)
-	{		
-	}
+	LightBuffer();
 
 	const XMFLOAT3& GetAmbientColor() const { return _ambientColor; }
 	void SetAmbientColor(const XMFLOAT3& color) { _ambientColor = color; }
 
 	float GetAmbientBrightness() const { return _ambientBrightness; }
 	void SetAmbientBrightness(float brightness) { _ambientBrightness = brightness; }
-
-	ID3D11ShaderResourceView* GetShaderResourceView(int idx)
-	{
-		if (idx != 0)
-		{
-			return NULL;
-		}
-
-		return _shaderResourceView;
-	}
-
-	ID3D11ShaderResourceView*const* GetShaderResourceViews()
-	{
-		return &_shaderResourceView;
-	}
-
-	int GetShaderResourceCount()
-	{
-		return 1;
-	}
 	
-	ID3D11RenderTargetView* GetRenderTargetView(int idx)
-	{
-		if (idx != 0)
-		{
-			return NULL;
-		}
-
-		return _renderTargetView;
-	}
+	ID3D11ShaderResourceView* GetLightSRV() { return _srv; }
+	ID3D11RenderTargetView* GetLightRTV() { return _rtv; }
 	
-	ID3D11RenderTargetView*const* GetRenderTargetViews()
-	{
-		return &_renderTargetView;
-	}
-
-	int GetRenderTargetViewCount()
-	{
-		return 1;
-	}
-
-	ID3D11DepthStencilView* GetDepthStencilView()
-	{
-		return NULL;
-	}
-
-	ID3D11DepthStencilView* GetReadOnlyDepthStencilView() 
-	{
-		return NULL;
-	}
-
-	int GetCount()
-	{
-		return 1;
-	}
-
-	HRESULT GSSetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx);
-	HRESULT VSSetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx);
-	HRESULT PSSetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx);
-
-	HRESULT GSUnsetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx);
-	HRESULT VSUnsetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx);
-	HRESULT PSUnsetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx);
-
 	HRESULT Clear(ID3D11DeviceContext* pd3dImmediateContext);
-
-	HRESULT SetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext, ID3D11DepthStencilView* dsv);
-	HRESULT SetRenderTargetsAndDepthStencil(ID3D11DeviceContext* pd3dImmediateContext);
-
-	HRESULT UnsetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext, ID3D11DepthStencilView* dsv);
-	HRESULT UnsetRenderTargetsAndDepthStencil(ID3D11DeviceContext* pd3dImmediateContext);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
 	void OnD3D11DestroyDevice();

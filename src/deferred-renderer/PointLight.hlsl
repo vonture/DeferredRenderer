@@ -29,12 +29,11 @@ cbuffer cbShadowProperties : register(b3)
 	float4x4 ShadowMatrix;	
 }
 
-Texture2D RT0 : register(t0);
-Texture2D RT1 : register(t1);
-Texture2D RT2 : register(t2);
-Texture2D RT3 : register(t3);
+Texture2D DiffuseTexture : register(t0);
+Texture2D NormalTexture : register(t1);
+Texture2D DepthTexture : register(t2);
 
-Texture2D ShadowMap : register(t5);
+Texture2D ShadowMap : register(t3);
 
 SamplerState SceneSampler	: register(s0);
 SamplerComparisonState ShadowSampler	: register(s1);
@@ -76,9 +75,9 @@ float2 GetScreenTexCoord(float2 vPositionCS)
 
 float4 PS_PointLightCommon(VS_Out_PointLight input, float4 vPositionWS, float2 vTexCoord)
 {
-    float4 vNormalData = RT1.Sample(SceneSampler, vTexCoord);
+    float4 vNormalData = NormalTexture.Sample(SceneSampler, vTexCoord);
 
-	float fSpecularIntensity = RT0.Sample(SceneSampler, vTexCoord).a;
+	float fSpecularIntensity = DiffuseTexture.Sample(SceneSampler, vTexCoord).a;
 	float fSpecularPower = vNormalData.a;	
 
     float3 vLightDir = LightPosition - vPositionWS.xyz;
@@ -105,7 +104,7 @@ float4 PS_PointLightUnshadowed(VS_Out_PointLight input) : SV_TARGET0
 
 	float2 vScreenCoord = GetScreenTexCoord(input.vPositionCS2.xy);
 
-	float fDepth = RT3.Sample(SceneSampler, vScreenCoord).r;
+	float fDepth = DepthTexture.Sample(SceneSampler, vScreenCoord).r;
 	float4 vPositionWS = GetPositionWS(input.vPositionCS2.xy, fDepth);
 
 	return PS_PointLightCommon(input, vPositionWS, vScreenCoord);
@@ -164,7 +163,7 @@ float4 PS_PointLightShadowed(VS_Out_PointLight input) : SV_TARGET0
 
 	float2 vScreenCoord = GetScreenTexCoord(input.vPositionCS2.xy);
 
-	float fDepth = RT3.Sample(SceneSampler, vScreenCoord).r;
+	float fDepth = DepthTexture.Sample(SceneSampler, vScreenCoord).r;
 	float4 vPositionWS = GetPositionWS(input.vPositionCS2.xy, fDepth);
 
 	float4 vPositionLS = mul(vPositionWS, ShadowMatrix);

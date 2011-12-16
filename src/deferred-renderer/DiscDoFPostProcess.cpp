@@ -66,7 +66,7 @@ HRESULT DiscDoFPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID
 	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, NULL);
 
 	// Set the textures
-	ID3D11ShaderResourceView* srvs[2] = { gBuffer->GetShaderResourceView(3), src };
+	ID3D11ShaderResourceView* srvs[2] = { gBuffer->GetDepthSRV(), src };
 	pd3dImmediateContext->PSSetShaderResources(0, 2, srvs);
 
 	Quad* fsQuad = GetFullScreenQuad();

@@ -1,104 +1,37 @@
 #pragma once
 
 #include "PCH.h"
-#include "DeferredBuffer.h"
+#include "IHasContent.h"
 
-class GBuffer : public DeferredBuffer
+class GBuffer : public IHasContent
 {
 private:
 	// RT0 =       Diffuse.r	| Diffuse.g		| Diffuse.b		| Specular Intensity
     // RT1 =       Normal.x		| Normal.y		| Normal.z		| Specular Power
-    // RT2 =       Emissive.r	| Emissive.g	| Emissive.b	| Material ID
-    // RT3 =       Depth		|				|				|
+    // RT2 =       Velocity.r	| Velocity.g	| Velocity.b	| Material ID
+    // RT3 =       Depth		|				|				| Sky Visibility
 	ID3D11Texture2D* _textures[4];
-	ID3D11ShaderResourceView* _shaderResourceViews[4];
-	ID3D11RenderTargetView* _renderTargetViews[3];
-	ID3D11DepthStencilView* _depthStencilView;
-	ID3D11DepthStencilView* _readonlyDepthStencilView;
+	ID3D11ShaderResourceView* _srvs[4];
+	ID3D11RenderTargetView* _rtvs[3];
+	ID3D11DepthStencilView* _dsv;
+	ID3D11DepthStencilView* _rodsv;
 
 public:
-	GBuffer()
-	{
-		for (int i = 0; i < 4; i++)
-		{
-			_textures[i] = NULL;
-			_shaderResourceViews[i] = NULL;
-		}
+	GBuffer();
 
-		for (int i = 0; i < 3; i++)
-		{
-			_renderTargetViews[i] = NULL;
-		}
+	ID3D11ShaderResourceView* GetDiffuseSRV() { return _srvs[0]; }
+	ID3D11ShaderResourceView* GetNormalSRV() { return _srvs[1]; }
+	ID3D11ShaderResourceView* GetVelocitySRV() { return _srvs[2]; }
+	ID3D11ShaderResourceView* GetDepthSRV() { return _srvs[3]; }
 
-		_depthStencilView = NULL;
-		_readonlyDepthStencilView = NULL;
-	}
+	ID3D11RenderTargetView* GetDiffuseRTV() { return _rtvs[0]; }
+	ID3D11RenderTargetView* GetNormalRTV() { return _rtvs[1]; }
+	ID3D11RenderTargetView* GetVelocityRTV() { return _rtvs[2]; }
+
+	ID3D11DepthStencilView* GetDepthDSV() { return _dsv; }
+	ID3D11DepthStencilView* GetReadOnlyDepthDSV() { return _rodsv; }
 	
-	ID3D11ShaderResourceView* GetShaderResourceView(int idx)
-	{
-		if (idx < 0 || idx >= 4)
-		{
-			return NULL;
-		}
-
-		return _shaderResourceViews[idx];
-	}
-
-	ID3D11ShaderResourceView*const* GetShaderResourceViews()
-	{
-		return &_shaderResourceViews[0];
-	}
-
-	int GetShaderResourceCount()
-	{
-		return 4;
-	}
-	
-	ID3D11RenderTargetView* GetRenderTargetView(int idx)
-	{
-		if (idx < 0 || idx >= 3)
-		{
-			return NULL;
-		}
-
-		return _renderTargetViews[idx];
-	}
-	
-	ID3D11RenderTargetView*const* GetRenderTargetViews()
-	{
-		return &_renderTargetViews[0];
-	}
-
-	int GetRenderTargetViewCount()
-	{
-		return 3;
-	}
-
-	ID3D11DepthStencilView* GetDepthStencilView()
-	{
-		return _depthStencilView;
-	}
-
-	ID3D11DepthStencilView* GetReadOnlyDepthStencilView() 
-	{
-		return _readonlyDepthStencilView;
-	}
-
-	HRESULT GSSetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx);
-	HRESULT VSSetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx);
-	HRESULT PSSetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx);
-
-	HRESULT GSUnsetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx);
-	HRESULT VSUnsetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx);
-	HRESULT PSUnsetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx);
-
 	HRESULT Clear(ID3D11DeviceContext* pd3dImmediateContext);
-	
-	HRESULT SetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext, ID3D11DepthStencilView* dsv);
-	HRESULT SetRenderTargetsAndDepthStencil(ID3D11DeviceContext* pd3dImmediateContext);
-
-	HRESULT UnsetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext, ID3D11DepthStencilView* dsv);
-	HRESULT UnsetRenderTargetsAndDepthStencil(ID3D11DeviceContext* pd3dImmediateContext);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
 	void OnD3D11DestroyDevice();

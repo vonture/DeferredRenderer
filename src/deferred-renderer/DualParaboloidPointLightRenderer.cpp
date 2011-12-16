@@ -243,7 +243,13 @@ HRESULT DualParaboloidPointLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 		float blendFactor[4] = {1, 1, 1, 1};
 		pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetAdditiveBlend(), blendFactor, 0xFFFFFFFF);
 
-		V_RETURN(gBuffer->PSSetShaderResources(pd3dImmediateContext, 0));	
+		ID3D11ShaderResourceView* gBufferSRVs[3] = 
+		{
+			gBuffer->GetDiffuseSRV(),
+			gBuffer->GetNormalSRV(),
+			gBuffer->GetDepthSRV(),
+		};
+		pd3dImmediateContext->PSSetShaderResources(0, 3, gBufferSRVs);
 
 		// Set the shaders and input
 		pd3dImmediateContext->GSSetShader(NULL, NULL, 0);
@@ -431,19 +437,15 @@ HRESULT DualParaboloidPointLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 			pd3dImmediateContext->PSSetConstantBuffers(3, 1, &_shadowPropertiesBuffer);
 
 			// Set the shadow map
-			pd3dImmediateContext->PSSetShaderResources(5, 1, &_shadowMapSRVs[i]);
+			pd3dImmediateContext->PSSetShaderResources(3, 1, &_shadowMapSRVs[i]);
 
 			Model* model = _lightModel.GetModel();
 			model->Render(pd3dImmediateContext);
-
-			// Null the shadow map srv
-			ID3D11ShaderResourceView* nullSRV[1] = { NULL };
-			pd3dImmediateContext->PSSetShaderResources(5, 1, nullSRV);
 		}
 
 		// Null all the SRVs
-		ID3D11ShaderResourceView* nullSRV5[5] = { NULL, NULL, NULL, NULL, NULL };
-		pd3dImmediateContext->PSSetShaderResources(0, 5, nullSRV5);
+		ID3D11ShaderResourceView* nullSRV4[4] = { NULL, NULL, NULL, NULL };
+		pd3dImmediateContext->PSSetShaderResources(0, 4, nullSRV4);
 
 		// Reset the raster state
 		pd3dImmediateContext->RSSetState(prevRS);

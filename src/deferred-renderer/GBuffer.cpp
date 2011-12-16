@@ -1,49 +1,21 @@
 #include "PCH.h"
 #include "GBuffer.h"
 
-HRESULT GBuffer::GSSetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx)
+GBuffer::GBuffer()
 {
-	pd3dImmediateContext->GSSetShaderResources(startIdx, 4, &_shaderResourceViews[0]);
+	for (int i = 0; i < 4; i++)
+	{
+		_textures[i] = NULL;
+		_srvs[i] = NULL;
+	}
 
-	return S_OK;
-}
+	for (int i = 0; i < 3; i++)
+	{
+		_rtvs[i] = NULL;
+	}
 
-HRESULT GBuffer::VSSetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx)
-{
-	pd3dImmediateContext->VSSetShaderResources(startIdx, 4, &_shaderResourceViews[0]);
-
-	return S_OK;
-}
-
-HRESULT GBuffer::PSSetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx)
-{
-	pd3dImmediateContext->PSSetShaderResources(startIdx, 4, &_shaderResourceViews[0]);
-
-	return S_OK;
-}
-
-HRESULT GBuffer::GSUnsetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx)
-{
-	ID3D11ShaderResourceView* ppSRVNULL[4] = { NULL, NULL, NULL, NULL };
-	pd3dImmediateContext->GSSetShaderResources(startIdx, 4, ppSRVNULL);
-
-	return S_OK;
-}
-
-HRESULT GBuffer::VSUnsetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx)
-{
-	ID3D11ShaderResourceView* ppSRVNULL[4] = { NULL, NULL, NULL, NULL };
-	pd3dImmediateContext->VSSetShaderResources(startIdx, 4, ppSRVNULL);
-
-	return S_OK;
-}
-
-HRESULT GBuffer::PSUnsetShaderResources(ID3D11DeviceContext* pd3dImmediateContext, int startIdx)
-{
-	ID3D11ShaderResourceView* ppSRVNULL[4] = { NULL, NULL, NULL, NULL };
-	pd3dImmediateContext->PSSetShaderResources(startIdx, 4, ppSRVNULL);
-
-	return S_OK;
+	_dsv = NULL;
+	_rodsv = NULL;
 }
 
 HRESULT GBuffer::Clear(ID3D11DeviceContext* pd3dImmediateContext)
@@ -54,45 +26,14 @@ HRESULT GBuffer::Clear(ID3D11DeviceContext* pd3dImmediateContext)
 	const float rt1clear[] = { 1.0f, 1.0f, 1.0f, 0.0f }; 
 	const float rt2clear[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	
-	pd3dImmediateContext->ClearRenderTargetView(_renderTargetViews[0], rt0clear);
-	pd3dImmediateContext->ClearRenderTargetView(_renderTargetViews[1], rt1clear);
-	pd3dImmediateContext->ClearRenderTargetView(_renderTargetViews[2], rt2clear);
-	pd3dImmediateContext->ClearDepthStencilView(_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	pd3dImmediateContext->ClearRenderTargetView(_rtvs[0], rt0clear);
+	pd3dImmediateContext->ClearRenderTargetView(_rtvs[1], rt1clear);
+	pd3dImmediateContext->ClearRenderTargetView(_rtvs[2], rt2clear);
+	pd3dImmediateContext->ClearDepthStencilView(_dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	return S_OK;
 }
 
-HRESULT GBuffer::SetRenderTargetsAndDepthStencil(ID3D11DeviceContext* pd3dImmediateContext)
-{
-	pd3dImmediateContext->OMSetRenderTargets(3, &_renderTargetViews[0], _depthStencilView);
-
-	return S_OK;
-}
-
-HRESULT GBuffer::SetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext, ID3D11DepthStencilView* dsv)
-{
-	pd3dImmediateContext->OMSetRenderTargets(3, &_renderTargetViews[0], dsv);
-
-	return S_OK;
-}
-
-HRESULT GBuffer::UnsetRenderTargetsAndDepthStencil(ID3D11DeviceContext* pd3dImmediateContext)
-{
-	ID3D11RenderTargetView* ppRTVNULL[3] = { NULL, NULL, NULL };
-
-	pd3dImmediateContext->OMSetRenderTargets(3, ppRTVNULL, NULL);
-
-	return S_OK;
-}
-
-HRESULT GBuffer::UnsetRenderTargets(ID3D11DeviceContext* pd3dImmediateContext, ID3D11DepthStencilView* dsv)
-{
-	ID3D11RenderTargetView* ppRTVNULL[3] = { NULL, NULL, NULL };
-
-	pd3dImmediateContext->OMSetRenderTargets(3, ppRTVNULL, dsv);
-
-	return S_OK;
-}
 
 HRESULT GBuffer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
@@ -168,15 +109,15 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
     };
 	rt3rvd.Texture2D.MipLevels = 1;
 
-	V_RETURN(pd3dDevice->CreateShaderResourceView(_textures[0], &rt012rvd, &_shaderResourceViews[0]));
-	V_RETURN(pd3dDevice->CreateShaderResourceView(_textures[1], &rt012rvd, &_shaderResourceViews[1]));
-	V_RETURN(pd3dDevice->CreateShaderResourceView(_textures[2], &rt012rvd, &_shaderResourceViews[2]));
-	V_RETURN(pd3dDevice->CreateShaderResourceView(_textures[3], &rt3rvd,   &_shaderResourceViews[3]));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(_textures[0], &rt012rvd, &_srvs[0]));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(_textures[1], &rt012rvd, &_srvs[1]));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(_textures[2], &rt012rvd, &_srvs[2]));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(_textures[3], &rt3rvd,   &_srvs[3]));
 
-	V_RETURN(SetDXDebugName(_shaderResourceViews[0], "RT0 SRV"));
-	V_RETURN(SetDXDebugName(_shaderResourceViews[1], "RT1 SRV"));
-	V_RETURN(SetDXDebugName(_shaderResourceViews[2], "RT2 SRV"));
-	V_RETURN(SetDXDebugName(_shaderResourceViews[3], "RT3 SRV"));
+	V_RETURN(SetDXDebugName(_srvs[0], "RT0 SRV"));
+	V_RETURN(SetDXDebugName(_srvs[1], "RT1 SRV"));
+	V_RETURN(SetDXDebugName(_srvs[2], "RT2 SRV"));
+	V_RETURN(SetDXDebugName(_srvs[3], "RT3 SRV"));
 
 	// Create the render targets
 	D3D11_RENDER_TARGET_VIEW_DESC rt012rtvd = 
@@ -187,13 +128,13 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
         0
     };
 
-	V_RETURN(pd3dDevice->CreateRenderTargetView(_textures[0], &rt012rtvd, &_renderTargetViews[0]));
-	V_RETURN(pd3dDevice->CreateRenderTargetView(_textures[1], &rt012rtvd, &_renderTargetViews[1]));
-	V_RETURN(pd3dDevice->CreateRenderTargetView(_textures[2], &rt012rtvd, &_renderTargetViews[2]));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(_textures[0], &rt012rtvd, &_rtvs[0]));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(_textures[1], &rt012rtvd, &_rtvs[1]));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(_textures[2], &rt012rtvd, &_rtvs[2]));
 
-	V_RETURN(SetDXDebugName(_renderTargetViews[0], "RT0 RTV"));
-	V_RETURN(SetDXDebugName(_renderTargetViews[1], "RT1 RTV"));
-	V_RETURN(SetDXDebugName(_renderTargetViews[2], "RT2 RTV"));
+	V_RETURN(SetDXDebugName(_rtvs[0], "RT0 RTV"));
+	V_RETURN(SetDXDebugName(_rtvs[1], "RT1 RTV"));
+	V_RETURN(SetDXDebugName(_rtvs[2], "RT2 RTV"));
 
 	// Create the depth stencil view
 	D3D11_DEPTH_STENCIL_VIEW_DESC dsvd =
@@ -203,9 +144,9 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
 		0,
 	};
 
-	V_RETURN(pd3dDevice->CreateDepthStencilView(_textures[3], &dsvd, &_depthStencilView));
+	V_RETURN(pd3dDevice->CreateDepthStencilView(_textures[3], &dsvd, &_dsv));
 	
-	V_RETURN(SetDXDebugName(_renderTargetViews[3], "RT3 DSV"));
+	V_RETURN(SetDXDebugName(_rtvs[3], "RT3 DSV"));
 
 	// Create the readonly depth stencil view
 	D3D11_DEPTH_STENCIL_VIEW_DESC rodsvd =
@@ -215,9 +156,9 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
 		D3D11_DSV_READ_ONLY_DEPTH,
 	};
 
-	V_RETURN(pd3dDevice->CreateDepthStencilView(_textures[3], &rodsvd, &_readonlyDepthStencilView));
+	V_RETURN(pd3dDevice->CreateDepthStencilView(_textures[3], &rodsvd, &_rodsv));
 	
-	V_RETURN(SetDXDebugName(_renderTargetViews[3], "RT3 Read Only DSV"));
+	V_RETURN(SetDXDebugName(_rtvs[3], "RT3 Read Only DSV"));
 	return S_OK;
 }
 
@@ -226,13 +167,13 @@ void GBuffer::OnD3D11ReleasingSwapChain()
 	for (int i = 0; i < 4; i++)
 	{
 		SAFE_RELEASE(_textures[i]);
-		SAFE_RELEASE(_shaderResourceViews[i]);
+		SAFE_RELEASE(_srvs[i]);
 	}
 
 	for (int i = 0; i < 3; i++)
 	{
-		SAFE_RELEASE(_renderTargetViews[i]);
+		SAFE_RELEASE(_rtvs[i]);
 	}
-	SAFE_RELEASE(_depthStencilView);
-	SAFE_RELEASE(_readonlyDepthStencilView);
+	SAFE_RELEASE(_dsv);
+	SAFE_RELEASE(_rodsv);
 }

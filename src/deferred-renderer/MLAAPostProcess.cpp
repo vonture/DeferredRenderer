@@ -101,9 +101,9 @@ HRESULT MLAAPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 
 	ID3D11ShaderResourceView* ppSRVEdgeDetect[3] = 
 	{ 
-		_depthDetect ? gBuffer->GetShaderResourceView(3) : NULL, // Depth
-		_normalDetect ?  gBuffer->GetShaderResourceView(1) : NULL, // Normal
-		_luminanceDetect ? gBuffer->GetShaderResourceView(0) : NULL, // Diffuse
+		_depthDetect ? gBuffer->GetDepthSRV() : NULL,
+		_normalDetect ?  gBuffer->GetNormalSRV() : NULL,
+		_luminanceDetect ? gBuffer->GetDiffuseSRV() : NULL,
 	};
 	pd3dImmediateContext->PSSetShaderResources(0, 3, ppSRVEdgeDetect);
 

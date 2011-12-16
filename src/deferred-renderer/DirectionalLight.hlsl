@@ -33,12 +33,11 @@ cbuffer cbShadowProperties : register(b2)
 	float4x4 ShadowTexCoordTransforms[CASCADE_COUNT];
 }
 
-Texture2D RT0 : register(t0);
-Texture2D RT1 : register(t1);
-Texture2D RT2 : register(t2);
-Texture2D RT3 : register(t3);
+Texture2D DiffuseTexture : register(t0);
+Texture2D NormalTexture : register(t1);
+Texture2D DepthTexture : register(t2);
 
-Texture2D ShadowMap : register(t4);
+Texture2D ShadowMap : register(t3);
 
 SamplerState PointSampler				: register(s0);
 SamplerComparisonState ShadowSampler	: register(s1);
@@ -61,9 +60,9 @@ float4 GetPositionWS(float2 vPositionCS, float fDepth)
 
 float4 PS_DirectionalLightCommon(PS_In_DirectionalLight input, float4 vPositionWS)
 {	
-    float4 vNormalData = RT1.Sample(PointSampler, input.vTexCoord);
+    float4 vNormalData = NormalTexture.Sample(PointSampler, input.vTexCoord);
     
-	float fSpecularIntensity = RT0.Sample(PointSampler, input.vTexCoord).a;
+	float fSpecularIntensity = DiffuseTexture.Sample(PointSampler, input.vTexCoord).a;
 	float fSpecularPower = vNormalData.a;	
 		    
 	float3 N = vNormalData.xyz;
@@ -80,7 +79,7 @@ float4 PS_DirectionalLightCommon(PS_In_DirectionalLight input, float4 vPositionW
 
 float4 PS_DirectionalLightUnshadowed(PS_In_DirectionalLight input) : SV_TARGET0
 {
-	float fDepth = RT3.Sample(PointSampler, input.vTexCoord).r;
+	float fDepth = DepthTexture.Sample(PointSampler, input.vTexCoord).r;
 	float4 vPositionWS = GetPositionWS(input.vPosition2, fDepth);
 
 	return PS_DirectionalLightCommon(input, vPositionWS);
@@ -146,7 +145,7 @@ float SampleShadowCascade(in float4 positionWS, in uint cascadeIdx)
 
 float4 PS_DirectionalLightShadowed(PS_In_DirectionalLight input) : SV_TARGET0
 {
-	float fDepth = RT3.Sample(PointSampler, input.vTexCoord).r;
+	float fDepth = DepthTexture.Sample(PointSampler, input.vTexCoord).r;
 	float4 vPositionWS = GetPositionWS(input.vPosition2, fDepth);
 		
 	// Determine how much padding is required in pixels on the shadow map so that PCF can be 

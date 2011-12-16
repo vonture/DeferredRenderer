@@ -14,10 +14,10 @@ static const float3 QuadPositions[4] =
 
 static const float2 QuadTexcoords[4] = 
 { 
-    float2(0,0), 
-    float2(1,0),
-    float2(0,1),
-    float2(1,1),
+    float2(0, 0), 
+    float2(1, 0),
+    float2(0, 1),
+    float2(1, 1),
 };
 
 Texture2D DiffuseMap	: register(t0);
@@ -72,13 +72,11 @@ void GS_Particle(point VS_Out_Particle input[1], inout TriangleStream<PS_In_Part
     
     output.vColor = input[0].vColor;
     
-	float3 vRotationVector = float3(cos(input[0].fRotation), -sin(input[0].fRotation), 1.0f);
-
     // Emit two new triangles
     [unroll] 
 	for(uint i = 0; i < 4; i++)
     {
-        float3 vCornerPosition = (QuadPositions[i] * vRotationVector) * input[0].fRadius;
+        float3 vCornerPosition = QuadPositions[i] * input[0].fRadius;
         vCornerPosition = mul(vCornerPosition, (float3x3)InverseView) + input[0].vPositionOS;
 
         output.vPositionCS = mul(float4(vCornerPosition, 1.0f), ViewProjection);

@@ -321,7 +321,6 @@
     <None Include="Fxaa3_11.hlsl" />
     <None Include="DiscDoF.hlsl" />
     <None Include="DualParaboloidDepth.hlsl" />
-    <ClInclude Include="DeferredBuffer.h" />
     <ClInclude Include="Camera.h" />
     <None Include="MLAA.hlsl" />
     <None Include="Particle.hlsl" />
