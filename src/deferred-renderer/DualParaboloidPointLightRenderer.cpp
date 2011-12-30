@@ -26,7 +26,7 @@ DualParaboloidPointLightRenderer::DualParaboloidPointLightRenderer()
 	}
 }
 
-HRESULT DualParaboloidPointLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, 
+HRESULT DualParaboloidPointLightRenderer::RenderGeometryShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, 
 	std::vector<ModelInstance*>* models, Camera* camera, AxisAlignedBox* sceneBounds)
 {
 	if (GetCount(true) > 0)
@@ -212,8 +212,8 @@ HRESULT DualParaboloidPointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 	return S_OK;
 }
 
-HRESULT DualParaboloidPointLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
-	GBuffer* gBuffer)
+HRESULT DualParaboloidPointLightRenderer::RenderGeometryLights(ID3D11DeviceContext* pd3dImmediateContext,
+	Camera* camera, GBuffer* gBuffer)
 {
 	if (GetCount(true) + GetCount(false) > 0)
 	{
@@ -450,6 +450,17 @@ HRESULT DualParaboloidPointLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 		// Reset the raster state
 		pd3dImmediateContext->RSSetState(prevRS);
 		SAFE_RELEASE(prevRS);
+
+		END_EVENT_D3D(L"");
+	}
+	return S_OK;
+}
+
+HRESULT DualParaboloidPointLightRenderer::RenderParticleLights( ID3D11DeviceContext* pd3dImmediateContext, Camera* camera, ParticleBuffer* gBuffer )
+{
+	if (GetCount(true) + GetCount(false) > 0)
+	{
+		BEGIN_EVENT_D3D(L"Point Lights");
 
 		END_EVENT_D3D(L"");
 	}

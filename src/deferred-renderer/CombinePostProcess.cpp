@@ -21,7 +21,7 @@ HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID
 	ID3D11ShaderResourceView* combineSRVs[2] = 
 	{
 		gBuffer->GetDiffuseSRV(),
-		lightBuffer->GetLightSRV(),
+		lightBuffer->GetGeometryLightSRV(),
 	};
 	
 	pd3dImmediateContext->PSSetShaderResources(0, 2, combineSRVs);

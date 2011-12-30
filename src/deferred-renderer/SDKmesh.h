@@ -14,7 +14,6 @@
 #define _SDKMESH_
 
 #include "PCH.h"
-#include <vector>
 
 //--------------------------------------------------------------------------------------
 // Hard Defines for the various structures

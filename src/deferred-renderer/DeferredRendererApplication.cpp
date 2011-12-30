@@ -17,12 +17,27 @@ DeferredRendererApplication::DeferredRendererApplication()
 	: Application(L"Deferred Renderer", NULL), _camera(0.1f, 40.0f, 1.0f, 1.0f), _selectedItem(NULL),
 	  _configWindow(NULL), _logWindow(NULL), _ppConfigPane(NULL)
 {	
-	
+	/*
 	ModelInstance* tankScene = new ModelInstance(L"\\models\\tankscene\\TankScene.sdkmesh");
 	tankScene->SetScale(1.0f);
 	tankScene->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	_models.push_back(tankScene);
+	*/
+	ModelInstance* mbpd = new ModelInstance(L"D:\\Temp\\MBPD\\models\\model.dae");
+	mbpd->SetScale(0.3f);
+	mbpd->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	_models.push_back(mbpd);
+
+	ModelInstance* moi = new ModelInstance(L"D:\\Temp\\moi\\models\\model.dae");
+	moi->SetScale(0.3f);
+	moi->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	_models.push_back(moi);
 	
+	ModelInstance* gnm = new ModelInstance(L"D:\\Temp\\GNM\\untitled.dae");
+	gnm->SetScale(0.01f);
+	gnm->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	_models.push_back(gnm);
+    
 	/*
 	ModelInstance* scanner = new ModelInstance(L"\\models\\MicroscopeCity\\scanner.sdkmesh");
 	scanner->SetScale(1.0f);
@@ -43,12 +58,14 @@ DeferredRendererApplication::DeferredRendererApplication()
 	soldier->SetScale(1.0f);
 	soldier->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	_models.push_back(soldier);
-		
+	*/
+
+	
 	ModelInstance* sponza = new ModelInstance(L"D:\\Program Files (x86)\\NVIDIA Corporation\\NVIDIA Direct3D SDK 11\\Media\\sponza\\Sponza.obj");
-	sponza->SetScale(0.02f);
+	sponza->SetScale(0.2f);
 	sponza->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	_models.push_back(sponza);
-	*/
+	
 
 	/*
 	ModelInstance* tree = new ModelInstance(L"\\models\\tree\\tree.obj");
@@ -65,12 +82,14 @@ DeferredRendererApplication::DeferredRendererApplication()
 	_models.push_back(troll);
 	*/
 		
+	/*
 	ParticleSystemInstance* smoke = new ParticleSystemInstance(L"\\particles\\smoke.xml");
 	smoke->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	smoke->SetScale(1.0f);
 	_particles.push_back(smoke);
-	
-	_pointLightsShadowed.push_back(new PointLight(XMFLOAT3(3.0f, 4.0f, 0.0f), 5.0f, XMFLOAT3(1.0f, 1.0f, 1.0f), 2.0f));
+	*/
+
+	//_pointLightsShadowed.push_back(new PointLight(XMFLOAT3(3.0f, 4.0f, 0.0f), 10.0f, XMFLOAT3(1.0f, 1.0f, 1.0f), 2.0f));
 
 	_camera.SetPosition(XMFLOAT3(1.0f, 4.0f, -6.0f));
 	_camera.SetRotation(XMFLOAT2(-0.1f, 0.35f));
@@ -165,6 +184,7 @@ void DeferredRendererApplication::OnInitialize()
 	_ppConfigPane->AddPostProcess(&_motionBlurPP, L"Motion blur", false, false);	
 
 	_modelConfigPane = new ModelConfigurationPane(_configWindow);
+	_boConfigPane = new BoundingObjectConfigurationPane(_configWindow, &_boPP);
 
 	new ProfilePane(_configWindow, Logger::GetInstance());
 	new DeviceManagerConfigurationPane(_configWindow, GetDeviceManager());		
@@ -287,28 +307,40 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 			XMFLOAT2 mousePos = XMFLOAT2(mouse.GetX(), mouse.GetY());
 			XMFLOAT2 viewSize = XMFLOAT2(GetWidth(), GetHeight());
 
-			Ray mouseRay = _camera.Unproject(mousePos, viewSize);
+			Ray mouseRay = _camera.UnprojectRay(mousePos, viewSize);
 
-			float minDist = FLT_MAX;
-			IDragable* minDragable = NULL;
+			_selectedDepth = FLT_MAX;
+			_selectedItem = NULL;
 
 			for (UINT i = 0; i < _dragables.size(); i++)
 			{
 				float dist;
-				if (_dragables[i]->RayIntersect(mouseRay, &dist))
+				if (_dragables[i]->RayIntersect(mouseRay, &dist) && dist < _selectedDepth)
 				{
-					minDist = dist;
-					minDragable = _dragables[i];
+					_selectedDepth = dist;
+					_selectedItem = _dragables[i];
 				}
 			}
-
-			_selectedItem = minDragable;
 		}
 
 		if (mouse.IsButtonDown(MouseButton::LeftButton))
 		{
 			if (_selectedItem)
 			{
+				float selectDistPerc = _selectedDepth / (_camera.GetFarClip() - _camera.GetNearClip());
+				XMFLOAT2 viewSize = XMFLOAT2(GetWidth(), GetHeight());
+
+				XMFLOAT3 oldSelectViewPos = XMFLOAT3(mouse.GetX() - mouse.GetDX(), 
+					mouse.GetY() - mouse.GetDY(), selectDistPerc);
+				XMFLOAT3 newSelectViewPos = XMFLOAT3(mouse.GetX(), mouse.GetY(), selectDistPerc);
+
+				XMFLOAT3 oldSelectWorldPos = _camera.UnprojectPosition(oldSelectViewPos, viewSize);
+				XMFLOAT3 newSelectWorldPos = _camera.UnprojectPosition(newSelectViewPos, viewSize);
+
+
+
+
+
 				XMFLOAT3 curModelPos = _selectedItem->GetPosition();
 				XMFLOAT3 camUp = _camera.GetUp();
 				XMFLOAT3 camRight = _camera.GetRight();				
@@ -366,30 +398,44 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 	V_RETURN(_renderer.Begin());
 
 	BoundingObjectSet boSet;
-	for (UINT i = 0; i < _dragables.size(); i++)
-	{
-		_dragables[i]->FillBoundingObjectSet(&boSet);
-	}
-	_boPP.Clear();
-	_boPP.Add(&boSet);
-
 	for (UINT i = 0; i < _modelConfigPane->GetModelInstanceCount(); i++)
 	{
-		_renderer.AddModel(_modelConfigPane->GetModelInstance(i));
+		ModelInstance* model = _modelConfigPane->GetModelInstance(i);
+
+		_renderer.AddModel(model);		
+		if (_boConfigPane->GetModelsEnabled())
+		{
+			model->FillBoundingObjectSet(&boSet);
+		}
 	}
 
 	for (UINT i = 0; i < _particles.size(); i++)
 	{
 		_renderer.AddParticleSystem(_particles[i]);
+
+		if (_boConfigPane->GetParticlesEnabled())
+		{
+			_particles[i]->FillBoundingObjectSet(&boSet);
+		}
 	}
 
 	for (UINT i = 0; i < _pointLightsShadowed.size(); i++)
 	{
 		_renderer.AddLight(_pointLightsShadowed[i], true);
+
+		if (_boConfigPane->GetLightsEnabled())
+		{
+			_pointLightsShadowed[i]->FillBoundingObjectSet(&boSet);
+		}
 	}
 	for (UINT i = 0; i < _pointLightsUnshadowed.size(); i++)
 	{
 		_renderer.AddLight(_pointLightsUnshadowed[i], false);
+
+		if (_boConfigPane->GetLightsEnabled())
+		{
+			_pointLightsUnshadowed[i]->FillBoundingObjectSet(&boSet);
+		}
 	}
 
 	for (UINT i = 0; i < _dirLightsShadowed.size(); i++)
@@ -401,6 +447,9 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 		_renderer.AddLight(_dirLightsUnshadowed[i], false);
 	}
 
+	_boPP.Clear();
+	_boPP.Add(&boSet);
+
 	if (_ppConfigPane->IsPostProcessEnabled(&_skyPP) && _skyPP.GetSunEnabled())
 	{
 		DirectionalLight sun = DirectionalLight(_skyPP.GetSunDirection(), _skyPP.GetSunColor(),
@@ -410,7 +459,7 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 	}
 	
 	AmbientLight ambientLight = AmbientLight(XMFLOAT3(1.0f, 1.0f, 1.0f), 0.5f);
-	//_renderer.AddLight(&ambientLight);
+	_renderer.AddLight(&ambientLight);
 
 	UINT ppCount = _ppConfigPane->GetSelectedPostProcessCount();
 	for (UINT i = 0; i < ppCount; i++)

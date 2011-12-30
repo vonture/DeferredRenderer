@@ -23,7 +23,7 @@ HRESULT GBuffer::Clear(ID3D11DeviceContext* pd3dImmediateContext)
 	const float rt0clear[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 	// Initialize normals to 1 to prevent normalizing the zero vector
-	const float rt1clear[] = { 1.0f, 1.0f, 1.0f, 0.0f }; 
+	const float rt1clear[] = { 0.0f, 0.0f, -1.0f, 0.0f }; 
 	const float rt2clear[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	
 	pd3dImmediateContext->ClearRenderTargetView(_rtvs[0], rt0clear);
@@ -85,10 +85,10 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
 	V_RETURN(pd3dDevice->CreateTexture2D(&rt012Desc, NULL, &_textures[2]));
 	V_RETURN(pd3dDevice->CreateTexture2D(&rt3Desc,   NULL, &_textures[3]));
 
-	V_RETURN(SetDXDebugName(_textures[0], "RT0 Texture"));
-	V_RETURN(SetDXDebugName(_textures[1], "RT1 Texture"));
-	V_RETURN(SetDXDebugName(_textures[2], "RT2 Texture"));
-	V_RETURN(SetDXDebugName(_textures[3], "RT3 Texture"));
+	V_RETURN(SetDXDebugName(_textures[0], "GBuffer RT0 Texture"));
+	V_RETURN(SetDXDebugName(_textures[1], "GBuffer RT1 Texture"));
+	V_RETURN(SetDXDebugName(_textures[2], "GBuffer RT2 Texture"));
+	V_RETURN(SetDXDebugName(_textures[3], "GBuffer RT3 Texture"));
 
 	// Create the shader resource views
 	D3D11_SHADER_RESOURCE_VIEW_DESC rt012rvd = 
@@ -114,10 +114,10 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
 	V_RETURN(pd3dDevice->CreateShaderResourceView(_textures[2], &rt012rvd, &_srvs[2]));
 	V_RETURN(pd3dDevice->CreateShaderResourceView(_textures[3], &rt3rvd,   &_srvs[3]));
 
-	V_RETURN(SetDXDebugName(_srvs[0], "RT0 SRV"));
-	V_RETURN(SetDXDebugName(_srvs[1], "RT1 SRV"));
-	V_RETURN(SetDXDebugName(_srvs[2], "RT2 SRV"));
-	V_RETURN(SetDXDebugName(_srvs[3], "RT3 SRV"));
+	V_RETURN(SetDXDebugName(_srvs[0], "GBuffer RT0 SRV"));
+	V_RETURN(SetDXDebugName(_srvs[1], "GBuffer RT1 SRV"));
+	V_RETURN(SetDXDebugName(_srvs[2], "GBuffer RT2 SRV"));
+	V_RETURN(SetDXDebugName(_srvs[3], "GBuffer RT3 SRV"));
 
 	// Create the render targets
 	D3D11_RENDER_TARGET_VIEW_DESC rt012rtvd = 
@@ -132,9 +132,9 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
 	V_RETURN(pd3dDevice->CreateRenderTargetView(_textures[1], &rt012rtvd, &_rtvs[1]));
 	V_RETURN(pd3dDevice->CreateRenderTargetView(_textures[2], &rt012rtvd, &_rtvs[2]));
 
-	V_RETURN(SetDXDebugName(_rtvs[0], "RT0 RTV"));
-	V_RETURN(SetDXDebugName(_rtvs[1], "RT1 RTV"));
-	V_RETURN(SetDXDebugName(_rtvs[2], "RT2 RTV"));
+	V_RETURN(SetDXDebugName(_rtvs[0], "GBuffer RT0 RTV"));
+	V_RETURN(SetDXDebugName(_rtvs[1], "GBuffer RT1 RTV"));
+	V_RETURN(SetDXDebugName(_rtvs[2], "GBuffer RT2 RTV"));
 
 	// Create the depth stencil view
 	D3D11_DEPTH_STENCIL_VIEW_DESC dsvd =
@@ -146,7 +146,7 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
 
 	V_RETURN(pd3dDevice->CreateDepthStencilView(_textures[3], &dsvd, &_dsv));
 	
-	V_RETURN(SetDXDebugName(_rtvs[3], "RT3 DSV"));
+	V_RETURN(SetDXDebugName(_rtvs[3], "GBuffer RT3 DSV"));
 
 	// Create the readonly depth stencil view
 	D3D11_DEPTH_STENCIL_VIEW_DESC rodsvd =
@@ -158,7 +158,7 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
 
 	V_RETURN(pd3dDevice->CreateDepthStencilView(_textures[3], &rodsvd, &_rodsv));
 	
-	V_RETURN(SetDXDebugName(_rtvs[3], "RT3 Read Only DSV"));
+	V_RETURN(SetDXDebugName(_rtvs[3], "GBuffer RT3 Read Only DSV"));
 	return S_OK;
 }
 

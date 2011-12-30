@@ -21,7 +21,7 @@ CascadedDirectionalLightRenderer::CascadedDirectionalLightRenderer()
 	}
 }
 
-HRESULT CascadedDirectionalLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, 
+HRESULT CascadedDirectionalLightRenderer::RenderGeometryShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, 
 	std::vector<ModelInstance*>* models, Camera* camera, AxisAlignedBox* sceneBounds)
 {
 	if (GetCount(true) > 0)
@@ -666,8 +666,8 @@ HRESULT CascadedDirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 	return S_OK;
 }
 
-HRESULT CascadedDirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
-	GBuffer* gBuffer)
+HRESULT CascadedDirectionalLightRenderer::RenderGeometryLights(ID3D11DeviceContext* pd3dImmediateContext,
+	Camera* camera, GBuffer* gBuffer)
 {	
 	if (GetCount(true) + GetCount(false) > 0)
 	{
@@ -789,7 +789,22 @@ HRESULT CascadedDirectionalLightRenderer::RenderLights(ID3D11DeviceContext* pd3d
 	return S_OK;
 }
 
-HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT CascadedDirectionalLightRenderer::RenderParticleLights(ID3D11DeviceContext* pd3dImmediateContext,
+	Camera* camera, ParticleBuffer* gBuffer)
+{
+	if (GetCount(true) + GetCount(false) > 0)
+	{
+		BEGIN_EVENT_D3D(L"Directional Lights");
+
+
+
+		END_EVENT_D3D(L"");
+	}
+	return S_OK;
+}
+
+HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
+	ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 

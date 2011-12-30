@@ -116,11 +116,11 @@ HRESULT BoundingObjectPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCont
 		// Calculate the world matrix
 		XMMATRIX rot = XMMatrixRotationQuaternion(XMLoadFloat4(&obb->Orientation));
 		XMMATRIX scale = XMMatrixScalingFromVector(XMLoadFloat3(&obb->Extents));
-
-		XMMATRIX world = XMMatrixMultiply(rot, scale);
-
+		
 		XMVECTOR position = XMLoadFloat3(&obb->Center);
-		world.r[3] = XMVectorSelect(world.r[3], position, XMVectorSelectControl(1, 1, 1, 0));
+		XMMATRIX translate = XMMatrixTranslationFromVector(position);
+
+		XMMATRIX world = XMMatrixMultiply(scale,  XMMatrixMultiply(rot, translate));
 
 		XMMATRIX wvp = XMMatrixMultiply(world, viewProj);
 

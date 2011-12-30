@@ -123,6 +123,8 @@ float SampleShadow(in float2 vShadowTexCoord, in float fSceneDepth)
 	float bottomEdge = fracs.y;
 
 	float shadowVisibility = 0.0f;
+	
+	float2 invShadowMapSize = 1.0f / ShadowMapSize;
 
 	[unroll(NumSamples)]
 	for (int y = -Radius; y <= Radius; y++)
@@ -130,7 +132,7 @@ float SampleShadow(in float2 vShadowTexCoord, in float fSceneDepth)
 		[unroll(NumSamples)]
 		for (int x = -Radius; x <= Radius; x++)
 		{
-			float2 offset = float2(x, y) / ShadowMapSize;
+			float2 offset = float2(x, y) * invShadowMapSize;
 			float sample = ShadowMap.SampleCmp(ShadowSampler, vShadowTexCoord + offset, fSceneDepth - Bias).x;
 
 			float xWeight = 1;

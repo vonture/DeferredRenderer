@@ -210,7 +210,7 @@ XMFLOAT3 Camera::GetDown() const
 	return XMFLOAT3(-_world._21, -_world._22, -_world._23);
 }
 
-Ray Camera::Unproject(const XMFLOAT2& screenPos, const XMFLOAT2& viewPortSize) const
+Ray Camera::UnprojectRay(const XMFLOAT2& screenPos, const XMFLOAT2& viewPortSize) const
 {
 	XMFLOAT2 viewPortPos = XMFLOAT2((screenPos.x / viewPortSize.x) * 2.0f - 1.0f,
 		-((screenPos.y / viewPortSize.y) * 2.0f - 1.0f));
@@ -230,6 +230,34 @@ Ray Camera::Unproject(const XMFLOAT2& screenPos, const XMFLOAT2& viewPortSize) c
 	return r;
 }
 
+XMFLOAT3 Camera::UnprojectPosition(const XMFLOAT3& screenPos, const XMFLOAT2& viewPortSize) const
+{
+	XMVECTOR viewPortPos = XMVectorSet((screenPos.x / viewPortSize.x) * 2.0f - 1.0f,
+		-((screenPos.y / viewPortSize.y) * 2.0f - 1.0f), screenPos.z, 1.0f);
+
+	XMMATRIX invViewProj = XMLoadFloat4x4(&_invViewProj);
+
+	XMVECTOR transformed = XMVector3TransformCoord(viewPortPos, invViewProj);
+
+	XMFLOAT3 result;
+	XMStoreFloat3(&result, transformed);
+
+	return result;
+}
+
+XMFLOAT3 Camera::ProjectPosition(const XMFLOAT3& worldPos)
+{
+	XMVECTOR worldPosVec = XMLoadFloat3(&worldPos);
+	XMMATRIX viewProj = XMLoadFloat4x4(&_viewProj);
+
+	XMVECTOR transformed = XMVector3TransformCoord(worldPosVec, viewProj);
+
+	XMFLOAT3 result;
+	XMStoreFloat3(&result, transformed);
+
+	return result;
+}
+
 Frustum Camera::CreateFrustum() const
 {
 	XMMATRIX proj = XMLoadFloat4x4(&_proj);
@@ -242,3 +270,4 @@ Frustum Camera::CreateFrustum() const
 	
 	return f;
 }
+

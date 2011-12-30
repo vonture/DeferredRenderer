@@ -35,17 +35,14 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext,
 	XMFLOAT4X4 fProj = camera->GetProjection();
 	XMMATRIX proj = XMLoadFloat4x4(&fProj);
 
-	Frustum cameraFrust;
-	Collision::ComputeFrustumFromProjection(&cameraFrust, &proj);
-	cameraFrust.Origin = camera->GetPosition();
-	cameraFrust.Orientation = camera->GetOrientation();
+	Frustum cameraFrust = camera->CreateFrustum();
 
 	pd3dDeviceContext->VSSetShader(_meshVertexShader, NULL, 0);
 
 	pd3dDeviceContext->IASetInputLayout(_meshInputLayout);
 	pd3dDeviceContext->OMSetDepthStencilState(_dsStates.GetDepthWriteStencilSetDesc(), 1);
 
-	pd3dDeviceContext->RSSetState(_rasterStates.GetNoCull());
+	pd3dDeviceContext->RSSetState(_rasterStates.GetBackFaceCull());
 
 	float blendFactor[4] = {1, 1, 1, 1};
 	pd3dDeviceContext->OMSetBlendState(_blendStates.GetBlendDisabled(), blendFactor, 0xFFFFFFFF);

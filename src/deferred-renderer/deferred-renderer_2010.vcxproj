@@ -46,7 +46,7 @@
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>true</GenerateManifest>
     <ExecutablePath>$(DXSDK_DIR)Utilities\bin\x86;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>$(SolutionDir)gwen/include;$(SolutionDir)assimp/include;$(SolutionDir)tinyxml/include;$(DXSDK_DIR)include;;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)gwen/include;$(SolutionDir)assimp/include;$(SolutionDir)tinyxml/include;$(DXSDK_DIR)include;</IncludePath>
     <LibraryPath>$(SolutionDir)$(Configuration)-lib\;$(DXSDK_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -143,6 +143,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AssimpLogger.cpp" />
+    <ClCompile Include="BoundingObjectConfigurationPane.cpp" />
     <ClCompile Include="BoundingObjectSet.cpp" />
     <ClCompile Include="ContentManager.cpp" />
     <ClCompile Include="ContentType.cpp" />
@@ -162,6 +163,7 @@
     <ClCompile Include="ModelConfigurationPane.cpp" />
     <ClCompile Include="ModelLoader.cpp" />
     <ClCompile Include="MotionBlurConfigurationPane.cpp" />
+    <ClCompile Include="ParticleBuffer.cpp" />
     <ClCompile Include="ParticleRenderer.cpp" />
     <ClCompile Include="ParticleSystemInstance.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
@@ -230,6 +232,7 @@
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="xnaCollision.cpp" />
     <ClInclude Include="AssimpLogger.h" />
+    <ClInclude Include="BoundingObjectConfigurationPane.h" />
     <ClInclude Include="BoundingObjectSet.h" />
     <ClInclude Include="ComponentSystem.h" />
     <ClInclude Include="ContentLoader.h" />
@@ -254,6 +257,7 @@
     <ClInclude Include="ModelLoader.h" />
     <ClInclude Include="MotionBlurConfigurationPane.h" />
     <ClInclude Include="Particle.h" />
+    <ClInclude Include="ParticleBuffer.h" />
     <ClInclude Include="ParticleRenderer.h" />
     <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="ParticleSystemInstance.h" />
@@ -313,28 +317,100 @@
     <ClInclude Include="VertexShaderLoader.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="xnaCollision.h" />
-    <None Include="BoundingObject.hlsl" />
-    <None Include="Copy.hlsl" />
-    <None Include="DirectionalDepth.hlsl" />
-    <None Include="DirectionalLight.hlsl" />
-    <None Include="FXAA.hlsl" />
-    <None Include="Fxaa3_11.hlsl" />
-    <None Include="DiscDoF.hlsl" />
-    <None Include="DualParaboloidDepth.hlsl" />
+    <CustomBuild Include="BoundingObject.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Copy.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="DirectionalDepth.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="DirectionalLight.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="FXAA.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Fxaa3_11.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="DiscDoF.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="DualParaboloidDepth.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
+    </CustomBuild>
     <ClInclude Include="Camera.h" />
-    <None Include="MLAA.hlsl" />
-    <None Include="Particle.hlsl" />
-    <None Include="Sky.hlsl" />
-    <None Include="Sprite.hlsl" />
-    <None Include="SSAO.hlsl" />
+    <CustomBuild Include="MLAA.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Particle.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Sky.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Sprite.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="SSAO.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
+    </CustomBuild>
     <None Include="UIRenderer.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="GBufferCombine.hlsl" />
-    <None Include="HDR.hlsl" />
-    <None Include="Mesh.hlsl" />
-    <None Include="PointLight.hlsl" />
-    <None Include="Quad.hlsl" />
+    <CustomBuild Include="GBufferCombine.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="HDR.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Mesh.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="PointLight.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Quad.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DeferredRendererApplication.h" />

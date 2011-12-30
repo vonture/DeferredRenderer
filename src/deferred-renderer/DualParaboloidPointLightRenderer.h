@@ -87,9 +87,12 @@ protected:
 public:
 	DualParaboloidPointLightRenderer();
 
-	HRESULT RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*>* models,
+	HRESULT RenderGeometryShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*>* models,
 		Camera* camera, AxisAlignedBox* sceneBounds);
-	HRESULT RenderLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera, GBuffer* gBuffer);
+	HRESULT RenderGeometryLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera, GBuffer* gBuffer);
+
+	HRESULT RenderParticleLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
+		ParticleBuffer* gBuffer);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
 	void OnD3D11DestroyDevice();

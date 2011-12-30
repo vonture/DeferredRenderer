@@ -9,6 +9,7 @@
 #include "ModelInstance.h"
 #include "GBuffer.h"
 #include "LightBuffer.h"
+#include "ParticleBuffer.h"
 #include "IHasContent.h"
 #include "ModelRenderer.h"
 #include "ParticleRenderer.h"
@@ -20,6 +21,7 @@ private:
 	bool _begun;
 	GBuffer _gBuffer;
 	LightBuffer _lightBuffer;
+	ParticleBuffer _particleBuffer;
 	
 	std::vector<ModelInstance*> _models;
 	std::vector<ParticleSystemInstance*> _particleSystems;

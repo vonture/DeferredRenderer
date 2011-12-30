@@ -8,7 +8,7 @@
 #include "AssimpLogger.h"
 
 Model::Model()
-	: _meshes(NULL), _meshCount(0), _materials(NULL), _materialCount(0)
+	: _meshes(NULL), _meshCount(0), _materials(NULL), _materialCount(0), _name(NULL)
 {
 }
 
@@ -85,11 +85,25 @@ HRESULT Model::CreateFromFile(ID3D11Device* device, const WCHAR* fileName)
 		}
 
 		UINT importSteps = 	
-			aiProcess_ConvertToLeftHanded	|
-			aiProcess_FixInfacingNormals |
-			aiProcessPreset_TargetRealtime_Fast | 
-			aiProcess_FindInstances |
+			aiProcess_PreTransformVertices			|
+			aiProcess_ConvertToLeftHanded			|
+			aiProcess_CalcTangentSpace				| 
+			aiProcess_GenSmoothNormals				|
+			aiProcess_JoinIdenticalVertices			|
+			aiProcess_ImproveCacheLocality			|
+			aiProcess_LimitBoneWeights				|
+			aiProcess_RemoveRedundantMaterials      |
+			aiProcess_SplitLargeMeshes				|
+			aiProcess_Triangulate					|
+			aiProcess_GenUVCoords                   |
+			aiProcess_SortByPType                   |
+			aiProcess_FindDegenerates               |
+			aiProcess_FindInstances                 |
+			aiProcess_ValidateDataStructure         |
 			aiProcess_OptimizeMeshes;
+
+		importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE | 
+			aiPrimitiveType_POLYGON);
 
 		// Load with assimp
 		const aiScene* scene = importer.ReadFile(pathA, importSteps);

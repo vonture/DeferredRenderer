@@ -30,9 +30,6 @@ private:
 	Gwen::Controls::Label* _sunDirLabel;
 	DirectionSelector* _sunDirSelector;
 
-	Gwen::Color vectorToGwenColor(const XMFLOAT3& vector);
-	XMFLOAT3 gwenColorToVector(const Gwen::Color& color);
-	
 	virtual void OnValueChanged(Gwen::Controls::Base *control);
 
 public:

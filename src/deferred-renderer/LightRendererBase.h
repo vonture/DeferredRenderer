@@ -6,6 +6,7 @@
 #include "ModelInstance.h"
 #include "Camera.h"
 #include "GBuffer.h"
+#include "ParticleBuffer.h"
 
 class LightRendererBase : public IHasContent
 {
@@ -30,10 +31,13 @@ public:
 	LightRendererBase();
 	virtual ~LightRendererBase();
 
-	virtual HRESULT RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*>* models,
+	virtual HRESULT RenderGeometryShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*>* models,
 		Camera* camera, AxisAlignedBox* sceneBounds) = 0;
-	virtual HRESULT RenderLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
+	virtual HRESULT RenderGeometryLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
 		GBuffer* gBuffer) = 0;
+
+	virtual HRESULT RenderParticleLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
+		ParticleBuffer* gBuffer) = 0;
 
 	virtual UINT GetCount() = 0;
 	virtual UINT GetCount(bool shadowed) = 0;

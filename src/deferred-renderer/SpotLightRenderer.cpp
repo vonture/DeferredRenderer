@@ -10,32 +10,47 @@ SpotLightRenderer::~SpotLightRenderer()
 {
 }
 
-HRESULT SpotLightRenderer::RenderShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*>* models,
-	Camera* camera, AxisAlignedBox* sceneBounds)
+HRESULT SpotLightRenderer::RenderGeometryShadowMaps(ID3D11DeviceContext* pd3dImmediateContext,
+	std::vector<ModelInstance*>* models, Camera* camera, AxisAlignedBox* sceneBounds)
 {
 	if (GetCount(true) > 0)
 	{
 		BEGIN_EVENT_D3D(L"Spot Light Shadow Maps");
 
 		END_EVENT_D3D(L"");
-		return E_FAIL;
+		return E_NOTIMPL;
 	}
 	return S_OK;
 }
 
-HRESULT SpotLightRenderer::RenderLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera, GBuffer* gBuffer)
+HRESULT SpotLightRenderer::RenderGeometryLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
+	GBuffer* gBuffer)
 {
 	if (GetCount(true) + GetCount(false) > 0)
 	{
 		BEGIN_EVENT_D3D(L"Spot Lights");
 
 		END_EVENT_D3D(L"");
-		return E_FAIL;
+		return E_NOTIMPL;
 	}
 	return S_OK;
 }
 
-HRESULT SpotLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT SpotLightRenderer::RenderParticleLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
+	ParticleBuffer* gBuffer )
+{
+	if (GetCount(true) + GetCount(false) > 0)
+	{
+		BEGIN_EVENT_D3D(L"Spot Lights");
+
+		END_EVENT_D3D(L"");
+		return E_NOTIMPL;
+	}
+	return S_OK;
+}
+
+HRESULT SpotLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager,
+	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
@@ -49,8 +64,8 @@ void SpotLightRenderer::OnD3D11DestroyDevice()
 	LightRenderer::OnD3D11DestroyDevice();
 }
 
-HRESULT SpotLightRenderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
-                        const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT SpotLightRenderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, 
+	IDXGISwapChain* pSwapChain, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
@@ -58,6 +73,7 @@ HRESULT SpotLightRenderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Con
 
 	return S_OK;
 }
+
 void SpotLightRenderer::OnD3D11ReleasingSwapChain()
 {
 	LightRenderer::OnD3D11ReleasingSwapChain();

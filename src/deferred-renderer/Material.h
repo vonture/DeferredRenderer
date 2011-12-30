@@ -5,7 +5,7 @@
 #include "SDKmesh.h"
 #include "aiScene.h"
 
-typedef long TexturePathHash;
+typedef std::wstring TexturePathHash;
 
 class Material : public ContentType
 {

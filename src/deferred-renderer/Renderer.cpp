@@ -97,117 +97,153 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* viewCam
     ID3D11DepthStencilView* pOrigDSV = NULL;
     pd3dImmediateContext->OMGetRenderTargets( 1, &pOrigRTV, &pOrigDSV );
 
-	// Calculate the scene bounds
 	AxisAlignedBox sceneBounds;
-	if (_models.size() > 0)
+	BEGIN_EVENT(L"Calculate scene bounds");
 	{
-		sceneBounds = _models[0]->GetAxisAlignedBox();
-		for (UINT i = 1; i < _models.size(); i++)
+		if (_models.size() > 0)
 		{
-			AxisAlignedBox modelAABB = _models[i]->GetAxisAlignedBox();
+			sceneBounds = _models[0]->GetAxisAlignedBox();
+			for (UINT i = 1; i < _models.size(); i++)
+			{
+				AxisAlignedBox modelAABB = _models[i]->GetAxisAlignedBox();
 
-			Collision::MergeAxisAlignedBoxes(&sceneBounds, &sceneBounds, &modelAABB);
+				Collision::MergeAxisAlignedBoxes(&sceneBounds, &sceneBounds, &modelAABB);
+			}
 		}
 	}
+	END_EVENT(L"");
 
 	// render the shadow maps
 	BEGIN_EVENT_D3D(L"Shadow Maps");
-	for (std::map<size_t, LightRendererBase*>::iterator it = _lightRenderers.begin(); it != _lightRenderers.end(); it++)
 	{
-		V_RETURN(it->second->RenderShadowMaps(pd3dImmediateContext, &_models, viewCamera, &sceneBounds));
+		for (std::map<size_t, LightRendererBase*>::iterator it = _lightRenderers.begin(); it != _lightRenderers.end(); it++)
+		{
+			V_RETURN(it->second->RenderGeometryShadowMaps(pd3dImmediateContext, &_models, viewCamera, &sceneBounds));
+		}
 	}
 	END_EVENT_D3D(L"");
 
 	// Render the scene to the gbuffer
 	BEGIN_EVENT_D3D(L"G-Buffer");
-
-	V_RETURN(_gBuffer.Clear(pd3dImmediateContext));
-
-	ID3D11RenderTargetView* gBufferRTVs[3] = 
 	{
-		_gBuffer.GetDiffuseRTV(),
-		_gBuffer.GetNormalRTV(),
-		_gBuffer.GetVelocityRTV(),
-	};	
-	pd3dImmediateContext->OMSetRenderTargets(3, gBufferRTVs, _gBuffer.GetDepthDSV());
+		V_RETURN(_gBuffer.Clear(pd3dImmediateContext));
 
-	V_RETURN(_modelRenderer.RenderModels(pd3dImmediateContext, &_models, viewCamera));
+		ID3D11RenderTargetView* gBufferRTVs[3] = 
+		{
+			_gBuffer.GetDiffuseRTV(),
+			_gBuffer.GetNormalRTV(),
+			_gBuffer.GetVelocityRTV(),
+		};	
+		pd3dImmediateContext->OMSetRenderTargets(3, gBufferRTVs, _gBuffer.GetDepthDSV());
 
-	V_RETURN(_particleRenderer.RenderParticles(pd3dImmediateContext, &_particleSystems, viewCamera));
+		V_RETURN(_modelRenderer.RenderModels(pd3dImmediateContext, &_models, viewCamera));
+	}	
 	END_EVENT_D3D(L"");
 
-	// render the lights
-	BEGIN_EVENT_D3D(L"Lights");
+	// Render the particles
+	BEGIN_EVENT_D3D(L"Particles");
+	{
+		V_RETURN(_particleBuffer.Clear(pd3dImmediateContext));
 
+		ID3D11RenderTargetView* particleBufferRTVs[3] = 
+		{
+			_particleBuffer.GetDiffuseRTV(),
+			_particleBuffer.GetNormalRTV(),
+			NULL,
+		};	
+		pd3dImmediateContext->OMSetRenderTargets(3, particleBufferRTVs, _gBuffer.GetReadOnlyDepthDSV());
+
+		V_RETURN(_particleRenderer.RenderParticles(pd3dImmediateContext, &_particleSystems, viewCamera, &_gBuffer));
+	}
+	END_EVENT_D3D(L"");
+
+	V_RETURN(_lightBuffer.Clear(pd3dImmediateContext));
 	_lightBuffer.SetAmbientColor(_ambientLight.GetColor());
 	_lightBuffer.SetAmbientBrightness(_ambientLight.GetBrightness());
-	V_RETURN(_lightBuffer.Clear(pd3dImmediateContext));
 
-	ID3D11RenderTargetView* lightBufferRTVs[3] = 
+	// render the lights
+	BEGIN_EVENT_D3D(L"Geometry Lights");
 	{
-		_lightBuffer.GetLightRTV(),
-		NULL,
-		NULL,
-	};	
-	pd3dImmediateContext->OMSetRenderTargets(3, lightBufferRTVs, _gBuffer.GetReadOnlyDepthDSV());
+		ID3D11RenderTargetView* lightBufferGetometryRTVs[2] = 
+		{
+			_lightBuffer.GetGeometryLightRTV(),
+			NULL,
+		};	
+		pd3dImmediateContext->OMSetRenderTargets(2, lightBufferGetometryRTVs, _gBuffer.GetReadOnlyDepthDSV());
 	
-	for (std::map<size_t, LightRendererBase*>::iterator it = _lightRenderers.begin(); it != _lightRenderers.end(); it++)
-	{
-		V_RETURN(it->second->RenderLights(pd3dImmediateContext, viewCamera, &_gBuffer));
+		for (std::map<size_t, LightRendererBase*>::iterator it = _lightRenderers.begin(); it != _lightRenderers.end(); it++)
+		{
+			V_RETURN(it->second->RenderGeometryLights(pd3dImmediateContext, viewCamera, &_gBuffer));
+		}
 	}
+	END_EVENT_D3D(L"");
+	
+	BEGIN_EVENT_D3D(L"Particle Lights");
+	{
+		ID3D11RenderTargetView* lightBufferGetometryRTVs[1] = 
+		{
+			_lightBuffer.GetParticleLightRTV(),
+		};	
+		pd3dImmediateContext->OMSetRenderTargets(1, lightBufferGetometryRTVs, _gBuffer.GetReadOnlyDepthDSV());
 
-	ID3D11RenderTargetView* nullRTV[1] = { NULL };
-	pd3dImmediateContext->OMSetRenderTargets(1, nullRTV, NULL);
+		for (std::map<size_t, LightRendererBase*>::iterator it = _lightRenderers.begin(); it != _lightRenderers.end(); it++)
+		{
+			V_RETURN(it->second->RenderParticleLights(pd3dImmediateContext, viewCamera, &_particleBuffer));
+		}
 
+		ID3D11RenderTargetView* nullRTV[1] = { NULL };
+		pd3dImmediateContext->OMSetRenderTargets(1, nullRTV, NULL);
+	}
 	END_EVENT_D3D(L"");
 	
 	BEGIN_EVENT_D3D(L"Post-Processes");
+	{	
+		// Find the final non-additive pp
+		UINT lastNonAdditive = 0;
+		for (UINT i = _postProcesses.size() - 1; i > 0; i--)
+		{
+			if (!_postProcesses[i]->GetIsAdditive())
+			{
+				lastNonAdditive = i;
+				break;
+			}
+		}	
 	
-	// Find the final non-additive pp
-	UINT lastNonAdditive = 0;
-	for (UINT i = _postProcesses.size() - 1; i > 0; i--)
-	{
-		if (!_postProcesses[i]->GetIsAdditive())
+		// render the post processes	
+		for (UINT i = 0; i < _postProcesses.size(); i++)
 		{
-			lastNonAdditive = i;
-			break;
-		}
-	}	
-	
-	// render the post processes	
-	for (UINT i = 0; i < _postProcesses.size(); i++)
-	{
-		PostProcess* pp = _postProcesses[i];
-		bool isAdditive = pp->GetIsAdditive();
+			PostProcess* pp = _postProcesses[i];
+			bool isAdditive = pp->GetIsAdditive();
 		
-		// calculate source resource view
-		ID3D11ShaderResourceView* srcSRV = NULL;
-		if (i > 0 && i <= lastNonAdditive)
-		{
-			srcSRV = _ppShaderResourceViews[0];
-		}
+			// calculate source resource view
+			ID3D11ShaderResourceView* srcSRV = NULL;
+			if (i > 0 && i <= lastNonAdditive)
+			{
+				srcSRV = _ppShaderResourceViews[0];
+			}
 		
-		// Calculate destination render target
-		ID3D11RenderTargetView* dstRTV = NULL;
-		if (i >= lastNonAdditive)
-		{
-			dstRTV = pOrigRTV;
-		}
-		else if (isAdditive)
-		{
-			dstRTV = _ppRenderTargetViews[0];
-		}
-		else
-		{
-			dstRTV = _ppRenderTargetViews[1];
-		}
+			// Calculate destination render target
+			ID3D11RenderTargetView* dstRTV = NULL;
+			if (i >= lastNonAdditive)
+			{
+				dstRTV = pOrigRTV;
+			}
+			else if (isAdditive)
+			{
+				dstRTV = _ppRenderTargetViews[0];
+			}
+			else
+			{
+				dstRTV = _ppRenderTargetViews[1];
+			}
 
-		// Render the post process
-		V_RETURN(pp->Render(pd3dImmediateContext, srcSRV, dstRTV, viewCamera, &_gBuffer, &_lightBuffer));
+			// Render the post process
+			V_RETURN(pp->Render(pd3dImmediateContext, srcSRV, dstRTV, viewCamera, &_gBuffer, &_lightBuffer));
 
-		if (!isAdditive)
-		{
-			swapPPBuffers();
+			if (!isAdditive)
+			{
+				swapPPBuffers();
+			}
 		}
 	}
 	END_EVENT_D3D(L"");
@@ -225,6 +261,7 @@ HRESULT Renderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* 
 	// Call the sub content holders
 	V_RETURN(_gBuffer.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 	V_RETURN(_lightBuffer.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
+	V_RETURN(_particleBuffer.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 	V_RETURN(_modelRenderer.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 	V_RETURN(_particleRenderer.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 	V_RETURN(_combinePP.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
@@ -236,6 +273,7 @@ void Renderer::OnD3D11DestroyDevice()
 {
 	_gBuffer.OnD3D11DestroyDevice();
 	_lightBuffer.OnD3D11DestroyDevice();
+	_particleBuffer.OnD3D11DestroyDevice();
 	_modelRenderer.OnD3D11DestroyDevice();
 	_particleRenderer.OnD3D11DestroyDevice();
 	_combinePP.OnD3D11DestroyDevice();
@@ -301,6 +339,7 @@ HRESULT Renderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManag
 
 	V_RETURN(_gBuffer.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_lightBuffer.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(_particleBuffer.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_modelRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_particleRenderer.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_combinePP.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
@@ -319,6 +358,7 @@ void Renderer::OnD3D11ReleasingSwapChain()
 
 	_gBuffer.OnD3D11ReleasingSwapChain();
 	_lightBuffer.OnD3D11ReleasingSwapChain();
+	_particleBuffer.OnD3D11ReleasingSwapChain();
 	_modelRenderer.OnD3D11ReleasingSwapChain();
 	_particleRenderer.OnD3D11ReleasingSwapChain();
 	_combinePP.OnD3D11ReleasingSwapChain();

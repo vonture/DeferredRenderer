@@ -2,9 +2,14 @@
 #include "LightBuffer.h"
 
 LightBuffer::LightBuffer()
-	: _tex(NULL), _srv(NULL), _rtv(NULL), _ambientColor(0.0f, 0.0f, 0.0f),
-	  _ambientBrightness(0)
+	: _ambientColor(0.0f, 0.0f, 0.0f), _ambientBrightness(0)
 {
+	for (UINT i = 0; i < 2; i++)
+	{
+		_tex[i] = NULL;
+		_srv[i] = NULL;
+		_rtv[i] = NULL;
+	}
 }
 
 HRESULT LightBuffer::Clear(ID3D11DeviceContext* pd3dImmediateContext)
@@ -16,7 +21,8 @@ HRESULT LightBuffer::Clear(ID3D11DeviceContext* pd3dImmediateContext)
 		_ambientColor.z * _ambientBrightness, 
 		0.0f 
 	};
-	pd3dImmediateContext->ClearRenderTargetView(_rtv, rtclear);
+	pd3dImmediateContext->ClearRenderTargetView(_rtv[0], rtclear);
+	pd3dImmediateContext->ClearRenderTargetView(_rtv[1], rtclear);
 
 	return S_OK;
 }
@@ -52,8 +58,11 @@ HRESULT LightBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentMa
         0//UINT MiscFlags;    
     };
 
-	V_RETURN(pd3dDevice->CreateTexture2D(&textureDesc, NULL, &_tex));
-	V_RETURN(SetDXDebugName(_tex, "Light Buffer Texture"));
+	V_RETURN(pd3dDevice->CreateTexture2D(&textureDesc, NULL, &_tex[0]));
+	V_RETURN(pd3dDevice->CreateTexture2D(&textureDesc, NULL, &_tex[1]));
+
+	V_RETURN(SetDXDebugName(_tex[0], "Light Buffer Geometry Texture"));
+	V_RETURN(SetDXDebugName(_tex[1], "Light Buffer Particle Texture"));
 
 	// Create the shader resource view
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = 
@@ -65,8 +74,11 @@ HRESULT LightBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentMa
     };
 	srvDesc.Texture2D.MipLevels = 1;
 
-	V_RETURN(pd3dDevice->CreateShaderResourceView(_tex, &srvDesc, &_srv));
-	V_RETURN(SetDXDebugName(_srv, "Light Buffer SRV"));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(_tex[0], &srvDesc, &_srv[0]));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(_tex[1], &srvDesc, &_srv[1]));
+
+	V_RETURN(SetDXDebugName(_srv[0], "Light Buffer Geometry SRV"));
+	V_RETURN(SetDXDebugName(_srv[1], "Light Buffer Particle SRV"));
 
 	// Create the render target
 	D3D11_RENDER_TARGET_VIEW_DESC rtDesc = 
@@ -77,14 +89,20 @@ HRESULT LightBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentMa
         0
     };
 
-	V_RETURN(pd3dDevice->CreateRenderTargetView(_tex, &rtDesc, &_rtv));
-	V_RETURN(SetDXDebugName(_rtv, "Light Buffer RTV"));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(_tex[0], &rtDesc, &_rtv[0]));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(_tex[1], &rtDesc, &_rtv[1]));
+	
+	V_RETURN(SetDXDebugName(_rtv[0], "Light Buffer Geometry RTV"));
+	V_RETURN(SetDXDebugName(_rtv[1], "Light Buffer Particle RTV"));
 
 	return S_OK;
 }
 void LightBuffer::OnD3D11ReleasingSwapChain()
 {	
-	SAFE_RELEASE(_tex);
-	SAFE_RELEASE(_srv);
-	SAFE_RELEASE(_rtv);
+	for (UINT i = 0; i < 2; i++)
+	{
+		SAFE_RELEASE(_tex[i]);
+		SAFE_RELEASE(_srv[i]);
+		SAFE_RELEASE(_rtv[i]);
+	}
 }

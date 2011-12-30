@@ -25,19 +25,13 @@ HRESULT loadMaterialTexture(ID3D11Device* device, const WCHAR* modelDir, const C
 		return E_FAIL;
 	}
 
-	WCHAR fullPath[MAX_PATH];
-	wcsncpy_s(fullPath, modelDir, MAX_PATH);
-	wcsncat_s(fullPath, L"\\", MAX_PATH);
-	wcsncat_s(fullPath, wtexturePath, MAX_PATH);
-	
-	// Check if this texture has already been loaded by this model
-	locale loc;
-	const collate<WCHAR>& wcoll = use_facet<collate<WCHAR>>(loc);
-	TexturePathHash hash = wcoll.hash(fullPath, fullPath + wcslen(fullPath));
-	
+	std::wstring fullPath = std::wstring(modelDir);
+	fullPath += L"\\";
+	fullPath += wtexturePath;
+		
 	if (loadedTextureMap)
 	{
-		std::map<TexturePathHash, ID3D11ShaderResourceView*>::iterator it = loadedTextureMap->find(hash);
+		std::map<TexturePathHash, ID3D11ShaderResourceView*>::iterator it = loadedTextureMap->find(fullPath);
 		if (it != loadedTextureMap->end())
 		{
 			*outSRV = it->second;
@@ -47,10 +41,10 @@ HRESULT loadMaterialTexture(ID3D11Device* device, const WCHAR* modelDir, const C
 		}
 	}
 		
-	hr = D3DX11CreateShaderResourceViewFromFile(device, fullPath, NULL, NULL, outSRV, NULL);
-	if (SUCCEEDED(hr))
+	hr = D3DX11CreateShaderResourceViewFromFile(device, fullPath.c_str(), NULL, NULL, outSRV, NULL);
+	if (loadedTextureMap && SUCCEEDED(hr))
 	{
-		loadedTextureMap->insert(std::pair<TexturePathHash, ID3D11ShaderResourceView*>(hash, *outSRV));
+		loadedTextureMap->insert(std::pair<TexturePathHash, ID3D11ShaderResourceView*>(fullPath, *outSRV));
 	}
 
 	return hr;

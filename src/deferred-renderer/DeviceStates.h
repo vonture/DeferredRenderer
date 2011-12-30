@@ -11,12 +11,14 @@ private:
 	ID3D11BlendState* _alphaBlend;
 	ID3D11BlendState* _pmAlphaBlend;
 	ID3D11BlendState* _noColor;
+	ID3D11BlendState* _particleBlend;
 
 	static D3D11_BLEND_DESC getBlendDisabledDesc();
 	static D3D11_BLEND_DESC getAdditiveBlendDesc();
 	static D3D11_BLEND_DESC getAlphaBlendDesc();
 	static D3D11_BLEND_DESC getPreMultipliedAlphaBlendDesc();
 	static D3D11_BLEND_DESC getColorWriteDisabledDesc();
+	static D3D11_BLEND_DESC getParticleBlendDesc();
 
 public:
 	BlendStates();
@@ -27,11 +29,12 @@ public:
 		const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
 	void OnD3D11ReleasingSwapChain();
 
-	ID3D11BlendState* GetBlendDisabled() { return _blendDisabled; };
-	ID3D11BlendState* GetAdditiveBlend() { return _additiveBlend; };
-	ID3D11BlendState* GetAlphaBlend() { return _alphaBlend; };
-	ID3D11BlendState* GetPreMultipliedAlphaBlend() { return _pmAlphaBlend; };
-	ID3D11BlendState* GetColorWriteDisabled() { return _noColor; };
+	ID3D11BlendState* GetBlendDisabled() { return _blendDisabled; }
+	ID3D11BlendState* GetAdditiveBlend() { return _additiveBlend; }
+	ID3D11BlendState* GetAlphaBlend() { return _alphaBlend; }
+	ID3D11BlendState* GetPreMultipliedAlphaBlend() { return _pmAlphaBlend; }
+	ID3D11BlendState* GetColorWriteDisabled() { return _noColor; }
+	ID3D11BlendState* GetParticleBlend() { return _particleBlend; }
 };
 
 

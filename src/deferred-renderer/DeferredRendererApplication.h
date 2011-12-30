@@ -34,6 +34,7 @@
 #include "ConfigurationWindow.h"
 #include "PostProcessSelectionPane.h"
 #include "ModelConfigurationPane.h"
+#include "BoundingObjectConfigurationPane.h"
 #include "LogWindow.h"
 
 class DeferredRendererApplication : public Application
@@ -56,6 +57,7 @@ private:
 	std::vector<IHasContent*> _contentHolders;
 
 	IDragable* _selectedItem;
+	float _selectedDepth;
 
 	DualParaboloidPointLightRenderer _paraboloidPointLR;
 	CascadedDirectionalLightRenderer _cascadedDirectionalLR;
@@ -81,10 +83,10 @@ private:
 	FontLoader _fontLoader;
 	EntityLoader _entityLoader;
 
-
 	ConfigurationWindow* _configWindow;
 	PostProcessSelectionPane* _ppConfigPane;
 	ModelConfigurationPane* _modelConfigPane;
+	BoundingObjectConfigurationPane* _boConfigPane;
 
 	LogWindow* _logWindow;
 

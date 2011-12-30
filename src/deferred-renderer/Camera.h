@@ -56,6 +56,10 @@ public:
 	XMFLOAT3 GetUp() const;
 	XMFLOAT3 GetDown() const;
 
-	Ray Unproject(const XMFLOAT2& screenPos, const XMFLOAT2& viewPortSize) const;
+	Ray UnprojectRay(const XMFLOAT2& screenPos, const XMFLOAT2& viewPortSize) const;
+	XMFLOAT3 UnprojectPosition(const XMFLOAT3& screenPos, const XMFLOAT2& viewPortSize) const;
+	
+	XMFLOAT3 ProjectPosition(const XMFLOAT3& worldPos);
+
 	Frustum CreateFrustum() const;
 };

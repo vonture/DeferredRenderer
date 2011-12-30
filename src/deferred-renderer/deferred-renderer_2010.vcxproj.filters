@@ -85,62 +85,8 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="GBufferCombine.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="DirectionalLight.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Mesh.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="PointLight.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="DualParaboloidDepth.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="BoundingObject.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="HDR.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Sky.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="SSAO.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="MLAA.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="UIRenderer.h">
       <Filter>UI</Filter>
-    </None>
-    <None Include="Sprite.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Copy.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Fxaa3_11.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="FXAA.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Quad.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="DirectionalDepth.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="DiscDoF.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Particle.hlsl">
-      <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -389,6 +335,12 @@
     </ClCompile>
     <ClCompile Include="BoundingObjectSet.cpp">
       <Filter>Collision</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleBuffer.cpp">
+      <Filter>Buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="BoundingObjectConfigurationPane.cpp">
+      <Filter>Post Process\Configuration Panes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -677,7 +629,67 @@
     <ClInclude Include="BoundingObjectSet.h">
       <Filter>Collision</Filter>
     </ClInclude>
+    <ClInclude Include="ParticleBuffer.h">
+      <Filter>Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="BoundingObjectConfigurationPane.h">
+      <Filter>Post Process\Configuration Panes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="HDR.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Sprite.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Sky.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Quad.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="PointLight.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Particle.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="MLAA.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Mesh.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="GBufferCombine.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Fxaa3_11.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="FXAA.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="DualParaboloidDepth.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="DiscDoF.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="DirectionalLight.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="DirectionalDepth.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Copy.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="SSAO.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="BoundingObject.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

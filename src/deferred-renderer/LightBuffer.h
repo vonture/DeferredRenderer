@@ -6,10 +6,11 @@
 class LightBuffer : public IHasContent
 {
 private:
-	// LightRT =   Light.r  | Light.g   | Light.b   | 
-	ID3D11Texture2D* _tex;
-	ID3D11ShaderResourceView* _srv;
-	ID3D11RenderTargetView* _rtv;
+	// LightRT0 =  Geometry Light.r  | Geometry Light.g   | Geometry Light.b   | Geometry Specular
+	// LightRT1 =  Particle Light.r  | Particle Light.g   | Particle Light.b   | Particle Alpha
+	ID3D11Texture2D* _tex[2];
+	ID3D11ShaderResourceView* _srv[2];
+	ID3D11RenderTargetView* _rtv[2];
 
 	XMFLOAT3 _ambientColor;
 	float _ambientBrightness;
@@ -23,9 +24,12 @@ public:
 	float GetAmbientBrightness() const { return _ambientBrightness; }
 	void SetAmbientBrightness(float brightness) { _ambientBrightness = brightness; }
 	
-	ID3D11ShaderResourceView* GetLightSRV() { return _srv; }
-	ID3D11RenderTargetView* GetLightRTV() { return _rtv; }
+	ID3D11ShaderResourceView* GetGeometryLightSRV() { return _srv[0]; }
+	ID3D11RenderTargetView* GetGeometryLightRTV() { return _rtv[0]; }
 	
+	ID3D11ShaderResourceView* GetParticleLightSRV() { return _srv[1]; }
+	ID3D11RenderTargetView* GetParticleLightRTV() { return _rtv[1]; }
+
 	HRESULT Clear(ID3D11DeviceContext* pd3dImmediateContext);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	

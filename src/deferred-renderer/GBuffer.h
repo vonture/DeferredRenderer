@@ -9,7 +9,7 @@ private:
 	// RT0 =       Diffuse.r	| Diffuse.g		| Diffuse.b		| Specular Intensity
     // RT1 =       Normal.x		| Normal.y		| Normal.z		| Specular Power
     // RT2 =       Velocity.r	| Velocity.g	| Velocity.b	| Material ID
-    // RT3 =       Depth		|				|				| Sky Visibility
+    // RT3 =       Depth										| Sky Visibility
 	ID3D11Texture2D* _textures[4];
 	ID3D11ShaderResourceView* _srvs[4];
 	ID3D11RenderTargetView* _rtvs[3];

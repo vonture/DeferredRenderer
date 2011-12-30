@@ -21,7 +21,7 @@ SkyConfigurationPane::SkyConfigurationPane(Gwen::Controls::Base* parent, SkyPost
 	_skyColorLabel->Dock(Gwen::Pos::Top);
 
 	_skyColorPicker = new Gwen::Controls::ColorPicker(this);
-	_skyColorPicker->SetColor(vectorToGwenColor(pp->GetSkyColor()));
+	_skyColorPicker->SetColor(Vector3ToGwenColor(pp->GetSkyColor()));
 	_skyColorPicker->Dock(Gwen::Pos::Top);
 	_skyColorPicker->onColorChanged.Add(this, &SkyConfigurationPane::OnValueChanged);
 
@@ -44,7 +44,7 @@ SkyConfigurationPane::SkyConfigurationPane(Gwen::Controls::Base* parent, SkyPost
 	_sunColorLabel->Dock(Gwen::Pos::Top);
 	
 	_sunColorPicker = new Gwen::Controls::ColorPicker(this);
-	_sunColorPicker->SetColor(vectorToGwenColor(pp->GetSunColor()));
+	_sunColorPicker->SetColor(Vector3ToGwenColor(pp->GetSunColor()));
 	_sunColorPicker->Dock(Gwen::Pos::Top);
 	_sunColorPicker->onColorChanged.Add(this, &SkyConfigurationPane::OnValueChanged);
 	
@@ -76,16 +76,6 @@ SkyConfigurationPane::~SkyConfigurationPane()
 {
 }
 
-Gwen::Color SkyConfigurationPane::vectorToGwenColor(const XMFLOAT3& vector)
-{
-	return Gwen::Color(vector.x * 255, vector.y * 255, vector.z * 255);
-}
-
-XMFLOAT3 SkyConfigurationPane::gwenColorToVector(const Gwen::Color& color)
-{
-	return XMFLOAT3(color.r / 255.0f, color.g / 255.0f, color.b / 255.0f);
-}
-
 void SkyConfigurationPane::OnValueChanged(Gwen::Controls::Base *control)
 {
 	SkyPostProcess* pp = GetConfiguredObject();
@@ -96,7 +86,7 @@ void SkyConfigurationPane::OnValueChanged(Gwen::Controls::Base *control)
 	}
 	else if (control == _skyColorPicker)
 	{
-		pp->SetSkyColor(gwenColorToVector(_skyColorPicker->GetColor()));
+		pp->SetSkyColor(GwenColorToVector3(_skyColorPicker->GetColor()));
 	}
 	else if (control == _skyBrightnessSlider->Slider())
 	{
@@ -108,7 +98,7 @@ void SkyConfigurationPane::OnValueChanged(Gwen::Controls::Base *control)
 	}
 	else if (control == _sunColorPicker)
 	{
-		pp->SetSunColor(gwenColorToVector(_sunColorPicker->GetColor()));
+		pp->SetSunColor(GwenColorToVector3(_sunColorPicker->GetColor()));
 	}
 	else if (control == _sunWidthSlider->Slider())
 	{
@@ -133,11 +123,11 @@ void SkyConfigurationPane::OnFrameMove(double totalTime, float dt)
 	_skyTypeSlider->Slider()->SetValue(pp->GetSkyTypeIndex());
 	_skyTypeSlider->Label()->SetText("Sky type: " + Gwen::Utility::UnicodeToString(pp->GetSkyTypeDescription()));
 
-	_skyColorPicker->SetColor(vectorToGwenColor(pp->GetSkyColor()));
+	_skyColorPicker->SetColor(Vector3ToGwenColor(pp->GetSkyColor()));
 	_skyBrightnessSlider->Label()->SetText("Sky Brightness: " + Gwen::Utility::ToString(pp->GetSkyBrightness()));
 
 	_sunEnabledCheckBox->Checkbox()->SetChecked(pp->GetSunEnabled());
-	_sunColorPicker->SetColor(vectorToGwenColor(pp->GetSunColor()));
+	_sunColorPicker->SetColor(Vector3ToGwenColor(pp->GetSunColor()));
 
 	_sunBrightnessSlider->Slider()->SetValue(pp->GetSunBrightness());
 	_sunBrightnessSlider->Label()->SetText("Sun Brightness: " + Gwen::Utility::ToString(pp->GetSunBrightness()));

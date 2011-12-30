@@ -83,7 +83,7 @@ float4 PS_SSAO(PS_In_Quad input) : SV_TARGET0
 	
 	// Sample the random texture so that this location will always yeild the same
 	// random direction (so that there is no flickering)
-	float fRandomRotation = Texture1.SampleLevel(PointSampler, frac(input.vTexCoord * RAND_TEX_SIZE), 0).x;
+	//float fRandomRotation = Texture1.SampleLevel(PointSampler, frac(input.vTexCoord * RAND_TEX_SIZE), 0).x;
 	
 	float fUnoccludedSamples = 1;
 
@@ -91,7 +91,8 @@ float4 PS_SSAO(PS_In_Quad input) : SV_TARGET0
 	for (int i = 0; i < SSAO_SAMPLE_COUNT; i++)
 	{
 		float2 vRayDirBase = SampleDirections[i].xy * InverseSceneSize * SampleRadius;
-		float2 vRayDirRot = vRayDirBase * float2(sin(fRandomRotation), cos(fRandomRotation));
+		//float2 vRayDirRot = vRayDirBase * float2(sin(fRandomRotation), cos(fRandomRotation));
+		float2 vRayDirRot = vRayDirBase;
 
 		float2 vRayTexCoord = input.vTexCoord + vRayDirRot;
 		float fRayDepth = GetLinearDepth(Texture0.SampleLevel(PointSampler, vRayTexCoord, 0).x, CameraNearClip, CameraFarClip);
