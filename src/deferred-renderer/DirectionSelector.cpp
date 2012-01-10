@@ -44,7 +44,7 @@ void DirectionSelector::VerifyDirection()
 	}
 }
 
-void DirectionSelector::OnMouseMoved(int x, int y, int deltaX, int deltaY)
+void DirectionSelector::OnMouseMoved(int x, int y, int, int)
 {
 	if (_selected)
 	{
@@ -62,11 +62,16 @@ void DirectionSelector::OnMouseMoved(int x, int y, int deltaX, int deltaY)
 
 void DirectionSelector::OnMouseClickLeft(int x, int y, bool bDown)
 {
-	_selected = bDown;
-
-	// Make sure it catches this point if the mouse doesn't move while clicking
-	if (bDown)
+	if ( bDown )
 	{
+		_selected = true;
 		OnMouseMoved(x, y, 0, 0);
+		Gwen::MouseFocus = this;
+	}
+	else
+	{
+		_selected = false;
+
+		Gwen::MouseFocus = NULL;
 	}
 }
