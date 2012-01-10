@@ -1,29 +1,29 @@
 #include "PCH.h"
-#include "CombinePostProcess.h"
+#include "ParticleCombinePostProcess.h"
 #include "Logger.h"
 #include "PixelShaderLoader.h"
 
-CombinePostProcess::CombinePostProcess()
+ParticleCombinePostProcess::ParticleCombinePostProcess()
 	: _pixelShader(NULL)
 {
-	SetIsAdditive(false);
+	SetIsAdditive(true);
 }
 
-HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
-		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
+HRESULT ParticleCombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
+	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, ParticleBuffer* pBuffer, LightBuffer* lightBuffer)
 {
-	BEGIN_EVENT_D3D(L"Combine");
+	BEGIN_EVENT_D3D(L"Particle Combine");
 
 	HRESULT hr;
-	
+
 	pd3dImmediateContext->OMSetRenderTargets(1, &dstRTV, NULL);
 
 	ID3D11ShaderResourceView* combineSRVs[2] = 
 	{
-		gBuffer->GetDiffuseSRV(),
-		lightBuffer->GetGeometryLightSRV(),
+		pBuffer->GetDiffuseSRV(),
+		lightBuffer->GetParticleLightSRV(),
 	};
-	
+
 	pd3dImmediateContext->PSSetShaderResources(0, 2, combineSRVs);
 
 	ID3D11SamplerState* sampler = GetSamplerStates()->GetPointClamp();
@@ -32,8 +32,8 @@ HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID
 	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthDisabled(), 0);
 
 	float blendFactor[4] = {1, 1, 1, 1};
-	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
-	
+	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetAlphaBlend(), blendFactor, 0xFFFFFFFF);
+
 	Quad* fsQuad = GetFullScreenQuad();
 
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _pixelShader));
@@ -47,7 +47,7 @@ HRESULT CombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID
 	return S_OK;
 }
 
-HRESULT CombinePostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT ParticleCombinePostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
@@ -58,10 +58,10 @@ HRESULT CombinePostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, Conten
 	{
 		"PS_Combine",		// const char* EntryPoint;
 		NULL,				// D3D_SHADER_MACRO* Defines;
-		"G-buffer combine",	// const char* DebugName;
+		"P-buffer combine",	// const char* DebugName;
 	};
 
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"GBufferCombine.hlsl", &psOpts, &psContent));
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"PBufferCombine.hlsl", &psOpts, &psContent));
 
 	_pixelShader = psContent->PixelShader;
 	_pixelShader->AddRef();
@@ -71,24 +71,24 @@ HRESULT CombinePostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, Conten
 	return S_OK;
 }
 
-void CombinePostProcess::OnD3D11DestroyDevice()
+void ParticleCombinePostProcess::OnD3D11DestroyDevice()
 {
 	PostProcess::OnD3D11DestroyDevice();
 
 	SAFE_RELEASE(_pixelShader);
 }
 
-HRESULT CombinePostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
+HRESULT ParticleCombinePostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
 	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
 	V_RETURN(PostProcess::OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
-	
+
 	return S_OK;
 }
 
-void CombinePostProcess::OnD3D11ReleasingSwapChain()
+void ParticleCombinePostProcess::OnD3D11ReleasingSwapChain()
 {
 	PostProcess::OnD3D11ReleasingSwapChain();
 }

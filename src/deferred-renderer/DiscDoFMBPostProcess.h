@@ -4,7 +4,7 @@
 #include "PostProcess.h"
 #include "Poisson.h"
 
-class DiscDoFPostProcess : public PostProcess
+class DiscDoFMBPostProcess : public PostProcess
 {
 private:	
 	float _focalDistance;
@@ -39,7 +39,7 @@ private:
 	ID3D11Buffer* _sampleBuffers[NUM_DOF_SAMPLE_COUNTS];
 
 public:
-	DiscDoFPostProcess();
+	DiscDoFMBPostProcess();
 
 	float GetFocalDistance() const { return _focalDistance; }
 	void SetFocalDistance(float dist) { _focalDistance = max(dist, 0.0f); }
@@ -57,7 +57,7 @@ public:
 	UINT GetNumSampleCountIndicies() const { return NUM_DOF_SAMPLE_COUNTS; }
 
 	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
-		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer);
+		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, ParticleBuffer* pBuffer,LightBuffer* lightBuffer);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
 	void OnD3D11DestroyDevice();

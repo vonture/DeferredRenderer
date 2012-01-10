@@ -2,10 +2,10 @@
 
 #include "PCH.h"
 #include "ConfigurationPane.h"
-#include "DiscDoFPostProcess.h"
+#include "DiscDoFMBPostProcess.h"
 #include "SliderWithLabel.h"
 
-class DiscDoFConfigurationPane : public ConfigurationPane<DiscDoFPostProcess>
+class DiscDoFMBConfigurationPane : public ConfigurationPane<DiscDoFMBPostProcess>
 {
 private:
 	SliderWithLabel* _focalDistSlider;
@@ -17,7 +17,7 @@ private:
 	virtual void OnValueChanged(Gwen::Controls::Base *control);
 
 public:
-	DiscDoFConfigurationPane(Gwen::Controls::Base* parent, DiscDoFPostProcess* pp);
+	DiscDoFMBConfigurationPane(Gwen::Controls::Base* parent, DiscDoFMBPostProcess* pp);
 
 	void OnFrameMove(double totalTime, float dt);
 };

@@ -1,9 +1,9 @@
 #include "PCH.h"
-#include "DiscDoFPostProcess.h"
+#include "DiscDoFMBPostProcess.h"
 #include "Logger.h"
 #include "PixelShaderLoader.h"
 
-DiscDoFPostProcess::DiscDoFPostProcess()
+DiscDoFMBPostProcess::DiscDoFMBPostProcess()
 	: _propertiesBuffer(NULL)
 {
 	SetIsAdditive(false);
@@ -21,8 +21,8 @@ DiscDoFPostProcess::DiscDoFPostProcess()
 	SetSampleCountIndex(1);
 }
 
-HRESULT DiscDoFPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
-	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
+HRESULT DiscDoFMBPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
+	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, ParticleBuffer* pBuffer,LightBuffer* lightBuffer)
 {
 	BEGIN_EVENT_D3D(L"DoF");
 
@@ -82,7 +82,7 @@ HRESULT DiscDoFPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID
 	return S_OK;
 }
 
-HRESULT DiscDoFPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager,
+HRESULT DiscDoFMBPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager,
 	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
@@ -159,7 +159,7 @@ HRESULT DiscDoFPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, Conten
 	return S_OK;
 }
 
-void DiscDoFPostProcess::OnD3D11DestroyDevice()
+void DiscDoFMBPostProcess::OnD3D11DestroyDevice()
 {
 	PostProcess::OnD3D11DestroyDevice();
 	
@@ -172,7 +172,7 @@ void DiscDoFPostProcess::OnD3D11DestroyDevice()
 	}
 }
 
-HRESULT DiscDoFPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager,
+HRESULT DiscDoFMBPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager,
 	IDXGISwapChain* pSwapChain, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
@@ -186,7 +186,7 @@ HRESULT DiscDoFPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Co
 	return S_OK;
 }
 
-void DiscDoFPostProcess::OnD3D11ReleasingSwapChain()
+void DiscDoFMBPostProcess::OnD3D11ReleasingSwapChain()
 {
 	PostProcess::OnD3D11ReleasingSwapChain();
 }
