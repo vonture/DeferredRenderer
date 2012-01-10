@@ -3,12 +3,11 @@
 
 DeviceManager::DeviceManager()
 	: _backBufferFormat(DXGI_FORMAT_R8G8B8A8_UNORM_SRGB), _backBufferWidth(1280),
-	  _backBufferHeight(720), _msCount(1), _msQuality(0), _enableAutoDS(true), _fullScreen(false),
-	  _featureLevel(D3D_FEATURE_LEVEL_10_1), _minFeatureLevel(D3D_FEATURE_LEVEL_10_0), 
+	  _backBufferHeight(720), _msCount(1), _msQuality(0), _enableAutoDS(false), _fullScreen(false),
+	  _featureLevel(D3D_FEATURE_LEVEL_11_0), _minFeatureLevel(D3D_FEATURE_LEVEL_10_0), 
 	  _autoDSFormat(DXGI_FORMAT_D24_UNORM_S8_UINT), _useAutoDSAsSR(false), _vsync(true),
-	  _device(NULL), _immediateContext(NULL), _swapChain(NULL), _backBufferTexture(NULL), _backBufferRTV(NULL),
-	  _autoDSTexture(NULL), _autoDSView(NULL), _autoDSSRView(NULL), _factory(NULL), _adapter(NULL),
-	  _output(NULL)
+	  _device(NULL), _immediateContext(NULL), _swapChain(NULL), _backBufferRTV(NULL), _autoDSTexture(NULL), 
+	  _autoDSView(NULL), _autoDSSRView(NULL)
 {
     _refreshRate.Numerator = 60;
     _refreshRate.Denominator = 1;
@@ -16,16 +15,26 @@ DeviceManager::DeviceManager()
 
 HRESULT DeviceManager::Initialize(HWND outputWindow)
 {
-	HRESULT hr;
+	HRESULT hr = S_OK;
 
-	V_RETURN(checkForSuitableOutput());
+	D3D_DRIVER_TYPE driverTypes[] =
+    {
+        D3D_DRIVER_TYPE_HARDWARE,
+        D3D_DRIVER_TYPE_WARP,
+        D3D_DRIVER_TYPE_REFERENCE,
+    };
+    UINT numDriverTypes = ARRAYSIZE(driverTypes);
+
+	D3D_FEATURE_LEVEL featureLevels[] =
+    {
+        D3D_FEATURE_LEVEL_11_0,
+        D3D_FEATURE_LEVEL_10_1,
+        D3D_FEATURE_LEVEL_10_0,
+    };
+	UINT numFeatureLevels = ARRAYSIZE(featureLevels);
 
 	DXGI_SWAP_CHAIN_DESC desc;
 	ZeroMemory(&desc, sizeof(DXGI_SWAP_CHAIN_DESC));
-
-    _refreshRate.Numerator = 60;
-    _refreshRate.Denominator = 1;    
-
 	desc.BufferCount = 2;
 	desc.BufferDesc.Format = _backBufferFormat;
 	desc.BufferDesc.Width = _backBufferWidth;
@@ -36,28 +45,42 @@ HRESULT DeviceManager::Initialize(HWND outputWindow)
 	desc.SampleDesc.Count = _msCount;
 	desc.SampleDesc.Quality = _msQuality;
 	desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-	desc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+	//desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+	//desc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 	desc.OutputWindow = outputWindow;
 	desc.Windowed = !_fullScreen;
 
-	UINT flags = D3D11_CREATE_DEVICE_SINGLETHREADED;
+	UINT createDeviceFlags = 0;
 #ifdef _DEBUG
-	flags |= D3D11_CREATE_DEVICE_DEBUG;
+	createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
-	V_RETURN(D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, flags,
-		NULL, 0, D3D11_SDK_VERSION, &desc, &_swapChain, &_device, NULL, &_immediateContext));
+	for(UINT i = 0; i < numDriverTypes; i++)
+    {
+        D3D_DRIVER_TYPE driverType = driverTypes[i];
+        hr = D3D11CreateDeviceAndSwapChain(NULL, driverType, NULL, createDeviceFlags, featureLevels,
+			numFeatureLevels, D3D11_SDK_VERSION, &desc, &_swapChain, &_device, &_featureLevel, &_immediateContext);
+        if(SUCCEEDED(hr))
+		{
+            break;
+		}
+    }
+	if(FAILED(hr))
+	{
+        return hr;
+	}
+	if (_featureLevel < _minFeatureLevel)
+    {
+		SAFE_RELEASE(_device);
+		SAFE_RELEASE(_immediateContext);
+		SAFE_RELEASE(_swapChain);
+		return E_FAIL;
+    }
+
 	V_RETURN(SetDXDebugName(_device, "Graphics device"));
 	V_RETURN(SetDXDebugName(_immediateContext, "Immediate context"));
 	V_RETURN(SetDXDebugName(_swapChain, "Swap chain"));
-
-    _featureLevel = _device->GetFeatureLevel();
-    if (_featureLevel < _minFeatureLevel)
-    {
-       return E_FAIL;
-    }
-
+	
     V_RETURN(afterReset());
 
 	return S_OK;
@@ -65,26 +88,20 @@ HRESULT DeviceManager::Initialize(HWND outputWindow)
 
 void DeviceManager::Destroy()
 {
+	SAFE_RELEASE(_autoDSTexture);
+	SAFE_RELEASE(_autoDSView);
+	SAFE_RELEASE(_autoDSSRView);
+	SAFE_RELEASE(_backBufferRTV);
+
 	if (_immediateContext)
 	{
 		_immediateContext->ClearState();
 		_immediateContext->Flush();
 	}
-
-	SAFE_RELEASE(_factory);
-	SAFE_RELEASE(_adapter);
-	SAFE_RELEASE(_output);
-
-	SAFE_RELEASE(_device);
-	SAFE_RELEASE(_immediateContext);
+	
 	SAFE_RELEASE(_swapChain);
-
-	SAFE_RELEASE(_backBufferTexture);
-	SAFE_RELEASE(_backBufferRTV);
-
-	SAFE_RELEASE(_autoDSTexture);
-	SAFE_RELEASE(_autoDSView);
-	SAFE_RELEASE(_autoDSSRView);
+	SAFE_RELEASE(_immediateContext);
+	SAFE_RELEASE(_device);
 }
 
 HRESULT DeviceManager::Reset()
@@ -96,7 +113,6 @@ HRESULT DeviceManager::Reset()
 		return E_FAIL;
 	}
 
-	SAFE_RELEASE(_backBufferTexture);
 	SAFE_RELEASE(_backBufferRTV);
 
 	SAFE_RELEASE(_autoDSTexture);
@@ -145,44 +161,17 @@ HRESULT DeviceManager::Present()
 	return S_OK;
 }
 
-HRESULT DeviceManager::checkForSuitableOutput()
-{
-	HRESULT hr;
-	
-	V_RETURN(CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&_factory));
-
-    // Look for an adapter that supports D3D11
-    IDXGIAdapter1* curAdapter = NULL;
-    UINT adapterIdx = 0;
-    while(!_adapter && SUCCEEDED(_factory->EnumAdapters1(adapterIdx, &_adapter)))
-	{
-        if(SUCCEEDED(_adapter->CheckInterfaceSupport(__uuidof(ID3D11Device), NULL)))
-		{
-            _adapter = curAdapter;
-		}
-		adapterIdx++;
-	}
-
-    if (!_adapter)
-	{
-		return E_FAIL;
-	}
-
-    // use the first output
-    V_RETURN(_adapter->EnumOutputs(0, &_output));
-
-	return S_OK;
-}
-
 HRESULT DeviceManager::afterReset()
 {
 	HRESULT hr;
 
-	V_RETURN(_swapChain->GetBuffer(0, __uuidof(_backBufferTexture), (void**)(&_backBufferTexture)));
-	V_RETURN(SetDXDebugName(_backBufferTexture, "Back buffer texture"));
-
-    V_RETURN(_device->CreateRenderTargetView(_backBufferTexture, NULL, &_backBufferRTV));
+	ID3D11Texture2D* pBackBuffer = NULL;
+	V_RETURN(_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)(&pBackBuffer)));
+	
+    V_RETURN(_device->CreateRenderTargetView(pBackBuffer, NULL, &_backBufferRTV));
+	
 	V_RETURN(SetDXDebugName(_backBufferRTV, "Back buffer RTV"));
+	SAFE_RELEASE(pBackBuffer);
 
     // Create a default DepthStencil buffer
     if(_enableAutoDS)
@@ -288,9 +277,4 @@ HRESULT DeviceManager::afterReset()
 	_backBufferSurfaceDesc.SampleDesc.Quality = _msQuality;
 
 	return S_OK;
-}
-
-HRESULT DeviceManager::TakeScreenshot(const WCHAR* path, D3DX11_IMAGE_FILE_FORMAT format)
-{
-	return D3DX11SaveTextureToFile(_immediateContext, _backBufferTexture, format, path);
 }

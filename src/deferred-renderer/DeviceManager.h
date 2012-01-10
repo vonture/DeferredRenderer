@@ -5,15 +5,10 @@
 class DeviceManager
 {
 private:
-	IDXGIFactory1* _factory;
-    IDXGIAdapter1* _adapter;
-    IDXGIOutput* _output;
-
 	ID3D11Device* _device;
 	ID3D11DeviceContext* _immediateContext;
 	IDXGISwapChain*	_swapChain;
 
-	ID3D11Texture2D* _backBufferTexture;
 	ID3D11RenderTargetView* _backBufferRTV;
 
 	DXGI_SURFACE_DESC _backBufferSurfaceDesc;
@@ -80,6 +75,4 @@ public:
     void SetFullScreen(bool enabled) { _fullScreen = enabled; }
     void SetVSyncEnabled(bool enabled) { _vsync = enabled; }
     void SetMinFeatureLevel(D3D_FEATURE_LEVEL level) { _minFeatureLevel = level; }
-
-	HRESULT TakeScreenshot(const WCHAR* path = L"", D3DX11_IMAGE_FILE_FORMAT format = D3DX11_IFF_DDS);
 };
