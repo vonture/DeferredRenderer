@@ -31,7 +31,7 @@ public:
 
 	T* GetLight(UINT idx)
     {
-		return (idx >= _shadowed.size()) ? _unshadowed[idx] :  _shadowed[idx - _shadowed.size()];
+		return (idx >= _shadowed.size()) ? _unshadowed[idx - _shadowed.size()] :  _shadowed[idx];
     }
 
 	T* GetLight(UINT idx, bool shadowed)
