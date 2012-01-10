@@ -8,7 +8,7 @@
 #include "CameraConfigurationPane.h"
 #include "SSAOConfigurationPane.h"
 #include "HBAOConfigurationPane.h"
-#include "DiscDoFConfigurationPane.h"
+#include "DiscDoFMBConfigurationPane.h"
 #include "MotionBlurConfigurationPane.h"
 #include "DeviceManagerConfigurationPane.h"
 #include "ProfilePane.h"
@@ -17,12 +17,19 @@ DeferredRendererApplication::DeferredRendererApplication()
 	: Application(L"Deferred Renderer", NULL), _camera(0.1f, 40.0f, 1.0f, 1.0f), _selectedItem(NULL),
 	  _configWindow(NULL), _logWindow(NULL), _ppConfigPane(NULL)
 {	
-	/*
+	
 	ModelInstance* tankScene = new ModelInstance(L"\\models\\tankscene\\TankScene.sdkmesh");
 	tankScene->SetScale(1.0f);
 	tankScene->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	_models.push_back(tankScene);
+
+	/*
+	ModelInstance* squid = new ModelInstance(L"\\models\\Squid\\Squid.sdkmesh");
+	squid->SetScale(0.05f);
+	squid->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	_models.push_back(squid);
 	*/
+	/*
 	ModelInstance* mbpd = new ModelInstance(L"D:\\Temp\\MBPD\\models\\model.dae");
 	mbpd->SetScale(0.3f);
 	mbpd->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
@@ -38,7 +45,7 @@ DeferredRendererApplication::DeferredRendererApplication()
 	gnm->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	_models.push_back(gnm);
     
-	/*
+	
 	ModelInstance* scanner = new ModelInstance(L"\\models\\MicroscopeCity\\scanner.sdkmesh");
 	scanner->SetScale(1.0f);
 	scanner->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
@@ -58,7 +65,7 @@ DeferredRendererApplication::DeferredRendererApplication()
 	soldier->SetScale(1.0f);
 	soldier->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	_models.push_back(soldier);
-	*/
+	
 
 	
 	ModelInstance* sponza = new ModelInstance(L"D:\\Program Files (x86)\\NVIDIA Corporation\\NVIDIA Direct3D SDK 11\\Media\\sponza\\Sponza.obj");
@@ -67,7 +74,7 @@ DeferredRendererApplication::DeferredRendererApplication()
 	_models.push_back(sponza);
 	
 
-	/*
+	
 	ModelInstance* tree = new ModelInstance(L"\\models\\tree\\tree.obj");
 	tree->SetScale(0.5f);
 	tree->SetPosition(XMFLOAT3(3.0f, -1.0f, -3.0f));
@@ -82,12 +89,13 @@ DeferredRendererApplication::DeferredRendererApplication()
 	_models.push_back(troll);
 	*/
 		
-	/*
-	ParticleSystemInstance* smoke = new ParticleSystemInstance(L"\\particles\\smoke.xml");
-	smoke->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
-	smoke->SetScale(1.0f);
-	_particles.push_back(smoke);
-	*/
+	for (UINT i = 0; i < 1; i++)
+	{
+		ParticleSystemInstance* smoke = new ParticleSystemInstance(L"\\particles\\smoke.xml");
+		smoke->SetPosition(XMFLOAT3(i, 0.0f, i));
+		smoke->SetScale(1.0f);
+		_particles.push_back(smoke);
+	}
 
 	//_pointLightsShadowed.push_back(new PointLight(XMFLOAT3(3.0f, 4.0f, 0.0f), 10.0f, XMFLOAT3(1.0f, 1.0f, 1.0f), 2.0f));
 
@@ -95,6 +103,7 @@ DeferredRendererApplication::DeferredRendererApplication()
 	_camera.SetRotation(XMFLOAT2(-0.1f, 0.35f));
 		
 	_contentHolders.push_back(&_renderer);
+	_contentHolders.push_back(&_pBufferCombinePP);
 	_contentHolders.push_back(&_hdrPP);
 	_contentHolders.push_back(&_skyPP);
 	_contentHolders.push_back(&_mlaaPP);
@@ -178,12 +187,14 @@ void DeferredRendererApplication::OnInitialize()
 	_ppConfigPane->AddPostProcess(&_mlaaPP, L"MLAA", false, true);	
 	_ppConfigPane->AddPostProcess(&_hdrPP, L"HDR", true, true);
 	_ppConfigPane->AddPostProcess(&_discDoFPP, L"Disc DoF", false, true);
+	_ppConfigPane->AddPostProcess(&_pBufferCombinePP, L"Particle Combine", true, true);
 	_ppConfigPane->AddPostProcess(&_fxaaPP, L"FXAA", true, true);
 	_ppConfigPane->AddPostProcess(&_boPP, L"Bounding objects", true, true);
 	_ppConfigPane->AddPostProcess(&_uiPP, L"UI", true, false);
 	_ppConfigPane->AddPostProcess(&_motionBlurPP, L"Motion blur", false, false);	
 
 	_modelConfigPane = new ModelConfigurationPane(_configWindow);
+	_particleConfigPane = new ParticleConfigurationPane(_configWindow);
 	_boConfigPane = new BoundingObjectConfigurationPane(_configWindow, &_boPP);
 
 	new ProfilePane(_configWindow, Logger::GetInstance());
@@ -195,7 +206,7 @@ void DeferredRendererApplication::OnInitialize()
 	new SSAOConfigurationPane(_configWindow, &_ssaoPP);
 	new HBAOConfigurationPane(_configWindow, &_hbaoPP);
 	new SkyConfigurationPane(_configWindow, &_skyPP);
-	new DiscDoFConfigurationPane(_configWindow, &_discDoFPP);
+	new DiscDoFMBConfigurationPane(_configWindow, &_discDoFPP);
 	new MotionBlurConfigurationPane(_configWindow, &_motionBlurPP);
 
 	// Create the log window
@@ -236,6 +247,24 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 	MouseState mouse = MouseState::GetState(hwnd);
 	END_EVENT(L"");
 	
+	_camera.StoreMatrices();
+
+	BEGIN_EVENT(L"Update Models");
+	for (UINT i = 0; i < _models.size(); i++)
+	{
+		_models[i]->StoreWorld();
+	}
+	END_EVENT(L"");
+
+	BEGIN_EVENT(L"Update Particles");
+	XMFLOAT3 wind = _particleConfigPane->GetWindVector();
+	XMFLOAT3 grav = _particleConfigPane->GetGravityVector();
+	for (UINT i = 0; i < _particleConfigPane->GetParticleInstanceCount(); i++)
+	{
+		_particleConfigPane->GetParticleInstance(i)->AdvanceSystem(wind, grav, dt);
+	}
+	END_EVENT(L"");
+
 	if (IsActive() && mouse.IsOverWindow())
 	{
 		BEGIN_EVENT(L"Process input");
@@ -337,10 +366,8 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 				XMFLOAT3 oldSelectWorldPos = _camera.UnprojectPosition(oldSelectViewPos, viewSize);
 				XMFLOAT3 newSelectWorldPos = _camera.UnprojectPosition(newSelectViewPos, viewSize);
 
-
-
-
-
+				
+				
 				XMFLOAT3 curModelPos = _selectedItem->GetPosition();
 				XMFLOAT3 camUp = _camera.GetUp();
 				XMFLOAT3 camRight = _camera.GetRight();				
@@ -359,13 +386,6 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 		END_EVENT(L"");
 	}
 	
-	BEGIN_EVENT(L"Update Particles");
-	for (UINT i = 0; i < _particles.size(); i++)
-	{
-		_particles[i]->AdvanceSystem(dt);
-	}
-	END_EVENT(L"");
-
 	if (_ppConfigPane->IsPostProcessEnabled(&_uiPP))
 	{
 		BEGIN_EVENT(L"Update UI");
@@ -408,14 +428,15 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 			model->FillBoundingObjectSet(&boSet);
 		}
 	}
-
-	for (UINT i = 0; i < _particles.size(); i++)
+	
+	for (UINT i = 0; i < _particleConfigPane->GetParticleInstanceCount(); i++)
 	{
-		_renderer.AddParticleSystem(_particles[i]);
+		ParticleSystemInstance* particle = _particleConfigPane->GetParticleInstance(i);
 
+		_renderer.AddParticleSystem(particle);
 		if (_boConfigPane->GetParticlesEnabled())
 		{
-			_particles[i]->FillBoundingObjectSet(&boSet);
+			particle->FillBoundingObjectSet(&boSet);
 		}
 	}
 
@@ -458,7 +479,7 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 		_renderer.AddLight(&sun, true);
 	}
 	
-	AmbientLight ambientLight = AmbientLight(XMFLOAT3(1.0f, 1.0f, 1.0f), 0.5f);
+	AmbientLight ambientLight = AmbientLight(XMFLOAT3(1.0f, 1.0f, 1.0f), 1.2f);
 	_renderer.AddLight(&ambientLight);
 
 	UINT ppCount = _ppConfigPane->GetSelectedPostProcessCount();
@@ -498,6 +519,10 @@ HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 	for (UINT i = 0; i < _models.size(); i++)
 	{
 		_modelConfigPane->AddModelInstance(_models[i]);
+	}
+	for (UINT i = 0; i < _particles.size(); i++)
+	{
+		_particleConfigPane->AddParticleInstance(_particles[i]);
 	}
 
 	return S_OK;

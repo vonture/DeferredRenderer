@@ -46,7 +46,7 @@
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>true</GenerateManifest>
     <ExecutablePath>$(DXSDK_DIR)Utilities\bin\x86;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>$(SolutionDir)gwen/include;$(SolutionDir)assimp/include;$(SolutionDir)tinyxml/include;$(DXSDK_DIR)include;</IncludePath>
+    <IncludePath>$(SolutionDir)gwen/include;$(SolutionDir)assimp/include;$(SolutionDir)tinyxml/include;$(DXSDK_DIR)include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)$(Configuration)-lib\;$(DXSDK_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -164,6 +164,8 @@
     <ClCompile Include="ModelLoader.cpp" />
     <ClCompile Include="MotionBlurConfigurationPane.cpp" />
     <ClCompile Include="ParticleBuffer.cpp" />
+    <ClCompile Include="ParticleCombinePostProcess.cpp" />
+    <ClCompile Include="ParticleConfigurationPane.cpp" />
     <ClCompile Include="ParticleRenderer.cpp" />
     <ClCompile Include="ParticleSystemInstance.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
@@ -174,7 +176,7 @@
     </ClCompile>
     <ClCompile Include="PixelShaderLoader.cpp" />
     <ClCompile Include="Poisson.cpp" />
-    <ClCompile Include="DiscDoFConfigurationPane.cpp" />
+    <ClCompile Include="DiscDoFMBConfigurationPane.cpp" />
     <ClCompile Include="PostProcessSelectionPane.cpp" />
     <ClCompile Include="ProfilePane.cpp" />
     <ClCompile Include="SDKmesh.cpp" />
@@ -187,10 +189,10 @@
     <ClCompile Include="BoundingObjectPostProcess.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CameraConfigurationPane.cpp" />
-    <ClCompile Include="CombinePostProcess.cpp" />
+    <ClCompile Include="GeometryCombinePostProcess.cpp" />
     <ClCompile Include="ConfigurationWindow.cpp" />
     <ClCompile Include="DDSTextureLoader.cpp" />
-    <ClCompile Include="DiscDoFPostProcess.cpp" />
+    <ClCompile Include="DiscDoFMBPostProcess.cpp" />
     <ClCompile Include="DeviceManager.cpp" />
     <ClCompile Include="DeviceStates.cpp" />
     <ClCompile Include="CascadedDirectionalLightRenderer.cpp" />
@@ -234,13 +236,11 @@
     <ClInclude Include="AssimpLogger.h" />
     <ClInclude Include="BoundingObjectConfigurationPane.h" />
     <ClInclude Include="BoundingObjectSet.h" />
-    <ClInclude Include="ComponentSystem.h" />
     <ClInclude Include="ContentLoader.h" />
     <ClInclude Include="ContentManager.h" />
     <ClInclude Include="ContentType.h" />
     <ClInclude Include="DeviceManagerConfigurationPane.h" />
     <ClInclude Include="EntityLoader.h" />
-    <ClInclude Include="EntitySystem.h" />
     <ClInclude Include="FontLoader.h" />
     <ClInclude Include="FXAAConfigurationPane.h" />
     <ClInclude Include="FXAAPostProcess.h" />
@@ -248,6 +248,7 @@
     <ClInclude Include="HBAOConfigurationPane.h" />
     <ClInclude Include="HBAOPostProcess.h" />
     <ClInclude Include="IDragable.h" />
+    <ClInclude Include="IWorldEntity.h" />
     <ClInclude Include="LightRenderer.h" />
     <ClInclude Include="LightRendererBase.h" />
     <ClInclude Include="LiveTextureControl.h" />
@@ -258,13 +259,15 @@
     <ClInclude Include="MotionBlurConfigurationPane.h" />
     <ClInclude Include="Particle.h" />
     <ClInclude Include="ParticleBuffer.h" />
+    <ClInclude Include="ParticleCombinePostProcess.h" />
+    <ClInclude Include="ParticleConfigurationPane.h" />
     <ClInclude Include="ParticleRenderer.h" />
     <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="ParticleSystemInstance.h" />
     <ClInclude Include="ParticleSystemLoader.h" />
     <ClInclude Include="PixelShaderLoader.h" />
     <ClInclude Include="Poisson.h" />
-    <ClInclude Include="DiscDoFConfigurationPane.h" />
+    <ClInclude Include="DiscDoFMBConfigurationPane.h" />
     <ClInclude Include="PostProcessSelectionPane.h" />
     <ClInclude Include="ProfilePane.h" />
     <ClInclude Include="SDKmesh.h" />
@@ -276,14 +279,14 @@
     <ClInclude Include="Application.h" />
     <ClInclude Include="BoundingObjectPostProcess.h" />
     <ClInclude Include="ButtonState.h" />
-    <ClInclude Include="CombinePostProcess.h" />
+    <ClInclude Include="GeometryCombinePostProcess.h" />
     <ClInclude Include="ConfigurationPane.h" />
     <ClInclude Include="ConfigurationPaneBase.h" />
     <ClInclude Include="ConfigurationWindow.h" />
     <ClInclude Include="DDS.h" />
     <ClInclude Include="DDSTextureLoader.h" />
     <ClInclude Include="PCH.h" />
-    <ClInclude Include="DiscDoFPostProcess.h" />
+    <ClInclude Include="DiscDoFMBPostProcess.h" />
     <ClInclude Include="DeviceManager.h" />
     <ClInclude Include="DeviceStates.h" />
     <ClInclude Include="CascadedDirectionalLightRenderer.h" />
@@ -379,6 +382,11 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
     </CustomBuild>
     <CustomBuild Include="SSAO.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="PBufferCombine.hlsl">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>

@@ -74,12 +74,6 @@
     <Filter Include="Utility">
       <UniqueIdentifier>{d830b4ca-7382-48aa-ad84-f0f9e77ded14}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Entities">
-      <UniqueIdentifier>{c4ea52e6-9c06-4771-b980-46c8ec9f0855}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Entities\Components">
-      <UniqueIdentifier>{f8ef2fd1-23bd-4203-bd3e-500117eb3e76}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Particles">
       <UniqueIdentifier>{a0458f14-e840-43ab-86b7-9963733637b8}</UniqueIdentifier>
     </Filter>
@@ -108,9 +102,6 @@
     </ClCompile>
     <ClCompile Include="FullscreenQuad.cpp">
       <Filter>Quads</Filter>
-    </ClCompile>
-    <ClCompile Include="CombinePostProcess.cpp">
-      <Filter>Post Process</Filter>
     </ClCompile>
     <ClCompile Include="KeyboardState.cpp">
       <Filter>Input</Filter>
@@ -273,12 +264,6 @@
     <ClCompile Include="HBAOConfigurationPane.cpp">
       <Filter>Post Process\Configuration Panes</Filter>
     </ClCompile>
-    <ClCompile Include="DiscDoFPostProcess.cpp">
-      <Filter>Post Process</Filter>
-    </ClCompile>
-    <ClCompile Include="DiscDoFConfigurationPane.cpp">
-      <Filter>Post Process\Configuration Panes</Filter>
-    </ClCompile>
     <ClCompile Include="MotionBlurConfigurationPane.cpp">
       <Filter>Post Process\Configuration Panes</Filter>
     </ClCompile>
@@ -342,6 +327,21 @@
     <ClCompile Include="BoundingObjectConfigurationPane.cpp">
       <Filter>Post Process\Configuration Panes</Filter>
     </ClCompile>
+    <ClCompile Include="DiscDoFMBPostProcess.cpp">
+      <Filter>Post Process</Filter>
+    </ClCompile>
+    <ClCompile Include="DiscDoFMBConfigurationPane.cpp">
+      <Filter>Post Process\Configuration Panes</Filter>
+    </ClCompile>
+    <ClCompile Include="GeometryCombinePostProcess.cpp">
+      <Filter>Post Process</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleCombinePostProcess.cpp">
+      <Filter>Post Process</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleConfigurationPane.cpp">
+      <Filter>Particles</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -377,9 +377,6 @@
     </ClInclude>
     <ClInclude Include="FullscreenQuad.h">
       <Filter>Quads</Filter>
-    </ClInclude>
-    <ClInclude Include="CombinePostProcess.h">
-      <Filter>Post Process</Filter>
     </ClInclude>
     <ClInclude Include="KeyboardState.h">
       <Filter>Input</Filter>
@@ -560,12 +557,6 @@
     <ClInclude Include="HBAOConfigurationPane.h">
       <Filter>Post Process\Configuration Panes</Filter>
     </ClInclude>
-    <ClInclude Include="DiscDoFPostProcess.h">
-      <Filter>Post Process</Filter>
-    </ClInclude>
-    <ClInclude Include="DiscDoFConfigurationPane.h">
-      <Filter>Post Process\Configuration Panes</Filter>
-    </ClInclude>
     <ClInclude Include="MotionBlurConfigurationPane.h">
       <Filter>Post Process\Configuration Panes</Filter>
     </ClInclude>
@@ -584,17 +575,11 @@
     <ClInclude Include="ModelLoader.h">
       <Filter>Content</Filter>
     </ClInclude>
-    <ClInclude Include="EntitySystem.h">
-      <Filter>Entities</Filter>
-    </ClInclude>
     <ClInclude Include="EntityLoader.h">
       <Filter>Content</Filter>
     </ClInclude>
     <ClInclude Include="FontLoader.h">
       <Filter>Content</Filter>
-    </ClInclude>
-    <ClInclude Include="ComponentSystem.h">
-      <Filter>Entities\Components</Filter>
     </ClInclude>
     <ClInclude Include="ModelConfigurationPane.h">
       <Filter>Models</Filter>
@@ -634,6 +619,24 @@
     </ClInclude>
     <ClInclude Include="BoundingObjectConfigurationPane.h">
       <Filter>Post Process\Configuration Panes</Filter>
+    </ClInclude>
+    <ClInclude Include="IWorldEntity.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="DiscDoFMBPostProcess.h">
+      <Filter>Post Process</Filter>
+    </ClInclude>
+    <ClInclude Include="DiscDoFMBConfigurationPane.h">
+      <Filter>Post Process\Configuration Panes</Filter>
+    </ClInclude>
+    <ClInclude Include="GeometryCombinePostProcess.h">
+      <Filter>Post Process</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleCombinePostProcess.h">
+      <Filter>Post Process</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleConfigurationPane.h">
+      <Filter>Particles</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -689,6 +692,9 @@
       <Filter>Shaders</Filter>
     </CustomBuild>
     <CustomBuild Include="BoundingObject.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="PBufferCombine.hlsl">
       <Filter>Shaders</Filter>
     </CustomBuild>
   </ItemGroup>

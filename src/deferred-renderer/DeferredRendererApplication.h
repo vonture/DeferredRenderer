@@ -7,12 +7,13 @@
 #include "KeyboardState.h"
 #include "MouseState.h"
 
+#include "ParticleCombinePostProcess.h"
 #include "HDRPostProcess.h"
 #include "SkyPostProcess.h"
 #include "MLAAPostProcess.h"
 #include "SSAOPostProcess.h"
 #include "HBAOPostProcess.h"
-#include "DiscDoFPostProcess.h"
+#include "DiscDoFMBPostProcess.h"
 #include "MotionBlurPostProcess.h"
 #include "UIPostProcess.h"
 #include "FXAAPostProcess.h"
@@ -34,6 +35,7 @@
 #include "ConfigurationWindow.h"
 #include "PostProcessSelectionPane.h"
 #include "ModelConfigurationPane.h"
+#include "ParticleConfigurationPane.h"
 #include "BoundingObjectConfigurationPane.h"
 #include "LogWindow.h"
 
@@ -63,13 +65,14 @@ private:
 	CascadedDirectionalLightRenderer _cascadedDirectionalLR;
 	SpotLightRenderer _spotLR;
 
+	ParticleCombinePostProcess _pBufferCombinePP;
 	HDRPostProcess _hdrPP;
 	SkyPostProcess _skyPP;
 	MLAAPostProcess _mlaaPP;
 	FXAAPostProcess _fxaaPP;
 	SSAOPostProcess _ssaoPP;
 	HBAOPostProcess _hbaoPP;
-	DiscDoFPostProcess _discDoFPP;
+	DiscDoFMBPostProcess _discDoFPP;
 	MotionBlurPostProcess _motionBlurPP;
 	BoundingObjectPostProcess _boPP;
 	UIPostProcess _uiPP;
@@ -86,6 +89,7 @@ private:
 	ConfigurationWindow* _configWindow;
 	PostProcessSelectionPane* _ppConfigPane;
 	ModelConfigurationPane* _modelConfigPane;
+	ParticleConfigurationPane* _particleConfigPane;
 	BoundingObjectConfigurationPane* _boConfigPane;
 
 	LogWindow* _logWindow;
