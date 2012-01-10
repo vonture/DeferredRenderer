@@ -11,14 +11,12 @@ private:
 	ID3D11BlendState* _alphaBlend;
 	ID3D11BlendState* _pmAlphaBlend;
 	ID3D11BlendState* _noColor;
-	ID3D11BlendState* _particleBlend;
 
 	static D3D11_BLEND_DESC getBlendDisabledDesc();
 	static D3D11_BLEND_DESC getAdditiveBlendDesc();
 	static D3D11_BLEND_DESC getAlphaBlendDesc();
 	static D3D11_BLEND_DESC getPreMultipliedAlphaBlendDesc();
 	static D3D11_BLEND_DESC getColorWriteDisabledDesc();
-	static D3D11_BLEND_DESC getParticleBlendDesc();
 
 public:
 	BlendStates();
@@ -34,7 +32,6 @@ public:
 	ID3D11BlendState* GetAlphaBlend() { return _alphaBlend; }
 	ID3D11BlendState* GetPreMultipliedAlphaBlend() { return _pmAlphaBlend; }
 	ID3D11BlendState* GetColorWriteDisabled() { return _noColor; }
-	ID3D11BlendState* GetParticleBlend() { return _particleBlend; }
 };
 
 

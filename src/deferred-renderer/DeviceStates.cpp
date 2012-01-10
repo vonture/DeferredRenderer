@@ -2,8 +2,7 @@
 #include "DeviceStates.h"
 
 BlendStates::BlendStates()
-	: _blendDisabled(NULL), _additiveBlend(NULL), _alphaBlend(NULL), _pmAlphaBlend(NULL), _noColor(NULL),
-	  _particleBlend(NULL)
+	: _blendDisabled(NULL), _additiveBlend(NULL), _alphaBlend(NULL), _pmAlphaBlend(NULL), _noColor(NULL)
 {
 }
 
@@ -26,10 +25,7 @@ HRESULT BlendStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManage
 
 	blendDesc = getColorWriteDisabledDesc();
 	V_RETURN(pd3dDevice->CreateBlendState(&blendDesc, &_noColor));
-
-	blendDesc = getParticleBlendDesc();
-	V_RETURN(pd3dDevice->CreateBlendState(&blendDesc, &_particleBlend));
-
+	
 	return S_OK;
 }
 void BlendStates::OnD3D11DestroyDevice()
@@ -49,7 +45,6 @@ HRESULT BlendStates::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentMa
 
 void BlendStates::OnD3D11ReleasingSwapChain()
 {
-
 }
 
 D3D11_BLEND_DESC BlendStates::getBlendDisabledDesc()
@@ -145,26 +140,6 @@ D3D11_BLEND_DESC BlendStates::getColorWriteDisabledDesc()
 		blendDesc.RenderTarget[i].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
 		blendDesc.RenderTarget[i].DestBlendAlpha = D3D11_BLEND_ONE;
 		blendDesc.RenderTarget[i].RenderTargetWriteMask = 0;
-		blendDesc.RenderTarget[i].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-		blendDesc.RenderTarget[i].SrcBlendAlpha = D3D11_BLEND_ONE;
-	}
-
-	return blendDesc;
-}
-
-D3D11_BLEND_DESC BlendStates::getParticleBlendDesc()
-{
-	D3D11_BLEND_DESC blendDesc;
-	blendDesc.AlphaToCoverageEnable = false;
-	blendDesc.IndependentBlendEnable = false;
-	for (UINT i = 0; i < 8; ++i)
-	{
-		blendDesc.RenderTarget[i].BlendEnable = true;
-		blendDesc.RenderTarget[i].BlendOp = D3D11_BLEND_OP_ADD;
-		blendDesc.RenderTarget[i].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-		blendDesc.RenderTarget[i].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-		blendDesc.RenderTarget[i].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
-		blendDesc.RenderTarget[i].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 		blendDesc.RenderTarget[i].SrcBlend = D3D11_BLEND_SRC_ALPHA;
 		blendDesc.RenderTarget[i].SrcBlendAlpha = D3D11_BLEND_ONE;
 	}
