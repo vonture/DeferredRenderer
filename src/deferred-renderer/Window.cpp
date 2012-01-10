@@ -306,27 +306,8 @@ void Window::MessageLoop()
 
 	while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 	{
-		bool isDlgMsg = false;
-		
-		/*
-		for (map<HWND, DlgFunction>::iterator it = userDlgFunctions.begin(); it != userDlgFunctions.end(); it++)
-		{
-			if (::IsDialogMessage((*it).first, &msg))
-			{
-				isDlgMsg = true;
-				break;
-			}
-		}
-		*/
-		
-		if (!isDlgMsg)
-		{
-			if (!_acceleratorTable || !TranslateAccelerator(msg.hwnd, _acceleratorTable, &msg))
-			{
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
-			}
-		}
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
 	}
 }
 
