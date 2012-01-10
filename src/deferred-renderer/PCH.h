@@ -76,6 +76,7 @@ using namespace std;
 #include <cmath>
 #include <sstream>
 #include <fstream>
+#include <algorithm>
 
 // Some utility functions
 #include "Utility.h"
