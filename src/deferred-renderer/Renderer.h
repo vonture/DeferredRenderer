@@ -5,7 +5,7 @@
 #include "Lights.h"
 #include "Camera.h"
 #include "PostProcess.h"
-#include "CombinePostProcess.h"
+#include "GeometryCombinePostProcess.h"
 #include "ModelInstance.h"
 #include "GBuffer.h"
 #include "LightBuffer.h"
@@ -23,13 +23,14 @@ private:
 	LightBuffer _lightBuffer;
 	ParticleBuffer _particleBuffer;
 	
-	std::vector<ModelInstance*> _models;
-	std::vector<ParticleSystemInstance*> _particleSystems;
+	std::vector<ModelInstance*> _models;	
 	std::vector<PostProcess*> _postProcesses;
+
+	std::vector<ParticleSystemInstance*> _particleSystems;
 		
 	ModelRenderer _modelRenderer;
 	ParticleRenderer _particleRenderer;
-	CombinePostProcess _combinePP;
+	GeometryCombinePostProcess _combinePP;
 		
 	ID3D11Texture2D* _ppTextures[2];
 	ID3D11ShaderResourceView* _ppShaderResourceViews[2];

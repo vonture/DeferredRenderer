@@ -149,7 +149,7 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* viewCam
 		{
 			_particleBuffer.GetDiffuseRTV(),
 			_particleBuffer.GetNormalRTV(),
-			NULL,
+			_particleBuffer.GetVelocityRTV(),
 		};	
 		pd3dImmediateContext->OMSetRenderTargets(3, particleBufferRTVs, _gBuffer.GetReadOnlyDepthDSV());
 
@@ -164,12 +164,13 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* viewCam
 	// render the lights
 	BEGIN_EVENT_D3D(L"Geometry Lights");
 	{
-		ID3D11RenderTargetView* lightBufferGetometryRTVs[2] = 
+		ID3D11RenderTargetView* lightBufferGetometryRTVs[3] = 
 		{
 			_lightBuffer.GetGeometryLightRTV(),
 			NULL,
+			NULL,
 		};	
-		pd3dImmediateContext->OMSetRenderTargets(2, lightBufferGetometryRTVs, _gBuffer.GetReadOnlyDepthDSV());
+		pd3dImmediateContext->OMSetRenderTargets(3, lightBufferGetometryRTVs, _gBuffer.GetReadOnlyDepthDSV());
 	
 		for (std::map<size_t, LightRendererBase*>::iterator it = _lightRenderers.begin(); it != _lightRenderers.end(); it++)
 		{
@@ -238,7 +239,8 @@ HRESULT Renderer::End(ID3D11DeviceContext* pd3dImmediateContext, Camera* viewCam
 			}
 
 			// Render the post process
-			V_RETURN(pp->Render(pd3dImmediateContext, srcSRV, dstRTV, viewCamera, &_gBuffer, &_lightBuffer));
+			V_RETURN(pp->Render(pd3dImmediateContext, srcSRV, dstRTV, viewCamera, &_gBuffer, &_particleBuffer,
+				&_lightBuffer));
 
 			if (!isAdditive)
 			{

@@ -15,11 +15,11 @@
 #endif
 
 #ifndef DEPTH_BIAS
-#define DEPTH_BIAS 0.001f
+#define DEPTH_BIAS 0.01f
 #endif
 
-#ifndef SMOOTHSTEP_OFFSET
-#define SMOOTHSTEP_OFFSET 0.15f
+#ifndef BLUR_EDGE_THRESHOLD
+#define BLUR_EDGE_THRESHOLD 0.85f
 #endif
 
 cbuffer cbSSAOProperties : register(cb0)
@@ -69,12 +69,6 @@ float GetLinearDepth(float nonLinearDepth, float nearClip, float farClip)
 	return ( -nearClip * fPercFar ) / ( nonLinearDepth - fPercFar);
 }
 
-float smootherstep(float x)
-{
-    // Evaluate polynomial
-    return x*x*x*(x*(x*6.0f - 15.0f) + 10.0f);
-}
-
 float4 PS_SSAO(PS_In_Quad input) : SV_TARGET0
 {
 	// Texture0 = Depth
@@ -83,28 +77,28 @@ float4 PS_SSAO(PS_In_Quad input) : SV_TARGET0
 	
 	// Sample the random texture so that this location will always yeild the same
 	// random direction (so that there is no flickering)
-	//float fRandomRotation = Texture1.SampleLevel(PointSampler, frac(input.vTexCoord * RAND_TEX_SIZE), 0).x;
+	float fRandomRotation = Texture1.SampleLevel(PointSampler, frac(input.vTexCoord * RAND_TEX_SIZE), 0).x;
 	
-	float fUnoccludedSamples = 1;
+	float fUnoccludedSamples = 0;
 
 	[unroll]
 	for (int i = 0; i < SSAO_SAMPLE_COUNT; i++)
 	{
-		float2 vRayDirBase = SampleDirections[i].xy * InverseSceneSize * SampleRadius;
-		//float2 vRayDirRot = vRayDirBase * float2(sin(fRandomRotation), cos(fRandomRotation));
-		float2 vRayDirRot = vRayDirBase;
+		float fSampleAngle = SampleDirections[i].x + fRandomRotation;
 
-		float2 vRayTexCoord = input.vTexCoord + vRayDirRot;
+		float2 vRayDir = float2(cos(fSampleAngle), sin(fSampleAngle)) * InverseSceneSize * SampleDirections[i].y * SampleRadius;
+		
+		float2 vRayTexCoord = input.vTexCoord + vRayDir;
 		float fRayDepth = GetLinearDepth(Texture0.SampleLevel(PointSampler, vRayTexCoord, 0).x, CameraNearClip, CameraFarClip);
-
+		
 		if (abs(fRayDepth - fCenterDepth) > DepthThreshold || (fRayDepth + DEPTH_BIAS) >= fCenterDepth)
 		{
 			fUnoccludedSamples++;
+			//fUnoccludedSamples += (1.0f - min(abs(fRayDepth - fCenterDepth) / DepthThreshold, 1.0f));
 		}
 	}
 
-	//float fAO = max((fUnoccludedSamples / fTotalSamples) + 0.5f, 0.0f) * 2.0f;
-	float fAO = saturate(smootherstep((fUnoccludedSamples / SSAO_SAMPLE_COUNT) + SMOOTHSTEP_OFFSET));
+	float fAO = saturate((fUnoccludedSamples / SSAO_SAMPLE_COUNT) * 2.0f);
 
 	return float4(fAO, 0.0f, 0.0f, 1.0f);
 }
@@ -154,7 +148,7 @@ float Blur(float2 vTexCoord, float2 vDirection)
 		float fWeight = CalcGaussianWeight(i);
 		float3 fNormalSample = Texture1.SampleLevel(PointSampler, vTexCoord + (vNormStep * i), 0).xyz;
 
-		if (dot(fNormalSample, fCenterNormal) > 0.85f)
+		if (dot(fNormalSample, fCenterNormal) > BLUR_EDGE_THRESHOLD)
 		{
 			float fAOSample = Texture0.SampleLevel(LinearSampler, vAOTexCoord + (vAOStep * i), 0).x;
 			fTotalValue += fAOSample * fWeight;

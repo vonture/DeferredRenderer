@@ -52,7 +52,7 @@ SSAOPostProcess::SSAOPostProcess()
 }
 
 HRESULT SSAOPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
-	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer)
+	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, ParticleBuffer* pBuffer,LightBuffer* lightBuffer)
 {
 	BEGIN_EVENT_D3D(L"SSAO");
 
@@ -291,10 +291,10 @@ HRESULT SSAOPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 	XMFLOAT4 sampleDirections[SSAO_SAMPLE_COUNT_MAX];	
 	for (UINT i = 0; i < SSAO_SAMPLE_COUNT_MAX; i++)
 	{
-		float randAngle = (rand() / (float)RAND_MAX) * 2.0f * Pi;
-		float randLen = (rand() / (float)RAND_MAX);
+		float randAngle = ((rand() % 1000) / 1000.0f) * 2.0f * Pi;
+		float randLen = ((rand() % 1000) / 1000.0f);
 
-		sampleDirections[i] = XMFLOAT4(sinf(randAngle) * randLen, cosf(randAngle) * randLen, 0.0f, 0.0f);
+		sampleDirections[i] = XMFLOAT4(randAngle, randLen, 0.0f, 0.0f);
 	}
 
 	D3D11_SUBRESOURCE_DATA directionInitData;
@@ -332,7 +332,7 @@ HRESULT SSAOPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 	float randomData[RANDOM_TEXTURE_SIZE * RANDOM_TEXTURE_SIZE];
 	for (UINT i = 0; i < RANDOM_TEXTURE_SIZE * RANDOM_TEXTURE_SIZE; i++)
 	{
-		randomData[i] = (rand() / (float)RAND_MAX) * 2.0f * Pi;
+		randomData[i] = ((rand() % 1000) / 1000.0f) * 2.0f * Pi;
 	}
 
 	D3D11_SUBRESOURCE_DATA randomInitData;
