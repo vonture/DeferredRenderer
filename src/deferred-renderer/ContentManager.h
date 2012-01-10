@@ -16,7 +16,7 @@ private:
 	ContentMap _loadedContent;
 	std::vector<WCHAR*> _searchPaths;
 
-	static const UINT ERROR_MSG_LEN = 512;
+	static const UINT ERROR_MSG_LEN = 1024;
 
 	HRESULT getPath(const WCHAR* inPathSegment, WCHAR* outputPath, UINT outputLen);
 		
