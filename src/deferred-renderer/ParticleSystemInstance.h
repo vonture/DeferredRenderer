@@ -5,6 +5,7 @@
 #include "IDragable.h"
 #include "ParticleSystem.h"
 #include "Particle.h"
+#include "Camera.h"
 
 class ParticleSystemInstance : public IHasContent, public IDragable
 {
@@ -20,11 +21,18 @@ private:
 	XMFLOAT3 _position;
 	float _scale;
 	XMFLOAT4 _orientation;
-
-	XMFLOAT3 _wind;
-	XMFLOAT3 _gravity;
+	
+	AxisAlignedBox _aabb;
 
 	Particle* _particles;
+
+	struct PARTICLE_SORT_INFO
+	{
+		UINT Particle;
+		float Depth;
+	};
+	PARTICLE_SORT_INFO* _particleSortSpace;
+
 	UINT _particleCount;
 	UINT _particleIndex;
 	bool _rolledOver;
@@ -32,11 +40,11 @@ private:
 	float _spawnTimer;
 
 	float _selectRadius;
-
-	bool _vbDirty;
-
+	
 	bool _worldDirty;
 	void clean();
+
+	void DepthSort(PARTICLE_SORT_INFO* parts, int low, int high);
 
 public:
 	ParticleSystemInstance(const WCHAR* path);
@@ -56,14 +64,14 @@ public:
 	ParticleSystem* GetParticleSystem();
 
 	void Reset();
-	void AdvanceSystem(float dt);
+	void AdvanceSystem(const XMFLOAT3& wind, const XMFLOAT3& gravity, float dt);
 
 	void FillBoundingObjectSet(BoundingObjectSet* set);
 	bool RayIntersect(const Ray& ray, float* dist);
 
 	ID3D11ShaderResourceView* GetDiffuseSRV();
 	ID3D11ShaderResourceView* GetNormalSRV();
-	ID3D11Buffer* GetParticleVertexBuffer(ID3D11DeviceContext* pd3d11DeviceContext);
+	ID3D11Buffer* GetParticleVertexBuffer(ID3D11DeviceContext* pd3d11DeviceContext, Camera* camera);
 	UINT GetVertexStride() const;
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, 

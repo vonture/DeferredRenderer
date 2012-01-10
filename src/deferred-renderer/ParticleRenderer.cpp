@@ -6,7 +6,7 @@
 #include "PixelShaderLoader.h"
 
 ParticleRenderer::ParticleRenderer()
-	: _ps(NULL), _gs(NULL), _il(NULL), _vs(NULL), _particleCB(NULL), _cameraCB(NULL)
+	: _ps(NULL), _gs(NULL), _il(NULL), _vs(NULL), _particleCB(NULL), _cameraCB(NULL), _particleBlend(NULL)
 {
 	SetFadeDistance(0.5f);
 }
@@ -19,6 +19,18 @@ HRESULT ParticleRenderer::RenderParticles(ID3D11DeviceContext* pd3dDeviceContext
 	{
 		HRESULT hr;
 
+		// Sort systems by the emitter's depth from the camera
+		XMFLOAT3 camForward = camera->GetForward();
+		std::vector<PARTICLE_SYSTEM_INFO> depthVec = std::vector<PARTICLE_SYSTEM_INFO>(partCount);
+		for (UINT i = 0; i < partCount; i++)
+		{
+			XMFLOAT3 systemPos = instances->at(i)->GetPosition();
+			float depth = systemPos.x * camForward.x + systemPos.y * camForward.y + systemPos.z * camForward.z;
+			depthVec[i] = PARTICLE_SYSTEM_INFO(i, depth);
+		}
+
+		std::sort(depthVec.begin(), depthVec.end(), depthCompare);
+
 		pd3dDeviceContext->VSSetShader(_vs, NULL, 0);
 		pd3dDeviceContext->GSSetShader(_gs, NULL, 0);
 		pd3dDeviceContext->PSSetShader(_ps, NULL, 0);
@@ -26,11 +38,11 @@ HRESULT ParticleRenderer::RenderParticles(ID3D11DeviceContext* pd3dDeviceContext
 		pd3dDeviceContext->IASetInputLayout(_il);
 
 		float blendFactor[4] = {1, 1, 1, 1};
-		pd3dDeviceContext->OMSetBlendState(_blendStates.GetParticleBlend(), blendFactor, 0xFFFFFFFF);
+		pd3dDeviceContext->OMSetBlendState(_particleBlend, blendFactor, 0xFFFFFFFF);
 		
 		ID3D11SamplerState* samplers[2] = 
 		{
-			_samplerStates.GetAnisotropic16Clamp(),
+			_samplerStates.GetLinearClamp(),
 			_samplerStates.GetPointClamp(),
 		};
 		pd3dDeviceContext->PSSetSamplers(0, 2, samplers);
@@ -44,7 +56,13 @@ HRESULT ParticleRenderer::RenderParticles(ID3D11DeviceContext* pd3dDeviceContext
 
 		XMFLOAT4X4 fInvView = camera->GetWorld();
 		XMMATRIX invView = XMLoadFloat4x4(&fInvView);
-				
+
+		XMFLOAT4X4 fPrevViewProj = camera->GetPreviousViewProjection();
+		XMMATRIX prevViewProj = XMLoadFloat4x4(&fPrevViewProj);
+
+		XMFLOAT4X4 fPrevInvView = camera->GetPreviousWorld();
+		XMMATRIX prevInvView = XMLoadFloat4x4(&fPrevInvView);
+						
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
 
 		// Map Geometry shader perameters
@@ -53,6 +71,8 @@ HRESULT ParticleRenderer::RenderParticles(ID3D11DeviceContext* pd3dDeviceContext
 
 		XMStoreFloat4x4(&particleProperties->ViewProjection, XMMatrixTranspose(viewProj));
 		XMStoreFloat4x4(&particleProperties->InverseView, XMMatrixTranspose(invView));
+		XMStoreFloat4x4(&particleProperties->PrevViewProjection, XMMatrixTranspose(prevViewProj));
+		XMStoreFloat4x4(&particleProperties->PrevInverseView, XMMatrixTranspose(prevInvView));
 
 		pd3dDeviceContext->Unmap(_particleCB, 0);
 		pd3dDeviceContext->GSSetConstantBuffers(0, 1, &_particleCB);
@@ -76,12 +96,12 @@ HRESULT ParticleRenderer::RenderParticles(ID3D11DeviceContext* pd3dDeviceContext
 
 		for (UINT i = 0; i < partCount; i++)
 		{
-			ParticleSystemInstance* system = instances->at(i);
+			ParticleSystemInstance* system = instances->at(depthVec[i].System);
 						
 			ID3D11ShaderResourceView* srvs[2] = { system->GetDiffuseSRV(), system->GetNormalSRV() };
 			pd3dDeviceContext->PSSetShaderResources(0, 2, srvs);
 
-			ID3D11Buffer* vertexBuffers[1] = { system->GetParticleVertexBuffer(pd3dDeviceContext) };
+			ID3D11Buffer* vertexBuffers[1] = { system->GetParticleVertexBuffer(pd3dDeviceContext, camera) };
 			UINT strides[1] = { system->GetVertexStride() };
 			UINT offsets[1] = { 0 };
 			pd3dDeviceContext->IASetVertexBuffers(0, 1, vertexBuffers, strides, offsets);
@@ -141,10 +161,13 @@ HRESULT ParticleRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentM
 	// Load vertex shader (using ParticleVertex)
 	D3D11_INPUT_ELEMENT_DESC layout_particle[] =
 	{
-		{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT,	  0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR",     0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "RADIUS",    0, DXGI_FORMAT_R32_FLOAT,          0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "ROTATION",  0, DXGI_FORMAT_R32_FLOAT,          0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "POSITION",		0, DXGI_FORMAT_R32G32B32_FLOAT,		0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "PREVPOSITION",	0, DXGI_FORMAT_R32G32B32_FLOAT,		0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR",			0, DXGI_FORMAT_R32G32B32A32_FLOAT,	0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "RADIUS",			0, DXGI_FORMAT_R32_FLOAT,			0, 40, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "PREVRADIUS",		0, DXGI_FORMAT_R32_FLOAT,			0, 44, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "ROTATION",		0, DXGI_FORMAT_R32_FLOAT,			0, 48, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "PREVROTATION",	0, DXGI_FORMAT_R32_FLOAT,			0, 52, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 
 	VertexShaderContent* vsContent;
@@ -184,6 +207,30 @@ HRESULT ParticleRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentM
 	bufferDesc.ByteWidth = sizeof(CB_CAMERA_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_cameraCB));
 	V_RETURN(SetDXDebugName(_particleCB, "Particle Renderer camera CB"));
+		
+	D3D11_BLEND_DESC blendDesc;
+	blendDesc.AlphaToCoverageEnable = false;
+	blendDesc.IndependentBlendEnable = true;
+	blendDesc.RenderTarget[0].BlendEnable = true;
+	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_SRC_ALPHA;
+	for (UINT i = 1; i < 8; i++)
+	{
+		blendDesc.RenderTarget[i].BlendEnable = true;
+		blendDesc.RenderTarget[i].BlendOp = D3D11_BLEND_OP_ADD;
+		blendDesc.RenderTarget[i].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		blendDesc.RenderTarget[i].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+		blendDesc.RenderTarget[i].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+		blendDesc.RenderTarget[i].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+		blendDesc.RenderTarget[i].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+		blendDesc.RenderTarget[i].SrcBlendAlpha = D3D11_BLEND_ONE;
+	}
+	V_RETURN(pd3dDevice->CreateBlendState(&blendDesc, &_particleBlend));
 	
 	V_RETURN(_dsStates.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 	V_RETURN(_samplerStates.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
@@ -203,6 +250,8 @@ void ParticleRenderer::OnD3D11DestroyDevice()
 
 	SAFE_RELEASE(_particleCB);
 	SAFE_RELEASE(_cameraCB);
+
+	SAFE_RELEASE(_particleBlend);
 
 	_dsStates.OnD3D11DestroyDevice();
 	_samplerStates.OnD3D11DestroyDevice();

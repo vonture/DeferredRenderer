@@ -20,8 +20,9 @@
 // Vertex shader buffer
 cbuffer cbModelProperties : register(c0)
 {
-    float4x4 World					: packoffset(c0.x);
-    float4x4 WorldViewProjection	: packoffset(c4.x);
+    float4x4 World						: packoffset(c0.x);
+    float4x4 WorldViewProjection		: packoffset(c4.x);
+    float4x4 PrevWorldViewProjection	: packoffset(c8.x);
 }
 
 // Pixel shader buffers
@@ -59,11 +60,13 @@ struct VS_In_Mesh
 
 struct VS_Out_Mesh
 {
-	float4 vPositionCS	: SV_POSITION;
-	float2 vTexCoord	: TEXCOORD;
-	float3 vNormalWS	: NORMALWS;
-	float3 vTangentWS	: TANGENTWS;
-	float3 vBinormalWS	: BINORMALWS;
+	float4 vPositionCS		: SV_POSITION;
+	float4 vPositionCS2		: POSITION;
+	float4 vPrevPositionCS	: PREVPOSITION;
+	float2 vTexCoord		: TEXCOORD;
+	float3 vNormalWS		: NORMALWS;
+	float3 vTangentWS		: TANGENTWS;
+	float3 vBinormalWS		: BINORMALWS;
 };
 
 struct PS_Out_Mesh
@@ -78,6 +81,8 @@ VS_Out_Mesh VS_Mesh(VS_In_Mesh input)
     VS_Out_Mesh output;
 
     output.vPositionCS = mul(input.vPositionOS, WorldViewProjection);
+	output.vPositionCS2 = output.vPositionCS;
+	output.vPrevPositionCS = mul(input.vPositionOS, PrevWorldViewProjection);
 	output.vNormalWS = mul(input.vNormalOS, (float3x3)World);
 	output.vTangentWS = mul(input.vTangentOS, (float3x3)World);
 	output.vBinormalWS = mul(input.vBinormalOS, (float3x3)World);
@@ -91,7 +96,6 @@ PS_Out_Mesh PS_Mesh(VS_Out_Mesh input)
 	PS_Out_Mesh output;
 
 #if DIFFUSE_MAPPED
-
 	#if ALPHA_CUTOUT_ENABLED
 		float fAlphaNoMip = DiffuseMap.SampleLevel(Sampler, input.vTexCoord, 0).a;
 		clip(fAlphaNoMip - AlphaThreshold);
@@ -125,13 +129,16 @@ PS_Out_Mesh PS_Mesh(VS_Out_Mesh input)
 	float fSpecularIntensity = max((vSpecularColor.r + vSpecularColor.g + vSpecularColor.b) / 3.0f, EPSILON);
 	float fSpecularPower = max(SpecularPower, EPSILON);
 
-    // RT0 =       Diffuse.r	| Diffuse.g		| Diffuse.b		| Specular Intensity
+	float2 vVelocityVS = (input.vPositionCS2.xy / input.vPositionCS2.w) -
+		(input.vPrevPositionCS.xy / input.vPrevPositionCS.w);
+
+	// RT0 =       Diffuse.r	| Diffuse.g		| Diffuse.b		| Specular Intensity
     // RT1 =       Normal.x		| Normal.y		| Normal.z		| Specular Power
-    // RT2 =       Emissive.r	| Emissive.g	| Emissive.b	| Material ID
-    // RT3 =       Depth		|				|				|
+    // RT2 =       Velocity.x	| Velocity.y	| 				| Material ID
+    // RT3 =       Depth										| Sky Visibility
 	output.RT0 = float4(vDiffuse.rgb, fSpecularIntensity);
 	output.RT1 = float4(vNormal, fSpecularPower);
-	output.RT2 = float4(vEmissive, 0.0f);
+	output.RT2 = float4(vVelocityVS, 0.0f, 0.0f);
 
 	return output;
 }

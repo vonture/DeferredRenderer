@@ -54,12 +54,93 @@ void ModelInstance::clean()
 	_dirty = false;
 }
 
+void ModelInstance::SetPosition(const XMFLOAT3& pos)
+{
+	_position = pos;
+
+	_dirty = true;
+}
+
+void ModelInstance::SetScale(float scale)
+{
+	_scale = scale;
+
+	_dirty = true;
+}
+
+void ModelInstance::SetOrientation(const XMFLOAT4& orientation)
+{
+	_orientation = orientation;
+
+	_dirty = true;
+}
+
+const XMFLOAT4X4& ModelInstance::GetWorld() 
+{ 
+	if (_dirty)
+	{
+		clean();
+	}
+
+	return _world;
+}
+
+const XMFLOAT4X4& ModelInstance::GetPreviousWorld() const
+{
+	return _prevWorld;
+}
+
+const AxisAlignedBox& ModelInstance::GetMeshAxisAlignedBox(UINT meshIdx)
+{
+	if (_dirty)
+	{
+		clean();
+	}
+
+	return _transformedMeshAxisBoxes[meshIdx];
+}
+
+const AxisAlignedBox& ModelInstance::GetAxisAlignedBox() 
+{ 
+	if (_dirty)
+	{
+		clean();
+	}
+
+	return _transformedMainAxisBox;
+}
+
+const OrientedBox& ModelInstance::GetMeshOrientedBox(UINT meshIdx)
+{
+	if (_dirty)
+	{
+		clean();
+	}
+
+	return _transformedMeshOrientedBoxes[meshIdx];
+}
+
+const OrientedBox& ModelInstance::GetOrientedBox() 
+{ 
+	if (_dirty)
+	{
+		clean();
+	}
+
+	return _transformedMainOrientedBox;
+}
+
 void ModelInstance::FillBoundingObjectSet(BoundingObjectSet* set)
 {
 	for (UINT i = 0; i < _model->GetMeshCount(); i++)
 	{
 		set->AddOrientedBox(_transformedMeshOrientedBoxes[i]);
 	}
+}
+
+void ModelInstance::StoreWorld()
+{
+	_prevWorld = GetWorld();
 }
 
 bool ModelInstance::RayIntersect(const Ray& ray, float* dist)

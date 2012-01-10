@@ -3,6 +3,7 @@
 #include "PCH.h"
 #include "ContentType.h"
 #include "Particle.h"
+#include "xnaCollision.h"
 
 class ParticleSystem : public ContentType
 {
@@ -25,7 +26,7 @@ private:
 	float _startSpeed;
 	float _endSpeed;
 	float _speedExponent;
-	//float _speedVariance;
+	float _speedVariance;
 
 	float _rollAmount;
 	float _windFalloff;
@@ -36,6 +37,7 @@ private:
 	XMFLOAT4 _initialColor;
 	XMFLOAT4 _finalColor;
 	float _fadeExponent;
+	float _alphaPower;
 
 public:
 	ParticleSystem();
@@ -55,5 +57,5 @@ public:
 	void SpawnParticle(const XMFLOAT3& emitterPos, const XMFLOAT4& emitterRot, float emitterScale,
 		Particle* outParticle);
 	void AdvanceParticles(float dt, const XMFLOAT3& wind, const XMFLOAT3& gravity,
-		Particle* particles, UINT count);
+		Particle* particles, UINT count, AxisAlignedBox* outBounds);
 };

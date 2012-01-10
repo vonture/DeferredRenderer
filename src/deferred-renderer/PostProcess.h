@@ -3,6 +3,7 @@
 #include "PCH.h"
 #include "IHasContent.h"
 #include "GBuffer.h"
+#include "ParticleBuffer.h"
 #include "LightBuffer.h"
 #include "DeviceStates.h"
 #include "FullscreenQuad.h"
@@ -33,8 +34,9 @@ public:
 
 	bool GetIsAdditive() const { return _isAdditive; }
 
-	virtual HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
-		ID3D11RenderTargetView* dst, Camera* camera, GBuffer* gBuffer, LightBuffer* lightBuffer) = 0;
+	virtual HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src, 
+		ID3D11RenderTargetView* dst, Camera* camera, GBuffer* gBuffer, ParticleBuffer* pBuffer,
+		LightBuffer* lightBuffer) = 0;
 
 	virtual HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
 	virtual void OnD3D11DestroyDevice();

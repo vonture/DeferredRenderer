@@ -13,6 +13,7 @@ struct CB_MODEL_PROPERTIES
 {
 	XMFLOAT4X4 World;
 	XMFLOAT4X4 WorldViewProjection;
+	XMFLOAT4X4 PreviousWorldViewProjection;
 };
 
 class ModelRenderer : public IHasContent

@@ -169,6 +169,26 @@ const XMFLOAT4X4& Camera::GetInverseViewProjection() const
 	return _invViewProj;
 }
 
+const XMFLOAT4X4& Camera::GetPreviousView() const
+{
+	return _prevView;
+}
+
+const XMFLOAT4X4& Camera::GetPreviousProjection() const
+{
+	return _prevProj;
+}
+
+const XMFLOAT4X4& Camera::GetPreviousViewProjection() const
+{
+	return _prevViewProj;
+}
+
+const XMFLOAT4X4& Camera::GetPreviousInverseViewProjection() const
+{
+	return _prevInvViewProj;
+}
+
 void Camera::SetWorld(const XMFLOAT4X4& world)
 {
 	_world = world;
@@ -178,6 +198,20 @@ void Camera::SetWorld(const XMFLOAT4X4& world)
 const XMFLOAT4X4& Camera::GetWorld() const
 { 
 	return _world;
+}
+
+const XMFLOAT4X4& Camera::GetPreviousWorld() const
+{
+	return _prevWorld;
+}
+
+void Camera::StoreMatrices()
+{
+	_prevWorld = _world;
+	_prevView = _view;
+	_prevProj = _proj;
+	_prevViewProj = _viewProj;
+	_prevInvViewProj = _invViewProj;
 }
 
 XMFLOAT3 Camera::GetForward() const

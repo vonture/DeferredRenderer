@@ -4,9 +4,9 @@
 
 ParticleSystemInstance::ParticleSystemInstance(const WCHAR* path)
 	: _path(path), _system(NULL), _vb(NULL), _position(0.0f, 0.0f, 0.0f), _scale(1.0f),
-	  _orientation(0.0f, 0.0f, 0.0f, 1.0f), _worldDirty(true), _vbDirty(true), _particles(NULL), 
-	  _particleCount(0), _particleIndex(0), _rolledOver(false), _spawnTimer(0), _vertexStride(0),
-	  _wind(0.0f, 0.0f, 0.0f), _gravity(0.0f, -1.0f, 0.0f), _selectRadius(1.5f)
+	  _orientation(0.0f, 0.0f, 0.0f, 1.0f), _worldDirty(true), _particles(NULL), _particleSortSpace(NULL),
+	  _particleCount(0), _particleIndex(0), _rolledOver(false), _spawnTimer(0), _vertexStride(0), 
+	  _selectRadius(1.5f)
 {
 }
 
@@ -93,27 +93,19 @@ void ParticleSystemInstance::Reset()
 
 void ParticleSystemInstance::FillBoundingObjectSet( BoundingObjectSet* set )
 {
-	Sphere s;
-	s.Center = _position;
-	s.Radius = _selectRadius * _scale;
-
-	set->AddSphere(s);
+	set->AddAxisAlignedBox(_aabb);
 }
 
 bool ParticleSystemInstance::RayIntersect(const Ray& ray, float* dist)
 {
-	Sphere s;
-	s.Center = _position;
-	s.Radius = _selectRadius * _scale;
-
 	XMVECTOR rayOrigin = XMLoadFloat3(&ray.Origin);
 	XMVECTOR rayDir = XMLoadFloat3(&ray.Direction);
 
-	return !Collision::IntersectPointSphere(rayOrigin, &s) &&
-		Collision::IntersectRaySphere(rayOrigin, rayDir, &s, dist);
+	return !Collision::IntersectPointAxisAlignedBox(rayOrigin, &_aabb) &&
+		Collision::IntersectRayAxisAlignedBox(rayOrigin, rayDir, &_aabb, dist);
 }
 
-void ParticleSystemInstance::AdvanceSystem(float dt)
+void ParticleSystemInstance::AdvanceSystem(const XMFLOAT3& wind, const XMFLOAT3& gravity, float dt)
 {
 	_spawnTimer -= dt;
 
@@ -131,35 +123,91 @@ void ParticleSystemInstance::AdvanceSystem(float dt)
 		_spawnTimer += _system->GetSpawnRate();
 	}
 
-	_system->AdvanceParticles(dt, _wind, _gravity, _particles, GetParticleCount());
-
-	_vbDirty = true;
+	_system->AdvanceParticles(dt, wind, gravity, _particles, GetParticleCount(), &_aabb);
 }
 
-
-ID3D11Buffer* ParticleSystemInstance::GetParticleVertexBuffer(ID3D11DeviceContext* pd3d11DeviceContext)
+void ParticleSystemInstance::DepthSort(PARTICLE_SORT_INFO* parts, int low, int high)
 {
-	if (_vbDirty)
-	{
-		D3D11_MAPPED_SUBRESOURCE mappedResource;
-		HRESULT hr;
+	//  low is the lower index, high is the upper index
+	//  of the region of array a that is to be sorted
+	int i = low, j = high;
+	float h;
+	int index;
+	float x = parts[(low + high) / 2].Depth;
 
-		UINT partCount = GetParticleCount();
-		V(pd3d11DeviceContext->Map(_vb, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
-		
-		ParticleVertex* bufferData = (ParticleVertex*)mappedResource.pData;
-
-		for (UINT i = 0; i < partCount; i++)
+	//  partition
+	do
+	{    
+		while (parts[i].Depth > x)
 		{
-			bufferData[i].Position = _particles[i].Position;
-			bufferData[i].Color = _particles[i].Color;
-			bufferData[i].Radius = _particles[i].Radius;
-			bufferData[i].Rotation = _particles[i].Rotation;
+			i++;
+		}
+		while (parts[j].Depth < x)
+		{
+			j--;
 		}
 
-		pd3d11DeviceContext->Unmap(_vb, 0);
+		if (i <= j)
+		{
+			h = parts[i].Depth; parts[i].Depth = parts[j].Depth; parts[j].Depth = h;
+			index = parts[i].Particle; parts[i].Particle = parts[j].Particle; parts[j].Particle = index;
+			
+			i++;
+			j--;
+		}
+	} while (i <= j);
+
+	//  recursion
+	if (low < j)
+	{
+		DepthSort(parts, low, j);
 	}
-	_vbDirty = false;
+	if (i < high) 
+	{
+		DepthSort(parts, i, high);
+	}
+}
+
+ID3D11Buffer* ParticleSystemInstance::GetParticleVertexBuffer(ID3D11DeviceContext* pd3d11DeviceContext, 
+	Camera* camera)
+{
+	HRESULT hr;
+
+	UINT partCount = GetParticleCount();	
+
+	// Prepare the particles to be sorted
+	XMFLOAT3 camForward = camera->GetForward();
+	for (UINT i = 0; i < partCount; i++)
+	{
+		_particleSortSpace[i].Particle = i;
+
+		// Dot product
+		_particleSortSpace[i].Depth = 
+			(camForward.x * _particles[i].Position.x) + 
+			(camForward.y * _particles[i].Position.y) +
+			(camForward.z * _particles[i].Position.z);
+	}
+
+	// Sort the particles
+	DepthSort(_particleSortSpace, 0, partCount - 1);
+
+	// Copy particles in sorted order to the buffer
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	V(pd3d11DeviceContext->Map(_vb, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+	ParticleVertex* bufferData = (ParticleVertex*)mappedResource.pData;
+
+	for (UINT i = 0; i < partCount; i++)
+	{
+		bufferData[i].Position =			_particles[_particleSortSpace[i].Particle].Position;
+		bufferData[i].PreviousPosition =	_particles[_particleSortSpace[i].Particle].PreviousPosition;
+		bufferData[i].Color =				_particles[_particleSortSpace[i].Particle].Color;
+		bufferData[i].Radius =				_particles[_particleSortSpace[i].Particle].Radius;
+		bufferData[i].PreviousRadius =		_particles[_particleSortSpace[i].Particle].PreviousRadius;
+		bufferData[i].Rotation =			_particles[_particleSortSpace[i].Particle].Rotation;
+		bufferData[i].PreviousRotation =	_particles[_particleSortSpace[i].Particle].PreviousRotation;
+	}
+
+	pd3d11DeviceContext->Unmap(_vb, 0);
 
 	return _vb;
 }
@@ -179,7 +227,6 @@ ID3D11ShaderResourceView* ParticleSystemInstance::GetNormalSRV()
 	return _system->GetNormalSRV();
 }
 
-
 HRESULT ParticleSystemInstance::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 	ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc )
 {
@@ -189,8 +236,11 @@ HRESULT ParticleSystemInstance::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 
 	_particleCount = _system->GetMaxSimultaneousParticles();
 	_particles = new Particle[_particleCount];
-	if (!_particles)
+	_particleSortSpace = new PARTICLE_SORT_INFO[_particleCount];
+	if (!_particles || !_particleSortSpace)
 	{
+		SAFE_DELETE_ARRAY(_particles);
+		SAFE_DELETE_ARRAY(_particleSortSpace);
 		return E_FAIL;
 	}
 
@@ -205,7 +255,6 @@ HRESULT ParticleSystemInstance::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 	};
 	V_RETURN(pd3dDevice->CreateBuffer(&vbDesc, NULL, &_vb));
 	_vertexStride = sizeof(ParticleVertex);
-	_vbDirty = true;
 
 	_particleIndex = 0;
 	_spawnTimer = 0;
@@ -221,6 +270,7 @@ void ParticleSystemInstance::OnD3D11DestroyDevice()
 	SAFE_RELEASE(_vb);
 
 	SAFE_DELETE_ARRAY(_particles);
+	SAFE_DELETE_ARRAY(_particleSortSpace);
 	_particleCount = 0;
 }
 

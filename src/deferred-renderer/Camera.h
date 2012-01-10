@@ -6,6 +6,12 @@
 class Camera
 {
 private:
+	XMFLOAT4X4 _prevWorld;
+	XMFLOAT4X4 _prevView;
+	XMFLOAT4X4 _prevProj;
+	XMFLOAT4X4 _prevViewProj;
+	XMFLOAT4X4 _prevInvViewProj;
+
 	XMFLOAT4X4 _world;
 	XMFLOAT4X4 _view;
 	XMFLOAT4X4 _proj;
@@ -46,8 +52,16 @@ public:
 	const XMFLOAT4X4& GetViewProjection() const;
 	const XMFLOAT4X4& GetInverseViewProjection() const;
 
+	const XMFLOAT4X4& GetPreviousView() const;
+	const XMFLOAT4X4& GetPreviousProjection() const;
+	const XMFLOAT4X4& GetPreviousViewProjection() const;
+	const XMFLOAT4X4& GetPreviousInverseViewProjection() const;
+
 	void SetWorld(const XMFLOAT4X4& world);
 	const XMFLOAT4X4& GetWorld() const;
+	const XMFLOAT4X4& GetPreviousWorld() const;
+
+	void StoreMatrices();
 
 	XMFLOAT3 GetForward() const;
 	XMFLOAT3 GetBackward() const;

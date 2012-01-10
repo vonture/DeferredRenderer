@@ -32,8 +32,8 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext,
 	XMFLOAT4X4 fViewProj = camera->GetViewProjection();
 	XMMATRIX viewProj = XMLoadFloat4x4(&fViewProj);
 
-	XMFLOAT4X4 fProj = camera->GetProjection();
-	XMMATRIX proj = XMLoadFloat4x4(&fProj);
+	XMFLOAT4X4 fPrevViewProj = camera->GetPreviousViewProjection();
+	XMMATRIX prevViewProj = XMLoadFloat4x4(&fPrevViewProj);
 
 	Frustum cameraFrust = camera->CreateFrustum();
 
@@ -79,13 +79,17 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext,
 		
 		XMFLOAT4X4 fWorld = instance->GetWorld();
 		XMMATRIX world = XMLoadFloat4x4(&fWorld);
-
 		XMMATRIX wvp = XMMatrixMultiply(world, viewProj);
+
+		XMFLOAT4X4 fPrevWorld = instance->GetPreviousWorld();
+		XMMATRIX prevWorld = XMLoadFloat4x4(&fPrevWorld);
+		XMMATRIX prevWVP = XMMatrixMultiply(prevWorld, prevViewProj);		
 
 		V(pd3dDeviceContext->Map(_constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 		CB_MODEL_PROPERTIES* modelProperties = (CB_MODEL_PROPERTIES*)mappedResource.pData;
 		XMStoreFloat4x4(&modelProperties->World, XMMatrixTranspose(world));
 		XMStoreFloat4x4(&modelProperties->WorldViewProjection, XMMatrixTranspose(wvp));
+		XMStoreFloat4x4(&modelProperties->PreviousWorldViewProjection, XMMatrixTranspose(prevWVP));
 		pd3dDeviceContext->Unmap(_constantBuffer, 0);
 
 		pd3dDeviceContext->VSSetConstantBuffers(0, 1, &_constantBuffer);
@@ -218,11 +222,15 @@ HRESULT ModelRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMana
 	// Load the vertex shader
 	D3D11_INPUT_ELEMENT_DESC layout_mesh[] =
     {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TANGENT",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "POSITION",	0, DXGI_FORMAT_R32G32B32_FLOAT,		0, 0,  D3D11_INPUT_PER_VERTEX_DATA,		0 },
+		{ "NORMAL",		0, DXGI_FORMAT_R32G32B32_FLOAT,		0, 12, D3D11_INPUT_PER_VERTEX_DATA,		0 },
+		{ "TEXCOORD",	0, DXGI_FORMAT_R32G32_FLOAT,		0, 24, D3D11_INPUT_PER_VERTEX_DATA,		0 },
+		{ "TANGENT",	0, DXGI_FORMAT_R32G32B32_FLOAT,		0, 32, D3D11_INPUT_PER_VERTEX_DATA,		0 },
+		{ "BINORMAL",	0, DXGI_FORMAT_R32G32B32_FLOAT,		0, 44, D3D11_INPUT_PER_VERTEX_DATA,		0 },
+		//{ "WORLD",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 0,  D3D11_INPUT_PER_INSTANCE_DATA,	1 },
+		//{ "WORLD",		1, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 16, D3D11_INPUT_PER_INSTANCE_DATA,	1 },
+		//{ "WORLD",		2, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 32, D3D11_INPUT_PER_INSTANCE_DATA,	1 },
+		//{ "WORLD",		3, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 48, D3D11_INPUT_PER_INSTANCE_DATA,	1 },
     };
 
 	VertexShaderOptions vsOpts =

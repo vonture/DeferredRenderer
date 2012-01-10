@@ -25,11 +25,15 @@ private:
 	BlendStates _blendStates;
 	RasterizerStates _rasterStates;
 
+	ID3D11BlendState* _particleBlend;
+
 	ID3D11Buffer* _particleCB;
 	struct CB_PARTICLE_PROPERTIES
 	{
 		XMFLOAT4X4 ViewProjection;
-		XMFLOAT4X4 InverseView;		
+		XMFLOAT4X4 InverseView;
+		XMFLOAT4X4 PrevViewProjection;
+		XMFLOAT4X4 PrevInverseView;	
 	};
 
 	ID3D11Buffer* _cameraCB;
@@ -46,6 +50,19 @@ private:
 		XMFLOAT3 Right;
 		float Padding3;
 	};
+
+	struct PARTICLE_SYSTEM_INFO
+	{
+		UINT System;
+		float Depth;
+
+		PARTICLE_SYSTEM_INFO() { }
+		PARTICLE_SYSTEM_INFO(UINT system, float depth) : System(system), Depth(depth) { }
+	};
+	static bool depthCompare(const PARTICLE_SYSTEM_INFO& i, const PARTICLE_SYSTEM_INFO& j)
+	{ 
+		return i.Depth > j.Depth;
+	}
 
 public:
 	ParticleRenderer();
