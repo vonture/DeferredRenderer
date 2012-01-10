@@ -201,7 +201,7 @@ inline HRESULT CompileShaderFromFile(const WCHAR* szFileName, const char* szEntr
 		return pObj ? pObj->SetPrivateData(WKPDID_D3DDebugObjectName, lstrlenA(pstrName), pstrName) : E_FAIL;
 	}
 #else
-	#define SetDXDebugName(pObj, pstrName)
+	#define SetDXDebugName(pObj, pstrName) (S_OK)
 #endif
 
 #if defined(DEBUG) || defined(_DEBUG)
