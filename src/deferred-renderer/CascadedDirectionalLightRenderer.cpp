@@ -11,7 +11,7 @@ CascadedDirectionalLightRenderer::CascadedDirectionalLightRenderer()
 	: _depthVSNoAlpha(NULL), _depthInputNoAlpha(NULL), _alphaCutoutProperties(NULL),
 	  _depthVSAlpha(NULL), _depthInputAlpha(NULL), _depthPSAlpha(NULL), _depthPropertiesBuffer(NULL),
 	  _unshadowedPS(NULL), _shadowedPS(NULL), _cameraPropertiesBuffer(NULL), _lightPropertiesBuffer(NULL),
-	  _shadowPropertiesBuffer(NULL)
+	  _shadowPropertiesBuffer(NULL), _unshadowedParticlePS(NULL), _shadowedParticlePS(NULL)
 {
 	for (int i = 0; i < NUM_SHADOW_MAPS; i++)
 	{
@@ -58,7 +58,7 @@ struct Triangle
 
 
 //--------------------------------------------------------------------------------------
-// Computing an accurate near and flar plane will decrease surface acne and Peter-panning.
+// Computing an accurate near and far plane will decrease surface acne and Peter-panning.
 // Surface acne is the term for erroneous self shadowing.  Peter-panning is the effect where
 // shadows disappear near the base of an object.
 // As offsets are generally used with PCF filtering due self shadowing issues, computing the
@@ -377,12 +377,9 @@ void CascadedDirectionalLightRenderer::CreateAABBPoints( XMVECTOR* vAABBPoints, 
 // points that make up a view frustum.
 // The frustum is scaled to fit within the Begin and End interval paramaters.
 //--------------------------------------------------------------------------------------
-void CascadedDirectionalLightRenderer::CreateFrustumPointsFromCascadeInterval( float fCascadeIntervalBegin, 
-                                                        FLOAT fCascadeIntervalEnd, 
-                                                        XMMATRIX &vProjection,
-                                                        XMVECTOR* pvCornerPointsWorld ) 
+void CascadedDirectionalLightRenderer::CreateFrustumPointsFromCascadeInterval(float fCascadeIntervalBegin, 
+	FLOAT fCascadeIntervalEnd, XMMATRIX &vProjection, XMVECTOR* pvCornerPointsWorld) 
 {
-
     Frustum vViewFrust;
 	Collision::ComputeFrustumFromProjection( &vViewFrust, &vProjection );
     vViewFrust.Near = fCascadeIntervalBegin;
@@ -790,13 +787,72 @@ HRESULT CascadedDirectionalLightRenderer::RenderGeometryLights(ID3D11DeviceConte
 }
 
 HRESULT CascadedDirectionalLightRenderer::RenderParticleLights(ID3D11DeviceContext* pd3dImmediateContext,
-	Camera* camera, ParticleBuffer* gBuffer)
+	Camera* camera, ParticleBuffer* pBuffer)
 {
 	if (GetCount(true) + GetCount(false) > 0)
 	{
 		BEGIN_EVENT_D3D(L"Directional Lights");
 
+		HRESULT hr;
+		D3D11_MAPPED_SUBRESOURCE mappedResource;
 
+		// prepare the camera properties buffer
+		XMFLOAT4X4 fCamViewProj = camera->GetViewProjection();
+
+		XMVECTOR det;
+		XMMATRIX cameraInvViewProj = XMMatrixInverse(&det, XMLoadFloat4x4(&fCamViewProj));
+
+		// Set the global properties for all directional lights
+		ID3D11SamplerState* samplers[2] =
+		{
+			GetSamplerStates()->GetPointClamp(),
+			GetSamplerStates()->GetShadowMap(),
+		};
+		pd3dImmediateContext->PSSetSamplers(0, 2, samplers);
+		pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetReverseDepthEnabled(), 0);	
+
+		float blendFactor[4] = {1, 1, 1, 1};
+		pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetAdditiveBlend(), blendFactor, 0xFFFFFFFF);
+
+		ID3D11ShaderResourceView* gBufferSRVs[2] = 
+		{
+			pBuffer->GetDiffuseSRV(),
+			pBuffer->GetNormalSRV(),
+		};
+		pd3dImmediateContext->PSSetShaderResources(0, 2, gBufferSRVs);
+
+		// map the camera properties
+		V_RETURN(pd3dImmediateContext->Map(_cameraPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+		CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES* cameraProperties = (CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES*)mappedResource.pData;
+
+		XMStoreFloat4x4(&cameraProperties->InverseViewProjection, XMMatrixTranspose(cameraInvViewProj));
+		cameraProperties->CameraPosition = camera->GetPosition();
+
+		pd3dImmediateContext->Unmap(_cameraPropertiesBuffer, 0);
+
+		pd3dImmediateContext->PSSetConstantBuffers(0, 1, &_cameraPropertiesBuffer);
+		
+		int numLights = GetCount();
+		for (int i = 0; i < numLights; i++)
+		{
+			DirectionalLight* light = GetLight(i);
+
+			// Prepare the light properties
+			V_RETURN(pd3dImmediateContext->Map(_lightPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+			CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES* lightProperties = 
+				(CB_DIRECTIONALLIGHT_LIGHT_PROPERTIES*)mappedResource.pData;
+
+			lightProperties->LightColor = light->GetColor();
+			lightProperties->LightBrightness = light->GetBrightness();
+			lightProperties->LightDirection = light->GetDirection();
+
+			pd3dImmediateContext->Unmap(_lightPropertiesBuffer, 0);
+
+			pd3dImmediateContext->PSSetConstantBuffers(1, 1, &_lightPropertiesBuffer);
+
+			// Finally, render the quad
+			_fsQuad.Render(pd3dImmediateContext, _unshadowedParticlePS);
+		}
 
 		END_EVENT_D3D(L"");
 	}
@@ -909,6 +965,36 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 
 	SAFE_RELEASE(psContent);
 	
+	// Load the pixel shaders for unshadowed light particle post processeses
+	PixelShaderOptions psParticleUnshadowedOpts = 
+	{
+		"PS_DirectionalParticleLightUnshadowed",			//const char* EntryPoint;
+		NULL,												// D3D_SHADER_MACRO* Defines;
+		"Directional Cascaded Unshadowed Particle Light"	//const char* DebugName;
+	};
+
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalLight.hlsl", &psParticleUnshadowedOpts, &psContent));
+
+	_unshadowedParticlePS = psContent->PixelShader;
+	_unshadowedParticlePS->AddRef();
+
+	SAFE_RELEASE(psContent);
+
+	// Load the pixel shaders for unshadowed light particle post processeses
+	PixelShaderOptions psParticleShadowedOpts = 
+	{
+		"PS_DirectionalParticleLightShadowed",			//const char* EntryPoint;
+		NULL,											// D3D_SHADER_MACRO* Defines;
+		"Directional Cascaded Shadowed Particle Light"	//const char* DebugName;
+	};
+
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalLight.hlsl", &psParticleShadowedOpts, &psContent));
+
+	_shadowedParticlePS = psContent->PixelShader;
+	_shadowedParticlePS->AddRef();
+
+	SAFE_RELEASE(psContent);
+	
 	// Create the buffers
 	D3D11_BUFFER_DESC bufferDesc =
 	{
@@ -1008,6 +1094,9 @@ void CascadedDirectionalLightRenderer::OnD3D11DestroyDevice()
 
 	SAFE_RELEASE(_unshadowedPS);
 	SAFE_RELEASE(_shadowedPS);
+	SAFE_RELEASE(_unshadowedParticlePS);
+	SAFE_RELEASE(_shadowedParticlePS);
+
 	SAFE_RELEASE(_lightPropertiesBuffer);
 	SAFE_RELEASE(_cameraPropertiesBuffer);
 	SAFE_RELEASE(_shadowPropertiesBuffer);

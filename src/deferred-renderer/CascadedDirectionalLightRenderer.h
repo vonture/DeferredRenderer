@@ -23,6 +23,9 @@ private:
 
 	ID3D11PixelShader* _unshadowedPS;
 	ID3D11PixelShader* _shadowedPS;
+	ID3D11PixelShader* _unshadowedParticlePS;
+	ID3D11PixelShader* _shadowedParticlePS;
+
 	ID3D11Buffer* _cameraPropertiesBuffer;
 	ID3D11Buffer* _lightPropertiesBuffer;
 	ID3D11Buffer* _shadowPropertiesBuffer;
@@ -30,7 +33,7 @@ private:
 	
 	static const UINT NUM_SHADOW_MAPS = 3;
 	static const UINT NUM_CASCADES = 4;
-	static const UINT SHADOW_MAP_SIZE = 1024;
+	static const UINT SHADOW_MAP_SIZE = 2048;
 	static const float CASCADE_SPLITS[NUM_CASCADES];
 	static const float BIAS;
 	ID3D11Texture2D* _shadowMapTextures[NUM_SHADOW_MAPS];

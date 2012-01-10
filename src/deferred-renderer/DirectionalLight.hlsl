@@ -83,7 +83,7 @@ float4 PS_DirectionalLightUnshadowed(PS_In_DirectionalLight input) : SV_TARGET0
 	float4 vPositionWS = GetPositionWS(input.vPosition2, fDepth);
 
 	return PS_DirectionalLightCommon(input, vPositionWS);
-};
+}
 
 float SampleShadowCascade(in float4 positionWS, in uint cascadeIdx)
 {
@@ -177,4 +177,29 @@ float4 PS_DirectionalLightShadowed(PS_In_DirectionalLight input) : SV_TARGET0
 	float fShadow = SampleShadowCascade(vPositionWS, iCascadeIdx);
 
 	return fShadow * PS_DirectionalLightCommon(input, vPositionWS);	
-};
+}
+
+
+float4 PS_DirectionalParticleLightCommon(PS_In_DirectionalLight input)
+{	
+    float4 vNormalData = NormalTexture.Sample(PointSampler, input.vTexCoord);
+
+	float fAlpha = vNormalData.a;
+    		    
+	float3 N = normalize(vNormalData.xyz);
+    float3 L = normalize(LightDirection);
+
+	float fDiffuseTerm = saturate(dot(N, L));
+	
+    return float4(fDiffuseTerm * LightColor * LightBrightness * fAlpha, fAlpha);
+}
+
+float4 PS_DirectionalParticleLightUnshadowed(PS_In_DirectionalLight input) : SV_TARGET0
+{
+	return PS_DirectionalParticleLightCommon(input);
+}
+
+float4 PS_DirectionalParticleLightShadowed(PS_In_DirectionalLight input) : SV_TARGET0
+{
+	return PS_DirectionalParticleLightCommon(input);
+}
