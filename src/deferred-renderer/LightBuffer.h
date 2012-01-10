@@ -7,7 +7,7 @@ class LightBuffer : public IHasContent
 {
 private:
 	// LightRT0 =  Geometry Light.r  | Geometry Light.g   | Geometry Light.b   | Geometry Specular
-	// LightRT1 =  Particle Light.r  | Particle Light.g   | Particle Light.b   | Particle Alpha
+	// LightRT1 =  Particle Light.r  | Particle Light.g   | Particle Light.b   |
 	ID3D11Texture2D* _tex[2];
 	ID3D11ShaderResourceView* _srv[2];
 	ID3D11RenderTargetView* _rtv[2];
