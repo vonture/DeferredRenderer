@@ -2,9 +2,11 @@
 #include "ModelRenderer.h"
 #include "PixelShaderLoader.h"
 #include "VertexShaderLoader.h"
+#include "ModelInstanceSet.h"
 
 ModelRenderer::ModelRenderer()
-	: _meshVertexShader(NULL),  _meshInputLayout(NULL), _alphaThresholdBuffer(NULL), _constantBuffer(NULL)
+	: _meshVertexShader(NULL), _meshInputLayout(NULL), _alphaThresholdBuffer(NULL), _modelPropertiesBuffer(NULL),
+	  _instanceWorldVB(NULL)
 {
 	for (UINT i = 0; i < 2; i++)
 	{
@@ -28,15 +30,13 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext,
 {
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;	
-
+	
 	XMFLOAT4X4 fViewProj = camera->GetViewProjection();
 	XMMATRIX viewProj = XMLoadFloat4x4(&fViewProj);
 
 	XMFLOAT4X4 fPrevViewProj = camera->GetPreviousViewProjection();
 	XMMATRIX prevViewProj = XMLoadFloat4x4(&fPrevViewProj);
-
-	Frustum cameraFrust = camera->CreateFrustum();
-
+	
 	pd3dDeviceContext->VSSetShader(_meshVertexShader, NULL, 0);
 
 	pd3dDeviceContext->IASetInputLayout(_meshInputLayout);
@@ -61,60 +61,59 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext,
 		pd3dDeviceContext->PSSetConstantBuffers(1, 1, &_alphaThresholdBuffer);
 	}
 
-	ID3D11PixelShader* prevPS = NULL;
+	V(pd3dDeviceContext->Map(_modelPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+	CB_MODEL_PROPERTIES* modelProperties = (CB_MODEL_PROPERTIES*)mappedResource.pData;
+	XMStoreFloat4x4(&modelProperties->ViewProjection, XMMatrixTranspose(viewProj));
+	XMStoreFloat4x4(&modelProperties->PreviousViewProjection, XMMatrixTranspose(prevViewProj));
+	pd3dDeviceContext->Unmap(_modelPropertiesBuffer, 0);
 
-	for (UINT i = 0; i < instances->size(); i++)
+	pd3dDeviceContext->VSSetConstantBuffers(0, 1, &_modelPropertiesBuffer);
+	
+	
+	ModelInstanceSet modelSet = ModelInstanceSet(instances, camera);
+
+	// Copy the instance world matrices into the vertex buffer
+	V(pd3dDeviceContext->Map(_instanceWorldVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+	XMFLOAT4X4* instanceVB = (XMFLOAT4X4*)mappedResource.pData;
+
+	for (UINT i = 0; i < modelSet.GetModelCount(); i++)
 	{
-		ModelInstance* instance = instances->at(i);
-		Model* model = instance->GetModel();
-
-		OrientedBox modelBounds = instance->GetOrientedBox();
-
-		// If there is no intersection between the frust and this model, don't render anything
-		int modelIntersect = Collision::IntersectOrientedBoxFrustum(&modelBounds, &cameraFrust);
-		if (!modelIntersect)
+		for (UINT j = 0; j < modelSet.GetInstanceCount(i); j++)
 		{
-			continue;
+			ModelInstance* instance = modelSet.GetInstance(i, j);
+
+			XMFLOAT4X4 fWorld = instance->GetWorld();
+			XMMATRIX world = XMLoadFloat4x4(&fWorld);
+
+			XMFLOAT4X4 fPrevWorld = instance->GetPreviousWorld();
+			XMMATRIX prevWorld = XMLoadFloat4x4(&fPrevWorld);
+
+			XMStoreFloat4x4(&instanceVB[modelSet.GetGlobalIndex(i, j)], XMMatrixTranspose(world));
 		}
+	}
+
+	pd3dDeviceContext->Unmap(_instanceWorldVB, 0);
+
+	UINT instanceVBStride = sizeof(XMFLOAT4X4);
+	UINT instanceVBOffset = 0;
+	pd3dDeviceContext->IASetVertexBuffers(1, 1, &_instanceWorldVB, &instanceVBStride, &instanceVBOffset);
+
+	ID3D11PixelShader* prevPS = NULL;
+	for (UINT i = 0; i < modelSet.GetModelCount(); i++)
+	{
+		Model* model = modelSet.GetModel(i);
 		
-		XMFLOAT4X4 fWorld = instance->GetWorld();
-		XMMATRIX world = XMLoadFloat4x4(&fWorld);
-		XMMATRIX wvp = XMMatrixMultiply(world, viewProj);
-
-		XMFLOAT4X4 fPrevWorld = instance->GetPreviousWorld();
-		XMMATRIX prevWorld = XMLoadFloat4x4(&fPrevWorld);
-		XMMATRIX prevWVP = XMMatrixMultiply(prevWorld, prevViewProj);		
-
-		V(pd3dDeviceContext->Map(_constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
-		CB_MODEL_PROPERTIES* modelProperties = (CB_MODEL_PROPERTIES*)mappedResource.pData;
-		XMStoreFloat4x4(&modelProperties->World, XMMatrixTranspose(world));
-		XMStoreFloat4x4(&modelProperties->WorldViewProjection, XMMatrixTranspose(wvp));
-		XMStoreFloat4x4(&modelProperties->PreviousWorldViewProjection, XMMatrixTranspose(prevWVP));
-		pd3dDeviceContext->Unmap(_constantBuffer, 0);
-
-		pd3dDeviceContext->VSSetConstantBuffers(0, 1, &_constantBuffer);
-
+		// Render each mesh
 		for (UINT j = 0; j < model->GetMeshCount(); j++)
 		{
-			// If the main box is completely within the frust, we can skip the mesh check
-			if (modelIntersect != COMPLETELY_INSIDE)
-			{
-				const OrientedBox& meshBounds = instance->GetMeshOrientedBox(j);
-							
-				if (!Collision::IntersectOrientedBoxFrustum(&meshBounds, &cameraFrust))
-				{
-					continue;
-				}
-			}
-
 			const Mesh* mesh = model->GetMesh(j);
 			UINT partCount = mesh->GetMeshPartCount();
 
-			ID3D11Buffer* vertexBuffers[1] = { mesh->GetVertexBuffer() };
-			UINT strides[1] = { mesh->GetVertexStride() };
-			UINT offsets[1] = { 0 };
+			ID3D11Buffer* meshVB = mesh->GetVertexBuffer();
+			UINT meshStride = mesh->GetVertexStride();
+			UINT meshOffset = 0;
 
-			pd3dDeviceContext->IASetVertexBuffers(0, 1, vertexBuffers, strides, offsets);
+			pd3dDeviceContext->IASetVertexBuffers(0, 1, &meshVB, &meshStride, &meshOffset);
 			pd3dDeviceContext->IASetIndexBuffer(mesh->GetIndexBuffer(), mesh->GetIndexBufferFormat(), 0);
 			pd3dDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -132,7 +131,7 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext,
 
 				ID3D11ShaderResourceView* srvs[3] = { diffSRV, normSRV, specSRV };
 				pd3dDeviceContext->PSSetShaderResources(0, 3, srvs);
-				
+
 				// Set the shader if it wasn't the same for the last mesh
 				ID3D11PixelShader* ps = _meshPixelShader[diffSRV != NULL]
 					[normSRV != NULL][specSRV != NULL][_alphaCutoutEnabled && mesh->GetAlphaCutoutEnabled()];
@@ -142,10 +141,18 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext,
 					prevPS = ps;
 				}
 
-				pd3dDeviceContext->DrawIndexed(part->IndexCount, part->IndexStart, part->VertexStart);
+				pd3dDeviceContext->DrawIndexedInstanced(part->IndexCount, modelSet.GetInstanceCount(i),
+					part->IndexStart, part->VertexStart, modelSet.GetGlobalIndex(i, 0));
 			}
 		}
 	}
+
+	// Null the second vertex buffer
+	ID3D11Buffer* nullVB[1] = { NULL };
+	UINT nullStride[1] = { 0 };
+	UINT nullOffset[1] = { 0 };
+
+	pd3dDeviceContext->IASetVertexBuffers(1, 1, nullVB, nullStride, nullOffset);
 
 	// Unset the alpha cutout buffer
 	if (_alphaCutoutEnabled)
@@ -227,10 +234,10 @@ HRESULT ModelRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMana
 		{ "TEXCOORD",	0, DXGI_FORMAT_R32G32_FLOAT,		0, 24, D3D11_INPUT_PER_VERTEX_DATA,		0 },
 		{ "TANGENT",	0, DXGI_FORMAT_R32G32B32_FLOAT,		0, 32, D3D11_INPUT_PER_VERTEX_DATA,		0 },
 		{ "BINORMAL",	0, DXGI_FORMAT_R32G32B32_FLOAT,		0, 44, D3D11_INPUT_PER_VERTEX_DATA,		0 },
-		//{ "WORLD",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 0,  D3D11_INPUT_PER_INSTANCE_DATA,	1 },
-		//{ "WORLD",		1, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 16, D3D11_INPUT_PER_INSTANCE_DATA,	1 },
-		//{ "WORLD",		2, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 32, D3D11_INPUT_PER_INSTANCE_DATA,	1 },
-		//{ "WORLD",		3, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 48, D3D11_INPUT_PER_INSTANCE_DATA,	1 },
+		{ "WORLD",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 0,  D3D11_INPUT_PER_INSTANCE_DATA,	1 },
+		{ "WORLD",		1, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 16, D3D11_INPUT_PER_INSTANCE_DATA,	1 },
+		{ "WORLD",		2, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 32, D3D11_INPUT_PER_INSTANCE_DATA,	1 },
+		{ "WORLD",		3, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 48, D3D11_INPUT_PER_INSTANCE_DATA,	1 },
     };
 
 	VertexShaderOptions vsOpts =
@@ -263,10 +270,22 @@ HRESULT ModelRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMana
 	};
 
 	bufferDesc.ByteWidth = sizeof(CB_MODEL_PROPERTIES);
-	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_constantBuffer));
+	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_modelPropertiesBuffer));
 
 	bufferDesc.ByteWidth = sizeof(CB_MODEL_ALPHA_THRESHOLD);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_alphaThresholdBuffer));
+
+
+	D3D11_BUFFER_DESC vbDesc = 
+	{
+		sizeof(XMFLOAT4X4) * MAX_INSTANCES, // INT ByteWidth;
+		D3D11_USAGE_DYNAMIC, // D3D11_USAGE Usage;
+		D3D11_BIND_VERTEX_BUFFER, // UINT BindFlags;
+		D3D11_CPU_ACCESS_WRITE, // UINT CPUAccessFlags;
+		0, // UINT MiscFlags;
+		0, // UINT StructureByteStride;
+	};
+	V_RETURN(pd3dDevice->CreateBuffer(&vbDesc, NULL, &_instanceWorldVB));
 	
 	V_RETURN(_dsStates.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 	V_RETURN(_samplerStates.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
@@ -293,8 +312,9 @@ void ModelRenderer::OnD3D11DestroyDevice()
 	SAFE_RELEASE(_meshVertexShader);
 	SAFE_RELEASE(_meshInputLayout);
 	
-	SAFE_RELEASE(_constantBuffer);
+	SAFE_RELEASE(_modelPropertiesBuffer);
 	SAFE_RELEASE(_alphaThresholdBuffer);
+	SAFE_RELEASE(_instanceWorldVB);
 
 	_dsStates.OnD3D11DestroyDevice();
 	_samplerStates.OnD3D11DestroyDevice();

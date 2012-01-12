@@ -11,9 +11,8 @@ using namespace std;
 
 struct CB_MODEL_PROPERTIES
 {
-	XMFLOAT4X4 World;
-	XMFLOAT4X4 WorldViewProjection;
-	XMFLOAT4X4 PreviousWorldViewProjection;
+	XMFLOAT4X4 ViewProjection;
+	XMFLOAT4X4 PreviousViewProjection;
 };
 
 class ModelRenderer : public IHasContent
@@ -32,8 +31,11 @@ private:
 	// 4: ALPHA_CUTOUT_ENABLED
 	ID3D11PixelShader* _meshPixelShader[2][2][2][2];
 	
-	ID3D11Buffer* _constantBuffer;
+	ID3D11Buffer* _modelPropertiesBuffer;
 	ID3D11Buffer* _alphaThresholdBuffer;
+
+	static const UINT MAX_INSTANCES = 128;
+	ID3D11Buffer* _instanceWorldVB;
 
 	struct CB_MODEL_ALPHA_THRESHOLD
 	{

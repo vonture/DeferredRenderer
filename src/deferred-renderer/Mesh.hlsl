@@ -20,9 +20,8 @@
 // Vertex shader buffer
 cbuffer cbModelProperties : register(c0)
 {
-    float4x4 World						: packoffset(c0.x);
-    float4x4 WorldViewProjection		: packoffset(c4.x);
-    float4x4 PrevWorldViewProjection	: packoffset(c8.x);
+    float4x4 ViewProjection		: packoffset(c0.x);
+    float4x4 PrevViewProjection	: packoffset(c4.x);
 }
 
 // Pixel shader buffers
@@ -56,6 +55,7 @@ struct VS_In_Mesh
 	float2 vTexCoord	: TEXCOORD;
 	float3 vTangentOS	: TANGENT;
 	float3 vBinormalOS	: BINORMAL;
+	float4x4 mWorld		: WORLD;
 };
 
 struct VS_Out_Mesh
@@ -80,12 +80,14 @@ VS_Out_Mesh VS_Mesh(VS_In_Mesh input)
 {
     VS_Out_Mesh output;
 
-    output.vPositionCS = mul(input.vPositionOS, WorldViewProjection);
+	float4x4 curWVP = mul(input.mWorld, ViewProjection);
+
+    output.vPositionCS = mul(input.vPositionOS, curWVP);
 	output.vPositionCS2 = output.vPositionCS;
-	output.vPrevPositionCS = mul(input.vPositionOS, PrevWorldViewProjection);
-	output.vNormalWS = mul(input.vNormalOS, (float3x3)World);
-	output.vTangentWS = mul(input.vTangentOS, (float3x3)World);
-	output.vBinormalWS = mul(input.vBinormalOS, (float3x3)World);
+	output.vPrevPositionCS = mul(input.vPositionOS, curWVP);
+	output.vNormalWS = mul(input.vNormalOS, (float3x3)input.mWorld);
+	output.vTangentWS = mul(input.vTangentOS, (float3x3)input.mWorld);
+	output.vBinormalWS = mul(input.vBinormalOS, (float3x3)input.mWorld);
 	output.vTexCoord = input.vTexCoord;
 
     return output;
