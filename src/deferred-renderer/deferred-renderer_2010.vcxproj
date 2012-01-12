@@ -161,6 +161,7 @@
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="LogWindow.cpp" />
     <ClCompile Include="ModelConfigurationPane.cpp" />
+    <ClCompile Include="ModelInstanceSet.cpp" />
     <ClCompile Include="ModelLoader.cpp" />
     <ClCompile Include="MotionBlurConfigurationPane.cpp" />
     <ClCompile Include="ParticleBuffer.cpp" />
@@ -248,13 +249,13 @@
     <ClInclude Include="HBAOConfigurationPane.h" />
     <ClInclude Include="HBAOPostProcess.h" />
     <ClInclude Include="IDragable.h" />
-    <ClInclude Include="IWorldEntity.h" />
     <ClInclude Include="LightRenderer.h" />
     <ClInclude Include="LightRendererBase.h" />
     <ClInclude Include="LiveTextureControl.h" />
     <ClInclude Include="LogWindow.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="ModelConfigurationPane.h" />
+    <ClInclude Include="ModelInstanceSet.h" />
     <ClInclude Include="ModelLoader.h" />
     <ClInclude Include="MotionBlurConfigurationPane.h" />
     <ClInclude Include="Particle.h" />

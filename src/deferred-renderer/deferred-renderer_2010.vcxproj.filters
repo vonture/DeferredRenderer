@@ -342,6 +342,9 @@
     <ClCompile Include="ParticleConfigurationPane.cpp">
       <Filter>Particles</Filter>
     </ClCompile>
+    <ClCompile Include="ModelInstanceSet.cpp">
+      <Filter>Models</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -620,9 +623,6 @@
     <ClInclude Include="BoundingObjectConfigurationPane.h">
       <Filter>Post Process\Configuration Panes</Filter>
     </ClInclude>
-    <ClInclude Include="IWorldEntity.h">
-      <Filter>Interfaces</Filter>
-    </ClInclude>
     <ClInclude Include="DiscDoFMBPostProcess.h">
       <Filter>Post Process</Filter>
     </ClInclude>
@@ -637,6 +637,9 @@
     </ClInclude>
     <ClInclude Include="ParticleConfigurationPane.h">
       <Filter>Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelInstanceSet.h">
+      <Filter>Models</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
