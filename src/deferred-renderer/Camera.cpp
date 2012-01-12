@@ -23,6 +23,11 @@ Camera::~Camera()
 {
 }
 
+void Camera::BuildProjection(XMMATRIX* outProj, float nearClip, float farClip )
+{
+	*outProj = XMMatrixOrthographicLH(1.0f, 1.0f, nearClip, farClip);
+}
+
 void Camera::worldMatrixChanged()
 {	
 	XMMATRIX world = XMLoadFloat4x4(&_world);
@@ -32,7 +37,7 @@ void Camera::worldMatrixChanged()
 	XMMATRIX view = XMMatrixInverse(&det, world);
 	XMMATRIX viewProj = XMMatrixMultiply(view, proj);
 	XMMATRIX invViewProj = XMMatrixInverse(&det, viewProj);
-
+	
 	XMStoreFloat4x4(&_view, view);
 	XMStoreFloat4x4(&_viewProj, viewProj);
 	XMStoreFloat4x4(&_invViewProj, invViewProj);
@@ -47,6 +52,15 @@ void Camera::projMatrixChanged()
 	XMVECTOR det;
 	XMMATRIX viewProj = XMMatrixMultiply(view, proj);
 	XMMATRIX invViewProj = XMMatrixInverse(&det, viewProj);
+	XMMATRIX invProj = XMMatrixInverse(&det, proj);
+	
+	XMVECTOR n = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+	n = XMVector4Transform(n, invProj);
+	_nearClip = XMVectorGetZ(n * XMVectorReciprocal(XMVectorSplatW(n)));
+
+	XMVECTOR f = XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f);
+	f = XMVector4Transform(f, invProj);
+	_farClip = XMVectorGetZ(f * XMVectorReciprocal(XMVectorSplatW(f)));
 
 	XMStoreFloat4x4(&_viewProj, viewProj);
 	XMStoreFloat4x4(&_invViewProj, invViewProj);
@@ -203,6 +217,12 @@ const XMFLOAT4X4& Camera::GetWorld() const
 const XMFLOAT4X4& Camera::GetPreviousWorld() const
 {
 	return _prevWorld;
+}
+
+void Camera::SetProjection(const XMFLOAT4X4& proj)
+{
+	_proj = proj;
+	projMatrixChanged();
 }
 
 void Camera::StoreMatrices()

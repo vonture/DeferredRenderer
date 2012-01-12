@@ -27,12 +27,11 @@ private:
 protected:
 	void UpdateProjection();
 
+	virtual void BuildProjection(XMMATRIX* outProj, float nearClip, float farClip);
 public:
 	Camera();
 	Camera(float nearClip, float farClip);
 	virtual ~Camera();
-
-	virtual void BuildProjection(XMMATRIX* outProj, float nearClip, float farClip) = 0;
 
 	void SetLookAt(const XMFLOAT3 &eye, const XMFLOAT3 &lookAt, const XMFLOAT3 &up);
 	void SetLookTo(const XMFLOAT3 &eye, const XMFLOAT3 &lookTo, const XMFLOAT3 &up);
@@ -47,8 +46,7 @@ public:
 	float GetNearClip() const;
 	float GetFarClip() const;	
 
-	const XMFLOAT4X4& GetView() const;
-	const XMFLOAT4X4& GetProjection() const;
+	const XMFLOAT4X4& GetView() const;	
 	const XMFLOAT4X4& GetViewProjection() const;
 	const XMFLOAT4X4& GetInverseViewProjection() const;
 
@@ -60,6 +58,9 @@ public:
 	void SetWorld(const XMFLOAT4X4& world);
 	const XMFLOAT4X4& GetWorld() const;
 	const XMFLOAT4X4& GetPreviousWorld() const;
+
+	void SetProjection(const XMFLOAT4X4& proj);
+	const XMFLOAT4X4& GetProjection() const;
 
 	void StoreMatrices();
 
