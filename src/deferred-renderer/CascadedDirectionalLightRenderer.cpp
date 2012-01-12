@@ -4,7 +4,7 @@
 #include "PixelShaderLoader.h"
 #include "VertexShaderLoader.h"
 
-const float CascadedDirectionalLightRenderer::CASCADE_SPLITS[NUM_CASCADES] = { 0.125f, 0.25f, 0.5f, 1.0f };
+const float CascadedDirectionalLightRenderer::CASCADE_SPLITS[NUM_CASCADES] = { 0.0625f, 0.125f, 0.25f, 1.0f };
 const float CascadedDirectionalLightRenderer::BIAS = 0.005f;
 
 CascadedDirectionalLightRenderer::CascadedDirectionalLightRenderer()
@@ -570,10 +570,9 @@ HRESULT CascadedDirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 		FLOAT fNearPlane = 0.0f;
         FLOAT fFarPlane = 10000.0f;
 				
-		ComputeNearAndFar( fNearPlane, fFarPlane, vLightCameraOrthographicMin, 
+		ComputeNearAndFar(fNearPlane, fFarPlane, vLightCameraOrthographicMin, 
                 vLightCameraOrthographicMax, vSceneAABBPointsLightSpace);
 		
-
 		// Create the orthographic projection for this cascade.
 		XMMATRIX shadowProj = XMMatrixOrthographicOffCenterLH(
 			XMVectorGetX(vLightCameraOrthographicMin), XMVectorGetX(vLightCameraOrthographicMax), 
