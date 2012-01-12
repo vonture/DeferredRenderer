@@ -27,6 +27,7 @@ private:
 	BoundingObjectSet _objects;
 
 	ID3D11Buffer* _boxVB;
+	ID3D11Buffer* _frustVB;
 	ID3D11Buffer* _boxIB;
 
 	ID3D11Buffer* _sphereVB;

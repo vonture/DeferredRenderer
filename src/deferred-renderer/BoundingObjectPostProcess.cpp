@@ -5,7 +5,7 @@
 
 BoundingObjectPostProcess::BoundingObjectPostProcess()
 	: _boxVB(NULL), _boxIB(NULL), _sphereVB(NULL), _inputLayout(NULL), _vertexShader(NULL),
-	  _pixelShader(NULL), _wvpConstantBuffer(NULL), _colorConstantBuffer(NULL)
+	  _pixelShader(NULL), _wvpConstantBuffer(NULL), _colorConstantBuffer(NULL), _frustVB(NULL)
 {
 	SetIsAdditive(true);
 	SetColor(XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f));
@@ -59,11 +59,9 @@ HRESULT BoundingObjectPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCont
 	XMFLOAT4X4 fViewProj = camera->GetViewProjection();
 	XMMATRIX viewProj = XMLoadFloat4x4(&fViewProj);
 
+	ID3D11Buffer* nullVB = NULL;
 	UINT strides = sizeof(BOUNDING_OBJECT_VERTEX);
     UINT offsets = 0;
-
-	ID3D11Buffer* boxVBs[1] = { _boxVB };
-	ID3D11Buffer* sphereVBs[1] = { _sphereVB };
 
 	pd3dImmediateContext->VSSetShader(_vertexShader, NULL, 0);
     pd3dImmediateContext->PSSetShader(_pixelShader, NULL, 0);
@@ -85,7 +83,7 @@ HRESULT BoundingObjectPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCont
 	BEGIN_EVENT_D3D(L"AABBs");
 	pd3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 	pd3dImmediateContext->IASetIndexBuffer(_boxIB, DXGI_FORMAT_R16_UINT, 0);
-    pd3dImmediateContext->IASetVertexBuffers(0, 1, boxVBs, &strides, &offsets);
+    pd3dImmediateContext->IASetVertexBuffers(0, 1, &_boxVB, &strides, &offsets);
 	for (UINT i = 0; i < _objects.GetAxisAlignedBoxeCount(); i++)
 	{
 		AxisAlignedBox* aabb = _objects.GetAxisAlignedBox(i);
@@ -138,13 +136,54 @@ HRESULT BoundingObjectPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCont
 	BEGIN_EVENT_D3D(L"Frustums");
 	for (UINT i = 0; i < _objects.GetFrustumCount(); i++)
 	{
-		//Frustum* frust = _objects.GetFrustum(i);
+		Frustum* frust = _objects.GetFrustum(i);
+
+		// Null the VB so it can be changed
+		pd3dImmediateContext->IASetVertexBuffers(0, 1, &nullVB, &strides, &offsets);
+
+		// Calculate the world matrix
+		XMMATRIX rot = XMMatrixRotationQuaternion(XMLoadFloat4(&frust->Orientation));
+
+		XMVECTOR position = XMLoadFloat3(&frust->Origin);
+		XMMATRIX translate = XMMatrixTranslationFromVector(position);
+
+		XMMATRIX world = XMMatrixMultiply(rot, translate);
+		XMMATRIX wvp = XMMatrixMultiply(world, viewProj);
+
+		V_RETURN(pd3dImmediateContext->Map(_wvpConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+		CB_BOUNDING_OBJECT_PROPERTIES* properties = (CB_BOUNDING_OBJECT_PROPERTIES*)mappedResource.pData;
+		XMStoreFloat4x4(&properties->WorldViewProjection, XMMatrixTranspose(wvp));
+		pd3dImmediateContext->Unmap(_wvpConstantBuffer, 0);
+
+		pd3dImmediateContext->VSSetConstantBuffers(0, 1, &_wvpConstantBuffer);
+		
+		// Map the vertices
+		V_RETURN(pd3dImmediateContext->Map(_frustVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+		BOUNDING_OBJECT_VERTEX* frustCorners = (BOUNDING_OBJECT_VERTEX*)mappedResource.pData;
+
+		frustCorners[0].Position = XMFLOAT3(frust->RightSlope * frust->Near, frust->TopSlope * frust->Near, frust->Near);
+		frustCorners[1].Position = XMFLOAT3(frust->LeftSlope * frust->Near, frust->TopSlope * frust->Near, frust->Near);
+		frustCorners[2].Position = XMFLOAT3(frust->LeftSlope * frust->Near, frust->BottomSlope * frust->Near, frust->Near);
+		frustCorners[3].Position = XMFLOAT3(frust->RightSlope * frust->Near, frust->BottomSlope * frust->Near, frust->Near);
+
+		frustCorners[4].Position = XMFLOAT3(frust->RightSlope * frust->Far, frust->TopSlope * frust->Far, frust->Far);
+		frustCorners[5].Position = XMFLOAT3(frust->LeftSlope * frust->Far, frust->TopSlope * frust->Far, frust->Far);
+		frustCorners[6].Position = XMFLOAT3(frust->LeftSlope * frust->Far, frust->BottomSlope * frust->Far, frust->Far);
+		frustCorners[7].Position = XMFLOAT3(frust->RightSlope * frust->Far, frust->BottomSlope * frust->Far, frust->Far);
+
+		pd3dImmediateContext->Unmap(_frustVB, 0);
+
+		pd3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+		pd3dImmediateContext->IASetIndexBuffer(_boxIB, DXGI_FORMAT_R16_UINT, 0);
+		pd3dImmediateContext->IASetVertexBuffers(0, 1, &_frustVB, &strides, &offsets);
+
+		pd3dImmediateContext->DrawIndexed(24, 0, 0);
 	}
 	END_EVENT_D3D(L"");
 
 	BEGIN_EVENT_D3D(L"Spheres");
 	pd3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
-    pd3dImmediateContext->IASetVertexBuffers(0, 1, sphereVBs, &strides, &offsets);	
+    pd3dImmediateContext->IASetVertexBuffers(0, 1, &_sphereVB, &strides, &offsets);	
 	for (UINT i = 0; i < _objects.GetSphereCount(); i++)
 	{
 		Sphere* sphere = _objects.GetSphere(i);
@@ -335,6 +374,17 @@ HRESULT BoundingObjectPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 	ibDesc.ByteWidth = sizeof(WORD) * 24;
 	V_RETURN(pd3dDevice->CreateBuffer(&ibDesc, &initData, &_boxIB));
 
+	D3D11_BUFFER_DESC dynamicVBDesc = 
+	{
+		sizeof(BOUNDING_OBJECT_VERTEX) * 8, // INT ByteWidth;
+		D3D11_USAGE_DYNAMIC, // D3D11_USAGE Usage;
+		D3D11_BIND_VERTEX_BUFFER, // UINT BindFlags;
+		D3D11_CPU_ACCESS_WRITE, // UINT CPUAccessFlags;
+		0, // UINT MiscFlags;
+		0, // UINT StructureByteStride;
+	};
+	V_RETURN(pd3dDevice->CreateBuffer(&dynamicVBDesc, NULL, &_frustVB));
+
 	// Create the sphere vb
 	BOUNDING_OBJECT_VERTEX sphereVerts[SPHERE_POINT_COUNT];
 	fillRingVB(sphereVerts, (SPHERE_POINT_COUNT / 3) * 0, (SPHERE_POINT_COUNT / 3), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 1.0f));
@@ -355,6 +405,7 @@ void BoundingObjectPostProcess::OnD3D11DestroyDevice()
 
 	SAFE_RELEASE(_boxIB);
 	SAFE_RELEASE(_boxVB);
+	SAFE_RELEASE(_frustVB);
 	SAFE_RELEASE(_sphereVB);
 	SAFE_RELEASE(_inputLayout);
 	SAFE_RELEASE(_vertexShader);
