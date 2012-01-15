@@ -3,13 +3,14 @@
 #include "Logger.h"
 #include "PixelShaderLoader.h"
 #include "VertexShaderLoader.h"
+#include "ModelInstanceSet.h"
 
 const float CascadedDirectionalLightRenderer::CASCADE_SPLITS[NUM_CASCADES] = { 0.0625f, 0.125f, 0.25f, 1.0f };
 const float CascadedDirectionalLightRenderer::BIAS = 0.005f;
 
 CascadedDirectionalLightRenderer::CascadedDirectionalLightRenderer()
 	: _depthVSNoAlpha(NULL), _depthInputNoAlpha(NULL), _alphaCutoutProperties(NULL),
-	  _depthVSAlpha(NULL), _depthInputAlpha(NULL), _depthPSAlpha(NULL), _depthPropertiesBuffer(NULL),
+	  _depthVSAlpha(NULL), _depthInputAlpha(NULL), _depthPSAlpha(NULL), _instanceWVPVB(NULL),
 	  _unshadowedPS(NULL), _shadowedPS(NULL), _cameraPropertiesBuffer(NULL), _lightPropertiesBuffer(NULL),
 	  _shadowPropertiesBuffer(NULL), _unshadowedParticlePS(NULL), _shadowedParticlePS(NULL)
 {
@@ -437,7 +438,7 @@ HRESULT CascadedDirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 
 	pd3dImmediateContext->PSSetConstantBuffers(1, 1, &_alphaCutoutProperties);
 
-	// Store this for later
+	// Store this for later	
 	XMFLOAT4X4 fView = camera->GetView();
 	XMMATRIX cameraView = XMLoadFloat4x4(&fView);
 
@@ -447,25 +448,33 @@ HRESULT CascadedDirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 	XMFLOAT4X4 fProj = camera->GetProjection();
 	XMMATRIX cameraProj = XMLoadFloat4x4(&fProj);
 
+	XMFLOAT3 fCamForward = camera->GetForward();
+	XMVECTOR camFwd = XMLoadFloat3(&fCamForward);
+
+	XMFLOAT3 fCamPos = camera->GetPosition();
+	XMVECTOR camPos = XMLoadFloat3(&fCamPos);
+
 	// Compute the inverse of the camera's view
 	XMVECTOR det;
 	XMMATRIX inverseCameraView = XMMatrixInverse(&det, cameraView);	
 
 	// Calculate the scene aabb in light space
-	XMVECTOR lightDir = XMLoadFloat3(&dlight->GetDirection());
-	XMFLOAT3 lightOrigin = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
-
-	XMMATRIX mLightCameraView = XMMatrixLookAtLH(XMLoadFloat3(&lightOrigin), -lightDir, up);
-
 	XMVECTOR vSceneCenter = XMLoadFloat3(&sceneBounds->Center);
 	XMVECTOR vSceneExtents = XMLoadFloat3(&sceneBounds->Extents);
 
+	XMFLOAT3 fLightDir = dlight->GetDirection();
+	XMVECTOR lightDir = XMLoadFloat3(&fLightDir);	
+	XMVECTOR lightOrigin =  XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+
+	XMMATRIX mLightCameraView = XMMatrixLookToLH(lightOrigin, -lightDir, up);
+	XMMATRIX mInvLightCameraView = XMMatrixInverse(&det, mLightCameraView);	
+
 	XMVECTOR vSceneAABBPointsLightSpace[8];
 	CreateAABBPoints(vSceneAABBPointsLightSpace, vSceneCenter, vSceneExtents);
-	for(int i = 0; i < 8; i++) 
+	for(int cascadeIdx = 0; cascadeIdx < 8; cascadeIdx++) 
 	{
-		vSceneAABBPointsLightSpace[i] = XMVector4Transform(vSceneAABBPointsLightSpace[i], mLightCameraView); 
+		vSceneAABBPointsLightSpace[cascadeIdx] = XMVector4Transform(vSceneAABBPointsLightSpace[cascadeIdx], mLightCameraView); 
 	}
 
 	FLOAT fFrustumIntervalBegin, fFrustumIntervalEnd;
@@ -486,7 +495,10 @@ HRESULT CascadedDirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 	int numRows = (int)sqrtf((float)NUM_CASCADES);
     float cascadeSize = (float)SHADOW_MAP_SIZE / numRows;
 
-	for (UINT i = 0; i < NUM_CASCADES; i++)
+	UINT instanceVBStride = sizeof(XMFLOAT4X4);
+	UINT instanceVBOffset = 0;
+
+	for (UINT cascadeIdx = 0; cascadeIdx < NUM_CASCADES; cascadeIdx++)
 	{
 		// Create the viewport
 		D3D11_VIEWPORT vp;
@@ -494,15 +506,15 @@ HRESULT CascadedDirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 		vp.MaxDepth = 1.0f;
 		vp.Width = cascadeSize;
 		vp.Height = cascadeSize;
-		vp.TopLeftX = offsets[i].x * cascadeSize * 2.0f;
-        vp.TopLeftY = offsets[i].y * cascadeSize * 2.0f;
+		vp.TopLeftX = offsets[cascadeIdx].x * cascadeSize * 2.0f;
+        vp.TopLeftY = offsets[cascadeIdx].y * cascadeSize * 2.0f;
 
 		pd3dImmediateContext->RSSetViewports(1, &vp);
 
 		// calc the split depths
-        float splitDist = CASCADE_SPLITS[i];
+        float splitDist = CASCADE_SPLITS[cascadeIdx];
 
-		fFrustumIntervalBegin = 0.0f;
+		fFrustumIntervalBegin = camera->GetNearClip();
 		fFrustumIntervalEnd = splitDist * fCameraNearFarRange;
 		
 		XMVECTOR vFrustumPoints[8];
@@ -518,6 +530,7 @@ HRESULT CascadedDirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
         {
             // Transform the frustum from camera view space to world space.
             vFrustumPoints[icpIndex] = XMVector4Transform(vFrustumPoints[icpIndex], inverseCameraView);
+			
             // Transform the point from world space to Light Camera Space.
             vTempTranslatedCornerPoint = XMVector4Transform(vFrustumPoints[icpIndex], mLightCameraView);
             // Find the closest point.
@@ -582,60 +595,80 @@ HRESULT CascadedDirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 		XMMATRIX shadowViewProj = XMMatrixMultiply(mLightCameraView, shadowProj);
 
 		// Create the shadow frustum for intersection tests
-		Frustum shadowFrust;
-		Collision::ComputeFrustumFromProjection(&shadowFrust, &shadowProj);
-		shadowFrust.Origin = lightOrigin;
-		XMStoreFloat4(&shadowFrust.Orientation, XMQuaternionNormalize(-lightDir));
+		OrientedBox shadowObb;
+		XMVECTOR obbCenter = camPos + (camFwd * ((fFrustumIntervalEnd + fFrustumIntervalBegin) * 0.5f));
+		XMStoreFloat3(&shadowObb.Center, obbCenter);
+
+		shadowObb.Extents.x = (XMVectorGetX(vLightCameraOrthographicMax) - XMVectorGetX(vLightCameraOrthographicMin)) * 0.5f;
+		shadowObb.Extents.y = (XMVectorGetY(vLightCameraOrthographicMax) - XMVectorGetY(vLightCameraOrthographicMin)) * 0.5f;
+		shadowObb.Extents.z = (fFarPlane - fNearPlane) * 0.5f;
 		
-		// Render the depth of all the models in the scene
-		for (UINT j = 0; j < models->size(); j++)
+		XMStoreFloat4(&shadowObb.Orientation, XMQuaternionRotationMatrix(mInvLightCameraView));
+		
+		ModelInstanceSet modelSet = ModelInstanceSet(models, &shadowObb);
+		
+		// Copy the instance wvp matrices into the vertex buffer
+		V_RETURN(pd3dImmediateContext->Map(_instanceWVPVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+		XMFLOAT4X4* instanceVB = (XMFLOAT4X4*)mappedResource.pData;
+
+		for (UINT i = 0; i < modelSet.GetModelCount(); i++)
 		{
-			ModelInstance* instance = models->at(j);
-			Model* model = instance->GetModel();
-
-			// Preform a collision check
-			OrientedBox modelBounds = instance->GetOrientedBox();
-
-			int modelIntersect = Collision::IntersectOrientedBoxFrustum(&modelBounds, &shadowFrust);
-			if (!modelIntersect)
+			for (UINT j = 0; j < modelSet.GetInstanceCount(i); j++)
 			{
-				//continue;
-			}
+				ModelInstance* instance = modelSet.GetInstance(i, j);
 
-			// Prepare the buffer
-			XMFLOAT4X4 fWorld = instance->GetWorld();
-			XMMATRIX wvp = XMMatrixMultiply(XMLoadFloat4x4(&fWorld), shadowViewProj);
-		
-			V_RETURN(pd3dImmediateContext->Map(_depthPropertiesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
-			CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES* modelProperties = (CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES*)mappedResource.pData;
-			XMStoreFloat4x4(&modelProperties->WorldViewProjection, XMMatrixTranspose(wvp));
-			pd3dImmediateContext->Unmap(_depthPropertiesBuffer, 0);
-			
-			pd3dImmediateContext->VSSetConstantBuffers(0, 1, &_depthPropertiesBuffer);
-			
-			// Render the mesh parts
-			for (UINT k = 0; k < model->GetMeshCount(); k++)
-			{
-				// If the main box is completely within the frust, we can skip the mesh check
-				if (modelIntersect != COMPLETELY_INSIDE)
-				{
-					const OrientedBox& meshBounds = instance->GetMeshOrientedBox(k);
-								
-					if (!Collision::IntersectOrientedBoxFrustum(&meshBounds, &shadowFrust))
-					{
-						//continue;
-					}
-				}
+				XMFLOAT4X4 fWorld = instance->GetWorld();
+				XMMATRIX world = XMLoadFloat4x4(&fWorld);
 
-				bool alphaCutoutEnabled = GetAlphaCutoutEnabled() && model->GetMesh(k)->GetAlphaCutoutEnabled();
-
-				pd3dImmediateContext->VSSetShader(alphaCutoutEnabled ? _depthVSAlpha : _depthVSNoAlpha, NULL, 0);
-				pd3dImmediateContext->PSSetShader(alphaCutoutEnabled ? _depthPSAlpha : NULL, NULL, 0);
-
-				pd3dImmediateContext->IASetInputLayout(alphaCutoutEnabled ? _depthInputAlpha : _depthInputNoAlpha);
+				XMMATRIX wvp = XMMatrixMultiply(XMLoadFloat4x4(&fWorld), shadowViewProj);
 				
-				model->RenderMesh(pd3dImmediateContext, k, INVALID_BUFFER_SLOT, 
-					alphaCutoutEnabled ? 0 : INVALID_SAMPLER_SLOT, INVALID_SAMPLER_SLOT, INVALID_SAMPLER_SLOT);
+				XMStoreFloat4x4(&instanceVB[modelSet.GetGlobalIndex(i, j)], XMMatrixTranspose(wvp));
+			}
+		}
+
+		pd3dImmediateContext->Unmap(_instanceWVPVB, 0);
+
+		pd3dImmediateContext->IASetVertexBuffers(1, 1, &_instanceWVPVB, &instanceVBStride, &instanceVBOffset);
+
+		for (UINT i = 0; i < modelSet.GetModelCount(); i++)
+		{
+			Model* model = modelSet.GetModel(i);
+
+			// Render each mesh
+			for (UINT j = 0; j < model->GetMeshCount(); j++)
+			{
+				const Mesh* mesh = model->GetMesh(j);
+				UINT partCount = mesh->GetMeshPartCount();
+
+				ID3D11Buffer* meshVB = mesh->GetVertexBuffer();
+				UINT meshStride = mesh->GetVertexStride();
+				UINT meshOffset = 0;
+
+				pd3dImmediateContext->IASetVertexBuffers(0, 1, &meshVB, &meshStride, &meshOffset);
+				pd3dImmediateContext->IASetIndexBuffer(mesh->GetIndexBuffer(), mesh->GetIndexBufferFormat(), 0);
+				pd3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+				for (UINT k = 0; k < partCount; k++)
+				{
+					const MeshPart* part = mesh->GetMeshPart(k);
+					const Material* mat = model->GetMaterial(part->MaterialIndex);
+
+					bool alphaCutoutEnabled = GetAlphaCutoutEnabled() && mesh->GetAlphaCutoutEnabled();
+
+					pd3dImmediateContext->VSSetShader(alphaCutoutEnabled ? _depthVSAlpha : _depthVSNoAlpha, NULL, 0);
+					pd3dImmediateContext->PSSetShader(alphaCutoutEnabled ? _depthPSAlpha : NULL, NULL, 0);
+
+					pd3dImmediateContext->IASetInputLayout(alphaCutoutEnabled ? _depthInputAlpha : _depthInputNoAlpha);
+
+					if (alphaCutoutEnabled)
+					{
+						ID3D11ShaderResourceView* diffuseSRV = mat->GetDiffuseSRV();
+						pd3dImmediateContext->PSSetShaderResources(0, 1, &diffuseSRV);
+					}
+
+					pd3dImmediateContext->DrawIndexedInstanced(part->IndexCount, modelSet.GetInstanceCount(i),
+						part->IndexStart, part->VertexStart, modelSet.GetGlobalIndex(i, 0));
+				}
 			}
 		}
 
@@ -650,13 +683,13 @@ HRESULT CascadedDirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 		// Calculate the offset/scale matrix, which applies the offset and scale needed to
         // convert the UV coordinate into the proper coordinate for the cascade being sampled in
         // the atlas.
-        XMFLOAT4 offset = XMFLOAT4(offsets[i].x, offsets[i].y, 0.0f, 1.0);
+        XMFLOAT4 offset = XMFLOAT4(offsets[cascadeIdx].x, offsets[cascadeIdx].y, 0.0f, 1.0);
         XMMATRIX cascadeOffsetMatrix = XMMatrixScaling(0.5f, 0.5f, 1.0f);
         cascadeOffsetMatrix.r[3] = XMLoadFloat4(&offset);
 
-		XMStoreFloat4x4(&_shadowMatricies[shadowMapIdx][i], XMMatrixTranspose(shadowViewProj));
-		XMStoreFloat4x4(&_shadowTexCoordTransforms[shadowMapIdx][i], XMMatrixTranspose(cascadeOffsetMatrix));
-		_cascadeSplits[shadowMapIdx][i] = fFrustumIntervalEnd;
+		XMStoreFloat4x4(&_shadowMatricies[shadowMapIdx][cascadeIdx], XMMatrixTranspose(shadowViewProj));
+		XMStoreFloat4x4(&_shadowTexCoordTransforms[shadowMapIdx][cascadeIdx], XMMatrixTranspose(cascadeOffsetMatrix));
+		_cascadeSplits[shadowMapIdx][cascadeIdx] = fFrustumIntervalEnd;
 	}
 
 	return S_OK;
@@ -869,7 +902,11 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 	// Load alpha cutout disabled vertex shader and input layout
 	D3D11_INPUT_ELEMENT_DESC noAlphaLayout[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,		0, 0, D3D11_INPUT_PER_VERTEX_DATA,		0 },
+		{ "WVP",	  0, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 0,  D3D11_INPUT_PER_INSTANCE_DATA,	1 },
+		{ "WVP",	  1, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 16, D3D11_INPUT_PER_INSTANCE_DATA,	1 },
+		{ "WVP",	  2, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 32, D3D11_INPUT_PER_INSTANCE_DATA,	1 },
+		{ "WVP",	  3, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 48, D3D11_INPUT_PER_INSTANCE_DATA,	1 },
 	};	
 
 	VertexShaderOptions vsNoAlphaOpts =
@@ -877,7 +914,7 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 		"VS_DepthNoAlpha",						// const char* EntryPoint;
 		NULL,									// D3D_SHADER_MACRO* Defines;
 		noAlphaLayout,							// D3D11_INPUT_ELEMENT_DESC* InputElements;
-		1,										// UINT InputElementCount;
+		ARRAYSIZE(noAlphaLayout),				// UINT InputElementCount;
 		"Directional Depth (alpha cutout = 0)"	// const char* DebugName;
 	};
 
@@ -895,8 +932,12 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 	// Load the alpha cutout enabled vertex shader and input layout
 	D3D11_INPUT_ELEMENT_DESC alphaLayout[] =
 	{
-		{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD",  0, DXGI_FORMAT_R32G32_FLOAT,    0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT,		0, 0,  D3D11_INPUT_PER_VERTEX_DATA,		0 },
+		{ "TEXCOORD",  0, DXGI_FORMAT_R32G32_FLOAT,			0, 24, D3D11_INPUT_PER_VERTEX_DATA,		0 },
+		{ "WVP",	   0, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 0,  D3D11_INPUT_PER_INSTANCE_DATA,	1 },
+		{ "WVP",	   1, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 16, D3D11_INPUT_PER_INSTANCE_DATA,	1 },
+		{ "WVP",	   2, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 32, D3D11_INPUT_PER_INSTANCE_DATA,	1 },
+		{ "WVP",	   3, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 48, D3D11_INPUT_PER_INSTANCE_DATA,	1 },
 	};
 
 	VertexShaderOptions vsAlphaOpts =
@@ -904,7 +945,7 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 		"VS_DepthAlpha",						// const char* EntryPoint;
 		NULL,									// D3D_SHADER_MACRO* Defines;
 		alphaLayout,							// D3D11_INPUT_ELEMENT_DESC* InputElements;
-		2,										// UINT InputElementCount;
+		ARRAYSIZE(alphaLayout),					// UINT InputElementCount;
 		"Directional Depth (alpha cutout = 1)"	// const char* DebugName;
 	};
 
@@ -1007,10 +1048,7 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 
 	bufferDesc.ByteWidth = sizeof(CB_DIRECTIONALLIGHT_ALPHACUTOUT_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_alphaCutoutProperties));
-
-	bufferDesc.ByteWidth = sizeof(CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES);
-	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_depthPropertiesBuffer));
-
+	
 	bufferDesc.ByteWidth = sizeof(CB_DIRECTIONALLIGHT_CAMERA_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_cameraPropertiesBuffer));
 	
@@ -1019,6 +1057,17 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 
 	bufferDesc.ByteWidth = sizeof(CB_DIRECTIONALLIGHT_SHADOW_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_shadowPropertiesBuffer));
+
+	D3D11_BUFFER_DESC vbDesc = 
+	{
+		sizeof(XMFLOAT4X4) * MAX_INSTANCES, // INT ByteWidth;
+		D3D11_USAGE_DYNAMIC, // D3D11_USAGE Usage;
+		D3D11_BIND_VERTEX_BUFFER, // UINT BindFlags;
+		D3D11_CPU_ACCESS_WRITE, // UINT CPUAccessFlags;
+		0, // UINT MiscFlags;
+		0, // UINT StructureByteStride;
+	};
+	V_RETURN(pd3dDevice->CreateBuffer(&vbDesc, NULL, &_instanceWVPVB));
 
 	// Create the shadow textures
 	D3D11_TEXTURE2D_DESC shadowMapTextureDesc = 
@@ -1088,8 +1137,8 @@ void CascadedDirectionalLightRenderer::OnD3D11DestroyDevice()
 	SAFE_RELEASE(_depthVSAlpha);
 	SAFE_RELEASE(_depthInputAlpha);
 	SAFE_RELEASE(_depthPSAlpha);
-
-	SAFE_RELEASE(_depthPropertiesBuffer);
+	
+	SAFE_RELEASE(_instanceWVPVB);
 
 	SAFE_RELEASE(_unshadowedPS);
 	SAFE_RELEASE(_shadowedPS);

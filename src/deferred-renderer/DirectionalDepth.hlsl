@@ -1,8 +1,3 @@
-cbuffer cbModelProperties : register(c0)
-{
-    float4x4 WorldViewProjection	: packoffset(c0.x);
-}
-
 cbuffer cbAlphaCutoutProperties : register(c1)
 {
     float AlphaThreshold	: packoffset(c0);
@@ -12,6 +7,7 @@ cbuffer cbAlphaCutoutProperties : register(c1)
 struct VS_In_DepthNoAlpha
 {
 	float4 vPositionOS	: POSITION;
+	float4x4 mWVP		: WVP;
 };
 
 struct VS_Out_DepthNoAlpha
@@ -23,7 +19,7 @@ VS_Out_DepthNoAlpha VS_DepthNoAlpha(VS_In_DepthNoAlpha input)
 {
     VS_Out_DepthNoAlpha output;
 
-    output.vPositionCS = mul(input.vPositionOS, WorldViewProjection);
+    output.vPositionCS = mul(input.vPositionOS, input.mWVP);
 
     return output;
 }
@@ -36,6 +32,7 @@ struct VS_In_DepthAlpha
 {
 	float4 vPositionOS	: POSITION;
 	float2 vTexCoord	: TEXCOORD;
+	float4x4 mWVP		: WVP;
 };
 
 struct VS_Out_DepthAlpha
@@ -48,7 +45,7 @@ VS_Out_DepthAlpha VS_DepthAlpha(VS_In_DepthAlpha input)
 {
     VS_Out_DepthAlpha output;
 
-    output.vPositionCS = mul(input.vPositionOS, WorldViewProjection);
+    output.vPositionCS = mul(input.vPositionOS, input.mWVP);
 	output.vTexCoord = input.vTexCoord;
 
     return output;

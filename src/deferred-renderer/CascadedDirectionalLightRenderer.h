@@ -6,6 +6,8 @@
 #include "FullscreenQuad.h"
 #include "DeviceStates.h"
 
+#include "BoundingObjectPostProcess.h"
+
 class CascadedDirectionalLightRenderer : public LightRenderer<DirectionalLight>
 {
 private:
@@ -18,13 +20,14 @@ private:
 	ID3D11InputLayout* _depthInputAlpha;
 	ID3D11PixelShader* _depthPSAlpha;
 	ID3D11Buffer* _alphaCutoutProperties;
-
-	ID3D11Buffer* _depthPropertiesBuffer;	
-
+	
 	ID3D11PixelShader* _unshadowedPS;
 	ID3D11PixelShader* _shadowedPS;
 	ID3D11PixelShader* _unshadowedParticlePS;
 	ID3D11PixelShader* _shadowedParticlePS;
+
+	static const UINT MAX_INSTANCES = 128;
+	ID3D11Buffer* _instanceWVPVB;
 
 	ID3D11Buffer* _cameraPropertiesBuffer;
 	ID3D11Buffer* _lightPropertiesBuffer;
@@ -55,11 +58,6 @@ private:
 		UINT shadowMapIdx, std::vector<ModelInstance*>* models, Camera* camera,
 		AxisAlignedBox* sceneBounds);
 	
-	struct CB_DIRECTIONALLIGHT_DEPTH_PROPERTIES
-	{
-		XMFLOAT4X4 WorldViewProjection;
-	};
-
 	struct CB_DIRECTIONALLIGHT_ALPHACUTOUT_PROPERTIES
 	{
 		float AlphaThreshold;
@@ -95,7 +93,7 @@ protected:
 
 public:
 	CascadedDirectionalLightRenderer();
-
+	
 	HRESULT RenderGeometryShadowMaps(ID3D11DeviceContext* pd3dImmediateContext, std::vector<ModelInstance*>* models,
 		Camera* camera, AxisAlignedBox* sceneBounds);
 	HRESULT RenderGeometryLights(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera,
