@@ -1,7 +1,7 @@
 #pragma once
 
 #include "PCH.h"
-#include "Camera.h"
+#include "xnaCollision.h"
 #include "Model.h"
 #include "ModelInstance.h"
 
@@ -12,9 +12,14 @@ private:
 	std::vector<UINT> _globalIndices;
 	UINT _instanceCount;
 
+	void createSet(std::vector<ModelInstance*>* instances);
+
 public:
-	ModelInstanceSet(std::vector<ModelInstance*>* instances, Camera* camera);
-	
+	ModelInstanceSet(std::vector<ModelInstance*>* instances, const Frustum* frust);
+	ModelInstanceSet(std::vector<ModelInstance*>* instances, const Sphere* sphere);
+	ModelInstanceSet(std::vector<ModelInstance*>* instances, const OrientedBox* obb);
+	ModelInstanceSet(std::vector<ModelInstance*>* instances, const AxisAlignedBox* aabb);
+
 	UINT GetModelCount() const;
 	Model* GetModel(UINT idx);
 
@@ -23,5 +28,4 @@ public:
 	ModelInstance* GetInstance(UINT modelIdx, UINT instanceIdx);
 
 	UINT GetGlobalIndex(UINT modelIndex, UINT instanceIdx) const;
-
 };

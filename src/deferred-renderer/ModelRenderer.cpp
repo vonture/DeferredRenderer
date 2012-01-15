@@ -69,8 +69,8 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext,
 
 	pd3dDeviceContext->VSSetConstantBuffers(0, 1, &_modelPropertiesBuffer);
 	
-	
-	ModelInstanceSet modelSet = ModelInstanceSet(instances, camera);
+	Frustum cameraFrust = camera->CreateFrustum();
+	ModelInstanceSet modelSet = ModelInstanceSet(instances, &cameraFrust);
 
 	// Copy the instance world matrices into the vertex buffer
 	V(pd3dDeviceContext->Map(_instanceWorldVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
