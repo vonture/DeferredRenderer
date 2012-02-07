@@ -15,13 +15,15 @@
 #define STRICT							// Use strict declarations for Windows types
 
 // Warning disables
-#pragma warning(disable: 4100) // disable unreference formal parameter warnings for /W4 builds
+#pragma warning(disable: 4100) // disable unreferenced formal parameter warnings for /W4 builds
 #pragma warning(disable: 4324) // Padding added from aligned members
 
 // Windows header
 #include <windows.h>
+#include <Shlobj.h>
 #include <commctrl.h>
 #include <psapi.h>
+#include <stdint.h>
 
 // C RunTime Header Files
 #include <stdlib.h>
