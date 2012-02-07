@@ -12,7 +12,7 @@ const UINT MLAAPostProcess::WEIGHT_TEXTURE_SIZES[NUM_WEIGHT_TEXTURES] =
 	17, 33
 #endif
 };
-const WCHAR* MLAAPostProcess::WEIGHT_TEXTURE_PATH = L"media\\MLAA\\AreaMap";
+const WCHAR* MLAAPostProcess::WEIGHT_TEXTURE_PATH = L"MLAA\\AreaMap";
 
 MLAAPostProcess::MLAAPostProcess()
 	: _edgeDetectTexture(NULL), _edgeDetectRTV(NULL), _edgeDetectSRV(NULL),
