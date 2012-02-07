@@ -59,7 +59,7 @@ inline int AnsiToWString(const char* ansiString, WCHAR* output, UINT outputLengt
 
 inline int WStringToAnsi(const WCHAR* wString, char* output, UINT outputLength)
 {
-	return WideCharToMultiByte(CP_ACP, 0, wString, -1, output, outputLength, NULL, false);
+	return WideCharToMultiByte(CP_ACP, 0, wString, -1, output, outputLength, NULL, NULL);
 }
 
 inline int GetExtensionFromFileNameW(const WCHAR* fileName, WCHAR* output, UINT outputLength)
@@ -139,6 +139,37 @@ inline int GetDirectoryFromFileNameS(const char* fileName, char* output, UINT ou
         strcpy_s(output, outputLength, "");
 	}
 
+	return 1;
+}
+
+inline int GetDirectoryFromFileNameW(const std::wstring& input, std::wstring& output)
+{
+	size_t idx = input.rfind(L'\\');
+	if (idx != std::wstring::npos)
+	{
+		output = input.substr(0, idx + 1).c_str();
+	}
+	else
+	{
+		output = std::wstring(L"");
+	}
+
+	return 1;
+}
+
+inline int GetDirectoryFromFileNameS(const std::string& input, std::string& output)
+{
+	size_t idx = input.rfind(L'\\');
+	if (idx != std::wstring::npos)
+	{
+		output = input.substr(0, idx + 1).c_str();
+	}
+	else
+	{
+		output = std::string("");
+	}
+
+	return 1;
 	return 1;
 }
 
