@@ -15,28 +15,14 @@ HRESULT FontLoader::GenerateContentHash(const WCHAR* path, FontOptions* options,
 	return S_OK;
 }
 
-HRESULT FontLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
-		FontOptions* options, WCHAR* errorMsg, UINT errorLen, SpriteFont** contentOut)
+HRESULT FontLoader::LoadFromCompiledContentFile(ID3D11Device* device, std::istream* input, 
+	FontOptions* options, WCHAR* errorMsg, UINT errorLen, SpriteFont** contentOut)
 {
-	WCHAR logMsg[MAX_LOG_LENGTH];
-	swprintf_s(logMsg, L"Loading - %s", path);
-	LOG_INFO(L"Font Loader", logMsg);
-
-	SpriteFont* font = new SpriteFont();
-
-	HRESULT hr = font->CreateFromFile(device, path);
-	if (FAILED(hr))
-	{
-		delete font;
-		return hr;
-	}
-
-	*contentOut = font;
-	return S_OK;
+	return SpriteFont::Create(device, input, contentOut);
 }
 
-HRESULT FontLoader::LoadFromCompiledContentFile(ID3D11Device* device, const WCHAR* path, WCHAR* errorMsg,
-		UINT errorLen, SpriteFont** contentOut)
+HRESULT FontLoader::CompileContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump,
+	const WCHAR* path, FontOptions* options, WCHAR* errorMsg, UINT errorLen, std::ostream* output)
 {
-	return E_NOTIMPL;
+	return SpriteFont::Compile(device, path, output);
 }

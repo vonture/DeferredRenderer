@@ -4,8 +4,8 @@
 
 Mesh::Mesh()
 	: _indexBuffer(NULL), _indexCount(0), _vertexBuffer(NULL), _vertexCount(0), _vertexStride(0), 
-	  _meshParts(NULL), _meshPartCount(0), _inputElements(NULL), _alphaCutoutEnabled(true), _drawBackFaces(false), 
-	  _name(NULL)
+	  _meshParts(NULL), _meshPartCount(0), _inputElements(NULL), _alphaCutoutEnabled(true),
+	  _drawBackFaces(false), _name(NULL)
 {
 }
 
@@ -14,7 +14,7 @@ Mesh::~Mesh()
 	Destroy();
 }
 
-static D3DXVECTOR3 Perpendicular(const D3DXVECTOR3& vec)
+D3DXVECTOR3 Mesh::Perpendicular(const D3DXVECTOR3& vec)
 {
     _ASSERT(D3DXVec3Length(&vec) >= EPSILON);
 
@@ -46,7 +46,7 @@ static D3DXVECTOR3 Perpendicular(const D3DXVECTOR3& vec)
     return perp;
 }
 
-ID3DXMesh* GenerateTangentFrame(ID3DXMesh* mesh, UINT numVertices, UINT numIndices,
+ID3DXMesh* Mesh::GenerateTangentFrame(ID3DXMesh* mesh, UINT numVertices, UINT numIndices,
 	DXGI_FORMAT indexType, IDirect3DDevice9* d3d9Device)
 {
 	HRESULT hr;
@@ -216,7 +216,8 @@ ID3DXMesh* GenerateTangentFrame(ID3DXMesh* mesh, UINT numVertices, UINT numIndic
     return clonedMesh;
 }
 
-void Mesh::CreateInputElements(D3DVERTEXELEMENT9* declaration)
+void Mesh::CreateInputElements(D3DVERTEXELEMENT9* declaration, D3D11_INPUT_ELEMENT_DESC** output, 
+	UINT* elementCount)
 {
     std::map<BYTE, LPCSTR> nameMap;
     nameMap[D3DDECLUSAGE_POSITION] = "POSITION";
@@ -248,18 +249,18 @@ void Mesh::CreateInputElements(D3DVERTEXELEMENT9* declaration)
     formatMap[D3DDECLTYPE_FLOAT16_4] = DXGI_FORMAT_R16G16B16A16_FLOAT;
 
     // Figure out the number of elements
-	for (_inputElementCount = 0; declaration[_inputElementCount].Stream != 0xFF; _inputElementCount++);
+	for (*elementCount = 0; declaration[*elementCount].Stream != 0xFF; (*elementCount)++);
 
-	_inputElements = new D3D11_INPUT_ELEMENT_DESC[_inputElementCount];
-    for (UINT i = 0; i < _inputElementCount; i++)
+	*output = new D3D11_INPUT_ELEMENT_DESC[*elementCount];
+    for (UINT i = 0; i < (*elementCount); i++)
     {
-        _inputElements[i].InputSlot = 0;
-        _inputElements[i].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-        _inputElements[i].InstanceDataStepRate = 0;
-        _inputElements[i].SemanticName = nameMap[declaration[i].Usage];
-        _inputElements[i].Format = formatMap[declaration[i].Type];
-        _inputElements[i].AlignedByteOffset = declaration[i].Offset;
-        _inputElements[i].SemanticIndex = declaration[i].UsageIndex;
+        (*output)[i].InputSlot = 0;
+        (*output)[i].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+        (*output)[i].InstanceDataStepRate = 0;
+        (*output)[i].SemanticName = nameMap[declaration[i].Usage];
+        (*output)[i].Format = formatMap[declaration[i].Type];
+        (*output)[i].AlignedByteOffset = declaration[i].Offset;
+        (*output)[i].SemanticIndex = declaration[i].UsageIndex;
     }
 }
 
@@ -281,10 +282,11 @@ HRESULT Mesh::CreateFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d9
 
 	// Make a D3DX mesh
     ID3DXMesh* d3dxMesh = NULL;
+	SDKMESH_MESH* meshMesh = model->GetMesh(meshIdx);
     UINT numPrims = static_cast<UINT>(model->GetNumIndices(meshIdx) / 3);
     UINT numVerts = static_cast<UINT>(model->GetNumVertices(meshIdx, 0));
-    UINT vbIndex = model->GetMesh(meshIdx)->VertexBuffers[0];
-    UINT ibIndex = model->GetMesh(meshIdx)->IndexBuffer;
+    UINT vbIndex = meshMesh->VertexBuffers[0];
+    UINT ibIndex = meshMesh->IndexBuffer;
     const D3DVERTEXELEMENT9* vbElements = model->VBElements(vbIndex);
 	
     V_RETURN(D3DXCreateMesh(numPrims, numVerts, ops, vbElements, d3d9Device, &d3dxMesh));
@@ -348,7 +350,7 @@ HRESULT Mesh::CreateFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d9
 	// Convert the D3D9 vertex declaration to a D3D11 input element desc
     D3DVERTEXELEMENT9 declaration[MAX_FVF_DECL_SIZE];
     V_RETURN(d3dxMesh->GetDeclaration(declaration));
-    CreateInputElements(declaration);
+    CreateInputElements(declaration, &_inputElements, &_inputElementCount);
 
 	// Copy over the vertex data
     void* vertices = NULL;
@@ -421,6 +423,7 @@ HRESULT Mesh::CreateFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d9
 	
 	delete[] attributes;
 	delete[] attributeTable;
+	SAFE_RELEASE(d3dxMesh);
 	
 	return S_OK;
 }
@@ -432,20 +435,12 @@ HRESULT Mesh::CreateFromASSIMPMesh(ID3D11Device* device, const aiScene* scene, U
 	aiMesh* mesh = scene->mMeshes[meshIdx];
 
 	if (!mesh->HasFaces() || !mesh->HasNormals() || !mesh->HasPositions() || 
-		!mesh->HasTangentsAndBitangents() || mesh->GetNumUVChannels() < 0)
+		!mesh->HasTangentsAndBitangents() || mesh->GetNumUVChannels() == 0)
 	{
 		return E_FAIL;
 	}
 
 	// Create an array of verticies
-	struct Vertex
-    {
-        XMFLOAT3 Position;
-        XMFLOAT3 Normal;
-        XMFLOAT2 TexCoord;
-        XMFLOAT3 Tangent;
-        XMFLOAT3 Bitangent;
-    };
 	_vertexStride = sizeof(Vertex);
 	
 	UINT uvChannel = 0;
@@ -554,6 +549,124 @@ HRESULT Mesh::CreateFromASSIMPMesh(ID3D11Device* device, const aiScene* scene, U
 	return S_OK;
 }
 
+HRESULT Mesh::CompileFromASSIMPMesh(ID3D11Device* device, const aiScene* scene, UINT meshIdx, std::ostream* output )
+{
+	aiMesh* mesh = scene->mMeshes[meshIdx];
+
+	if (!mesh->HasFaces() || !mesh->HasNormals() || !mesh->HasPositions() || 
+		!mesh->HasTangentsAndBitangents() || mesh->GetNumUVChannels() == 0)
+	{
+		return E_FAIL;
+	}
+
+
+	// Copy the name
+	if (mesh->mName.length > 0)
+	{
+		WCHAR* name = new WCHAR[mesh->mName.length + 1];
+		AnsiToWString(mesh->mName.data, name, mesh->mName.length + 1);
+
+		if (!output->write((const char*)&(mesh->mName.length), sizeof(UINT)))
+		{
+			delete[] name;
+			return E_FAIL;
+		}
+
+		if (!output->write((const char*)name, sizeof(WCHAR) * mesh->mName.length))
+		{
+			delete[] name;
+			return E_FAIL;
+		}
+
+		delete[] name;
+	}
+	else
+	{
+		WCHAR* name = new WCHAR[MAX_PATH];
+		swprintf_s(name, MAX_PATH, L"Mesh %u", meshIdx);
+
+		UINT len = wcslen(name);
+
+		if (!output->write((const char*)&len, sizeof(UINT)))
+		{
+			delete[] name;
+			return E_FAIL;
+		}
+
+		if (!output->write((const char*)name, sizeof(WCHAR) * len))
+		{
+			delete[] name;
+			return E_FAIL;
+		}
+
+		delete[] name;
+	}
+
+	UINT uvChannel = 0;
+
+	UINT vertexCount = mesh->mNumVertices;
+	if (!output->write((const char*)&vertexCount, sizeof(UINT)))
+	{
+		return E_FAIL;
+	}
+
+	Vertex vert;
+	for (UINT i = 0; i < vertexCount; i++)
+	{
+		vert.Position = XMFLOAT3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+		vert.TexCoord = XMFLOAT2(mesh->mTextureCoords[uvChannel][i].x, mesh->mTextureCoords[uvChannel][i].y);
+		vert.Normal = XMFLOAT3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);		
+		vert.Tangent = XMFLOAT3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
+		vert.Bitangent = XMFLOAT3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
+
+		if (!output->write((const char*)&vert, sizeof(Vertex)))
+		{
+			return E_FAIL;
+		}
+	}
+	
+	// Create the indices
+	DXGI_FORMAT format = DXGI_FORMAT_R32_UINT;
+	if (!output->write((const char*)&format, sizeof(DXGI_FORMAT)))
+	{
+		return E_FAIL;
+	}
+
+	UINT indexCount = mesh->mNumFaces * 3;
+	if (!output->write((const char*)&indexCount, sizeof(UINT)))
+	{
+		return E_FAIL;
+	}
+
+	for (UINT i = 0; i < mesh->mNumFaces; i++)
+	{
+		if (!output->write((const char*)mesh->mFaces[i].mIndices, sizeof(UINT) * 3))
+		{
+			return E_FAIL;
+		}		
+	}
+
+	MeshPart part;
+	part.IndexStart = 0;
+	part.IndexCount = indexCount;
+	part.MaterialIndex = mesh->mMaterialIndex;
+	part.VertexStart = 0;
+
+	UINT partCount = 1;
+
+	if (!output->write((const char*)&partCount, sizeof(UINT)))
+	{
+		return E_FAIL;
+	}
+
+	if (!output->write((const char*)&part, sizeof(MeshPart)))
+	{
+		return E_FAIL;
+	}
+
+	return S_OK;
+}
+
 void Mesh::Destroy()
 {
 	SAFE_RELEASE(_indexBuffer);
@@ -570,4 +683,298 @@ void Mesh::Destroy()
 	_inputElementCount = 0;
 
 	SAFE_DELETE(_name);
+}
+
+HRESULT Mesh::CompileFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d9Device, 
+	const WCHAR* modelPath, SDKMesh* model,	UINT meshIdx, std::ostream* output)
+{
+	HRESULT hr;
+
+	// Figure out the index type
+	UINT ops = D3DXMESH_MANAGED;
+	UINT indexSize = 2;
+	DXGI_FORMAT indexBufferFormat = DXGI_FORMAT_R16_UINT;
+	if (model->GetIndexType(meshIdx) == IT_32BIT)
+	{
+		ops |= D3DXMESH_32BIT;
+		indexSize = 4;
+		indexBufferFormat = DXGI_FORMAT_R32_UINT;
+	}
+
+	// Make a D3DX mesh
+	ID3DXMesh* d3dxMesh = NULL;
+	SDKMESH_MESH* meshMesh = model->GetMesh(meshIdx);
+	UINT numPrims = static_cast<UINT>(model->GetNumIndices(meshIdx) / 3);
+	UINT numVerts = static_cast<UINT>(model->GetNumVertices(meshIdx, 0));
+	UINT vbIndex = meshMesh->VertexBuffers[0];
+	UINT ibIndex = meshMesh->IndexBuffer;
+	const D3DVERTEXELEMENT9* vbElements = model->VBElements(vbIndex);
+
+	V_RETURN(D3DXCreateMesh(numPrims, numVerts, ops, vbElements, d3d9Device, &d3dxMesh));
+
+	// Copy in vertex data
+	BYTE* verts = NULL;
+	BYTE* srcVerts = reinterpret_cast<BYTE*>(model->GetRawVerticesAt(vbIndex));
+	UINT vbStride = model->GetVertexStride(meshIdx, 0);
+	UINT declStride = D3DXGetDeclVertexSize(vbElements, 0);
+	V_RETURN(d3dxMesh->LockVertexBuffer(0, reinterpret_cast<void**>(&verts)));
+	for (UINT vertIdx = 0; vertIdx < numVerts; ++vertIdx)
+	{
+		memcpy(verts, srcVerts, declStride);
+		verts += declStride;
+		srcVerts += vbStride;
+	}
+	V_RETURN(d3dxMesh->UnlockVertexBuffer());
+
+	// Copy in index data
+	void* indices = NULL;
+	void* srcIndices = model->GetRawIndicesAt(ibIndex);
+	V_RETURN(d3dxMesh->LockIndexBuffer(0, &indices));
+	memcpy(indices, srcIndices, numPrims * 3 * indexSize);
+	V_RETURN(d3dxMesh->UnlockIndexBuffer());
+
+	// Set up the attribute table
+	DWORD* attributeBuffer = NULL;
+	V_RETURN(d3dxMesh->LockAttributeBuffer(0, &attributeBuffer));
+
+	UINT numSubsets = model->GetNumSubsets(meshIdx);
+	D3DXATTRIBUTERANGE* attributes = new D3DXATTRIBUTERANGE[numSubsets];
+	for (UINT i = 0; i < numSubsets; ++i)
+	{
+		SDKMESH_SUBSET* subset = model->GetSubset(meshIdx, i);
+		attributes[i].AttribId = subset->MaterialID;
+		attributes[i].FaceStart = static_cast<DWORD>(subset->IndexStart / 3);
+		attributes[i].FaceCount = static_cast<DWORD>(subset->IndexCount / 3);
+		attributes[i].VertexStart = static_cast<DWORD>(subset->VertexStart);
+		attributes[i].VertexCount = numVerts;
+
+		for (UINT faceIdx = attributes[i].FaceStart; faceIdx < attributes[i].FaceStart + attributes[i].FaceCount; ++faceIdx)
+		{
+			attributeBuffer[faceIdx] = subset->MaterialID;
+		}
+	}
+
+	V_RETURN(d3dxMesh->UnlockAttributeBuffer());
+
+	d3dxMesh->SetAttributeTable(attributes, numSubsets);
+
+	UINT vertexStride = d3dxMesh->GetNumBytesPerVertex();
+	UINT vertexCount = d3dxMesh->GetNumVertices();
+	UINT indexCount = d3dxMesh->GetNumFaces() * 3;
+
+
+	d3dxMesh = GenerateTangentFrame(d3dxMesh, vertexCount, indexCount, indexBufferFormat, d3d9Device);
+
+	vertexStride = d3dxMesh->GetNumBytesPerVertex();
+	vertexCount = d3dxMesh->GetNumVertices();
+	indexCount = d3dxMesh->GetNumFaces() * 3;
+
+
+	UINT nameLen = strlen(model->GetMesh(meshIdx)->Name);
+	if (nameLen > 0)
+	{
+		WCHAR* name = new WCHAR[nameLen + 1];
+		AnsiToWString(model->GetMesh(meshIdx)->Name, name, nameLen + 1);
+
+		if (!output->write((const char*)&nameLen, sizeof(UINT)))
+		{
+			delete[] name;
+			return E_FAIL;
+		}
+
+		if (!output->write((const char*)name, sizeof(WCHAR) * nameLen))
+		{
+			delete[] name;
+			return E_FAIL;
+		}
+
+		delete[] name;
+	}
+	else
+	{
+		WCHAR* name = new WCHAR[MAX_PATH];
+		swprintf_s(name, MAX_PATH, L"Mesh %u", meshIdx);
+
+		UINT len = wcslen(name);
+
+		if (!output->write((const char*)&len, sizeof(UINT)))
+		{
+			delete[] name;
+			return E_FAIL;
+		}
+
+		if (!output->write((const char*)name, sizeof(WCHAR) * len))
+		{
+			delete[] name;
+			return E_FAIL;
+		}
+
+		delete[] name;
+	}
+
+	// Copy over the vertex data
+	Vertex* vertices = NULL;
+	V_RETURN(d3dxMesh->LockVertexBuffer(0, (LPVOID*)&vertices));
+
+	if (!output->write((const char*)&vertexCount, sizeof(UINT)))
+	{
+		return E_FAIL;
+	}
+
+	if (!output->write((const char*)vertices, sizeof(Vertex) * vertexCount))
+	{
+		return E_FAIL;
+	}
+
+	V_RETURN(d3dxMesh->UnlockVertexBuffer());
+
+	void* finalIndices = NULL;
+	V_RETURN(d3dxMesh->LockIndexBuffer(0, &finalIndices));
+
+	if (!output->write((const char*)&indexBufferFormat, sizeof(DXGI_FORMAT)))
+	{
+		return E_FAIL;
+	}
+
+	if (!output->write((const char*)&indexCount, sizeof(UINT)))
+	{
+		return E_FAIL;
+	}
+	
+	UINT finalIndexSize = (indexBufferFormat == DXGI_FORMAT_R32_UINT) ? 4 : 2;
+	if (!output->write((const char*)finalIndices, finalIndexSize * indexCount))
+	{
+		return E_FAIL;
+	}
+	
+	// Copy in the subset info
+	DWORD subsetCount = 0;
+	V_RETURN(d3dxMesh->GetAttributeTable(NULL, &subsetCount));
+	D3DXATTRIBUTERANGE* attributeTable = new D3DXATTRIBUTERANGE[subsetCount];
+	V_RETURN(d3dxMesh->GetAttributeTable(attributeTable, &subsetCount));
+
+	if (!output->write((const char*)&subsetCount, sizeof(UINT)))
+	{
+		return E_FAIL;
+	}
+
+	MeshPart part;
+	for(UINT i = 0; i < subsetCount; ++i)
+	{
+		part.VertexStart = attributeTable[i].VertexStart;
+		part.IndexStart = attributeTable[i].FaceStart * 3;
+		part.IndexCount = attributeTable[i].FaceCount * 3;
+		part.MaterialIndex = attributeTable[i].AttribId;
+
+		if (!output->write((const char*)&part, sizeof(MeshPart)))
+		{
+			return E_FAIL;
+		}
+	}
+
+	delete[] attributes;
+	delete[] attributeTable;
+	SAFE_RELEASE(d3dxMesh);
+
+	return S_OK;
+}
+
+HRESULT Mesh::Create(ID3D11Device* device, std::istream* input, Mesh** output)
+{
+	HRESULT hr;
+
+	Mesh* result = new Mesh();
+
+	UINT nameLen;
+	input->read((char*)&nameLen, sizeof(UINT));
+
+	result->_name = new WCHAR[nameLen + 1];
+	result->_name[nameLen] = '\0';
+	input->read((char*)result->_name, nameLen * sizeof(WCHAR));
+
+	// Read the vertices and create the vertex buffer
+	result->_vertexStride = sizeof(Vertex);
+	input->read((char*)&result->_vertexCount, sizeof(UINT));
+
+	Vertex* verts = new Vertex[result->_vertexCount];
+	input->read((char*)verts, sizeof(Vertex) * result->_vertexCount);
+
+	Collision::ComputeBoundingAxisAlignedBoxFromPoints(&result->_boundingBox, result->_vertexCount, 
+		(XMFLOAT3*)verts, sizeof(Vertex));
+
+	D3D11_BUFFER_DESC vbDesc =
+	{
+		result->_vertexCount * sizeof(Vertex),
+		D3D11_USAGE_DEFAULT,
+		D3D11_BIND_VERTEX_BUFFER,
+		0,
+		0
+	};
+
+	D3D11_SUBRESOURCE_DATA vbInitData;
+	vbInitData.pSysMem = verts;
+	vbInitData.SysMemPitch = 0;
+	vbInitData.SysMemSlicePitch = 0;
+
+	hr = device->CreateBuffer(&vbDesc, &vbInitData, &result->_vertexBuffer);
+	delete[] verts;
+	if (FAILED(hr))
+	{
+		delete result;
+		return E_FAIL;
+	}
+
+	// Read the indices and create the index buffer
+	input->read((char*)&result->_indexBufferFormat, sizeof(DXGI_FORMAT));
+	input->read((char*)&result->_indexCount, sizeof(UINT));
+
+	UINT indexSize = (result->_indexBufferFormat == DXGI_FORMAT_R32_UINT) ? sizeof(uint32_t) : sizeof(uint16_t);
+
+	BYTE* indices = new BYTE[result->_indexCount * indexSize];
+	input->read((char*)indices, result->_indexCount * indexSize);
+
+	D3D11_BUFFER_DESC ibDesc =
+	{
+		result->_indexCount * indexSize,
+		D3D11_USAGE_DEFAULT,
+		D3D11_BIND_INDEX_BUFFER,
+		0,
+		0
+	};
+
+	D3D11_SUBRESOURCE_DATA ibInitData;
+	ibInitData.pSysMem = indices;
+	ibInitData.SysMemPitch = 0;
+	ibInitData.SysMemSlicePitch = 0;
+
+	hr = device->CreateBuffer(&ibDesc, &ibInitData, &result->_indexBuffer);
+	delete[] indices;
+	if (FAILED(hr))
+	{
+		delete result;
+		return E_FAIL;
+	}
+
+	// Read the meshparts
+	input->read((char*)&result->_meshPartCount, sizeof(UINT));
+
+	result->_meshParts = new MeshPart[result->_meshPartCount];
+	input->read((char*)result->_meshParts, result->_meshPartCount* sizeof(MeshPart));
+	
+	// Prepare the input layout
+	const D3D11_INPUT_ELEMENT_DESC layout_mesh[] =
+	{
+		{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD",  0, DXGI_FORMAT_R32G32_FLOAT,    0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TANGENT",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "BITANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+	result->_inputElementCount = ARRAYSIZE(layout_mesh);
+
+	result->_inputElements = new D3D11_INPUT_ELEMENT_DESC[result->_inputElementCount];
+	memcpy(result->_inputElements, layout_mesh, sizeof(D3D11_INPUT_ELEMENT_DESC) * result->_inputElementCount);
+
+	*output = result;
+	return S_OK;
 }

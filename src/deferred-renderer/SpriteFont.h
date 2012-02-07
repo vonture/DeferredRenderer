@@ -35,6 +35,9 @@ public:
 
 	ID3D11ShaderResourceView* GetFontShaderResourceView();
 
+	static HRESULT Create(ID3D11Device* device, std::istream* input, SpriteFont** output);
+	static HRESULT Compile(ID3D11Device* device, const WCHAR* fileName, std::ostream* output);
+
 	HRESULT CreateFromFile(ID3D11Device* pd3dDevice, const WCHAR* path);
 	void Destroy();
 };

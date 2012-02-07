@@ -7,7 +7,9 @@
 //--------------------------------------------------------------------------------------
 
 #include "PCH.h"
-
+/*
 HRESULT CreateDDSTextureFromFile( __in LPDIRECT3DDEVICE9 pDev, __in_z const WCHAR* szFileName, __out_opt LPDIRECT3DTEXTURE9* ppTex );
 HRESULT CreateDDSTextureFromFile( __in ID3D11Device* pDev, __in_z const WCHAR* szFileName, __out_opt ID3D11ShaderResourceView** ppSRV, bool sRGB = false );
 HRESULT CreateDDSTexture3DFromFile( __in ID3D11Device* pDev, __in_z const WCHAR* szFileName, __out_opt ID3D11ShaderResourceView** ppSRV, bool sRGB = false );
+*/
+HRESULT CreateDDSTexture3DFromMemory( __in ID3D11Device* pDev, __in_z const BYTE* data, UINT dataSize, __out_opt ID3D11ShaderResourceView** ppSRV, bool sRGB = false );

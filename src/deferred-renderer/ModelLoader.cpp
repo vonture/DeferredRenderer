@@ -16,28 +16,14 @@ HRESULT ModelLoader::GenerateContentHash(const WCHAR* path, ModelOptions* option
 	return S_OK;
 }
 
-HRESULT ModelLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
-		ModelOptions* options, WCHAR* errorMsg, UINT errorLen, Model** contentOut)
+HRESULT ModelLoader::LoadFromCompiledContentFile(ID3D11Device* device, std::istream* input,
+	ModelOptions* options, WCHAR* errorMsg, UINT errorLen, Model** contentOut)
 {
-	WCHAR logMsg[MAX_LOG_LENGTH];
-	swprintf_s(logMsg, L"Loading - %s", path);
-	LOG_INFO(L"Model Loader", logMsg);
-
-	Model* model = new Model();
-
-	HRESULT hr = model->CreateFromFile(device, path);
-	if (FAILED(hr))
-	{
-		delete model;
-		return hr;
-	}
-
-	*contentOut = model;
-	return S_OK;
+	return Model::Create(device, input, contentOut);
 }
 
-HRESULT ModelLoader::LoadFromCompiledContentFile(ID3D11Device* device, const WCHAR* path, WCHAR* errorMsg,
-		UINT errorLen, Model** contentOut)
+HRESULT ModelLoader::CompileContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump,
+	const WCHAR* path, ModelOptions* options, WCHAR* errorMsg, UINT errorLen, std::ostream* output)
 {
-	return E_NOTIMPL;
+	return Model::Compile(device, path, output);
 }

@@ -47,25 +47,21 @@ HRESULT VertexShaderLoader::GenerateContentHash(const WCHAR* path, VertexShaderO
 	return S_OK;
 }
 
-
-//
-//	Vertex Shader Load
-//
-HRESULT VertexShaderLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
-	VertexShaderOptions* options, WCHAR* errorMsg, UINT errorLen, VertexShaderContent** contentOut)
+HRESULT VertexShaderLoader::CompileContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, 
+	const WCHAR* path, VertexShaderOptions* options, WCHAR* errorMsg, UINT errorLen, std::ostream* output)
 {
 	if (!options)
 	{
 		swprintf_s(errorMsg, errorLen, L"Options cannot be null when loading shaders.");
 		return E_FAIL;
 	}
-	
+
 	WCHAR logMsg[MAX_LOG_LENGTH];
 	if (options->DebugName)
 	{
 		WCHAR debugNameW[256];
 		AnsiToWString(options->DebugName, debugNameW, 256);
-		
+
 		swprintf_s(logMsg, L"Loading - %s (path = %s)", debugNameW, path);		
 	}
 	else
@@ -75,7 +71,7 @@ HRESULT VertexShaderLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11Thr
 	LOG_INFO(L"Vertex Shader Loader", logMsg);
 
 	HRESULT hr;
-	
+
 	ID3DBlob* pShaderBlob = NULL;
 	hr = CompileShaderFromFile(path, options->EntryPoint, "vs_5_0", options->Defines, threadPump,
 		errorMsg, errorLen, &pShaderBlob, NULL);
@@ -86,29 +82,58 @@ HRESULT VertexShaderLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11Thr
 		return hr;
 	}
 
+	UINT size = pShaderBlob->GetBufferSize();
+	if (!output->write((const char*)&size, sizeof(UINT)))
+	{
+		return E_FAIL;
+	}
+
+	if (!output->write((const char*)pShaderBlob->GetBufferPointer(), size))
+	{
+		return E_FAIL;
+	}
+
+	return S_OK;
+}
+
+HRESULT VertexShaderLoader::LoadFromCompiledContentFile(ID3D11Device* device, std::istream* input, 
+	VertexShaderOptions* options, WCHAR* errorMsg, UINT errorLen, VertexShaderContent** contentOut)
+{
+	HRESULT hr;
+
+	UINT size;
+	if (!input->read((char*)&size, sizeof(UINT)))
+	{
+		return E_FAIL;
+	}
+
+	BYTE* data = new BYTE[size];
+	if (!input->read((char*)data, size))
+	{
+		return E_FAIL;
+	}
+
 	ID3D11VertexShader* vs;
-	hr = device->CreateVertexShader(pShaderBlob->GetBufferPointer(), pShaderBlob->GetBufferSize(), NULL, &vs);
+	hr = device->CreateVertexShader(data, size, NULL, &vs);
 	if (FAILED(hr))
 	{
-		SAFE_RELEASE(pShaderBlob);
-
+		SAFE_DELETE_ARRAY(data);
 		FormatDXErrorMessageW(hr, errorMsg, errorLen);
 		return hr;
 	}
 
 	ID3D11InputLayout* layout = NULL;
-	hr = device->CreateInputLayout(options->InputElements, options->InputElementCount,
-		pShaderBlob->GetBufferPointer(), pShaderBlob->GetBufferSize(), &layout);
+	hr = device->CreateInputLayout(options->InputElements, options->InputElementCount, data, size, &layout);
 	if (FAILED(hr))
 	{
-		SAFE_RELEASE(pShaderBlob);
+		SAFE_DELETE_ARRAY(data);
 		SAFE_RELEASE(vs);
 
 		FormatDXErrorMessageW(hr, errorMsg, errorLen);
 		return hr;
 	}
 
-	SAFE_RELEASE(pShaderBlob);
+	SAFE_DELETE_ARRAY(data);
 
 	if (options->DebugName)
 	{
@@ -129,8 +154,4 @@ HRESULT VertexShaderLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11Thr
 	return S_OK;
 }
 
-HRESULT VertexShaderLoader::LoadFromCompiledContentFile(ID3D11Device* device, const WCHAR* path, WCHAR* errorMsg,
-		UINT errorLen, VertexShaderContent** contentOut)
-{
-	return E_NOTIMPL;
-}
+

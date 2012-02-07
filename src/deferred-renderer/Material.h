@@ -57,9 +57,15 @@ public:
 
 	ID3D11Buffer* GetPropertiesBuffer() const { return _propertiesBuffer; }
 
-	HRESULT CreateFromSDKMeshMaterial(ID3D11Device* device, const WCHAR* modelPath, SDKMesh* model,
+	HRESULT CreateFromSDKMeshMaterial(ID3D11Device* device, const WCHAR* modelDir, SDKMesh* model,
 		UINT materialIdx, std::map<TexturePathHash, ID3D11ShaderResourceView*>* loadedTextureMap = NULL);
-	HRESULT CreateFromASSIMPMaterial(ID3D11Device* device, const WCHAR* modelPath, const aiScene* scene,
+	HRESULT CreateFromASSIMPMaterial(ID3D11Device* device, const WCHAR* modelDir, const aiScene* scene,
 		UINT materialIdx, std::map<TexturePathHash, ID3D11ShaderResourceView*>* loadedTextureMap = NULL);
 	void Destroy();
+
+	static HRESULT CompileFromSDKMeshMaterial(ID3D11Device* device, const WCHAR* modelDir,
+		SDKMesh* model, UINT materialIdx, std::ostream* output);
+	static HRESULT CompileFromASSIMPMaterial(ID3D11Device* device, const WCHAR* modelDir, 
+		const aiScene* scene, UINT materialIdx, std::ostream* output);
+	static HRESULT Create(ID3D11Device* device, std::istream* input, Material** output);
 };

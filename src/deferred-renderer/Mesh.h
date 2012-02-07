@@ -38,7 +38,22 @@ private:
 	bool _alphaCutoutEnabled;
 	bool _drawBackFaces;
 
-	void CreateInputElements(D3DVERTEXELEMENT9* declaration);
+	struct Vertex
+	{
+		XMFLOAT3 Position;
+		XMFLOAT3 Normal;
+		XMFLOAT2 TexCoord;
+		XMFLOAT3 Tangent;
+		XMFLOAT3 Bitangent;
+	};
+
+	static D3DXVECTOR3 Perpendicular(const D3DXVECTOR3& vec);
+
+	static void CreateInputElements(D3DVERTEXELEMENT9* declaration, D3D11_INPUT_ELEMENT_DESC** output,
+		UINT* elementCount);
+
+	static ID3DXMesh* GenerateTangentFrame(ID3DXMesh* mesh, UINT numVertices, UINT numIndices,
+		DXGI_FORMAT indexType, IDirect3DDevice9* d3d9Device);
 
 public:
 	Mesh();
@@ -70,4 +85,9 @@ public:
 	HRESULT CreateFromASSIMPMesh(ID3D11Device* device, const aiScene* scene, UINT meshIdx);
 
 	void Destroy();
+
+	static HRESULT CompileFromASSIMPMesh(ID3D11Device* device, const aiScene* scene, UINT meshIdx, std::ostream* output);
+	static HRESULT CompileFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d9Device, 
+		const WCHAR* modelPath, SDKMesh* model,	UINT meshIdx, std::ostream* output);
+	static HRESULT Create(ID3D11Device* device, std::istream* input, Mesh** output);
 };

@@ -40,8 +40,50 @@ HRESULT GeometryShaderLoader::GenerateContentHash(const WCHAR* path, GeometrySha
 	return S_OK;
 }
 
-HRESULT GeometryShaderLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
-	GeometryShaderOptions* options, WCHAR* errorMsg, UINT errorLen, GeometryShaderContent** contentOut)
+HRESULT GeometryShaderLoader::LoadFromCompiledContentFile( ID3D11Device* device, std::istream* input, GeometryShaderOptions* options, WCHAR* errorMsg, UINT errorLen, GeometryShaderContent** contentOut )
+{
+	HRESULT hr;
+
+	UINT size;
+	if (!input->read((char*)&size, sizeof(UINT)))
+	{
+		return E_FAIL;
+	}
+
+	BYTE* data = new BYTE[size];
+	if (!input->read((char*)data, size))
+	{
+		return E_FAIL;
+	}
+
+	ID3D11GeometryShader* gs;
+	hr = device->CreateGeometryShader(data, size, NULL, &gs);
+	if (FAILED(hr))
+	{
+		SAFE_DELETE_ARRAY(data);
+
+		FormatDXErrorMessageW(hr, errorMsg, errorLen);
+		return hr;
+	}
+
+	SAFE_DELETE_ARRAY(data);
+
+	if (options->DebugName)
+	{
+		CHAR debugName[256];
+
+		sprintf_s(debugName, "%s %s", options->DebugName, "GS");
+		V_RETURN(SetDXDebugName(gs, debugName));
+	}
+
+	GeometryShaderContent* content = new GeometryShaderContent();
+	content->GeometryShader = gs;
+
+	*contentOut = content;
+	return S_OK;
+}
+
+HRESULT GeometryShaderLoader::CompileContentFile( ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, GeometryShaderOptions* options, WCHAR* errorMsg, UINT errorLen, std::ostream* output )
 {
 	if (!options)
 	{
@@ -61,7 +103,7 @@ HRESULT GeometryShaderLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11T
 	{
 		swprintf_s(logMsg, L"Loading - %s", path);
 	}
-	LOG_INFO(L"Geometry Shader Loader", logMsg);
+	LOG_INFO(L"Pixel Shader Loader", logMsg);
 
 	HRESULT hr;
 
@@ -75,35 +117,16 @@ HRESULT GeometryShaderLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11T
 		return hr;
 	}
 
-	ID3D11GeometryShader* gs;
-	hr = device->CreateGeometryShader(pShaderBlob->GetBufferPointer(), pShaderBlob->GetBufferSize(), NULL, &gs);
-	if (FAILED(hr))
+	UINT size = pShaderBlob->GetBufferSize();
+	if (!output->write((const char*)&size, sizeof(UINT)))
 	{
-		SAFE_RELEASE(pShaderBlob);
-
-		FormatDXErrorMessageW(hr, errorMsg, errorLen);
-		return hr;
+		return E_FAIL;
 	}
 
-	SAFE_RELEASE(pShaderBlob);
-
-	if (options->DebugName)
+	if (!output->write((const char*)pShaderBlob->GetBufferPointer(), size))
 	{
-		CHAR debugName[256];
-
-		sprintf_s(debugName, "%s %s", options->DebugName, "GS");
-		V_RETURN(SetDXDebugName(gs, debugName));
+		return E_FAIL;
 	}
 
-	GeometryShaderContent* content = new GeometryShaderContent();
-	content->GeometryShader = gs;
-
-	*contentOut = content;
 	return S_OK;
-}
-
-HRESULT GeometryShaderLoader::LoadFromCompiledContentFile(ID3D11Device* device, const WCHAR* path, WCHAR* errorMsg,
-	UINT errorLen, GeometryShaderContent** contentOut)
-{
-	return E_NOTIMPL;
 }

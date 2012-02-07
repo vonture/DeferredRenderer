@@ -26,8 +26,8 @@ class VertexShaderLoader : public ContentLoader<VertexShaderOptions, VertexShade
 {
 public:
 	HRESULT GenerateContentHash(const WCHAR* path, VertexShaderOptions* options, ContentHash* hash);
-	HRESULT LoadFromContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
-		VertexShaderOptions* options, WCHAR* errorMsg, UINT errorLen, VertexShaderContent** contentOut);
-	HRESULT LoadFromCompiledContentFile(ID3D11Device* device, const WCHAR* path, WCHAR* errorMsg,
-		UINT errorLen, VertexShaderContent** contentOut);
+	HRESULT CompileContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, 
+		const WCHAR* path, VertexShaderOptions* options, WCHAR* errorMsg, UINT errorLen, std::ostream* output);
+	HRESULT LoadFromCompiledContentFile(ID3D11Device* device, std::istream* input, VertexShaderOptions* options, 
+		WCHAR* errorMsg, UINT errorLen, VertexShaderContent** contentOut);
 };

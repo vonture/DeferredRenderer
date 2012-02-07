@@ -16,28 +16,14 @@ HRESULT ParticleSystemLoader::GenerateContentHash(const WCHAR* path, ParticleSys
 	return S_OK;
 }
 
-HRESULT ParticleSystemLoader::LoadFromContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
+HRESULT ParticleSystemLoader::LoadFromCompiledContentFile(ID3D11Device* device, std::istream* input,
 	ParticleSystemOptions* options, WCHAR* errorMsg, UINT errorLen, ParticleSystem** contentOut)
 {
-	WCHAR logMsg[MAX_LOG_LENGTH];
-	swprintf_s(logMsg, L"Loading - %s", path);
-	LOG_INFO(L"Particle System Loader", logMsg);
-
-	ParticleSystem* system = new ParticleSystem();
-
-	HRESULT hr = system->CreateFromFile(device, path);
-	if (FAILED(hr))
-	{
-		delete system;
-		return hr;
-	}
-
-	*contentOut = system;
-	return S_OK;
+	return ParticleSystem::Create(device, input, contentOut);
 }
 
-HRESULT ParticleSystemLoader::LoadFromCompiledContentFile(ID3D11Device* device, const WCHAR* path, WCHAR* errorMsg,
-	UINT errorLen, ParticleSystem** contentOut)
+HRESULT ParticleSystemLoader::CompileContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump,
+	const WCHAR* path, ParticleSystemOptions* options, WCHAR* errorMsg, UINT errorLen, std::ostream* output)
 {
-	return E_NOTIMPL;
+	return ParticleSystem::Compile(device, path, output);
 }

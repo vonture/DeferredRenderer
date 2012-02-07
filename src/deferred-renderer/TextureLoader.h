@@ -23,8 +23,8 @@ class TextureLoader : public ContentLoader<TextureOptions, TextureContent>
 {
 public:
 	HRESULT GenerateContentHash(const WCHAR* path, TextureOptions* options, ContentHash* hash);
-	HRESULT LoadFromContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, const WCHAR* path, 
-		TextureOptions* options, WCHAR* errorMsg, UINT errorLen, TextureContent** contentOut);
-	HRESULT LoadFromCompiledContentFile(ID3D11Device* device, const WCHAR* path, WCHAR* errorMsg,
-		UINT errorLen, TextureContent** contentOut);
+	HRESULT CompileContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, 
+		const WCHAR* path, TextureOptions* options, WCHAR* errorMsg, UINT errorLen, std::ostream* output);
+	HRESULT LoadFromCompiledContentFile(ID3D11Device* device, std::istream* input, TextureOptions* options, 
+		WCHAR* errorMsg, UINT errorLen, TextureContent** contentOut);
 };

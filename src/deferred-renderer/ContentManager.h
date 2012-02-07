@@ -10,16 +10,19 @@ class ContentManager
 private:
 	typedef std::string LoaderHash;
 	typedef std::map<LoaderHash, ContentLoaderBase*> LoaderMap;
-	typedef std::map<ContentHash, ContentType*> ContentMap;
+	typedef std::map<ContentHash, IUnknown*> ContentMap;
 
 	LoaderMap _contentLoaders;
 	ContentMap _loadedContent;
-	std::vector<WCHAR*> _searchPaths;
+	std::wstring _compiledPath;
+	std::vector<std::wstring> _searchPaths;
 
 	static const UINT ERROR_MSG_LEN = 1024;
 
-	HRESULT getPath(const WCHAR* inPathSegment, WCHAR* outputPath, UINT outputLen);
-		
+	HRESULT getContentPath(const std::wstring& inPathSegment, std::wstring& outputPath, uint64_t& modDate);
+	HRESULT getCompiledPath(const ContentHash& hash, std::wstring& outputPath, bool& available, uint64_t& modDate);
+	HRESULT createCompiledContentFolder(const std::wstring& path);
+
 	template <class optionsType, class contentType>
 	LoaderHash getContentLoaderHash()
 	{
@@ -34,7 +37,8 @@ public:
 	ContentManager();
 	~ContentManager();
 
-	void AddSearchPath(const WCHAR* path);
+	void AddContentSearchPath(const std::wstring& path);
+	void SetCompiledContentPath(const std::wstring& path);
 
 	template <class optionsType, class contentType>
 	void AddContentLoader(ContentLoader<optionsType, contentType>* loader)
@@ -44,18 +48,9 @@ public:
 	}
 	
 	template <class optionsType, class contentType>
-	HRESULT LoadContent(ID3D11Device* device, const WCHAR* path, optionsType* options, contentType** ppContentOut)
+	HRESULT LoadContent(ID3D11Device* device, const WCHAR* path, optionsType* options,
+		contentType** ppContentOut)
 	{
-		// Generate the full path
-		WCHAR fullPath[MAX_PATH];
-		if (FAILED(getPath(path, fullPath, MAX_PATH)))
-		{
-			WCHAR errorMsg[MAX_LOG_LENGTH];
-			swprintf_s(errorMsg, L"Unable to find file: %s", path);
-			LOG_ERROR(L"ContentManager", errorMsg);
-			return E_FAIL;
-		}
-
 		// Find the loader for this content type
 		LoaderHash loaderLookupHash = getContentLoaderHash<optionsType, contentType>();
 		LoaderMap::iterator loaderIt = _contentLoaders.find(loaderLookupHash);
@@ -67,25 +62,26 @@ public:
 
 		// Cast to the loader to the correct type
 		ContentLoader<optionsType, contentType>* loader = 
-				dynamic_cast<ContentLoader<optionsType, contentType>*>(loaderIt->second);
+			dynamic_cast<ContentLoader<optionsType, contentType>*>(loaderIt->second);
 		if (!loader)
 		{
 			LOG_ERROR(L"ContentManager", L"Unable to dynamic cast content loader to required type.");
 			return E_FAIL;
 		}
-
+		
 		// Use the loader to generate the content hash
 		ContentHash hash;
-		bool hashAvailable = SUCCEEDED(loader->GenerateContentHash(fullPath, options, &hash));
-		if (!hashAvailable)
+		if (FAILED(loader->GenerateContentHash(path, options, &hash)))
 		{
-			LOG_INFO(L"ContentManager", L"Unable to generate hash of options type, cannot store.");
+			LOG_ERROR(L"ContentManager", L"Unable to generate hash of options type.");
+			return E_FAIL;
 		}
 
+
 		// If there is no hash, cannot load a stored content or store this content after loading
-		if (hashAvailable && _loadedContent.find(hash) != _loadedContent.end())
+		if (_loadedContent.find(hash) != _loadedContent.end())
 		{
-			ContentType* asContentBase = _loadedContent[hash];
+			IUnknown* asContentBase = _loadedContent[hash];
 
 			// Content already loaded, return it
 			contentType* asContentType = dynamic_cast<contentType*>(asContentBase);
@@ -103,36 +99,92 @@ public:
 		}
 		else
 		{
+			// Generate the full path
+			bool contentAvailable = false;
+			std::wstring fullPath;
+			uint64_t contentModDate;
+			if (SUCCEEDED(getContentPath(path, fullPath, contentModDate)))
+			{
+				contentAvailable = true;
+			}
+
+			// Search for a compiled file
+			bool compiledAvailable = false;
+			std::wstring compiledPath;
+			uint64_t compiledModDate;
+			if (SUCCEEDED(getCompiledPath(hash, compiledPath, compiledAvailable, compiledModDate)))
+			{
+				if (compiledAvailable && contentModDate > compiledModDate)
+				{
+					compiledAvailable = false;
+					LOG_INFO(L"ContentManager", L"Found a compiled content file but it is out of date.");
+				}
+			}
+			else
+			{
+				LOG_ERROR(L"ContentManager", L"Could not generate compiled content file path.");
+				return E_FAIL;
+			}
+
 			// Load this content
 			contentType* content = NULL;
 			WCHAR errorMsg[ERROR_MSG_LEN];
-			while (FAILED(loader->LoadFromContentFile(device, NULL, fullPath, options, errorMsg, ERROR_MSG_LEN, &content)))
+			if (contentAvailable && !compiledAvailable)
 			{
-				LOG_ERROR(L"ContentManager", errorMsg);
+				createCompiledContentFolder(compiledPath);
 
-				// If in debug mode, display a messagebox saying the content failed to load and give an 
-				// option to retry loading
-				#if _DEBUG
-					WCHAR msgBoxText[ERROR_MSG_LEN];
-					swprintf_s(msgBoxText, L"File: %s\nError: %s", fullPath, errorMsg);
-
-					int button = MessageBoxW(NULL, msgBoxText, L"Content loading error", MB_RETRYCANCEL);
-					if(button != IDRETRY)
-					{
-						return E_FAIL;
-					}
-				#else
+				std::ofstream outputStream;
+				outputStream.open(compiledPath, std::ios::out | std::ios::binary);
+				if (!outputStream.is_open())
+				{
+					LOG_ERROR(L"ContentManager", L"Could not open output file stream for compiled content.");
 					return E_FAIL;
-				#endif
+				}
+
+				if (FAILED(loader->CompileContentFile(device, NULL, fullPath.c_str(), options, errorMsg, 
+					ERROR_MSG_LEN, &outputStream)))
+				{
+					LOG_ERROR(L"ContentManager", errorMsg);
+					DeleteFile(compiledPath.c_str());
+					outputStream.close();
+					return E_FAIL;
+				}
+
+				outputStream.close();
+
+				compiledAvailable = true;
 			}
 
-			if (hashAvailable)
+			if (compiledAvailable)
 			{
+				std::ifstream inputStream = std::ifstream(compiledPath, std::ios::in | std::ios::binary);
+				if (!inputStream.is_open())
+				{
+					LOG_ERROR(L"ContentManager", L"Could not open input file stream for compiled content.");
+					return E_FAIL;
+				}
+
+				if (FAILED(loader->LoadFromCompiledContentFile(device, &inputStream, options, errorMsg,
+					ERROR_MSG_LEN, &content)))
+				{
+					LOG_ERROR(L"ContentManager", errorMsg);
+					inputStream.close();
+					return E_FAIL;
+				}
+
+				inputStream.close();
+
 				_loadedContent[hash] = content;
 				content->AddRef();
+				
+				*ppContentOut = content;
+				return S_OK;
 			}
-			*ppContentOut = content;
-			return S_OK;
+			else
+			{
+				LOG_ERROR(L"ContentManager", L"No content files or compiled content available.");
+				return E_FAIL;
+			}
 		}
 	}
 

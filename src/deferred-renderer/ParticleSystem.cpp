@@ -22,10 +22,10 @@ HRESULT ParticleSystem::CreateFromFile(ID3D11Device* device, const WCHAR* fileNa
 
 	_name = L"Smoke";
 
-	const WCHAR* diffusePath = L"C:\\Programming\\deferred-renderer\\src\\deferred-renderer\\media\\Particles\\smoke_diffuse.dds";
+	const WCHAR* diffusePath = L"C:\\Programming\\deferred-renderer\\media\\Particles\\smoke_diffuse.dds";
 	V_RETURN(D3DX11CreateShaderResourceViewFromFile(device, diffusePath, NULL, NULL, &_diffuse, NULL));
 
-	const WCHAR* normalPath = L"C:\\Programming\\deferred-renderer\\src\\deferred-renderer\\media\\Particles\\smoke_normal.dds";
+	const WCHAR* normalPath = L"C:\\Programming\\deferred-renderer\\media\\Particles\\smoke_normal.dds";
 	V_RETURN(D3DX11CreateShaderResourceViewFromFile(device, normalPath, NULL, NULL, &_normal, NULL));
 	
 	_spread = 1.0f;	
@@ -159,4 +159,16 @@ ID3D11ShaderResourceView* ParticleSystem::GetDiffuseSRV()
 ID3D11ShaderResourceView* ParticleSystem::GetNormalSRV()
 {
 	return _normal;
+}
+
+HRESULT ParticleSystem::Compile(ID3D11Device* device, const WCHAR* fileName, std::ostream* output)
+{
+	return S_OK;
+}
+
+HRESULT ParticleSystem::Create(ID3D11Device* device, std::istream* input, ParticleSystem** output)
+{
+	*output = new ParticleSystem();
+	(*output)->CreateFromFile(device, L"");
+	return S_OK;
 }

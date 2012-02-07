@@ -66,63 +66,29 @@ DXGI_FORMAT MAKE_TYPELESS( DXGI_FORMAT format )
 }
 
 //--------------------------------------------------------------------------------------
-static HRESULT LoadTextureDataFromFile( __in_z const WCHAR* szFileName, BYTE** ppHeapData,
+static HRESULT LoadTextureDataFromMemory( __in_z const BYTE* inputData, UINT dataSize, BYTE** ppHeapData,
                                         DDS_HEADER** ppHeader,
                                         BYTE** ppBitData, UINT* pBitSize )
 {
-    // open the file
-    HANDLE hFile = CreateFile( szFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
-                               FILE_FLAG_SEQUENTIAL_SCAN, NULL );
-    if( INVALID_HANDLE_VALUE == hFile )
-        return HRESULT_FROM_WIN32( GetLastError() );
-
-    // Get the file size
-    LARGE_INTEGER FileSize = {0};
-    GetFileSizeEx( hFile, &FileSize );
-
-    // File is too big for 32-bit allocation, so reject read
-    if( FileSize.HighPart > 0 )
-    {
-        CloseHandle( hFile );
-        return E_FAIL;
-    }
-
     // Need at least enough data to fill the header and magic number to be a valid DDS
-    if( FileSize.LowPart < (sizeof(DDS_HEADER)+sizeof(DWORD)) )
+    if( dataSize < (sizeof(DDS_HEADER)+sizeof(DWORD)) )
     {
-        CloseHandle( hFile );
         return E_FAIL;
     }
-
     // create enough space for the file data
-    *ppHeapData = new BYTE[ FileSize.LowPart ];
+    *ppHeapData = new BYTE[dataSize];
     if( !( *ppHeapData ) )
     {
-        CloseHandle( hFile );
         return E_OUTOFMEMORY;
     }
 
     // read the data in
-    DWORD BytesRead = 0;
-    if( !ReadFile( hFile, *ppHeapData, FileSize.LowPart, &BytesRead, NULL ) )
-    {
-        CloseHandle( hFile );
-        SAFE_DELETE_ARRAY( *ppHeapData );
-        return HRESULT_FROM_WIN32( GetLastError() );
-    }
-
-    if( BytesRead < FileSize.LowPart )
-    {
-        CloseHandle( hFile );
-        SAFE_DELETE_ARRAY( *ppHeapData );
-        return E_FAIL;
-    }
+	memcpy(*ppHeapData, inputData, dataSize);
 
     // DDS files always start with the same magic number ("DDS ")
     DWORD dwMagicNumber = *( DWORD* )( *ppHeapData );
     if( dwMagicNumber != DDS_MAGIC )
     {
-        CloseHandle( hFile );
         SAFE_DELETE_ARRAY( *ppHeapData );
         return E_FAIL;
     }
@@ -133,7 +99,6 @@ static HRESULT LoadTextureDataFromFile( __in_z const WCHAR* szFileName, BYTE** p
     if( pHeader->dwSize != sizeof(DDS_HEADER)
         || pHeader->ddspf.dwSize != sizeof(DDS_PIXELFORMAT) )
     {
-        CloseHandle( hFile );
         SAFE_DELETE_ARRAY( *ppHeapData );
         return E_FAIL;
     }
@@ -144,9 +109,8 @@ static HRESULT LoadTextureDataFromFile( __in_z const WCHAR* szFileName, BYTE** p
         && (MAKEFOURCC( 'D', 'X', '1', '0' ) == pHeader->ddspf.dwFourCC) )
     {
         // Must be long enough for both headers and magic value
-        if( FileSize.LowPart < (sizeof(DDS_HEADER)+sizeof(DWORD)+sizeof(DDS_HEADER_DXT10)) )
+        if( dataSize < (sizeof(DDS_HEADER)+sizeof(DWORD)+sizeof(DDS_HEADER_DXT10)) )
         {
-            CloseHandle( hFile );
             SAFE_DELETE_ARRAY( *ppHeapData );
             return E_FAIL;
         }
@@ -159,14 +123,12 @@ static HRESULT LoadTextureDataFromFile( __in_z const WCHAR* szFileName, BYTE** p
     INT offset = sizeof( DWORD ) + sizeof( DDS_HEADER )
                  + (bDXT10Header ? sizeof( DDS_HEADER_DXT10 ) : 0);
     *ppBitData = *ppHeapData + offset;
-    *pBitSize = FileSize.LowPart - offset;
-
-    CloseHandle( hFile );
+    *pBitSize = dataSize - offset;
 
     return S_OK;
 }
 
-
+/*
 //--------------------------------------------------------------------------------------
 // Return the BPP for a particular format
 //--------------------------------------------------------------------------------------
@@ -276,6 +238,7 @@ static UINT BitsPerPixel( D3DFORMAT fmt )
             return 0;
     }
 }
+*/
 
 static UINT BitsPerPixel( DXGI_FORMAT fmt )
 {
@@ -404,7 +367,7 @@ static UINT BitsPerPixel( DXGI_FORMAT fmt )
     }
 }
 
-
+/*
 //--------------------------------------------------------------------------------------
 // Get surface information for a particular format
 //--------------------------------------------------------------------------------------
@@ -452,6 +415,7 @@ static void GetSurfaceInfo( UINT width, UINT height, D3DFORMAT fmt, UINT* pNumBy
     if( pNumRows != NULL )
         *pNumRows = numRows;
 }
+*/
 
 static void GetSurfaceInfo( UINT width, UINT height, DXGI_FORMAT fmt, UINT* pNumBytes, UINT* pRowBytes, UINT* pNumRows )
 {
@@ -780,8 +744,7 @@ static DXGI_FORMAT GetDXGIFormat( const DDS_PIXELFORMAT& ddpf )
 
     return DXGI_FORMAT_UNKNOWN;
 }
-
-
+/*
 //--------------------------------------------------------------------------------------
 static HRESULT CreateTextureFromDDS( LPDIRECT3DDEVICE9 pDev, DDS_HEADER* pHeader, __inout_bcount(BitSize) BYTE* pBitData, UINT BitSize,
                                      __out LPDIRECT3DTEXTURE9* ppTex )
@@ -872,7 +835,7 @@ static HRESULT CreateTextureFromDDS( LPDIRECT3DDEVICE9 pDev, DDS_HEADER* pHeader
     *ppTex = pTexture;
     return hr;
 }
-
+*/
 //--------------------------------------------------------------------------------------
 static HRESULT CreateTextureFromDDS( ID3D11Device* pDev, DDS_HEADER* pHeader, __inout_bcount(BitSize) BYTE* pBitData,
                                      UINT BitSize, __out ID3D11ShaderResourceView** ppSRV, bool bSRGB )
@@ -1013,7 +976,7 @@ static HRESULT CreateTextureFromDDS( ID3D11Device* pDev, DDS_HEADER* pHeader, __
 
     return hr;
 }
-
+/*
 //--------------------------------------------------------------------------------------
 HRESULT CreateDDSTextureFromFile( LPDIRECT3DDEVICE9 pDev, const WCHAR* szFileName, LPDIRECT3DTEXTURE9* ppTex )
 {
@@ -1060,7 +1023,7 @@ HRESULT CreateDDSTextureFromFile( ID3D11Device* pDev, const WCHAR* szFileName, I
 	
     return hr;
 }
-
+*/
 //--------------------------------------------------------------------------------------
 static HRESULT CreateTexture3DFromDDS( ID3D11Device* pDev, DDS_HEADER* pHeader, __inout_bcount(BitSize) BYTE* pBitData,
                                      UINT BitSize, __out ID3D11ShaderResourceView** ppSRV, bool bSRGB )
@@ -1175,7 +1138,7 @@ static HRESULT CreateTexture3DFromDDS( ID3D11Device* pDev, DDS_HEADER* pHeader, 
 
     return hr;
 }
-
+/*
 //--------------------------------------------------------------------------------------
 HRESULT CreateDDSTexture3DFromFile( ID3D11Device* pDev, const WCHAR* szFileName, ID3D11ShaderResourceView** ppSRV, bool bSRGB )
 {
@@ -1198,4 +1161,29 @@ HRESULT CreateDDSTexture3DFromFile( ID3D11Device* pDev, const WCHAR* szFileName,
     SAFE_DELETE_ARRAY( pHeapData );
 
     return hr;
+}
+
+*/
+HRESULT CreateDDSTexture3DFromMemory( __in ID3D11Device* pDev, __in_z const BYTE* data, UINT dataSize,
+	__out_opt ID3D11ShaderResourceView** ppSRV, bool bSRGB)
+{
+	if ( !pDev || !data || !dataSize || !ppSRV )
+		return E_INVALIDARG;
+
+	BYTE* pHeapData = NULL;
+	DDS_HEADER* pHeader = NULL;
+	BYTE* pBitData = NULL;
+	UINT BitSize = 0;
+
+	HRESULT hr = LoadTextureDataFromMemory(data, dataSize, &pHeapData, &pHeader, &pBitData, &BitSize );
+	if(FAILED(hr))
+	{
+		SAFE_DELETE_ARRAY( pHeapData );
+		return hr;
+	}
+
+	hr = CreateTexture3DFromDDS( pDev, pHeader, pBitData, BitSize, ppSRV, bSRGB );
+	SAFE_DELETE_ARRAY( pHeapData );
+
+	return hr;
 }
