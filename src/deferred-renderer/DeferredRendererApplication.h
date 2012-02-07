@@ -30,7 +30,6 @@
 #include "ModelLoader.h"
 #include "ParticleSystemLoader.h"
 #include "FontLoader.h"
-#include "EntityLoader.h"
 
 #include "ConfigurationWindow.h"
 #include "PostProcessSelectionPane.h"
@@ -84,7 +83,6 @@ private:
 	ModelLoader _modelLoader;
 	ParticleSystemLoader _particleLoader;
 	FontLoader _fontLoader;
-	EntityLoader _entityLoader;
 
 	ConfigurationWindow* _configWindow;
 	PostProcessSelectionPane* _ppConfigPane;

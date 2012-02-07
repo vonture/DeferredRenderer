@@ -16,19 +16,26 @@
 DeferredRendererApplication::DeferredRendererApplication()
 	: Application(L"Deferred Renderer", NULL), _camera(0.1f, 40.0f, 1.0f, 1.0f), _selectedItem(NULL),
 	  _configWindow(NULL), _logWindow(NULL), _ppConfigPane(NULL)
-{	
+{
 	
-	ModelInstance* tankScene = new ModelInstance(L"\\models\\tankscene\\TankScene.sdkmesh");
-	tankScene->SetScale(1.0f);
-	tankScene->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
-	_models.push_back(tankScene);
+	for (int x = 0; x < 5; x++)
+	{
+		for (int y = 0; y < 5; y++)
+		{
+			ModelInstance* tankScene = new ModelInstance(L"\\models\\tankscene\\TankScene.sdkmesh");
+			tankScene->SetScale(1.0f);
+			tankScene->SetPosition(XMFLOAT3(x * 47.0f, 0.0f, y * 47.0f));
+			
+			_models.push_back(tankScene);
+		}
+	}
 
-	/*
+	
 	ModelInstance* squid = new ModelInstance(L"\\models\\Squid\\Squid.sdkmesh");
 	squid->SetScale(0.05f);
 	squid->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	_models.push_back(squid);
-	*/
+	
 	/*
 	ModelInstance* mbpd = new ModelInstance(L"D:\\Temp\\MBPD\\models\\model.dae");
 	mbpd->SetScale(0.3f);
@@ -72,14 +79,28 @@ DeferredRendererApplication::DeferredRendererApplication()
 	sponza->SetScale(0.2f);
 	sponza->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	_models.push_back(sponza);
-	
+	*/
 
 	
-	ModelInstance* tree = new ModelInstance(L"\\models\\tree\\tree.obj");
-	tree->SetScale(0.5f);
-	tree->SetPosition(XMFLOAT3(3.0f, -1.0f, -3.0f));
-	_models.push_back(tree);
+	for (int x = -5; x < 5; x++)
+	{
+		for (int z = -5; z < 5; z++)
+		{
+			ModelInstance* tree = new ModelInstance(L"\\models\\tree\\tree.obj");
+			tree->SetScale(0.5f);
+			tree->SetPosition(XMFLOAT3((x * 25.0f) + 125.0f, 2.0f, (z * 25.0f) + 125.0f));
+
+			XMFLOAT4 orientation;
+			XMStoreFloat4(&orientation, XMQuaternionRotationRollPitchYaw(0.0f, RandomBetween(-Pi, Pi), 0.0f));
+			tree->SetOrientation(orientation);
+
+			_models.push_back(tree);
+		}
+	}
 	
+	
+	
+	/*
 	ModelInstance* troll = new ModelInstance(L"D:\\Temp\\cave_troll\\cave-troll-armor-obj.obj");
 	troll->SetScale(0.01f);	
 	troll->SetPosition(XMFLOAT3(10.0f, 0.2f, -10.0f));	
@@ -88,7 +109,7 @@ DeferredRendererApplication::DeferredRendererApplication()
 	troll->SetOrientation(orientation);
 	_models.push_back(troll);
 	*/
-		
+	
 	for (UINT i = 0; i < 1; i++)
 	{
 		ParticleSystemInstance* smoke = new ParticleSystemInstance(L"\\particles\\smoke.xml");
@@ -100,7 +121,7 @@ DeferredRendererApplication::DeferredRendererApplication()
 	//_pointLightsShadowed.push_back(new PointLight(XMFLOAT3(3.0f, 4.0f, 0.0f), 10.0f, XMFLOAT3(1.0f, 1.0f, 1.0f), 2.0f));
 
 	_camera.SetPosition(XMFLOAT3(1.0f, 4.0f, -6.0f));
-	_camera.SetRotation(XMFLOAT2(-0.1f, 0.35f));
+	_camera.SetRotation(XMFLOAT2(-0.1f, 0.35f), 0.0f);
 		
 	_contentHolders.push_back(&_renderer);
 	_contentHolders.push_back(&_pBufferCombinePP);
@@ -168,7 +189,7 @@ DeferredRendererApplication::~DeferredRendererApplication()
 }
 
 void DeferredRendererApplication::OnInitialize()
-{		
+{
 	// Set some properties of the renderer
 	_renderer.AddLightRenderer(&_paraboloidPointLR);
 	_renderer.AddLightRenderer(&_cascadedDirectionalLR);
@@ -185,9 +206,9 @@ void DeferredRendererApplication::OnInitialize()
 	_ppConfigPane->AddPostProcess(&_hbaoPP, L"HBAO", false, false);
 	_ppConfigPane->AddPostProcess(&_skyPP, L"Sky", true, true);
 	_ppConfigPane->AddPostProcess(&_mlaaPP, L"MLAA", false, true);	
+	_ppConfigPane->AddPostProcess(&_pBufferCombinePP, L"Particle Combine", true, true);
 	_ppConfigPane->AddPostProcess(&_hdrPP, L"HDR", true, true);
 	_ppConfigPane->AddPostProcess(&_discDoFPP, L"Disc DoF", false, true);
-	_ppConfigPane->AddPostProcess(&_pBufferCombinePP, L"Particle Combine", true, true);
 	_ppConfigPane->AddPostProcess(&_fxaaPP, L"FXAA", true, true);
 	_ppConfigPane->AddPostProcess(&_boPP, L"Bounding objects", true, true);
 	_ppConfigPane->AddPostProcess(&_uiPP, L"UI", true, false);
@@ -215,10 +236,10 @@ void DeferredRendererApplication::OnInitialize()
 
 void DeferredRendererApplication::OnPreparingContentManager(ContentManager* contentManager)
 {	
-	contentManager->AddSearchPath(L"\\..\\..\\");						// Project root
-	contentManager->AddSearchPath(L"\\..\\deferred-renderer\\");		// source folder
-	contentManager->AddSearchPath(L"\\..\\deferred-renderer\\media\\");	// media folder
-
+	contentManager->AddContentSearchPath(L"\\..\\..\\media");
+	contentManager->AddContentSearchPath(L"\\..\\deferred-renderer");
+	contentManager->SetCompiledContentPath(L"\\..\\..\\compiledmedia");
+	
 	contentManager->AddContentLoader(&_textureLoader);
 	contentManager->AddContentLoader(&_psLoader);
 	contentManager->AddContentLoader(&_gsLoader);
@@ -226,7 +247,6 @@ void DeferredRendererApplication::OnPreparingContentManager(ContentManager* cont
 	contentManager->AddContentLoader(&_modelLoader);
 	contentManager->AddContentLoader(&_particleLoader);
 	contentManager->AddContentLoader(&_fontLoader);
-	contentManager->AddContentLoader(&_entityLoader);
 }
 
 void DeferredRendererApplication::OnPreparingDeviceSettings(DeviceManager* deviceManager)
@@ -291,12 +311,23 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 
 		if (mouse.IsButtonDown(MouseButton::RightButton))
 		{
-			const float mouseRotateSpeed = _camera.GetRotationSpeed();
-		
+			const float mouseRotateSpeed = _camera.GetRotationSpeed();		
 			XMFLOAT2 rotation = _camera.GetRotation();
 			rotation.x += mouse.GetDX() * mouseRotateSpeed;
 			rotation.y += mouse.GetDY() * mouseRotateSpeed;
-			_camera.SetRotation(rotation);
+
+			float rollSpeed = _camera.GetRollSpeed();
+			float roll = _camera.GetRoll();
+			if (kb.IsKeyDown(Keys::Q))
+			{
+				roll += rollSpeed * dt;
+			}
+			if (kb.IsKeyDown(Keys::E))
+			{
+				roll -= rollSpeed * dt;
+			}
+
+			_camera.SetRotation(rotation, roll);
 			
 			XMFLOAT2 moveDir = XMFLOAT2(0.0f, 0.0f);
 			if (kb.IsKeyDown(Keys::W) || kb.IsKeyDown(Keys::Up))
@@ -428,7 +459,7 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 			model->FillBoundingObjectSet(&boSet);
 		}
 	}
-	
+		
 	for (UINT i = 0; i < _particleConfigPane->GetParticleInstanceCount(); i++)
 	{
 		ParticleSystemInstance* particle = _particleConfigPane->GetParticleInstance(i);
