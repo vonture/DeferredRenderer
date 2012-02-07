@@ -45,7 +45,7 @@ public:
 	void SetMinimumEdgeThreshold(float threshold) { _edgeThresholdMin = clamp(threshold, 0.0f, 0.0833f); }
 	float GetMinimumEdgeThreshold() const { return _edgeThresholdMin; }
 
-	void SetQualityPresetIndex(UINT idx) { _qualityIndex = clamp(idx, 0, QUALITY_PRESET_COUNT - 1); }
+	void SetQualityPresetIndex(UINT idx) { _qualityIndex = min(idx, QUALITY_PRESET_COUNT - 1); }
 	UINT GetQualityPresetIndex() const { return _qualityIndex; }
 	UINT GetQualityPreset() const { return QUALITY_PRESETS[_qualityIndex]; }
 	UINT GetQualityPresetIndexCount() { return QUALITY_PRESET_COUNT; }

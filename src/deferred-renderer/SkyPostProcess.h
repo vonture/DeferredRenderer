@@ -65,7 +65,7 @@ public:
 	void SetSunEnabled(bool enable) { _enableSun = enable; }
 	void SetSunBrightness(float intensity) { _sunBrightness = max(intensity, 0.0f); }
 
-	void SetSkyTypeIndex(UINT idx) { _skyTypeIndex = clamp(idx, 0, SKY_TYPE_COUNT - 1); }
+	void SetSkyTypeIndex(UINT idx) { _skyTypeIndex = min(idx, SKY_TYPE_COUNT - 1); }
 	UINT GetSkyTypeIndex() const { return _skyTypeIndex; }
 	const WCHAR* GetSkyTypeDescription() const { return SKY_TYPES[_skyTypeIndex].Description; }
 	UINT GetSkyTypeIndexCount() const { return SKY_TYPE_COUNT; }

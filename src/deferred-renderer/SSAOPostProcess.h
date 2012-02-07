@@ -77,7 +77,7 @@ public:
 	UINT GetSampleCount() const { return SSAO_SAMPLE_COUNTS[_sampleCountIndex]; }
 	
 	UINT GetSampleCountIndex() const { return _sampleCountIndex; }
-	void SetSampleCountIndex(UINT index) { _sampleCountIndex = clamp(index, 0, NUM_SSAO_SAMPLE_COUNTS - 1); }
+	void SetSampleCountIndex(UINT index) { _sampleCountIndex = min(index, NUM_SSAO_SAMPLE_COUNTS - 1); }
 	UINT GetNumSampleCountIndices() const { return NUM_SSAO_SAMPLE_COUNTS; }
 
 	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
