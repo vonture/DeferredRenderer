@@ -146,7 +146,7 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
 
 	V_RETURN(pd3dDevice->CreateDepthStencilView(_textures[3], &dsvd, &_dsv));
 	
-	V_RETURN(SetDXDebugName(_rtvs[3], "GBuffer RT3 DSV"));
+	V_RETURN(SetDXDebugName(_dsv, "GBuffer RT3 DSV"));
 
 	// Create the readonly depth stencil view
 	D3D11_DEPTH_STENCIL_VIEW_DESC rodsvd =
@@ -158,7 +158,7 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
 
 	V_RETURN(pd3dDevice->CreateDepthStencilView(_textures[3], &rodsvd, &_rodsv));
 	
-	V_RETURN(SetDXDebugName(_rtvs[3], "GBuffer RT3 Read Only DSV"));
+	V_RETURN(SetDXDebugName(_rodsv, "GBuffer RT3 Read Only DSV"));
 	return S_OK;
 }
 
