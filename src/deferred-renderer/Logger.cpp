@@ -88,13 +88,8 @@ void Logger::flush()
 			if (_messages[i].Type & _readers[j].Type)
 			{
 				// Reader found, do the callback
-				LogFunction func = _readers[j].Function;
-
-				UINT type = _messages[i].Type;
-				const WCHAR* sender = _messages[i].Sender;
-				const WCHAR* msg = _messages[i].Message;
-
-				func(type, sender, msg);
+				LogFunction func = _readers[j].Function;				
+				func(_messages[i].Type, _messages[i].Sender, _messages[i].Message);
 
 				dispatched = true;
 			}
@@ -134,30 +129,31 @@ void Logger::RemoveReader(void* caller)
 	}
 }
 
-void Logger::AddLogMessage(UINT type, const WCHAR* sender, const WCHAR* message)
+void Logger::AddLogMessage(UINT type, const std::wstring& sender, const std::wstring& message)
 {
 	MESSAGE_INFO info = 
 	{
 		type,		// UINT Type;
-		sender,		// const WCHAR* Sender;
-		message,	// const WCHAR* Message;	
+		sender,		// std::wstring Sender;
+		message,		//std::wstring Message;	
 	};
 	_messages.push_back(info);
 
 #if _DEBUG
-	UINT msgLen = wcslen(message);
-	bool endsInNewLine = (msgLen > 0) && (message[msgLen - 1] == '\n');
+	std::wstring debugMessage = sender + std::wstring(L":") + message;
+	OutputDebugString(debugMessage.c_str());
 
-	WCHAR msg[MAX_LOG_LENGTH];
-	swprintf_s(msg, L"%s: %s%s", sender, message, endsInNewLine ? L"" : L"\n");
-	OutputDebugStringW(msg);
+	if (debugMessage.size() > 0 && debugMessage[debugMessage.size() - 1] != L'\n')
+	{
+		OutputDebugString(L"\n");
+	}
 #endif
 
 	// Flush the message queue
 	flush();
 }
 
-void Logger::BeginEvent(const WCHAR* name, bool graphicsEvent)
+void Logger::BeginEvent(const std::wstring& name, bool graphicsEvent)
 {
 #ifdef EVENTS_ENABLED
 	if (_nextEventSlot >= MAX_EVENTS)
@@ -213,7 +209,7 @@ void Logger::BeginEvent(const WCHAR* name, bool graphicsEvent)
 	{
 		// Alternate event colors between red and blue
 		D3DCOLOR col = D3DCOLOR_COLORVALUE(newEvent->Red ? 1.0f : 0.0f, 0.0f, newEvent->Red ? 0.0f : 1.0f, 1.0f);
-		D3DPERF_BeginEvent(col, name);
+		D3DPERF_BeginEvent(col, name.c_str());
 	}
 #else	
 	if (graphicsEvent)
@@ -223,7 +219,7 @@ void Logger::BeginEvent(const WCHAR* name, bool graphicsEvent)
 #endif
 }
 
-void Logger::EndEvent(const WCHAR* comment, bool graphicsEvent)
+void Logger::EndEvent(const std::wstring& comment, bool graphicsEvent)
 {
 #ifdef EVENTS_ENABLED
 	LARGE_INTEGER largeInt;
@@ -271,12 +267,12 @@ Logger::EventIterator::EventIterator(EVENT_INFO* root)
 {
 }
 
-const WCHAR* Logger::EventIterator::GetName() const
+const std::wstring& Logger::EventIterator::GetName() const
 {
 	return _curEvent->Name;
 }
 
-const WCHAR* Logger::EventIterator::GetComment() const
+const std::wstring& Logger::EventIterator::GetComment() const
 {
 	return _curEvent->Comment;
 }

@@ -26,15 +26,15 @@ LogWindow::~LogWindow()
 	}
 }
 
-void LogWindow::OnLogMessage(UINT type, const WCHAR* sender, const WCHAR* message)
+void LogWindow::OnLogMessage(UINT type, const std::wstring& sender, const std::wstring& message)
 {
 	Gwen::UnicodeString str = Gwen::UnicodeString(L"");	
-	if (sender)
+	if (sender.size() > 0)
 	{
-		str += Gwen::Utility::Format(L"%s: ", sender);
+		str += Gwen::Utility::Format(L"%s: ", sender.c_str());
 	}
 
-	str += Gwen::UnicodeString(message);
+	str += message;
 
 	if (str.size() > 0 &&  str[str.size() - 1] == '\n')
 	{

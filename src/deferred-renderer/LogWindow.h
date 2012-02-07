@@ -13,7 +13,7 @@ private:
 	Gwen::Controls::ListBox* _textList;
 
 protected:
-	void OnLogMessage(UINT type, const WCHAR* sender, const WCHAR* message);
+	void OnLogMessage(UINT type, const std::wstring& sender, const std::wstring& message);
 
 public:
 	LogWindow(Gwen::Controls::Base* parent, Logger* logger);

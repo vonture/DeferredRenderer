@@ -8,7 +8,7 @@
 #define MAX_SENDER_LENGTH 32
 #define EVENTS_ENABLED
 
-// Error logging implimentations
+// Error logging implementations
 #ifndef LOG_ERROR
 #define LOG_ERROR(sender, msg) SEND_LOG_MESSAGE(Error, sender, msg)
 #endif
@@ -29,7 +29,7 @@
 #define SEND_LOG_MESSAGE(type, sender, msg) (Logger::GetInstance()->AddLogMessage(MessageType::##type, (sender), (msg)))
 #endif
 
-// Event implimentations
+// Event implementations
 #ifndef BEGIN_EVENT
 #define BEGIN_EVENT(name) (Logger::GetInstance()->BeginEvent(name, false))
 #endif
@@ -62,7 +62,7 @@ namespace MessageType
 class Logger : public std::streambuf
 {
 public:
-	typedef std::tr1::function<void (UINT type, const WCHAR* sender, const WCHAR* message)> LogFunction;
+	typedef std::tr1::function<void (UINT type, const std::wstring& sender, const std::wstring& message)> LogFunction;
 
 private:	
 	Logger();
@@ -76,8 +76,8 @@ private:
 	struct MESSAGE_INFO
 	{
 		UINT Type;		
-		const WCHAR* Sender;
-		const WCHAR* Message;
+		std::wstring Sender;
+		std::wstring Message;
 	};
 	std::vector<MESSAGE_INFO> _messages;
 
@@ -93,8 +93,8 @@ private:
 	// Events
 	struct EVENT_INFO
 	{
-		const WCHAR* Name;
-		const WCHAR* Comment;
+		std::wstring Name;
+		std::wstring Comment;
 
 		INT64 BeginTime;
 		float Duration;
@@ -135,10 +135,10 @@ public:
 	void AddReader(UINT type, void* caller, LogFunction callbackFunction);	
 	void RemoveReader(void* caller);
 
-	void AddLogMessage(UINT type, const WCHAR* sender, const WCHAR* message);
+	void AddLogMessage(UINT type, const std::wstring& sender, const std::wstring& message);
 
-	void BeginEvent(const WCHAR* name, bool graphicsEvent = true);
-	void EndEvent(const WCHAR* comment, bool graphicsEvent = true);
+	void BeginEvent(const std::wstring& name, bool graphicsEvent = true);
+	void EndEvent(const std::wstring& comment, bool graphicsEvent = true);
 
 	// Wrapper class to return event information
 	class EventIterator
@@ -152,8 +152,8 @@ public:
 		EventIterator(EVENT_INFO* root);
 
 	public:
-		const WCHAR* GetName() const;
-		const WCHAR* GetComment() const;
+		const std::wstring& GetName() const;
+		const std::wstring& GetComment() const;
 		float GetDuration() const;
 
 		bool IsValid() const;
