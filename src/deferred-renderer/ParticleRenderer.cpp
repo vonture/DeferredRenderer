@@ -110,7 +110,7 @@ HRESULT ParticleRenderer::RenderParticles(ID3D11DeviceContext* pd3dDeviceContext
 		}
 
 		ID3D11ShaderResourceView* nullSrvs[2] = { NULL, NULL };
-		pd3dDeviceContext->PSGetShaderResources(0, 2, nullSrvs);
+		pd3dDeviceContext->PSSetShaderResources(0, 2, nullSrvs);
 
 		ID3D11Buffer* nullBuf = NULL;
 		pd3dDeviceContext->GSSetConstantBuffers(0, 1, &nullBuf);
