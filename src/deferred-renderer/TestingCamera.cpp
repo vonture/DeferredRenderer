@@ -6,6 +6,7 @@ TestingCamera::TestingCamera()
 {
 	SetMovementSpeed(10.0f);
 	SetRotationSpeed(0.002f);
+	SetRollSpeed(1.0f);
 }
 
 TestingCamera::TestingCamera(float nearClip, float farClip, float fov, float aspect)
@@ -13,6 +14,7 @@ TestingCamera::TestingCamera(float nearClip, float farClip, float fov, float asp
 {
 	SetMovementSpeed(10.0f);
 	SetRotationSpeed(0.002f);
+	SetRollSpeed(1.0f);
 }
 
 TestingCamera::~TestingCamera()
@@ -37,4 +39,15 @@ float TestingCamera::GetRotationSpeed() const
 void TestingCamera::SetRotationSpeed(float rotSpeed)
 {
 	_rotSpeed = max(0.0f, rotSpeed);
+}
+
+
+float TestingCamera::GetRollSpeed() const
+{
+	return _rollSpeed;
+}
+
+void TestingCamera::SetRollSpeed(float val)
+{ 
+	_rollSpeed = max(0.0f, val);
 }
