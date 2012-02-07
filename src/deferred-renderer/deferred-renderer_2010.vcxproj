@@ -61,7 +61,7 @@
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <ExceptionHandling>Sync</ExceptionHandling>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;TIXML_USE_STL;_DEBUG;DEBUG;PROFILE;_WINDOWS;D3DXFX_LARGEADDRESS_HANDLE;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ALL_PRESETS;WIN32;TIXML_USE_STL;_DEBUG;DEBUG;PROFILE;_WINDOWS;D3DXFX_LARGEADDRESS_HANDLE;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -108,7 +108,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions> %(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;TIXML_USE_STL;NDEBUG;_WINDOWS;D3DXFX_LARGEADDRESS_HANDLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ALL_PRESETS;WIN32;TIXML_USE_STL;NDEBUG;_WINDOWS;D3DXFX_LARGEADDRESS_HANDLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
@@ -148,7 +148,6 @@
     <ClCompile Include="ContentManager.cpp" />
     <ClCompile Include="ContentType.cpp" />
     <ClCompile Include="DeviceManagerConfigurationPane.cpp" />
-    <ClCompile Include="EntityLoader.cpp" />
     <ClCompile Include="FontLoader.cpp" />
     <ClCompile Include="FXAAConfigurationPane.cpp" />
     <ClCompile Include="FXAAPostProcess.cpp" />
@@ -241,7 +240,6 @@
     <ClInclude Include="ContentManager.h" />
     <ClInclude Include="ContentType.h" />
     <ClInclude Include="DeviceManagerConfigurationPane.h" />
-    <ClInclude Include="EntityLoader.h" />
     <ClInclude Include="FontLoader.h" />
     <ClInclude Include="FXAAConfigurationPane.h" />
     <ClInclude Include="FXAAPostProcess.h" />
