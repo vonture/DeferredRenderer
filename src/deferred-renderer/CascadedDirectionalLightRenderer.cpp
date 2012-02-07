@@ -5,7 +5,7 @@
 #include "VertexShaderLoader.h"
 #include "ModelInstanceSet.h"
 
-const float CascadedDirectionalLightRenderer::CASCADE_SPLITS[NUM_CASCADES] = { 0.0625f, 0.125f, 0.25f, 1.0f };
+const float CascadedDirectionalLightRenderer::CASCADE_SPLITS[NUM_CASCADES] = { 0.125f, 0.25f, 0.5f, 1.0f };
 const float CascadedDirectionalLightRenderer::BIAS = 0.005f;
 
 CascadedDirectionalLightRenderer::CascadedDirectionalLightRenderer()
@@ -68,8 +68,8 @@ struct Triangle
 //--------------------------------------------------------------------------------------
 void CascadedDirectionalLightRenderer::ComputeNearAndFar( FLOAT& fNearPlane, 
                                         FLOAT& fFarPlane, 
-                                        FXMVECTOR vLightCameraOrthographicMin, 
-                                        FXMVECTOR vLightCameraOrthographicMax, 
+                                        FXMVECTOR& vLightCameraOrthographicMin, 
+                                        FXMVECTOR& vLightCameraOrthographicMax, 
                                         XMVECTOR* pvPointsInCameraView ) 
 {
 
@@ -351,7 +351,8 @@ void CascadedDirectionalLightRenderer::ComputeNearAndFar( FLOAT& fNearPlane,
 //--------------------------------------------------------------------------------------
 // This function converts the "center, extents" version of an AABB into 8 points.
 //--------------------------------------------------------------------------------------
-void CascadedDirectionalLightRenderer::CreateAABBPoints( XMVECTOR* vAABBPoints, FXMVECTOR vCenter, FXMVECTOR vExtents )
+void CascadedDirectionalLightRenderer::CreateAABBPoints(XMVECTOR* vAABBPoints, FXMVECTOR& vCenter, 
+	FXMVECTOR& vExtents)
 {
     //This map enables us to use a for loop and do vector math.
     static const XMVECTORF32 vExtentsMap[] = 

@@ -46,10 +46,10 @@ private:
 	XMFLOAT4X4 _shadowTexCoordTransforms[NUM_SHADOW_MAPS][NUM_CASCADES];
 	float _cascadeSplits[NUM_SHADOW_MAPS][NUM_CASCADES];
 
-	void ComputeNearAndFar(FLOAT& fNearPlane, FLOAT& fFarPlane, FXMVECTOR vLightCameraOrthographicMin, 
-		FXMVECTOR vLightCameraOrthographicMax, XMVECTOR* pvPointsInCameraView);
+	void ComputeNearAndFar(FLOAT& fNearPlane, FLOAT& fFarPlane, FXMVECTOR& vLightCameraOrthographicMin, 
+		FXMVECTOR& vLightCameraOrthographicMax, XMVECTOR* pvPointsInCameraView);
 
-	void CreateAABBPoints(XMVECTOR* vAABBPoints, FXMVECTOR vCenter, FXMVECTOR vExtents);
+	void CreateAABBPoints(XMVECTOR* vAABBPoints, FXMVECTOR& vCenter, FXMVECTOR& vExtents);
 
 	void CreateFrustumPointsFromCascadeInterval(float fCascadeIntervalBegin, FLOAT fCascadeIntervalEnd, 
 		XMMATRIX &vProjection, XMVECTOR* pvCornerPointsWorld);
