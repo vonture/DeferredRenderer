@@ -35,7 +35,7 @@ HRESULT DeviceManager::Initialize(HWND outputWindow)
 
 	DXGI_SWAP_CHAIN_DESC desc;
 	ZeroMemory(&desc, sizeof(DXGI_SWAP_CHAIN_DESC));
-	desc.BufferCount = 2;
+	desc.BufferCount = 3;
 	desc.BufferDesc.Format = _backBufferFormat;
 	desc.BufferDesc.Width = _backBufferWidth;
 	desc.BufferDesc.Height = _backBufferHeight;
