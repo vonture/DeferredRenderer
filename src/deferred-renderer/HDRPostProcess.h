@@ -17,15 +17,12 @@ private:
 	UINT _lumMapSize;
 	UINT _mipLevels;
 	
-	ID3D11Texture2D* _lumTextures[2];
 	ID3D11RenderTargetView* _lumRTVs[2];
 	ID3D11ShaderResourceView* _lumSRVs[2];
 	
-	ID3D11Texture2D* _downScaleTextures[3];
 	ID3D11RenderTargetView* _downScaleRTVs[3];
 	ID3D11ShaderResourceView* _downScaleSRVs[3];
 	
-	ID3D11Texture2D* _blurTempTexture;
 	ID3D11RenderTargetView* _blurTempRTV;
 	ID3D11ShaderResourceView* _blurTempSRV;
 
