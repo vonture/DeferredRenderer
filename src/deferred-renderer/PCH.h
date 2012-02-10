@@ -56,6 +56,7 @@
 #include <dxgi.h>
 #include <d3d11.h>
 #include <d3dx11.h>
+#include <D3D11SDKLayers.h>
 #include <dxerr.h>
 #include <d3dx10.h>
 #include <D3Dcompiler.h>

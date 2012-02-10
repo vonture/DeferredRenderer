@@ -77,6 +77,11 @@ HRESULT DeviceManager::Initialize(HWND outputWindow)
 		return E_FAIL;
     }
 
+	ID3D11Debug* debugInterface;
+	V_RETURN(_device->QueryInterface<ID3D11Debug>(&debugInterface));
+	debugInterface->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+	SAFE_RELEASE(debugInterface);
+
 	V_RETURN(SetDXDebugName(_device, "Graphics device"));
 	V_RETURN(SetDXDebugName(_immediateContext, "Immediate context"));
 	V_RETURN(SetDXDebugName(_swapChain, "Swap chain"));
