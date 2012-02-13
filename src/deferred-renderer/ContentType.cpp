@@ -10,6 +10,11 @@ ContentType::~ContentType()
 {
 }
 
+UINT ContentType::GetRefCount() const
+{
+	return _refCount;
+}
+
 STDMETHODIMP ContentType::QueryInterface(REFIID riid, void** ppvObject)
 {
     IUnknown *punk = nullptr;
@@ -38,7 +43,9 @@ STDMETHODIMP_(ULONG) ContentType::Release()
     ULONG cRef = --_refCount;
 
     if (cRef == 0)
+	{
         delete this;
+	}
 
     return cRef;
 }
