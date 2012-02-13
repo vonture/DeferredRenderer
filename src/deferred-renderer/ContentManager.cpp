@@ -92,14 +92,3 @@ void ContentManager::SetCompiledContentPath(const std::wstring& path)
 	_compiledPath = std::wstring(cwd) + path;
 	free(cwd);
 }
-
-void ContentManager::ReleaseContent()
-{
-	ContentMap::iterator i;
-	for (i = _loadedContent.begin(); i != _loadedContent.end(); i++)
-	{
-		SAFE_RELEASE(i->second);
-	}
-
-	_loadedContent.clear();
-}

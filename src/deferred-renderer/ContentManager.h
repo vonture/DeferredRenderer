@@ -10,7 +10,7 @@ class ContentManager
 private:
 	typedef std::string LoaderHash;
 	typedef std::map<LoaderHash, ContentLoaderBase*> LoaderMap;
-	typedef std::map<ContentHash, IUnknown*> ContentMap;
+	typedef std::map<ContentHash, ContentType*> ContentMap;
 
 	LoaderMap _contentLoaders;
 	ContentMap _loadedContent;
@@ -175,7 +175,6 @@ public:
 				inputStream.close();
 
 				_loadedContent[hash] = content;
-				content->AddRef();
 				
 				*ppContentOut = content;
 				return S_OK;
@@ -188,5 +187,37 @@ public:
 		}
 	}
 
-	void ReleaseContent();
+	template <class contentType>
+	HRESULT ReleaseContent(contentType* content)
+	{
+		ContentType* asContentType = reinterpret_cast<ContentType*>(content);
+		if (!content)
+		{
+			LOG_ERROR(L"ContentManager", L"Attempted to release content object that didn't derive from \
+				ContentType");
+			return E_FAIL;
+		}
+
+		if (asContentType->GetRefCount() > 1)
+		{
+			asContentType->Release();
+			return S_OK;
+		}
+		else
+		{
+			for (ContentMap::iterator i = _loadedContent.begin(); i != _loadedContent.end(); i++)
+			{
+				if (i->second == asContentType)
+				{
+					_loadedContent.erase(i);
+					asContentType->Release();
+					return S_OK;
+				}
+			}
+
+			LOG_ERROR(L"ContentManager", L"Attemped to release content that wasn't held by the content \
+										  manager.");
+			return E_FAIL;
+		}
+	}
 };
