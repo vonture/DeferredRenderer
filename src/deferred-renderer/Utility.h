@@ -271,6 +271,11 @@ inline HRESULT CompileShaderFromFile(const WCHAR* szFileName, const char* szEntr
 #ifndef SAFE_DELETE_ARRAY
 #define SAFE_DELETE_ARRAY(p) { if (p) { delete[] (p); (p)=NULL; } }
 #endif
+
 #ifndef SAFE_RELEASE
 #define SAFE_RELEASE(p)      { if (p) { (p)->Release(); (p)=NULL; } }
+#endif
+
+#ifndef SAFE_CM_RELEASE
+#define SAFE_CM_RELEASE(cm, p) { if (p) { cm->ReleaseContent(p); (p)=NULL; } }
 #endif
