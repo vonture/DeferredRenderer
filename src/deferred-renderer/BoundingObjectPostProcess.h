@@ -5,6 +5,8 @@
 #include "IHasContent.h"
 #include "BoundingObjectSet.h"
 #include "xnaCollision.h"
+#include "PixelShaderLoader.h"
+#include "VertexShaderLoader.h"
 
 class BoundingObjectPostProcess : public PostProcess
 {
@@ -33,10 +35,8 @@ private:
 	ID3D11Buffer* _sphereVB;
 	static const UINT SPHERE_POINT_COUNT = 99;
 	
-	ID3D11InputLayout* _inputLayout;
-
-	ID3D11VertexShader* _vertexShader;
-	ID3D11PixelShader* _pixelShader;
+	VertexShaderContent* _vertexShader;
+	PixelShaderContent* _pixelShader;
 		
 	ID3D11Buffer* _wvpConstantBuffer;
 	ID3D11Buffer* _colorConstantBuffer;
@@ -62,12 +62,14 @@ public:
 	void Clear();
 
 	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
-		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, ParticleBuffer* pBuffer,LightBuffer* lightBuffer);
+		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, ParticleBuffer* pBuffer, 
+		LightBuffer* lightBuffer);
 
-	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
-	void OnD3D11DestroyDevice();
+	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, 
+		const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
+	void OnD3D11DestroyDevice(ContentManager* pContentManager);
 
-	HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
-                            const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-	void OnD3D11ReleasingSwapChain();
+	HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, 
+		IDXGISwapChain* pSwapChain, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
+	void OnD3D11ReleasingSwapChain(ContentManager* pContentManager);
 };

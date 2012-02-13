@@ -24,7 +24,8 @@ UIPostProcess::~UIPostProcess()
 }
 
 HRESULT UIPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
-	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, ParticleBuffer* pBuffer,LightBuffer* lightBuffer)
+	ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, ParticleBuffer* pBuffer,
+	LightBuffer* lightBuffer)
 {
 	BEGIN_EVENT_D3D(L"UI");
 		
@@ -52,7 +53,7 @@ LRESULT UIPostProcess::OnMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 	message.wParam = wParam;
 	message.lParam = lParam;
 
-	return SUCCEEDED(_input->ProcessMessage(message)) ? 0 : -1;
+	return _input->ProcessMessage(message) ? 0 : 1;
 }
 
 void UIPostProcess::OnFrameMove(double totalTime, float dt)
@@ -60,7 +61,8 @@ void UIPostProcess::OnFrameMove(double totalTime, float dt)
 	_canvas->DoThink();
 }
 
-HRESULT UIPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT UIPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager,
+	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
@@ -73,14 +75,14 @@ HRESULT UIPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMana
 	return S_OK;
 }
 
-void UIPostProcess::OnD3D11DestroyDevice()
+void UIPostProcess::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	PostProcess::OnD3D11DestroyDevice();
-	_uiRenderer.OnD3D11DestroyDevice();
+	PostProcess::OnD3D11DestroyDevice(pContentManager);
+	_uiRenderer.OnD3D11DestroyDevice(pContentManager);
 }
 
-HRESULT UIPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
-	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT UIPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager,
+	IDXGISwapChain* pSwapChain, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
@@ -93,8 +95,8 @@ HRESULT UIPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Content
 	return S_OK;
 }
 
-void UIPostProcess::OnD3D11ReleasingSwapChain()
+void UIPostProcess::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
-	PostProcess::OnD3D11ReleasingSwapChain();
-	_uiRenderer.OnD3D11ReleasingSwapChain();
+	PostProcess::OnD3D11ReleasingSwapChain(pContentManager);
+	_uiRenderer.OnD3D11ReleasingSwapChain(pContentManager);
 }

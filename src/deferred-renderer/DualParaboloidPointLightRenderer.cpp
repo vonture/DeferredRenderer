@@ -1,7 +1,5 @@
 #include "PCH.h"
 #include "DualParaboloidPointLightRenderer.h"
-#include "PixelShaderLoader.h"
-#include "VertexShaderLoader.h"
 #include "Logger.h"
 
 const float DualParaboloidPointLightRenderer::BIAS = 0.02f;
@@ -9,18 +7,16 @@ const float DualParaboloidPointLightRenderer::BIAS = 0.02f;
 DualParaboloidPointLightRenderer::DualParaboloidPointLightRenderer()
 	: _depthPS(NULL), _alphaCutoutPropertiesBuffer(NULL), _depthPropertiesBuffer(NULL),
 	  _vertexShader(NULL), _unshadowedPS(NULL), _shadowedPS(NULL), _modelPropertiesBuffer(NULL),
-	  _lightPropertiesBuffer(NULL), _cameraPropertiesBuffer(NULL), _lightInputLayout(NULL),
+	  _lightPropertiesBuffer(NULL), _cameraPropertiesBuffer(NULL),
 	  _lightModel(L"\\models\\sphere\\sphere.sdkmesh")
 {
 	for (UINT i = 0; i < 2; i++)
 	{
 		_depthVS[i] = NULL;
-		_depthInput[i] = NULL;
 	}
 
 	for (UINT i = 0; i < NUM_SHADOW_MAPS; i++)
 	{
-		_shadowMapTextures[i] = NULL;
 		_shadowMapDSVs[i] = NULL;
 		_shadowMapSRVs[i] = NULL;
 	}
@@ -83,10 +79,10 @@ HRESULT DualParaboloidPointLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 	pd3dImmediateContext->ClearDepthStencilView(_shadowMapDSVs[shadowMapIdx], D3D11_CLEAR_DEPTH, 1.0f, 0);
 		
 	pd3dImmediateContext->GSSetShader(NULL, NULL, 0);
-	pd3dImmediateContext->VSSetShader(alphaCutoutEnabled ? _depthVS[1] : _depthVS[0], NULL, 0);
-	pd3dImmediateContext->PSSetShader(alphaCutoutEnabled ? _depthPS : NULL, NULL, 0);	
+	pd3dImmediateContext->VSSetShader(alphaCutoutEnabled ? _depthVS[1]->VertexShader : _depthVS[0]->VertexShader, NULL, 0);
+	pd3dImmediateContext->PSSetShader(alphaCutoutEnabled ? _depthPS->PixelShader : NULL, NULL, 0);	
 
-	pd3dImmediateContext->IASetInputLayout(alphaCutoutEnabled ? _depthInput[1] : _depthInput[0]);
+	pd3dImmediateContext->IASetInputLayout(alphaCutoutEnabled ? _depthVS[1]->InputLayout : _depthVS[0]->InputLayout);
 
 	float blendFactor[4] = {1, 1, 1, 1};
 	pd3dImmediateContext->OMSetBlendState(GetBlendStates()->GetBlendDisabled(), blendFactor, 0xFFFFFFFF);
@@ -253,9 +249,9 @@ HRESULT DualParaboloidPointLightRenderer::RenderGeometryLights(ID3D11DeviceConte
 
 		// Set the shaders and input
 		pd3dImmediateContext->GSSetShader(NULL, NULL, 0);
-		pd3dImmediateContext->VSSetShader(_vertexShader, NULL, 0);
+		pd3dImmediateContext->VSSetShader(_vertexShader->VertexShader, NULL, 0);
 
-		pd3dImmediateContext->IASetInputLayout(_lightInputLayout);
+		pd3dImmediateContext->IASetInputLayout(_vertexShader->InputLayout);
 
 		// build the camera frustum
 		XMFLOAT4X4 fProj = camera->GetProjection();
@@ -284,7 +280,7 @@ HRESULT DualParaboloidPointLightRenderer::RenderGeometryLights(ID3D11DeviceConte
 		prevRS->GetDesc(&rsDesc);
 
 		// Begin rendering unshadowed lights
-		pd3dImmediateContext->PSSetShader(_unshadowedPS, NULL, 0);	
+		pd3dImmediateContext->PSSetShader(_unshadowedPS->PixelShader, NULL, 0);	
 
 		int numUnshadowed = GetCount(false);
 		for (int i = 0; i < numUnshadowed; i++)
@@ -355,7 +351,7 @@ HRESULT DualParaboloidPointLightRenderer::RenderGeometryLights(ID3D11DeviceConte
 		}
 
 		// Render the shadowed lights
-		pd3dImmediateContext->PSSetShader(_shadowedPS, NULL, 0);	
+		pd3dImmediateContext->PSSetShader(_shadowedPS->PixelShader, NULL, 0);	
 
 		int numShadowed = GetCount(true);
 		for (int i = 0; i < numShadowed; i++)
@@ -512,9 +508,6 @@ HRESULT DualParaboloidPointLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 	V_RETURN(SetDXDebugName(_modelPropertiesBuffer, "DP Light depth CB"));
 
 	// Create the shaders and input layout
-	PixelShaderContent* psContent = NULL;
-	VertexShaderContent* vsContent = NULL;
-
 	char entryPoint[256];
 	char debugName[256];
 	PixelShaderOptions psOpts =
@@ -547,40 +540,19 @@ HRESULT DualParaboloidPointLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 	// unshadowed ps
 	sprintf_s(entryPoint, "PS_PointLightUnshadowed");
 	sprintf_s(debugName, "Dual paraboloid unshadowed");
-
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"PointLight.hlsl", &psOpts, &psContent));
-
-	_unshadowedPS = psContent->PixelShader;
-	_unshadowedPS->AddRef();
-
-	SAFE_RELEASE(psContent);
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"PointLight.hlsl", &psOpts, &_unshadowedPS));
 
 	// shadowed ps
 	sprintf_s(entryPoint, "PS_PointLightShadowed");
 	sprintf_s(debugName, "Dual paraboloid shadowed");
-
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"PointLight.hlsl", &psOpts, &psContent));
-
-	_shadowedPS = psContent->PixelShader;
-	_shadowedPS->AddRef();
-
-	SAFE_RELEASE(psContent);
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"PointLight.hlsl", &psOpts, &_shadowedPS));
 	
 	// point light vs
 	sprintf_s(entryPoint, "VS_PointLight");
 	sprintf_s(debugName, "Dual paraboloid");
 	vsOpts.InputElements = posOnlyLayout;
 	vsOpts.InputElementCount = ARRAYSIZE(posOnlyLayout);
-
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"PointLight.hlsl", &vsOpts, &vsContent));
-
-	_vertexShader = vsContent->VertexShader;
-	_vertexShader->AddRef();
-
-	_lightInputLayout = vsContent->InputLayout;
-	_lightInputLayout->AddRef();
-
-	SAFE_RELEASE(vsContent);
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"PointLight.hlsl", &vsOpts, &_vertexShader));
 
 	// depth shaders
 	D3D_SHADER_MACRO macros[] = 
@@ -597,16 +569,7 @@ HRESULT DualParaboloidPointLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 	sprintf_s(debugName, "Dual paraboloid depth (alpha cutout = 0)");
 	vsOpts.InputElements = posOnlyLayout;
 	vsOpts.InputElementCount = ARRAYSIZE(posOnlyLayout);
-
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DualParaboloidDepth.hlsl", &vsOpts, &vsContent));
-
-	_depthVS[0] = vsContent->VertexShader;
-	_depthVS[0]->AddRef();
-
-	_depthInput[0] = vsContent->InputLayout;
-	_depthInput[0]->AddRef();
-
-	SAFE_RELEASE(vsContent);
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DualParaboloidDepth.hlsl", &vsOpts, &_depthVS[0]));
 
 	// dual paraboloid depth (with alpha cutout)
 	macros[0].Definition = "1";
@@ -614,28 +577,13 @@ HRESULT DualParaboloidPointLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 	sprintf_s(debugName, "Dual paraboloid depth (alpha cutout = 1)");	
 	vsOpts.InputElements = posTexcoordLayout;
 	vsOpts.InputElementCount = ARRAYSIZE(posTexcoordLayout);
-
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DualParaboloidDepth.hlsl", &vsOpts, &vsContent));
-
-	_depthVS[1] = vsContent->VertexShader;
-	_depthVS[1]->AddRef();
-
-	_depthInput[1] = vsContent->InputLayout;
-	_depthInput[1]->AddRef();
-
-	SAFE_RELEASE(vsContent);
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DualParaboloidDepth.hlsl", &vsOpts, &_depthVS[1]));
 
 	// dual paraboloid depth ps
 	macros[0].Definition = "1";
 	sprintf_s(entryPoint, "PS_Depth");
 	sprintf_s(debugName, "Dual paraboloid depth");
-
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DualParaboloidDepth.hlsl", &psOpts, &psContent));
-
-	_depthPS = psContent->PixelShader;
-	_depthPS->AddRef();
-
-	SAFE_RELEASE(psContent);	
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DualParaboloidDepth.hlsl", &psOpts, &_depthPS));
 	
 	// Create the shadow textures
 	D3D11_TEXTURE2D_DESC shadowMapTextureDesc = 
@@ -673,50 +621,48 @@ HRESULT DualParaboloidPointLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 
 	for (UINT i = 0; i < NUM_SHADOW_MAPS; i++)
 	{
-		V_RETURN(pd3dDevice->CreateTexture2D(&shadowMapTextureDesc, NULL, &_shadowMapTextures[i]));
-		sprintf_s(debugName, "DP shadow map %i texture", i);
-		V_RETURN(SetDXDebugName(_shadowMapTextures[i], debugName));
+		ID3D11Texture2D* shadowMapTexutre;
+		V_RETURN(pd3dDevice->CreateTexture2D(&shadowMapTextureDesc, NULL, &shadowMapTexutre));
 
-		V_RETURN(pd3dDevice->CreateShaderResourceView(_shadowMapTextures[i], &shadowMapSRVDesc, &_shadowMapSRVs[i]));		
+		V_RETURN(pd3dDevice->CreateShaderResourceView(shadowMapTexutre, &shadowMapSRVDesc, &_shadowMapSRVs[i]));		
 		sprintf_s(debugName, "DP shadow map %i SRV", i);
 		V_RETURN(SetDXDebugName(_shadowMapSRVs[i], debugName));
 
-		V_RETURN(pd3dDevice->CreateDepthStencilView(_shadowMapTextures[i], &shadowMapDSVDesc, &_shadowMapDSVs[i]));
+		V_RETURN(pd3dDevice->CreateDepthStencilView(shadowMapTexutre, &shadowMapDSVDesc, &_shadowMapDSVs[i]));
 		sprintf_s(debugName, "DP shadow map %i DSV", i);
 		V_RETURN(SetDXDebugName(_shadowMapDSVs[i], debugName));
+		
+		SAFE_RELEASE(shadowMapTexutre);
 	}
 
 	return S_OK;
 }
 
-void DualParaboloidPointLightRenderer::OnD3D11DestroyDevice()
+void DualParaboloidPointLightRenderer::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	LightRenderer::OnD3D11DestroyDevice();
+	LightRenderer::OnD3D11DestroyDevice(pContentManager);
 
-	_lightModel.OnD3D11DestroyDevice();
+	_lightModel.OnD3D11DestroyDevice(pContentManager);
 
 	for (UINT i = 0; i < 2; i++)
 	{
-		SAFE_RELEASE(_depthVS[i])
-		SAFE_RELEASE(_depthInput[i]);
+		SAFE_CM_RELEASE(pContentManager, _depthVS[i]);
 	}
-	SAFE_RELEASE(_depthPS);
+	SAFE_CM_RELEASE(pContentManager, _depthPS);
 	SAFE_RELEASE(_depthPropertiesBuffer);
 	SAFE_RELEASE(_alphaCutoutPropertiesBuffer);
 	
-	SAFE_RELEASE(_vertexShader);
-	SAFE_RELEASE(_unshadowedPS);
-	SAFE_RELEASE(_shadowedPS);
+	SAFE_CM_RELEASE(pContentManager, _vertexShader);
+	SAFE_CM_RELEASE(pContentManager, _unshadowedPS);
+	SAFE_CM_RELEASE(pContentManager, _shadowedPS);
 
 	SAFE_RELEASE(_modelPropertiesBuffer);
 	SAFE_RELEASE(_lightPropertiesBuffer);
 	SAFE_RELEASE(_cameraPropertiesBuffer);
 	SAFE_RELEASE(_shadowPropertiesBuffer);
-	SAFE_RELEASE(_lightInputLayout);
 
 	for (UINT i = 0; i < NUM_SHADOW_MAPS; i++)
 	{
-		SAFE_RELEASE(_shadowMapTextures[i]);
 		SAFE_RELEASE(_shadowMapDSVs[i]);
 		SAFE_RELEASE(_shadowMapSRVs[i]);
 	}
@@ -734,9 +680,9 @@ HRESULT DualParaboloidPointLightRenderer::OnD3D11ResizedSwapChain(ID3D11Device* 
 	return S_OK;
 }
 
-void DualParaboloidPointLightRenderer::OnD3D11ReleasingSwapChain()
+void DualParaboloidPointLightRenderer::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
-	LightRenderer::OnD3D11ReleasingSwapChain();
+	LightRenderer::OnD3D11ReleasingSwapChain(pContentManager);
 
-	_lightModel.OnD3D11ReleasingSwapChain();
+	_lightModel.OnD3D11ReleasingSwapChain(pContentManager);
 }

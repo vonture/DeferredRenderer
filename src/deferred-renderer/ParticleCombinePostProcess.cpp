@@ -1,7 +1,6 @@
 #include "PCH.h"
 #include "ParticleCombinePostProcess.h"
 #include "Logger.h"
-#include "PixelShaderLoader.h"
 
 ParticleCombinePostProcess::ParticleCombinePostProcess()
 	: _pixelShader(NULL)
@@ -36,7 +35,7 @@ HRESULT ParticleCombinePostProcess::Render(ID3D11DeviceContext* pd3dImmediateCon
 
 	Quad* fsQuad = GetFullScreenQuad();
 
-	V_RETURN(fsQuad->Render(pd3dImmediateContext, _pixelShader));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _pixelShader->PixelShader));
 
 	// Null the SRVs
 	ID3D11ShaderResourceView* NULLSRVs[2] = { NULL, NULL };
@@ -53,7 +52,6 @@ HRESULT ParticleCombinePostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice
 
 	V_RETURN(PostProcess::OnD3D11CreateDevice(pd3dDevice, pContentManager,pBackBufferSurfaceDesc));
 
-	PixelShaderContent* psContent = NULL;
 	PixelShaderOptions psOpts =
 	{
 		"PS_Combine",		// const char* EntryPoint;
@@ -61,21 +59,16 @@ HRESULT ParticleCombinePostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice
 		"P-buffer combine",	// const char* DebugName;
 	};
 
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"PBufferCombine.hlsl", &psOpts, &psContent));
-
-	_pixelShader = psContent->PixelShader;
-	_pixelShader->AddRef();
-
-	SAFE_RELEASE(psContent);
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"PBufferCombine.hlsl", &psOpts, &_pixelShader));
 
 	return S_OK;
 }
 
-void ParticleCombinePostProcess::OnD3D11DestroyDevice()
+void ParticleCombinePostProcess::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	PostProcess::OnD3D11DestroyDevice();
+	PostProcess::OnD3D11DestroyDevice(pContentManager);
 
-	SAFE_RELEASE(_pixelShader);
+	SAFE_CM_RELEASE(pContentManager, _pixelShader);
 }
 
 HRESULT ParticleCombinePostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
@@ -88,7 +81,7 @@ HRESULT ParticleCombinePostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDe
 	return S_OK;
 }
 
-void ParticleCombinePostProcess::OnD3D11ReleasingSwapChain()
+void ParticleCombinePostProcess::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
-	PostProcess::OnD3D11ReleasingSwapChain();
+	PostProcess::OnD3D11ReleasingSwapChain(pContentManager);
 }

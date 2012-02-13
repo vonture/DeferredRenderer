@@ -59,9 +59,9 @@ HRESULT SpotLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, Content
 	return S_OK;
 }
 
-void SpotLightRenderer::OnD3D11DestroyDevice()
+void SpotLightRenderer::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	LightRenderer::OnD3D11DestroyDevice();
+	LightRenderer::OnD3D11DestroyDevice(pContentManager);
 }
 
 HRESULT SpotLightRenderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, 
@@ -74,7 +74,7 @@ HRESULT SpotLightRenderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Con
 	return S_OK;
 }
 
-void SpotLightRenderer::OnD3D11ReleasingSwapChain()
+void SpotLightRenderer::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
-	LightRenderer::OnD3D11ReleasingSwapChain();
+	LightRenderer::OnD3D11ReleasingSwapChain(pContentManager);
 }

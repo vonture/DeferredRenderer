@@ -6,25 +6,24 @@
 #include "FullscreenQuad.h"
 #include "DeviceStates.h"
 
-#include "BoundingObjectPostProcess.h"
+#include "PixelShaderLoader.h"
+#include "VertexShaderLoader.h"
 
 class CascadedDirectionalLightRenderer : public LightRenderer<DirectionalLight>
 {
 private:
 	// No Alpha cutout shaders
-	ID3D11VertexShader* _depthVSNoAlpha;
-	ID3D11InputLayout* _depthInputNoAlpha;
+	VertexShaderContent* _depthVSNoAlpha;
 
 	// Alpha cutout shaders
-	ID3D11VertexShader* _depthVSAlpha;
-	ID3D11InputLayout* _depthInputAlpha;
-	ID3D11PixelShader* _depthPSAlpha;
+	VertexShaderContent* _depthVSAlpha;
+	PixelShaderContent* _depthPSAlpha;
 	ID3D11Buffer* _alphaCutoutProperties;
 	
-	ID3D11PixelShader* _unshadowedPS;
-	ID3D11PixelShader* _shadowedPS;
-	ID3D11PixelShader* _unshadowedParticlePS;
-	ID3D11PixelShader* _shadowedParticlePS;
+	PixelShaderContent* _unshadowedPS;
+	PixelShaderContent* _shadowedPS;
+	PixelShaderContent* _unshadowedParticlePS;
+	PixelShaderContent* _shadowedParticlePS;
 
 	static const UINT MAX_INSTANCES = 128;
 	ID3D11Buffer* _instanceWVPVB;
@@ -39,7 +38,6 @@ private:
 	static const UINT SHADOW_MAP_SIZE = 2048;
 	static const float CASCADE_SPLITS[NUM_CASCADES];
 	static const float BIAS;
-	ID3D11Texture2D* _shadowMapTextures[NUM_SHADOW_MAPS];
 	ID3D11DepthStencilView* _shadowMapDSVs[NUM_SHADOW_MAPS];
 	ID3D11ShaderResourceView* _shadowMapSRVs[NUM_SHADOW_MAPS];
 	XMFLOAT4X4 _shadowMatricies[NUM_SHADOW_MAPS][NUM_CASCADES];
@@ -103,9 +101,9 @@ public:
 		ParticleBuffer* gBuffer);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
-	void OnD3D11DestroyDevice();
+	void OnD3D11DestroyDevice(ContentManager* pContentManager);
 
 	HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
                             const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-	void OnD3D11ReleasingSwapChain();
+	void OnD3D11ReleasingSwapChain(ContentManager* pContentManager);
 };

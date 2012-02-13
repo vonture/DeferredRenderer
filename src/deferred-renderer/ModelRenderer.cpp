@@ -1,11 +1,9 @@
 #include "PCH.h"
 #include "ModelRenderer.h"
-#include "PixelShaderLoader.h"
-#include "VertexShaderLoader.h"
 #include "ModelInstanceSet.h"
 
 ModelRenderer::ModelRenderer()
-	: _meshVertexShader(NULL), _meshInputLayout(NULL), _alphaThresholdBuffer(NULL), _modelPropertiesBuffer(NULL),
+	: _meshVertexShader(NULL), _alphaThresholdBuffer(NULL), _modelPropertiesBuffer(NULL),
 	  _instanceWorldVB(NULL)
 {
 	for (UINT i = 0; i < 2; i++)
@@ -37,9 +35,9 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext,
 	XMFLOAT4X4 fPrevViewProj = camera->GetPreviousViewProjection();
 	XMMATRIX prevViewProj = XMLoadFloat4x4(&fPrevViewProj);
 	
-	pd3dDeviceContext->VSSetShader(_meshVertexShader, NULL, 0);
+	pd3dDeviceContext->VSSetShader(_meshVertexShader->VertexShader, NULL, 0);
 
-	pd3dDeviceContext->IASetInputLayout(_meshInputLayout);
+	pd3dDeviceContext->IASetInputLayout(_meshVertexShader->InputLayout);
 	pd3dDeviceContext->OMSetDepthStencilState(_dsStates.GetDepthWriteStencilSetDesc(), 1);
 
 	pd3dDeviceContext->RSSetState(_rasterStates.GetBackFaceCull());
@@ -133,8 +131,8 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext,
 				pd3dDeviceContext->PSSetShaderResources(0, 3, srvs);
 
 				// Set the shader if it wasn't the same for the last mesh
-				ID3D11PixelShader* ps = _meshPixelShader[diffSRV != NULL]
-					[normSRV != NULL][specSRV != NULL][_alphaCutoutEnabled && mesh->GetAlphaCutoutEnabled()];
+				ID3D11PixelShader* ps = _meshPixelShader[diffSRV != NULL][normSRV != NULL][specSRV != NULL]
+					[_alphaCutoutEnabled && mesh->GetAlphaCutoutEnabled()]->PixelShader;
 				if (ps != prevPS)
 				{
 					pd3dDeviceContext->PSSetShader(ps, NULL, 0);
@@ -167,9 +165,6 @@ HRESULT ModelRenderer::RenderModels(ID3D11DeviceContext* pd3dDeviceContext,
 HRESULT ModelRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
-
-	PixelShaderContent* psContent;
-	VertexShaderContent* vsContent;
 
 	D3D_SHADER_MACRO meshMacros[] = 
 	{		
@@ -205,23 +200,13 @@ HRESULT ModelRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMana
 				meshMacros[3].Definition = "0";
 				sprintf_s(debugName, "G-Buffer Mesh (diffuse = %u, normal = %u, specular = %u, alpha cutout = %u)",
 					i, j, k, 0);
-				V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Mesh.hlsl", &psOpts, &psContent));
-
-				_meshPixelShader[i][j][k][0] = psContent->PixelShader;
-				_meshPixelShader[i][j][k][0]->AddRef();
-
-				SAFE_RELEASE(psContent);
+				V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Mesh.hlsl", &psOpts, &_meshPixelShader[i][j][k][0]));
 
 				// Load alpha cutout
 				meshMacros[3].Definition = "1";
 				sprintf_s(debugName, "G-Buffer Mesh (diffuse = %u, normal = %u, specular = %u, alpha cutout = %u)",
 					i, j, k, 1);
-				V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Mesh.hlsl", &psOpts, &psContent));
-
-				_meshPixelShader[i][j][k][1] = psContent->PixelShader;
-				_meshPixelShader[i][j][k][1]->AddRef();
-
-				SAFE_RELEASE(psContent);
+				V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Mesh.hlsl", &psOpts, &_meshPixelShader[i][j][k][1]));
 			}
 		}
 	}
@@ -249,15 +234,7 @@ HRESULT ModelRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMana
 		"G-Buffer Mesh"			// const char* DebugName;
 	};
 
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Mesh.hlsl", &vsOpts, &vsContent));
-
-	_meshVertexShader = vsContent->VertexShader;
-	_meshInputLayout = vsContent->InputLayout;
-
-	_meshVertexShader->AddRef();
-	_meshInputLayout->AddRef();
-
-	SAFE_RELEASE(vsContent);
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Mesh.hlsl", &vsOpts, &_meshVertexShader));
 	
 	D3D11_BUFFER_DESC bufferDesc =
 	{
@@ -295,7 +272,7 @@ HRESULT ModelRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMana
 	return S_OK;
 }
 
-void ModelRenderer::OnD3D11DestroyDevice()
+void ModelRenderer::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
 	for (UINT i = 0; i < 2; i++)
 	{
@@ -303,23 +280,22 @@ void ModelRenderer::OnD3D11DestroyDevice()
 		{
 			for (UINT k = 0; k < 2; k++)
 			{
-				SAFE_RELEASE(_meshPixelShader[i][j][k][0]);
-				SAFE_RELEASE(_meshPixelShader[i][j][k][1]);
+				SAFE_CM_RELEASE(pContentManager, _meshPixelShader[i][j][k][0]);
+				SAFE_CM_RELEASE(pContentManager, _meshPixelShader[i][j][k][1]);
 			}
 		}		
 	}
 
-	SAFE_RELEASE(_meshVertexShader);
-	SAFE_RELEASE(_meshInputLayout);
+	SAFE_CM_RELEASE(pContentManager, _meshVertexShader);
 	
 	SAFE_RELEASE(_modelPropertiesBuffer);
 	SAFE_RELEASE(_alphaThresholdBuffer);
 	SAFE_RELEASE(_instanceWorldVB);
 
-	_dsStates.OnD3D11DestroyDevice();
-	_samplerStates.OnD3D11DestroyDevice();
-	_blendStates.OnD3D11DestroyDevice();
-	_rasterStates.OnD3D11DestroyDevice();
+	_dsStates.OnD3D11DestroyDevice(pContentManager);
+	_samplerStates.OnD3D11DestroyDevice(pContentManager);
+	_blendStates.OnD3D11DestroyDevice(pContentManager);
+	_rasterStates.OnD3D11DestroyDevice(pContentManager);
 }
 
 HRESULT ModelRenderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
@@ -335,10 +311,10 @@ HRESULT ModelRenderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Content
 	return S_OK;
 }
 
-void ModelRenderer::OnD3D11ReleasingSwapChain()
+void ModelRenderer::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
-	_dsStates.OnD3D11ReleasingSwapChain();
-	_samplerStates.OnD3D11ReleasingSwapChain();
-	_blendStates.OnD3D11ReleasingSwapChain();
-	_rasterStates.OnD3D11ReleasingSwapChain();
+	_dsStates.OnD3D11ReleasingSwapChain(pContentManager);
+	_samplerStates.OnD3D11ReleasingSwapChain(pContentManager);
+	_blendStates.OnD3D11ReleasingSwapChain(pContentManager);
+	_rasterStates.OnD3D11ReleasingSwapChain(pContentManager);
 }

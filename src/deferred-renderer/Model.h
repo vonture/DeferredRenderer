@@ -37,7 +37,6 @@ public:
 	const AxisAlignedBox& GetMeshAxisAlignedBox(UINT idx) const { return _meshes[idx]->GetAxisAlignedBox(); }
 	const AxisAlignedBox& GetAxisAlignedBox() const { return _boundingBox; }
 
-	HRESULT CreateFromFile(ID3D11Device* device, const WCHAR* fileName);
 	void Destroy();
 
 	static HRESULT Compile(ID3D11Device* device, const WCHAR* fileName, std::ostream* output);

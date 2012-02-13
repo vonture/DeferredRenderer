@@ -49,9 +49,9 @@ public:
 	virtual HRESULT OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext) = 0;
 
 	virtual HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
-	virtual void OnD3D11DestroyDevice();
+	virtual void OnD3D11DestroyDevice(ContentManager* pContentManager);
 
 	virtual HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
                             const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-	virtual void OnD3D11ReleasingSwapChain();
+	virtual void OnD3D11ReleasingSwapChain(ContentManager* pContentManager);
 };

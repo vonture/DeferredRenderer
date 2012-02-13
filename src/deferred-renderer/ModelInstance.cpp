@@ -187,9 +187,9 @@ HRESULT ModelInstance::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMana
 	return S_OK;
 }
 
-void ModelInstance::OnD3D11DestroyDevice()
+void ModelInstance::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	SAFE_RELEASE(_model);
+	SAFE_CM_RELEASE(pContentManager, _model);
 
 	SAFE_DELETE_ARRAY(_transformedMeshOrientedBoxes);
 	SAFE_DELETE_ARRAY(_transformedMeshAxisBoxes);
@@ -203,6 +203,6 @@ HRESULT ModelInstance::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Content
 	return S_OK;
 }
 
-void ModelInstance::OnD3D11ReleasingSwapChain()
+void ModelInstance::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
 }

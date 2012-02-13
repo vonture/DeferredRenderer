@@ -5,7 +5,6 @@ ParticleBuffer::ParticleBuffer()
 {
 	for (int i = 0; i < 3; i++)
 	{
-		_textures[i] = NULL;
 		_srvs[i] = NULL;
 		_rtvs[i] = NULL;
 	}
@@ -30,7 +29,7 @@ HRESULT ParticleBuffer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMan
 	return S_OK;
 }
 
-void ParticleBuffer::OnD3D11DestroyDevice()
+void ParticleBuffer::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
 }
 
@@ -55,13 +54,11 @@ HRESULT ParticleBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Conten
 		0//UINT MiscFlags;    
 	};
 
-	V_RETURN(pd3dDevice->CreateTexture2D(&texDesc, NULL, &_textures[0]));
-	V_RETURN(pd3dDevice->CreateTexture2D(&texDesc, NULL, &_textures[1]));
-	V_RETURN(pd3dDevice->CreateTexture2D(&texDesc, NULL, &_textures[2]));
+	ID3D11Texture2D* textures[3];
 
-	V_RETURN(SetDXDebugName(_textures[0], "Particle Buffer RT0 Texture"));
-	V_RETURN(SetDXDebugName(_textures[1], "Particle Buffer RT1 Texture"));
-	V_RETURN(SetDXDebugName(_textures[2], "Particle Buffer RT2 Texture"));
+	V_RETURN(pd3dDevice->CreateTexture2D(&texDesc, NULL, &textures[0]));
+	V_RETURN(pd3dDevice->CreateTexture2D(&texDesc, NULL, &textures[1]));
+	V_RETURN(pd3dDevice->CreateTexture2D(&texDesc, NULL, &textures[2]));
 
 	// Create the shader resource views
 	D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc = 
@@ -73,9 +70,9 @@ HRESULT ParticleBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Conten
 	};
 	SRVDesc.Texture2D.MipLevels = 1;
 
-	V_RETURN(pd3dDevice->CreateShaderResourceView(_textures[0], &SRVDesc, &_srvs[0]));
-	V_RETURN(pd3dDevice->CreateShaderResourceView(_textures[1], &SRVDesc, &_srvs[1]));
-	V_RETURN(pd3dDevice->CreateShaderResourceView(_textures[2], &SRVDesc, &_srvs[2]));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(textures[0], &SRVDesc, &_srvs[0]));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(textures[1], &SRVDesc, &_srvs[1]));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(textures[2], &SRVDesc, &_srvs[2]));
 
 	V_RETURN(SetDXDebugName(_srvs[0], "Particle Buffer RT0 SRV"));
 	V_RETURN(SetDXDebugName(_srvs[1], "Particle Buffer RT1 SRV"));
@@ -90,22 +87,26 @@ HRESULT ParticleBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Conten
 		0
 	};
 
-	V_RETURN(pd3dDevice->CreateRenderTargetView(_textures[0], &RTVDesc, &_rtvs[0]));
-	V_RETURN(pd3dDevice->CreateRenderTargetView(_textures[1], &RTVDesc, &_rtvs[1]));
-	V_RETURN(pd3dDevice->CreateRenderTargetView(_textures[2], &RTVDesc, &_rtvs[2]));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(textures[0], &RTVDesc, &_rtvs[0]));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(textures[1], &RTVDesc, &_rtvs[1]));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(textures[2], &RTVDesc, &_rtvs[2]));
 
 	V_RETURN(SetDXDebugName(_rtvs[0], "Particle Buffer RT0 RTV"));
 	V_RETURN(SetDXDebugName(_rtvs[1], "Particle Buffer RT1 RTV"));
 	V_RETURN(SetDXDebugName(_rtvs[2], "Particle Buffer RT2 RTV"));
 
+	for (int i = 0; i < 3; i++)
+	{
+		SAFE_RELEASE(textures[i]);
+	}
+
 	return S_OK;
 }
 
-void ParticleBuffer::OnD3D11ReleasingSwapChain()
+void ParticleBuffer::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
 	for (int i = 0; i < 3; i++)
 	{
-		SAFE_RELEASE(_textures[i]);
 		SAFE_RELEASE(_srvs[i]);
 		SAFE_RELEASE(_rtvs[i]);
 	}

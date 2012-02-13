@@ -5,7 +5,6 @@ GBuffer::GBuffer()
 {
 	for (int i = 0; i < 4; i++)
 	{
-		_textures[i] = NULL;
 		_srvs[i] = NULL;
 	}
 
@@ -40,7 +39,7 @@ HRESULT GBuffer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* p
 	return S_OK;
 }
 
-void GBuffer::OnD3D11DestroyDevice()
+void GBuffer::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {	
 }
 
@@ -80,15 +79,16 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
         0//UINT MiscFlags;    
     };
 
-	V_RETURN(pd3dDevice->CreateTexture2D(&rt012Desc, NULL, &_textures[0]));
-	V_RETURN(pd3dDevice->CreateTexture2D(&rt012Desc, NULL, &_textures[1]));
-	V_RETURN(pd3dDevice->CreateTexture2D(&rt012Desc, NULL, &_textures[2]));
-	V_RETURN(pd3dDevice->CreateTexture2D(&rt3Desc,   NULL, &_textures[3]));
+	ID3D11Texture2D* textures[4];
+	V_RETURN(pd3dDevice->CreateTexture2D(&rt012Desc, NULL, &textures[0]));
+	V_RETURN(pd3dDevice->CreateTexture2D(&rt012Desc, NULL, &textures[1]));
+	V_RETURN(pd3dDevice->CreateTexture2D(&rt012Desc, NULL, &textures[2]));
+	V_RETURN(pd3dDevice->CreateTexture2D(&rt3Desc,   NULL, &textures[3]));
 
-	V_RETURN(SetDXDebugName(_textures[0], "GBuffer RT0 Texture"));
-	V_RETURN(SetDXDebugName(_textures[1], "GBuffer RT1 Texture"));
-	V_RETURN(SetDXDebugName(_textures[2], "GBuffer RT2 Texture"));
-	V_RETURN(SetDXDebugName(_textures[3], "GBuffer RT3 Texture"));
+	V_RETURN(SetDXDebugName(textures[0], "GBuffer RT0 Texture"));
+	V_RETURN(SetDXDebugName(textures[1], "GBuffer RT1 Texture"));
+	V_RETURN(SetDXDebugName(textures[2], "GBuffer RT2 Texture"));
+	V_RETURN(SetDXDebugName(textures[3], "GBuffer RT3 Texture"));
 
 	// Create the shader resource views
 	D3D11_SHADER_RESOURCE_VIEW_DESC rt012rvd = 
@@ -109,10 +109,10 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
     };
 	rt3rvd.Texture2D.MipLevels = 1;
 
-	V_RETURN(pd3dDevice->CreateShaderResourceView(_textures[0], &rt012rvd, &_srvs[0]));
-	V_RETURN(pd3dDevice->CreateShaderResourceView(_textures[1], &rt012rvd, &_srvs[1]));
-	V_RETURN(pd3dDevice->CreateShaderResourceView(_textures[2], &rt012rvd, &_srvs[2]));
-	V_RETURN(pd3dDevice->CreateShaderResourceView(_textures[3], &rt3rvd,   &_srvs[3]));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(textures[0], &rt012rvd, &_srvs[0]));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(textures[1], &rt012rvd, &_srvs[1]));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(textures[2], &rt012rvd, &_srvs[2]));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(textures[3], &rt3rvd,   &_srvs[3]));
 
 	V_RETURN(SetDXDebugName(_srvs[0], "GBuffer RT0 SRV"));
 	V_RETURN(SetDXDebugName(_srvs[1], "GBuffer RT1 SRV"));
@@ -128,9 +128,9 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
         0
     };
 
-	V_RETURN(pd3dDevice->CreateRenderTargetView(_textures[0], &rt012rtvd, &_rtvs[0]));
-	V_RETURN(pd3dDevice->CreateRenderTargetView(_textures[1], &rt012rtvd, &_rtvs[1]));
-	V_RETURN(pd3dDevice->CreateRenderTargetView(_textures[2], &rt012rtvd, &_rtvs[2]));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(textures[0], &rt012rtvd, &_rtvs[0]));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(textures[1], &rt012rtvd, &_rtvs[1]));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(textures[2], &rt012rtvd, &_rtvs[2]));
 
 	V_RETURN(SetDXDebugName(_rtvs[0], "GBuffer RT0 RTV"));
 	V_RETURN(SetDXDebugName(_rtvs[1], "GBuffer RT1 RTV"));
@@ -144,7 +144,7 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
 		0,
 	};
 
-	V_RETURN(pd3dDevice->CreateDepthStencilView(_textures[3], &dsvd, &_dsv));
+	V_RETURN(pd3dDevice->CreateDepthStencilView(textures[3], &dsvd, &_dsv));
 	
 	V_RETURN(SetDXDebugName(_dsv, "GBuffer RT3 DSV"));
 
@@ -156,17 +156,22 @@ HRESULT GBuffer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManage
 		D3D11_DSV_READ_ONLY_DEPTH,
 	};
 
-	V_RETURN(pd3dDevice->CreateDepthStencilView(_textures[3], &rodsvd, &_rodsv));
+	V_RETURN(pd3dDevice->CreateDepthStencilView(textures[3], &rodsvd, &_rodsv));
 	
 	V_RETURN(SetDXDebugName(_rodsv, "GBuffer RT3 Read Only DSV"));
+
+	for(UINT i = 0; i < 4; i++)
+	{
+		SAFE_RELEASE(textures[i]);
+	}
+
 	return S_OK;
 }
 
-void GBuffer::OnD3D11ReleasingSwapChain()
+void GBuffer::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
 	for (int i = 0; i < 4; i++)
 	{
-		SAFE_RELEASE(_textures[i]);
 		SAFE_RELEASE(_srvs[i]);
 	}
 

@@ -3,6 +3,7 @@
 #include "PCH.h"
 #include "PostProcess.h"
 #include "Poisson.h"
+#include "PixelShaderLoader.h"
 
 class DiscDoFMBPostProcess : public PostProcess
 {
@@ -22,7 +23,7 @@ private:
 	static const UINT NUM_DOF_SAMPLE_COUNTS = 3;
 #endif
 
-	ID3D11PixelShader* _dofPSs[NUM_DOF_SAMPLE_COUNTS];
+	PixelShaderContent* _dofPSs[NUM_DOF_SAMPLE_COUNTS];
 
 	ID3D11Buffer* _propertiesBuffer;
 	struct CB_DOF_PROPERTIES
@@ -60,9 +61,9 @@ public:
 		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, ParticleBuffer* pBuffer,LightBuffer* lightBuffer);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-	void OnD3D11DestroyDevice();
+	void OnD3D11DestroyDevice(ContentManager* pContentManager);
 
 	HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
 		const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-	void OnD3D11ReleasingSwapChain();
+	void OnD3D11ReleasingSwapChain(ContentManager* pContentManager);
 };

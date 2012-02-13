@@ -24,9 +24,9 @@ HRESULT HBAOPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 	return S_OK;
 }
 
-void HBAOPostProcess::OnD3D11DestroyDevice()
+void HBAOPostProcess::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	PostProcess::OnD3D11DestroyDevice();
+	PostProcess::OnD3D11DestroyDevice(pContentManager);
 }
 
 HRESULT HBAOPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
@@ -39,7 +39,7 @@ HRESULT HBAOPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Conte
 	return S_OK;
 }
 
-void HBAOPostProcess::OnD3D11ReleasingSwapChain()
+void HBAOPostProcess::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
-	PostProcess::OnD3D11ReleasingSwapChain();
+	PostProcess::OnD3D11ReleasingSwapChain(pContentManager);
 }

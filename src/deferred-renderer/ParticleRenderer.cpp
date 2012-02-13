@@ -1,12 +1,8 @@
 #include "PCH.h"
 #include "ParticleRenderer.h"
 
-#include "VertexShaderLoader.h"
-#include "GeometryShaderLoader.h"
-#include "PixelShaderLoader.h"
-
 ParticleRenderer::ParticleRenderer()
-	: _ps(NULL), _gs(NULL), _il(NULL), _vs(NULL), _particleCB(NULL), _cameraCB(NULL), _particleBlend(NULL)
+	: _ps(NULL), _gs(NULL), _vs(NULL), _particleCB(NULL), _cameraCB(NULL), _particleBlend(NULL)
 {
 	SetFadeDistance(0.5f);
 }
@@ -31,11 +27,11 @@ HRESULT ParticleRenderer::RenderParticles(ID3D11DeviceContext* pd3dDeviceContext
 
 		std::sort(depthVec.begin(), depthVec.end(), depthCompare);
 
-		pd3dDeviceContext->VSSetShader(_vs, NULL, 0);
-		pd3dDeviceContext->GSSetShader(_gs, NULL, 0);
-		pd3dDeviceContext->PSSetShader(_ps, NULL, 0);
+		pd3dDeviceContext->VSSetShader(_vs->VertexShader, NULL, 0);
+		pd3dDeviceContext->GSSetShader(_gs->GeometryShader, NULL, 0);
+		pd3dDeviceContext->PSSetShader(_ps->PixelShader, NULL, 0);
 
-		pd3dDeviceContext->IASetInputLayout(_il);
+		pd3dDeviceContext->IASetInputLayout(_vs->InputLayout);
 
 		float blendFactor[4] = {1, 1, 1, 1};
 		pd3dDeviceContext->OMSetBlendState(_particleBlend, blendFactor, 0xFFFFFFFF);
@@ -129,34 +125,22 @@ HRESULT ParticleRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentM
 	HRESULT hr;
 	
 	// Load pixel shader
-	PixelShaderContent* psContent;
 	PixelShaderOptions psOpts =
 	{
 		"PS_Particle",	// const char* EntryPoint;
 		NULL,			// D3D_SHADER_MACRO* Defines;
 		"Particle",		// const char* DebugName;
 	};
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Particle.hlsl", &psOpts, &psContent));
-
-	_ps = psContent->PixelShader;
-	_ps->AddRef();
-
-	SAFE_RELEASE(psContent);
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Particle.hlsl", &psOpts, &_ps));
 
 	// Load geometry shader
-	GeometryShaderContent* gsContent;
 	GeometryShaderOptions gsOpts =
 	{
 		"GS_Particle",	// const char* EntryPoint;
 		NULL,			// D3D_SHADER_MACRO* Defines;
 		"Particle",		// const char* DebugName;
 	};
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Particle.hlsl", &gsOpts, &gsContent));
-
-	_gs = gsContent->GeometryShader;
-	_gs->AddRef();
-
-	SAFE_RELEASE(gsContent);
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Particle.hlsl", &gsOpts, &_gs));
 
 	// Load vertex shader (using ParticleVertex)
 	D3D11_INPUT_ELEMENT_DESC layout_particle[] =
@@ -169,8 +153,6 @@ HRESULT ParticleRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentM
 		{ "ROTATION",		0, DXGI_FORMAT_R32_FLOAT,			0, 48, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "PREVROTATION",	0, DXGI_FORMAT_R32_FLOAT,			0, 52, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
-
-	VertexShaderContent* vsContent;
 	VertexShaderOptions vsOpts =
 	{
 		"VS_Particle",				// const char* EntryPoint;
@@ -179,16 +161,7 @@ HRESULT ParticleRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentM
 		ARRAYSIZE(layout_particle),	// UINT InputElementCount;
 		"Particle"					// const char* DebugName;
 	};
-
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Particle.hlsl", &vsOpts, &vsContent));
-
-	_vs = vsContent->VertexShader;
-	_il = vsContent->InputLayout;
-
-	_vs->AddRef();
-	_il->AddRef();
-
-	SAFE_RELEASE(vsContent);
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Particle.hlsl", &vsOpts, &_vs));
 
 	D3D11_BUFFER_DESC bufferDesc =
 	{
@@ -240,23 +213,21 @@ HRESULT ParticleRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentM
 	return S_OK;
 }
 
-void ParticleRenderer::OnD3D11DestroyDevice()
+void ParticleRenderer::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	SAFE_RELEASE(_ps);	
-	SAFE_RELEASE(_gs);
-
-	SAFE_RELEASE(_il);
-	SAFE_RELEASE(_vs);
+	SAFE_CM_RELEASE(pContentManager, _ps);	
+	SAFE_CM_RELEASE(pContentManager, _gs);
+	SAFE_CM_RELEASE(pContentManager, _vs);
 
 	SAFE_RELEASE(_particleCB);
 	SAFE_RELEASE(_cameraCB);
 
 	SAFE_RELEASE(_particleBlend);
 
-	_dsStates.OnD3D11DestroyDevice();
-	_samplerStates.OnD3D11DestroyDevice();
-	_blendStates.OnD3D11DestroyDevice();
-	_rasterStates.OnD3D11DestroyDevice();
+	_dsStates.OnD3D11DestroyDevice(pContentManager);
+	_samplerStates.OnD3D11DestroyDevice(pContentManager);
+	_blendStates.OnD3D11DestroyDevice(pContentManager);
+	_rasterStates.OnD3D11DestroyDevice(pContentManager);
 }
 
 HRESULT ParticleRenderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager,
@@ -272,10 +243,10 @@ HRESULT ParticleRenderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Cont
 	return S_OK;
 }
 
-void ParticleRenderer::OnD3D11ReleasingSwapChain()
+void ParticleRenderer::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
-	_dsStates.OnD3D11ReleasingSwapChain();
-	_samplerStates.OnD3D11ReleasingSwapChain();
-	_blendStates.OnD3D11ReleasingSwapChain();
-	_rasterStates.OnD3D11ReleasingSwapChain();
+	_dsStates.OnD3D11ReleasingSwapChain(pContentManager);
+	_samplerStates.OnD3D11ReleasingSwapChain(pContentManager);
+	_blendStates.OnD3D11ReleasingSwapChain(pContentManager);
+	_rasterStates.OnD3D11ReleasingSwapChain(pContentManager);
 }

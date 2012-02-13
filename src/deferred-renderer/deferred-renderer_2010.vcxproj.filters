@@ -342,6 +342,9 @@
     <ClCompile Include="ModelInstanceSet.cpp">
       <Filter>Models</Filter>
     </ClCompile>
+    <ClCompile Include="FilmGrainVignettePostProcess.cpp">
+      <Filter>Post Process</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -635,6 +638,9 @@
     <ClInclude Include="ModelInstanceSet.h">
       <Filter>Models</Filter>
     </ClInclude>
+    <ClInclude Include="FilmGrainVignettePostProcess.h">
+      <Filter>Post Process</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="HDR.hlsl">
@@ -692,6 +698,9 @@
       <Filter>Shaders</Filter>
     </CustomBuild>
     <CustomBuild Include="PBufferCombine.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="FilmGrainVignette.hlsl">
       <Filter>Shaders</Filter>
     </CustomBuild>
   </ItemGroup>

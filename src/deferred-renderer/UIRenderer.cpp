@@ -106,11 +106,12 @@ void UIRenderer::EndClip()
 {
 }
 
-void UIRenderer::DrawTexturedRect(Gwen::Texture* pTexture, Gwen::Rect pTargetRect, float u1, float v1, float u2, float v2)
+void UIRenderer::DrawTexturedRect(Gwen::Texture* pTexture, Gwen::Rect pTargetRect, float u1, float v1,
+	float u2, float v2)
 {
 	Translate(pTargetRect);
 
-	ID3D11ShaderResourceView* srv = (ID3D11ShaderResourceView*)pTexture->data;
+	TextureContent* content = (TextureContent*)pTexture->data;
 
 	SPRITE_DRAW_DATA spriteData;
 	spriteData.TopLeft = XMFLOAT2(pTargetRect.x, pTargetRect.y);
@@ -119,34 +120,33 @@ void UIRenderer::DrawTexturedRect(Gwen::Texture* pTexture, Gwen::Rect pTargetRec
 	spriteData.SizeUV = XMFLOAT2(u2 - u1, v2 - v1);
 	spriteData.Color = _drawColor;
 
-	_spriteRenderer.AddTexturedRectangles(srv, &spriteData, 1);
+	_spriteRenderer.AddTexturedRectangles(content->ShaderResourceView, &spriteData, 1);
 }
 
 void UIRenderer::LoadTexture(Gwen::Texture* pTexture)
 {
 	HRESULT hr;
 
+	TextureOptions opts;
+	opts.DebugName = pTexture->name.Get().c_str();
+
 	TextureContent* pContent;
-	V(_contentManager->LoadContent(_graphicsDevice, pTexture->name.GetUnicode().c_str(), 
-		(TextureOptions*)NULL, &pContent));
+	V(_contentManager->LoadContent(_graphicsDevice, pTexture->name.GetUnicode().c_str(), &opts, &pContent));
 
-	pContent->ShaderResourceView->AddRef();
-
-	pTexture->data = pContent->ShaderResourceView;
+	pTexture->data = pContent;
 	pTexture->failed = false;
 	pTexture->width = pContent->Info.Width;
 	pTexture->height = pContent->Info.Height;
-
-	SAFE_RELEASE(pContent);
 }
 
 void UIRenderer::FreeTexture(Gwen::Texture* pTexture)
 {
-	ID3D11ShaderResourceView* srv = (ID3D11ShaderResourceView*)pTexture->data;
-	SAFE_RELEASE(srv);
+	TextureContent* content = (TextureContent*)pTexture->data;
+	_contentManager->ReleaseContent(content);
 }
 
-HRESULT UIRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT UIRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, 
+	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
@@ -161,14 +161,14 @@ HRESULT UIRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager
 	return S_OK;
 }
 
-void UIRenderer::OnD3D11DestroyDevice()
+void UIRenderer::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	_spriteRenderer.OnD3D11DestroyDevice();
-	SAFE_RELEASE(_uiFont);
+	_spriteRenderer.OnD3D11DestroyDevice(pContentManager);
+	SAFE_CM_RELEASE(pContentManager, _uiFont);
 }
 
-HRESULT UIRenderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
-	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT UIRenderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, 
+	IDXGISwapChain* pSwapChain, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
@@ -181,7 +181,7 @@ HRESULT UIRenderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentMan
 	return S_OK;
 }
 
-void UIRenderer::OnD3D11ReleasingSwapChain()
+void UIRenderer::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
-	_spriteRenderer.OnD3D11ReleasingSwapChain();
+	_spriteRenderer.OnD3D11ReleasingSwapChain(pContentManager);
 }

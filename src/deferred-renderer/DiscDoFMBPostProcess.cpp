@@ -1,7 +1,6 @@
 #include "PCH.h"
 #include "DiscDoFMBPostProcess.h"
 #include "Logger.h"
-#include "PixelShaderLoader.h"
 
 DiscDoFMBPostProcess::DiscDoFMBPostProcess()
 	: _propertiesBuffer(NULL)
@@ -72,7 +71,7 @@ HRESULT DiscDoFMBPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, 
 	Quad* fsQuad = GetFullScreenQuad();
 
 	// Render DOF
-	V_RETURN(fsQuad->Render(pd3dImmediateContext, _dofPSs[_sampleCountIndex]));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _dofPSs[_sampleCountIndex]->PixelShader));
 
 	// Null the SRVs
 	ID3D11ShaderResourceView* NULLSRV[2] = { NULL, NULL };
@@ -97,8 +96,6 @@ HRESULT DiscDoFMBPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, Cont
 		NULL,
 	};
 
-	PixelShaderContent* psContent = NULL;
-
 	char dofPSDebugName[256];
 	PixelShaderOptions psOpts =
 	{
@@ -112,12 +109,7 @@ HRESULT DiscDoFMBPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, Cont
 		sprintf_s(sampleCountString, "%i", Poisson::GetDistributionSize(i));
 		sprintf_s(dofPSDebugName, "Disc DoF (sample count = %s)", sampleCountString);
 		
-		V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DiscDoF.hlsl", &psOpts, &psContent));
-
-		_dofPSs[i] = psContent->PixelShader;
-		_dofPSs[i]->AddRef();
-
-		SAFE_RELEASE(psContent);
+		V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DiscDoF.hlsl", &psOpts, &_dofPSs[i]));
 	}
 
 	// Create the buffers
@@ -159,16 +151,16 @@ HRESULT DiscDoFMBPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, Cont
 	return S_OK;
 }
 
-void DiscDoFMBPostProcess::OnD3D11DestroyDevice()
+void DiscDoFMBPostProcess::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	PostProcess::OnD3D11DestroyDevice();
+	PostProcess::OnD3D11DestroyDevice(pContentManager);
 	
 	SAFE_RELEASE(_propertiesBuffer);
 
 	for (UINT i = 0; i < NUM_DOF_SAMPLE_COUNTS; i++)
 	{
 		SAFE_RELEASE(_sampleBuffers[i]);
-		SAFE_RELEASE(_dofPSs[i]);
+		SAFE_CM_RELEASE(pContentManager, _dofPSs[i]);
 	}
 }
 
@@ -186,7 +178,7 @@ HRESULT DiscDoFMBPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, 
 	return S_OK;
 }
 
-void DiscDoFMBPostProcess::OnD3D11ReleasingSwapChain()
+void DiscDoFMBPostProcess::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
-	PostProcess::OnD3D11ReleasingSwapChain();
+	PostProcess::OnD3D11ReleasingSwapChain(pContentManager);
 }

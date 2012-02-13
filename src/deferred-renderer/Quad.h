@@ -2,6 +2,7 @@
 
 #include "PCH.h"
 #include "IHasContent.h"
+#include "VertexShaderLoader.h"
 
 struct QUAD_VERTEX
 {
@@ -12,8 +13,7 @@ struct QUAD_VERTEX
 class Quad : public IHasContent
 {
 private:
-	ID3D11VertexShader* _vertexShader;
-	ID3D11InputLayout* _inputLayout;
+	VertexShaderContent* _vertexShader;
 	ID3D11Buffer* _vertexBuffer;
 
 protected:
@@ -26,9 +26,9 @@ public:
 	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11PixelShader* pixelShader);
 
 	virtual HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
-	virtual void OnD3D11DestroyDevice();
+	virtual void OnD3D11DestroyDevice(ContentManager* pContentManager);
 
 	virtual HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
                             const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-	virtual void OnD3D11ReleasingSwapChain();
+	virtual void OnD3D11ReleasingSwapChain(ContentManager* pContentManager);
 };

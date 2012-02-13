@@ -29,7 +29,7 @@ LRESULT Application::OnMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
 			
 				if(width != _deviceManager.GetBackBufferWidth() || height != _deviceManager.GetBackBufferHeight())
 				{
-					OnD3D11ReleasingSwapChain();
+					OnD3D11ReleasingSwapChain(&_contentManager);
 
 					_deviceManager.SetBackBufferWidth(width);
 					_deviceManager.SetBackBufferHeight(height);
@@ -155,10 +155,9 @@ HRESULT Application::Start()
 	}
 
 	// Clean up
-	OnD3D11ReleasingSwapChain();
-	OnD3D11DestroyDevice();
+	OnD3D11ReleasingSwapChain(&_contentManager);
+	OnD3D11DestroyDevice(&_contentManager);
 
-	_contentManager.ReleaseContent();
 	_deviceManager.Destroy();
 
 	return S_OK;
@@ -175,7 +174,7 @@ void Application::SetFullScreen(bool fullScreen)
 
 	if (fullScreen != _deviceManager.GetFullScreen())
 	{
-		OnD3D11ReleasingSwapChain();
+		OnD3D11ReleasingSwapChain(&_contentManager);
 
 		_deviceManager.SetFullScreen(fullScreen);
         _deviceManager.Reset();
@@ -225,7 +224,7 @@ HRESULT Application::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManage
 	return S_OK;
 }
 
-void Application::OnD3D11DestroyDevice()
+void Application::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
 }
 
@@ -235,6 +234,6 @@ HRESULT Application::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentMa
 	return S_OK;
 }
 
-void Application::OnD3D11ReleasingSwapChain()
+void Application::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
 }

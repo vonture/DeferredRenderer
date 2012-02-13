@@ -42,9 +42,9 @@ HRESULT MotionBlurPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, Con
 	return S_OK;
 }
 
-void MotionBlurPostProcess::OnD3D11DestroyDevice()
+void MotionBlurPostProcess::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	PostProcess::OnD3D11DestroyDevice();
+	PostProcess::OnD3D11DestroyDevice(pContentManager);
 
 	SAFE_RELEASE(_propertiesBuffer);
 }
@@ -59,7 +59,7 @@ HRESULT MotionBlurPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice,
 	return S_OK;
 }
 
-void MotionBlurPostProcess::OnD3D11ReleasingSwapChain()
+void MotionBlurPostProcess::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
-	PostProcess::OnD3D11ReleasingSwapChain();
+	PostProcess::OnD3D11ReleasingSwapChain(pContentManager);
 }

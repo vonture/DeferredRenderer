@@ -5,7 +5,8 @@
 #include "ModelInstance.h"
 #include "Camera.h"
 #include "DeviceStates.h"
-#include <vector>
+#include "PixelShaderLoader.h"
+#include "VertexShaderLoader.h"
 
 using namespace std;
 
@@ -21,15 +22,14 @@ private:
 	bool _alphaCutoutEnabled;
 	float _alphaThreshold;
 
-	ID3D11InputLayout* _meshInputLayout;
-	ID3D11VertexShader* _meshVertexShader;
+	VertexShaderContent* _meshVertexShader;
 
 	// Pixel shaders for...
 	// 1: DIFFUSE_MAPPED
 	// 2: NORMAL_MAPPED
 	// 3: SPECULAR_MAPPED
 	// 4: ALPHA_CUTOUT_ENABLED
-	ID3D11PixelShader* _meshPixelShader[2][2][2][2];
+	PixelShaderContent* _meshPixelShader[2][2][2][2];
 	
 	ID3D11Buffer* _modelPropertiesBuffer;
 	ID3D11Buffer* _alphaThresholdBuffer;
@@ -62,9 +62,9 @@ public:
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager,
 		const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
-	void OnD3D11DestroyDevice();
+	void OnD3D11DestroyDevice(ContentManager* pContentManager);
 
 	HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, 
 		IDXGISwapChain* pSwapChain, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-	void OnD3D11ReleasingSwapChain();
+	void OnD3D11ReleasingSwapChain(ContentManager* pContentManager);
 };

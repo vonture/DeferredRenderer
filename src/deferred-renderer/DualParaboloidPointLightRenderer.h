@@ -5,18 +5,20 @@
 #include "LightRenderer.h"
 #include "ModelInstance.h"
 
+#include "PixelShaderLoader.h"
+#include "VertexShaderLoader.h"
+
 class DualParaboloidPointLightRenderer : public LightRenderer<PointLight>
 {
 private:
-	ID3D11VertexShader* _depthVS[2]; // alphacutout disabled/enabled
-	ID3D11InputLayout* _depthInput[2]; // alphacutout disabled/enabled
-	ID3D11PixelShader* _depthPS; // alphacutout enabled
+	VertexShaderContent* _depthVS[2]; // alphacutout disabled/enabled
+	PixelShaderContent* _depthPS; // alphacutout enabled
 	ID3D11Buffer* _depthPropertiesBuffer;
 	ID3D11Buffer* _alphaCutoutPropertiesBuffer;
 
-	ID3D11VertexShader* _vertexShader;
-	ID3D11PixelShader* _unshadowedPS;
-	ID3D11PixelShader* _shadowedPS;	
+	VertexShaderContent* _vertexShader;
+	PixelShaderContent* _unshadowedPS;
+	PixelShaderContent* _shadowedPS;	
 		
 	ID3D11Buffer* _modelPropertiesBuffer;	
 	ID3D11Buffer* _lightPropertiesBuffer;
@@ -24,12 +26,10 @@ private:
 	ID3D11Buffer* _shadowPropertiesBuffer;
 
 	ModelInstance _lightModel;
-	ID3D11InputLayout* _lightInputLayout;
 
 	static const UINT NUM_SHADOW_MAPS = 3;
 	static const UINT SHADOW_MAP_SIZE = 2048;
 	static const float BIAS;
-	ID3D11Texture2D* _shadowMapTextures[NUM_SHADOW_MAPS];
 	ID3D11DepthStencilView* _shadowMapDSVs[NUM_SHADOW_MAPS];
 	ID3D11ShaderResourceView* _shadowMapSRVs[NUM_SHADOW_MAPS];
 	XMFLOAT4X4 _shadowMatricies[NUM_SHADOW_MAPS];
@@ -95,9 +95,9 @@ public:
 		ParticleBuffer* gBuffer);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
-	void OnD3D11DestroyDevice();
+	void OnD3D11DestroyDevice(ContentManager* pContentManager);
 
 	HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
                             const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-	void OnD3D11ReleasingSwapChain();
+	void OnD3D11ReleasingSwapChain(ContentManager* pContentManager);
 };

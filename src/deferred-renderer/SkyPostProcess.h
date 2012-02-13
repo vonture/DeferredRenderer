@@ -2,6 +2,7 @@
 
 #include "PCH.h"
 #include "PostProcess.h"
+#include "PixelShaderLoader.h"
 
 class SkyPostProcess : public PostProcess
 {
@@ -18,7 +19,7 @@ private:
 	struct SKY_TYPE
 	{
 		float A, B, C, D, E;
-		const WCHAR* Description;
+		std::wstring Description;
 	};
 
 #ifdef ALL_PRESETS
@@ -29,7 +30,7 @@ private:
 	static const SKY_TYPE SKY_TYPES[SKY_TYPE_COUNT];
 	UINT _skyTypeIndex;	
 
-	ID3D11PixelShader* _skyPSs[2][SKY_TYPE_COUNT];
+	PixelShaderContent* _skyPSs[2][SKY_TYPE_COUNT];
 
 	ID3D11Buffer* _skyProperties;
 
@@ -67,16 +68,16 @@ public:
 
 	void SetSkyTypeIndex(UINT idx) { _skyTypeIndex = min(idx, SKY_TYPE_COUNT - 1); }
 	UINT GetSkyTypeIndex() const { return _skyTypeIndex; }
-	const WCHAR* GetSkyTypeDescription() const { return SKY_TYPES[_skyTypeIndex].Description; }
+	const std::wstring& GetSkyTypeDescription() const { return SKY_TYPES[_skyTypeIndex].Description; }
 	UINT GetSkyTypeIndexCount() const { return SKY_TYPE_COUNT; }
 
 	HRESULT Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11ShaderResourceView* src,
 		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, ParticleBuffer* pBuffer,LightBuffer* lightBuffer);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-	void OnD3D11DestroyDevice();
+	void OnD3D11DestroyDevice(ContentManager* pContentManager);
 
 	HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
 		const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-	void OnD3D11ReleasingSwapChain();
+	void OnD3D11ReleasingSwapChain(ContentManager* pContentManager);
 };

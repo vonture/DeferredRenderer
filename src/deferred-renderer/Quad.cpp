@@ -1,9 +1,8 @@
 #include "PCH.h"
 #include "Quad.h"
-#include "VertexShaderLoader.h"
 
 Quad::Quad() 
-	: _vertexShader(NULL), _inputLayout(NULL), _vertexBuffer(NULL)
+	: _vertexShader(NULL), _vertexBuffer(NULL)
 {
 }
 
@@ -17,11 +16,11 @@ HRESULT Quad::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11PixelShade
     UINT offsets = 0;
     ID3D11Buffer* pBuffers[1] = { _vertexBuffer };
 
-    pd3dImmediateContext->IASetInputLayout(_inputLayout);
+    pd3dImmediateContext->IASetInputLayout(_vertexShader->InputLayout);
     pd3dImmediateContext->IASetVertexBuffers(0, 1, pBuffers, &strides, &offsets);
     pd3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
-    pd3dImmediateContext->VSSetShader(_vertexShader, NULL, 0);
+    pd3dImmediateContext->VSSetShader(_vertexShader->VertexShader, NULL, 0);
     pd3dImmediateContext->PSSetShader(pixelShader, NULL, 0);
     pd3dImmediateContext->Draw(4, 0);
 
@@ -66,24 +65,14 @@ HRESULT Quad::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pCon
 	vsOpts.InputElementCount = ARRAYSIZE(quadlayout);
 	vsOpts.DebugName = "Quad";
 
-	VertexShaderContent* vsContent;
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Quad.hlsl", &vsOpts, &vsContent));
-
-	_vertexShader = vsContent->VertexShader;
-	_inputLayout = vsContent->InputLayout;
-
-	_vertexShader->AddRef();
-	_inputLayout->AddRef();
-
-	SAFE_RELEASE(vsContent);
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Quad.hlsl", &vsOpts, &_vertexShader));
 
 	return S_OK;
 }
 
-void Quad::OnD3D11DestroyDevice()
+void Quad::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	SAFE_RELEASE(_vertexShader);
-	SAFE_RELEASE(_inputLayout);
+	SAFE_CM_RELEASE(pContentManager, _vertexShader);
 	SAFE_RELEASE(_vertexBuffer);
 }
 
@@ -93,6 +82,6 @@ HRESULT Quad::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* 
 	return S_OK;
 }
 
-void Quad::OnD3D11ReleasingSwapChain()
+void Quad::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
 }

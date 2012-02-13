@@ -4,6 +4,8 @@
 #include "IHasContent.h"
 #include "DeviceStates.h"
 #include "SpriteFont.h"
+#include "PixelShaderLoader.h"
+#include "VertexShaderLoader.h"
 
 struct SPRITE_DRAW_DATA
 {
@@ -49,14 +51,12 @@ private:
 	TEXTURE_INDEX* _textures;
 	int _curTexture;
 
-	ID3D11InputLayout* _inputLayout;
 	ID3D11Buffer* _indexBuffer;
 	ID3D11Buffer* _vertexBuffer;
 	
-	ID3D11VertexShader* _spriteVS;
-	ID3D11PixelShader* _spritePS;
+	VertexShaderContent* _spriteVS;
+	PixelShaderContent* _spritePS;
 
-	ID3D11Texture2D* _blankTexture;
 	ID3D11ShaderResourceView* _blankSRV;
 
 	bool _begun;
@@ -76,9 +76,9 @@ public:
 	void AddColoredRectangles(SPRITE_DRAW_DATA* spriteData, UINT numSprites);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-	void OnD3D11DestroyDevice();
+	void OnD3D11DestroyDevice(ContentManager* pContentManager);
 
 	HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
 		const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-	void OnD3D11ReleasingSwapChain();
+	void OnD3D11ReleasingSwapChain(ContentManager* pContentManager);
 };

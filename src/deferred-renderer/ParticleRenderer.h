@@ -9,14 +9,16 @@
 #include "GBuffer.h"
 #include "Camera.h"
 
+#include "VertexShaderLoader.h"
+#include "GeometryShaderLoader.h"
+#include "PixelShaderLoader.h"
+
 class ParticleRenderer : public IHasContent
 {
 private:
-	ID3D11PixelShader* _ps;
-	ID3D11GeometryShader* _gs;
-
-	ID3D11InputLayout* _il;
-	ID3D11VertexShader* _vs;
+	PixelShaderContent* _ps;
+	GeometryShaderContent* _gs;
+	VertexShaderContent* _vs;
 
 	float _fadeDistance;
 	
@@ -75,9 +77,9 @@ public:
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, 
 		const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
-	void OnD3D11DestroyDevice();
+	void OnD3D11DestroyDevice(ContentManager* pContentManager);
 
 	HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, 
 		IDXGISwapChain* pSwapChain, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-	void OnD3D11ReleasingSwapChain();
+	void OnD3D11ReleasingSwapChain(ContentManager* pContentManager);
 };

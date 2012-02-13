@@ -1,7 +1,6 @@
 #include "PCH.h"
 #include "SkyPostProcess.h"
 #include "Logger.h"
-#include "PixelShaderLoader.h"
 
 const SkyPostProcess::SKY_TYPE SkyPostProcess::SKY_TYPES[SKY_TYPE_COUNT] = 
 {
@@ -108,7 +107,7 @@ HRESULT SkyPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11
 	Quad* fsQuad = GetFullScreenQuad();
 	
 	// Render
-	V_RETURN(fsQuad->Render(pd3dImmediateContext, _skyPSs[_enableSun ? 1 : 0][_skyTypeIndex]));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _skyPSs[_enableSun ? 1 : 0][_skyTypeIndex]->PixelShader));
 	
 	END_EVENT_D3D(L"");
 
@@ -142,7 +141,6 @@ HRESULT SkyPostProcess:: OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 		skyMacros,	// D3D_SHADER_MACRO* Defines;
 		debugName,	// const char* DebugName;
 	};
-	PixelShaderContent* psContent = NULL;
 	
 	for (UINT i = 0; i < SKY_TYPE_COUNT; i++)
 	{
@@ -157,12 +155,7 @@ HRESULT SkyPostProcess:: OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 			sprintf_s(sunEnabledStr, "%u", j);
 			sprintf_s(debugName, "Sky post process (sun = %u, type = %u)", j, i);
 
-			V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Sky.hlsl", &psOpts, &psContent));
-			
-			_skyPSs[j][i] =  psContent->PixelShader;
-			_skyPSs[j][i]->AddRef();
-
-			SAFE_RELEASE(psContent);
+			V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Sky.hlsl", &psOpts, &_skyPSs[j][i]));
 		}
 	}
 
@@ -183,14 +176,14 @@ HRESULT SkyPostProcess:: OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 	return S_OK;
 }
 
-void SkyPostProcess::OnD3D11DestroyDevice()
+void SkyPostProcess::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	PostProcess::OnD3D11DestroyDevice();
+	PostProcess::OnD3D11DestroyDevice(pContentManager);
 
 	for (UINT i = 0; i < SKY_TYPE_COUNT; i++)
 	{
-		SAFE_RELEASE(_skyPSs[0][i]);
-		SAFE_RELEASE(_skyPSs[1][i]);
+		SAFE_CM_RELEASE(pContentManager, _skyPSs[0][i]);
+		SAFE_CM_RELEASE(pContentManager, _skyPSs[1][i]);
 	}
 	SAFE_RELEASE(_skyProperties);
 }
@@ -205,7 +198,7 @@ HRESULT SkyPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Conten
 	return S_OK;
 }
 
-void SkyPostProcess::OnD3D11ReleasingSwapChain()
+void SkyPostProcess::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
-	PostProcess::OnD3D11ReleasingSwapChain();
+	PostProcess::OnD3D11ReleasingSwapChain(pContentManager);
 }

@@ -28,7 +28,7 @@ HRESULT BlendStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManage
 	
 	return S_OK;
 }
-void BlendStates::OnD3D11DestroyDevice()
+void BlendStates::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
 	SAFE_RELEASE(_blendDisabled);
 	SAFE_RELEASE(_additiveBlend);
@@ -43,7 +43,7 @@ HRESULT BlendStates::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentMa
 	return S_OK;
 }
 
-void BlendStates::OnD3D11ReleasingSwapChain()
+void BlendStates::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
 }
 
@@ -184,7 +184,7 @@ HRESULT RasterizerStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentM
 
 	return S_OK;
 }
-void RasterizerStates::OnD3D11DestroyDevice()
+void RasterizerStates::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
 	SAFE_RELEASE(_noCull);
 	SAFE_RELEASE(_cullFrontFaces);
@@ -202,7 +202,7 @@ HRESULT RasterizerStates::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Cont
 	return S_OK;
 }
 
-void RasterizerStates::OnD3D11ReleasingSwapChain()
+void RasterizerStates::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
 
 }
@@ -392,7 +392,7 @@ HRESULT DepthStencilStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, Conten
 
 	return S_OK;
 }
-void DepthStencilStates::OnD3D11DestroyDevice()
+void DepthStencilStates::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
 	SAFE_RELEASE(_stencilReplace);
 	SAFE_RELEASE(_stencilEqual);
@@ -411,7 +411,7 @@ HRESULT DepthStencilStates::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Co
 	return S_OK;
 }
 
-void DepthStencilStates::OnD3D11ReleasingSwapChain()
+void DepthStencilStates::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
 }
 
@@ -611,7 +611,7 @@ HRESULT SamplerStates::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMana
 	
 	return S_OK;
 }
-void SamplerStates::OnD3D11DestroyDevice()
+void SamplerStates::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
 	SAFE_RELEASE(_linearClamp);
 	SAFE_RELEASE(_pointClamp);
@@ -628,7 +628,7 @@ HRESULT SamplerStates::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Content
 	return S_OK;
 }
 
-void SamplerStates::OnD3D11ReleasingSwapChain()
+void SamplerStates::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
 }
 

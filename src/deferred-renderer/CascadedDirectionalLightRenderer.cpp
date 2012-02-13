@@ -1,22 +1,19 @@
 #include "PCH.h"
 #include "CascadedDirectionalLightRenderer.h"
 #include "Logger.h"
-#include "PixelShaderLoader.h"
-#include "VertexShaderLoader.h"
 #include "ModelInstanceSet.h"
 
 const float CascadedDirectionalLightRenderer::CASCADE_SPLITS[NUM_CASCADES] = { 0.125f, 0.25f, 0.5f, 1.0f };
 const float CascadedDirectionalLightRenderer::BIAS = 0.005f;
 
 CascadedDirectionalLightRenderer::CascadedDirectionalLightRenderer()
-	: _depthVSNoAlpha(NULL), _depthInputNoAlpha(NULL), _alphaCutoutProperties(NULL),
-	  _depthVSAlpha(NULL), _depthInputAlpha(NULL), _depthPSAlpha(NULL), _instanceWVPVB(NULL),
+	: _depthVSNoAlpha(NULL), _alphaCutoutProperties(NULL),
+	  _depthVSAlpha(NULL), _depthPSAlpha(NULL), _instanceWVPVB(NULL),
 	  _unshadowedPS(NULL), _shadowedPS(NULL), _cameraPropertiesBuffer(NULL), _lightPropertiesBuffer(NULL),
 	  _shadowPropertiesBuffer(NULL), _unshadowedParticlePS(NULL), _shadowedParticlePS(NULL)
 {
 	for (int i = 0; i < NUM_SHADOW_MAPS; i++)
 	{
-		_shadowMapTextures[i] = NULL;
 		_shadowMapDSVs[i] = NULL;
 		_shadowMapSRVs[i] = NULL;
 	}
@@ -656,10 +653,11 @@ HRESULT CascadedDirectionalLightRenderer::renderDepth(ID3D11DeviceContext* pd3dI
 
 					bool alphaCutoutEnabled = GetAlphaCutoutEnabled() && mesh->GetAlphaCutoutEnabled();
 
-					pd3dImmediateContext->VSSetShader(alphaCutoutEnabled ? _depthVSAlpha : _depthVSNoAlpha, NULL, 0);
-					pd3dImmediateContext->PSSetShader(alphaCutoutEnabled ? _depthPSAlpha : NULL, NULL, 0);
+					pd3dImmediateContext->VSSetShader(alphaCutoutEnabled ? _depthVSAlpha->VertexShader : _depthVSNoAlpha->VertexShader, NULL, 0);
+					pd3dImmediateContext->PSSetShader(alphaCutoutEnabled ? _depthPSAlpha->PixelShader : NULL, NULL, 0);
 
-					pd3dImmediateContext->IASetInputLayout(alphaCutoutEnabled ? _depthInputAlpha : _depthInputNoAlpha);
+					pd3dImmediateContext->IASetInputLayout(
+						alphaCutoutEnabled ? _depthVSAlpha->InputLayout : _depthVSNoAlpha->InputLayout);
 
 					if (alphaCutoutEnabled)
 					{
@@ -761,7 +759,7 @@ HRESULT CascadedDirectionalLightRenderer::RenderGeometryLights(ID3D11DeviceConte
 
 			pd3dImmediateContext->PSSetConstantBuffers(1, 1, &_lightPropertiesBuffer);
 
-			_fsQuad.Render(pd3dImmediateContext, _unshadowedPS);
+			_fsQuad.Render(pd3dImmediateContext, _unshadowedPS->PixelShader);
 		}
 	
 		// begin rendering shadowed lights
@@ -806,7 +804,7 @@ HRESULT CascadedDirectionalLightRenderer::RenderGeometryLights(ID3D11DeviceConte
 			pd3dImmediateContext->PSSetShaderResources(3, 1, &_shadowMapSRVs[i]);
 
 			// Finally, render the quad
-			_fsQuad.Render(pd3dImmediateContext, _shadowedPS);
+			_fsQuad.Render(pd3dImmediateContext, _shadowedPS->PixelShader);
 		}
 
 		// Null all the SRVs
@@ -884,7 +882,7 @@ HRESULT CascadedDirectionalLightRenderer::RenderParticleLights(ID3D11DeviceConte
 			pd3dImmediateContext->PSSetConstantBuffers(1, 1, &_lightPropertiesBuffer);
 
 			// Finally, render the quad
-			_fsQuad.Render(pd3dImmediateContext, _unshadowedParticlePS);
+			_fsQuad.Render(pd3dImmediateContext, _unshadowedParticlePS->PixelShader);
 		}
 
 		END_EVENT_D3D(L"");
@@ -918,18 +916,8 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 		ARRAYSIZE(noAlphaLayout),				// UINT InputElementCount;
 		"Directional Depth (alpha cutout = 0)"	// const char* DebugName;
 	};
-
-	VertexShaderContent* vsContent = NULL;
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalDepth.hlsl", &vsNoAlphaOpts, &vsContent));
-
-	_depthVSNoAlpha = vsContent->VertexShader;
-	_depthInputNoAlpha = vsContent->InputLayout;
-
-	_depthVSNoAlpha->AddRef();
-	_depthInputNoAlpha->AddRef();
-
-	SAFE_RELEASE(vsContent);
-
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalDepth.hlsl", &vsNoAlphaOpts, &_depthVSNoAlpha));
+	
 	// Load the alpha cutout enabled vertex shader and input layout
 	D3D11_INPUT_ELEMENT_DESC alphaLayout[] =
 	{
@@ -949,16 +937,7 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 		ARRAYSIZE(alphaLayout),					// UINT InputElementCount;
 		"Directional Depth (alpha cutout = 1)"	// const char* DebugName;
 	};
-
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalDepth.hlsl", &vsAlphaOpts, &vsContent));
-	
-	_depthVSAlpha = vsContent->VertexShader;
-	_depthInputAlpha = vsContent->InputLayout;
-
-	_depthVSAlpha->AddRef();
-	_depthInputAlpha->AddRef();
-
-	SAFE_RELEASE(vsContent);
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalDepth.hlsl", &vsAlphaOpts, &_depthVSAlpha));
 
 	// Load the alpha cutout enabled pixel shader
 	PixelShaderOptions psAlphaOpts = 
@@ -967,14 +946,7 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 		NULL,								// D3D_SHADER_MACRO* Defines;
 		"Directional Depth (alpha cutout = 1)"	//const char* DebugName;
 	};
-
-	PixelShaderContent* psContent = NULL;
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalDepth.hlsl", &psAlphaOpts, &psContent));
-
-	_depthPSAlpha = psContent->PixelShader;
-	_depthPSAlpha->AddRef();
-
-	SAFE_RELEASE(psContent);
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalDepth.hlsl", &psAlphaOpts, &_depthPSAlpha));
 
 	// Load the pixel shaders for unshadowed light post processeses
 	PixelShaderOptions psUnshadowedOpts = 
@@ -983,13 +955,7 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 		NULL,									// D3D_SHADER_MACRO* Defines;
 		"Directional Cascaded Unshadowed Light"	//const char* DebugName;
 	};
-
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalLight.hlsl", &psUnshadowedOpts, &psContent));
-
-	_unshadowedPS = psContent->PixelShader;
-	_unshadowedPS->AddRef();
-
-	SAFE_RELEASE(psContent);
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalLight.hlsl", &psUnshadowedOpts, &_unshadowedPS));
 
 	// Load the pixel shaders for shadowed light post processeses
 	PixelShaderOptions psShadowedOpts = 
@@ -998,13 +964,7 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 		NULL,									// D3D_SHADER_MACRO* Defines;
 		"Directional Cascaded Shadowed Light"	//const char* DebugName;
 	};
-
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalLight.hlsl", &psShadowedOpts, &psContent));
-
-	_shadowedPS = psContent->PixelShader;
-	_shadowedPS->AddRef();
-
-	SAFE_RELEASE(psContent);
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalLight.hlsl", &psShadowedOpts, &_shadowedPS));
 	
 	// Load the pixel shaders for unshadowed light particle post processeses
 	PixelShaderOptions psParticleUnshadowedOpts = 
@@ -1013,13 +973,7 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 		NULL,												// D3D_SHADER_MACRO* Defines;
 		"Directional Cascaded Unshadowed Particle Light"	//const char* DebugName;
 	};
-
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalLight.hlsl", &psParticleUnshadowedOpts, &psContent));
-
-	_unshadowedParticlePS = psContent->PixelShader;
-	_unshadowedParticlePS->AddRef();
-
-	SAFE_RELEASE(psContent);
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalLight.hlsl", &psParticleUnshadowedOpts, &_unshadowedParticlePS));
 
 	// Load the pixel shaders for unshadowed light particle post processeses
 	PixelShaderOptions psParticleShadowedOpts = 
@@ -1028,13 +982,7 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 		NULL,											// D3D_SHADER_MACRO* Defines;
 		"Directional Cascaded Shadowed Particle Light"	//const char* DebugName;
 	};
-
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalLight.hlsl", &psParticleShadowedOpts, &psContent));
-
-	_shadowedParticlePS = psContent->PixelShader;
-	_shadowedParticlePS->AddRef();
-
-	SAFE_RELEASE(psContent);
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"DirectionalLight.hlsl", &psParticleShadowedOpts, &_shadowedParticlePS));
 	
 	// Create the buffers
 	D3D11_BUFFER_DESC bufferDesc =
@@ -1104,21 +1052,21 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 		0,
 	};
 
-
 	char debugName[MAX_PATH];
 	for (UINT i = 0; i < NUM_SHADOW_MAPS; i++)
 	{
-		V_RETURN(pd3dDevice->CreateTexture2D(&shadowMapTextureDesc, NULL, &_shadowMapTextures[i]));
-		sprintf_s(debugName, "Cascaded shadow map %i texture", i);
-		V_RETURN(SetDXDebugName(_shadowMapTextures[i], debugName));
+		ID3D11Texture2D* shadowMapTexture;
+		V_RETURN(pd3dDevice->CreateTexture2D(&shadowMapTextureDesc, NULL, &shadowMapTexture));
 
-		V_RETURN(pd3dDevice->CreateShaderResourceView(_shadowMapTextures[i], &shadowMapSRVDesc, &_shadowMapSRVs[i]));
+		V_RETURN(pd3dDevice->CreateShaderResourceView(shadowMapTexture, &shadowMapSRVDesc, &_shadowMapSRVs[i]));
 		sprintf_s(debugName, "Cascaded shadow map %i SRV", i);
 		V_RETURN(SetDXDebugName(_shadowMapSRVs[i], debugName));
 		
-		V_RETURN(pd3dDevice->CreateDepthStencilView(_shadowMapTextures[i], &shadowMapDSVDesc, &_shadowMapDSVs[i]));
+		V_RETURN(pd3dDevice->CreateDepthStencilView(shadowMapTexture, &shadowMapDSVDesc, &_shadowMapDSVs[i]));
 		sprintf_s(debugName, "Cascaded shadow map %i DSV", i);
 		V_RETURN(SetDXDebugName(_shadowMapDSVs[i], debugName));
+
+		SAFE_RELEASE(shadowMapTexture);
 	}
 
 	// Load the other IHasContents
@@ -1127,24 +1075,22 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 	return S_OK;
 }
 
-void CascadedDirectionalLightRenderer::OnD3D11DestroyDevice()
+void CascadedDirectionalLightRenderer::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	LightRenderer::OnD3D11DestroyDevice();
+	LightRenderer::OnD3D11DestroyDevice(pContentManager);
 
-	SAFE_RELEASE(_depthVSNoAlpha);
-	SAFE_RELEASE(_depthInputNoAlpha);
+	SAFE_CM_RELEASE(pContentManager, _depthVSNoAlpha);
 	SAFE_RELEASE(_alphaCutoutProperties);
 
-	SAFE_RELEASE(_depthVSAlpha);
-	SAFE_RELEASE(_depthInputAlpha);
-	SAFE_RELEASE(_depthPSAlpha);
+	SAFE_CM_RELEASE(pContentManager, _depthVSAlpha);
+	SAFE_CM_RELEASE(pContentManager, _depthPSAlpha);
 	
 	SAFE_RELEASE(_instanceWVPVB);
 
-	SAFE_RELEASE(_unshadowedPS);
-	SAFE_RELEASE(_shadowedPS);
-	SAFE_RELEASE(_unshadowedParticlePS);
-	SAFE_RELEASE(_shadowedParticlePS);
+	SAFE_CM_RELEASE(pContentManager, _unshadowedPS);
+	SAFE_CM_RELEASE(pContentManager, _shadowedPS);
+	SAFE_CM_RELEASE(pContentManager, _unshadowedParticlePS);
+	SAFE_CM_RELEASE(pContentManager, _shadowedParticlePS);
 
 	SAFE_RELEASE(_lightPropertiesBuffer);
 	SAFE_RELEASE(_cameraPropertiesBuffer);
@@ -1152,12 +1098,11 @@ void CascadedDirectionalLightRenderer::OnD3D11DestroyDevice()
 
 	for (UINT i = 0; i < NUM_SHADOW_MAPS; i++)
 	{
-		SAFE_RELEASE(_shadowMapTextures[i]);
 		SAFE_RELEASE(_shadowMapSRVs[i]);
 		SAFE_RELEASE(_shadowMapDSVs[i]);
 	}
 
-	_fsQuad.OnD3D11DestroyDevice();
+	_fsQuad.OnD3D11DestroyDevice(pContentManager);
 }
 
 HRESULT CascadedDirectionalLightRenderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
@@ -1172,8 +1117,8 @@ HRESULT CascadedDirectionalLightRenderer::OnD3D11ResizedSwapChain(ID3D11Device* 
 	return S_OK;
 }
 
-void CascadedDirectionalLightRenderer::OnD3D11ReleasingSwapChain()
+void CascadedDirectionalLightRenderer::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
-	LightRenderer::OnD3D11ReleasingSwapChain();
-	_fsQuad.OnD3D11ReleasingSwapChain();
+	LightRenderer::OnD3D11ReleasingSwapChain(pContentManager);
+	_fsQuad.OnD3D11ReleasingSwapChain(pContentManager);
 }

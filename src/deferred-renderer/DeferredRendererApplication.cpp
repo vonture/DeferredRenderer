@@ -133,6 +133,7 @@ DeferredRendererApplication::DeferredRendererApplication()
 	_contentHolders.push_back(&_hbaoPP);
 	_contentHolders.push_back(&_discDoFPP);
 	_contentHolders.push_back(&_motionBlurPP);
+	_contentHolders.push_back(&_filmGrainPP);
 	_contentHolders.push_back(&_boPP);
 	_contentHolders.push_back(&_uiPP);
 	_contentHolders.push_back(&_paraboloidPointLR);
@@ -210,6 +211,7 @@ void DeferredRendererApplication::OnInitialize()
 	_ppConfigPane->AddPostProcess(&_hdrPP, L"HDR", true, true);
 	_ppConfigPane->AddPostProcess(&_discDoFPP, L"Disc DoF", false, true);
 	_ppConfigPane->AddPostProcess(&_fxaaPP, L"FXAA", true, true);
+	_ppConfigPane->AddPostProcess(&_filmGrainPP, L"Film grain/vignette", true, true);
 	_ppConfigPane->AddPostProcess(&_boPP, L"Bounding objects", true, true);
 	_ppConfigPane->AddPostProcess(&_uiPP, L"UI", true, false);
 	_ppConfigPane->AddPostProcess(&_motionBlurPP, L"Motion blur", false, false);	
@@ -416,6 +418,11 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 
 		END_EVENT(L"");
 	}
+
+	if (_ppConfigPane->IsPostProcessEnabled(&_filmGrainPP))
+	{
+		_filmGrainPP.SetTime(totalTime);
+	}
 	
 	if (_ppConfigPane->IsPostProcessEnabled(&_uiPP))
 	{
@@ -559,12 +566,12 @@ HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevic
 	return S_OK;
 }
 
-void DeferredRendererApplication::OnD3D11DestroyDevice()
+void DeferredRendererApplication::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	Application::OnD3D11DestroyDevice();
+	Application::OnD3D11DestroyDevice(pContentManager);
 	for (UINT i = 0; i < _contentHolders.size(); i++)
 	{
-		_contentHolders[i]->OnD3D11DestroyDevice();
+		_contentHolders[i]->OnD3D11DestroyDevice(pContentManager);
 	}
 }
 
@@ -594,12 +601,12 @@ HRESULT DeferredRendererApplication::OnD3D11ResizedSwapChain(ID3D11Device* pd3dD
 
 	return S_OK;
 }
-void DeferredRendererApplication::OnD3D11ReleasingSwapChain()
+void DeferredRendererApplication::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
-	Application::OnD3D11ReleasingSwapChain();
+	Application::OnD3D11ReleasingSwapChain(pContentManager);
 	for (UINT i = 0; i < _contentHolders.size(); i++)
 	{
-		_contentHolders[i]->OnD3D11ReleasingSwapChain();
+		_contentHolders[i]->OnD3D11ReleasingSwapChain(pContentManager);
 	}
 }
 

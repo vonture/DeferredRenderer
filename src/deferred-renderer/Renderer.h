@@ -31,8 +31,7 @@ private:
 	ModelRenderer _modelRenderer;
 	ParticleRenderer _particleRenderer;
 	GeometryCombinePostProcess _combinePP;
-		
-	ID3D11Texture2D* _ppTextures[2];
+
 	ID3D11ShaderResourceView* _ppShaderResourceViews[2];
 	ID3D11RenderTargetView* _ppRenderTargetViews[2];
 	
@@ -87,9 +86,9 @@ public:
 	HRESULT End(ID3D11DeviceContext* pd3dImmediateContext, Camera* camera, Camera* clipCamera = NULL);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);	
-	void OnD3D11DestroyDevice();
+	void OnD3D11DestroyDevice(ContentManager* pContentManager);
 
 	HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
                             const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-	void OnD3D11ReleasingSwapChain();
+	void OnD3D11ReleasingSwapChain(ContentManager* pContentManager);
 };

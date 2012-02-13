@@ -264,9 +264,9 @@ HRESULT ParticleSystemInstance::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 }
 
 
-void ParticleSystemInstance::OnD3D11DestroyDevice()
+void ParticleSystemInstance::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	SAFE_RELEASE(_system);
+	SAFE_CM_RELEASE(pContentManager, _system);
 	SAFE_RELEASE(_vb);
 
 	SAFE_DELETE_ARRAY(_particles);
@@ -281,7 +281,7 @@ HRESULT ParticleSystemInstance::OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevic
 	return S_OK;
 }
 
-void ParticleSystemInstance::OnD3D11ReleasingSwapChain()
+void ParticleSystemInstance::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
 
 }

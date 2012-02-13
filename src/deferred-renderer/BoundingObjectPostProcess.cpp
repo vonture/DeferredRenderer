@@ -1,10 +1,7 @@
 #include "PCH.h"
 #include "BoundingObjectPostProcess.h"
-#include "PixelShaderLoader.h"
-#include "VertexShaderLoader.h"
-
 BoundingObjectPostProcess::BoundingObjectPostProcess()
-	: _boxVB(NULL), _boxIB(NULL), _sphereVB(NULL), _inputLayout(NULL), _vertexShader(NULL),
+	: _boxVB(NULL), _boxIB(NULL), _sphereVB(NULL), _vertexShader(NULL),
 	  _pixelShader(NULL), _wvpConstantBuffer(NULL), _colorConstantBuffer(NULL), _frustVB(NULL)
 {
 	SetIsAdditive(true);
@@ -63,10 +60,10 @@ HRESULT BoundingObjectPostProcess::Render(ID3D11DeviceContext* pd3dImmediateCont
 	UINT strides = sizeof(BOUNDING_OBJECT_VERTEX);
     UINT offsets = 0;
 
-	pd3dImmediateContext->VSSetShader(_vertexShader, NULL, 0);
-    pd3dImmediateContext->PSSetShader(_pixelShader, NULL, 0);
+	pd3dImmediateContext->VSSetShader(_vertexShader->VertexShader, NULL, 0);
+    pd3dImmediateContext->PSSetShader(_pixelShader->PixelShader, NULL, 0);
 	
-	pd3dImmediateContext->IASetInputLayout(_inputLayout);	
+	pd3dImmediateContext->IASetInputLayout(_vertexShader->InputLayout);	
 
 	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetDepthEnabled(), 0);
 
@@ -258,7 +255,6 @@ HRESULT BoundingObjectPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 	V_RETURN(PostProcess::OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 
 	// Load the pixel shader
-	PixelShaderContent* psContent = NULL;
 	PixelShaderOptions psOpts =
 	{
 		"PS_BoundingObject",// const char* EntryPoint;
@@ -266,12 +262,7 @@ HRESULT BoundingObjectPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 		"Bounding Object",	// const char* DebugName;
 	};
 	
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"BoundingObject.hlsl", &psOpts, &psContent));
-
-	_pixelShader = psContent->PixelShader;
-	_pixelShader->AddRef();
-
-	SAFE_RELEASE(psContent);
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"BoundingObject.hlsl", &psOpts, &_pixelShader));
 
 	// Load the sprite vertex shader and input layout
 	D3D11_INPUT_ELEMENT_DESC layout[] =
@@ -279,7 +270,6 @@ HRESULT BoundingObjectPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
 
-	VertexShaderContent* vsContent = NULL;
 	VertexShaderOptions vsOpts = 
 	{
 		"VS_BoundingObject",// const char* EntryPoint;
@@ -289,16 +279,8 @@ HRESULT BoundingObjectPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 		"Bounding Object",	// const char* DebugName;
 	};
 
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"BoundingObject.hlsl", &vsOpts, &vsContent));
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"BoundingObject.hlsl", &vsOpts, &_vertexShader));
 
-	_vertexShader = vsContent->VertexShader;
-	_vertexShader->AddRef();
-
-	_inputLayout = vsContent->InputLayout;
-	_inputLayout->AddRef();
-
-	SAFE_RELEASE(vsContent);
-	
 	// Create the constant buffer
 	D3D11_BUFFER_DESC cbDesc =
 	{
@@ -399,32 +381,33 @@ HRESULT BoundingObjectPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 }
 
 
-void BoundingObjectPostProcess::OnD3D11DestroyDevice()
+void BoundingObjectPostProcess::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	PostProcess::OnD3D11DestroyDevice();
+	PostProcess::OnD3D11DestroyDevice(pContentManager);
+
+	SAFE_CM_RELEASE(pContentManager, _vertexShader);
+	SAFE_CM_RELEASE(pContentManager, _pixelShader);
 
 	SAFE_RELEASE(_boxIB);
 	SAFE_RELEASE(_boxVB);
 	SAFE_RELEASE(_frustVB);
 	SAFE_RELEASE(_sphereVB);
-	SAFE_RELEASE(_inputLayout);
-	SAFE_RELEASE(_vertexShader);
-	SAFE_RELEASE(_pixelShader);
 	SAFE_RELEASE(_wvpConstantBuffer);
 	SAFE_RELEASE(_colorConstantBuffer);
 }
 
-HRESULT BoundingObjectPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
-                        const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT BoundingObjectPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, 
+	ContentManager* pContentManager, IDXGISwapChain* pSwapChain, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
 
-	V_RETURN(PostProcess::OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
+	V_RETURN(PostProcess::OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain,
+		pBackBufferSurfaceDesc));
 
 	return S_OK;
 }
 
-void BoundingObjectPostProcess::OnD3D11ReleasingSwapChain()
+void BoundingObjectPostProcess::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
-	PostProcess::OnD3D11ReleasingSwapChain();
+	PostProcess::OnD3D11ReleasingSwapChain(pContentManager);
 }

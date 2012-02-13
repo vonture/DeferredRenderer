@@ -1,15 +1,12 @@
 #include "PCH.h"
 #include "SpriteRenderer.h"
 #include "Logger.h"
-#include "PixelShaderLoader.h"
-#include "VertexShaderLoader.h"
 
 const float SpriteRenderer::SPRITE_DEPTH = 0.5f;
 
 SpriteRenderer::SpriteRenderer()
-	: _bbWidth(1), _bbHeight(1), _nextSprite(0), _inputLayout(NULL), _indexBuffer(NULL),
-	  _vertexBuffer(NULL), _spriteVS(NULL), _spritePS(NULL), _blankTexture(NULL), _blankSRV(NULL),
-	  _begun(false)
+	: _bbWidth(1), _bbHeight(1), _nextSprite(0),  _indexBuffer(NULL),
+	  _vertexBuffer(NULL), _spriteVS(NULL), _spritePS(NULL), _blankSRV(NULL), _begun(false)
 {
 	_indices = new SpriteIndex[MAX_SPRITES * 6];
 	_vertices = new SPRITE_VERTEX[MAX_SPRITES * 4];
@@ -81,8 +78,8 @@ HRESULT SpriteRenderer::End(ID3D11DeviceContext* pd3d11DeviceContext)
 	
 	// Set the shaders
 	pd3d11DeviceContext->GSSetShader(NULL, NULL, 0);
-	pd3d11DeviceContext->VSSetShader(_spriteVS, NULL, 0);
-	pd3d11DeviceContext->PSSetShader(_spritePS, NULL, 0);
+	pd3d11DeviceContext->VSSetShader(_spriteVS->VertexShader, NULL, 0);
+	pd3d11DeviceContext->PSSetShader(_spritePS->PixelShader, NULL, 0);
 
 	// Set the buffers
 	UINT stride = sizeof(SPRITE_VERTEX);
@@ -93,7 +90,7 @@ HRESULT SpriteRenderer::End(ID3D11DeviceContext* pd3d11DeviceContext)
 
 	pd3d11DeviceContext->IASetVertexBuffers(0, 1, &_vertexBuffer, &stride, &offset);
 	pd3d11DeviceContext->IASetIndexBuffer(_indexBuffer, indexFormat, offset);
-    pd3d11DeviceContext->IASetInputLayout(_inputLayout);
+    pd3d11DeviceContext->IASetInputLayout(_spriteVS->InputLayout);
     pd3d11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	for (int i = 0; i <= _curTexture; i++)
@@ -284,20 +281,13 @@ HRESULT SpriteRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMan
 	V_RETURN(_rasterStates.OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 
 	// Load the sprite pixel shader
-	PixelShaderContent* psContent = NULL;
 	PixelShaderOptions psOpts =
 	{
 		"PS_Sprite",// const char* EntryPoint;
 		NULL,		// D3D_SHADER_MACRO* Defines;
 		"Sprite",	// const char* DebugName;
-	};
-	
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Sprite.hlsl", &psOpts, &psContent));
-
-	_spritePS = psContent->PixelShader;
-	_spritePS->AddRef();
-
-	SAFE_RELEASE(psContent);
+	};	
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Sprite.hlsl", &psOpts, &_spritePS));
 	
 	// Load the sprite vertex shader and input layout
 	D3D11_INPUT_ELEMENT_DESC spriteLayout[] =
@@ -307,7 +297,6 @@ HRESULT SpriteRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMan
 		{ "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
 
-	VertexShaderContent* vsContent = NULL;
 	VertexShaderOptions vsOpts = 
 	{
 		"VS_Sprite",				// const char* EntryPoint;
@@ -316,16 +305,7 @@ HRESULT SpriteRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMan
 		ARRAYSIZE(spriteLayout),	// UINT InputElementCount;
 		"Sprite",					// const char* DebugName;
 	};
-
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Sprite.hlsl", &vsOpts, &vsContent));
-
-	_spriteVS = vsContent->VertexShader;
-	_spriteVS->AddRef();
-
-	_inputLayout = vsContent->InputLayout;
-	_inputLayout->AddRef();
-
-	SAFE_RELEASE(vsContent);
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Sprite.hlsl", &vsOpts, &_spriteVS));
 
 	// Create the buffers
 	D3D11_BUFFER_DESC vbDesc = 
@@ -375,8 +355,8 @@ HRESULT SpriteRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMan
 	initData.SysMemPitch = sizeof(XMHALF4);
 	initData.SysMemSlicePitch = 0;
 
-	V_RETURN(pd3dDevice->CreateTexture2D(&blankTextureDesc, &initData, &_blankTexture));
-	V_RETURN(SetDXDebugName(_blankTexture, "Sprite renderer blank texture"));
+	ID3D11Texture2D* blankTexture;
+	V_RETURN(pd3dDevice->CreateTexture2D(&blankTextureDesc, &initData, &blankTexture));
 
 	// create the blank srv
 	D3D11_SHADER_RESOURCE_VIEW_DESC blankSRVDesc = 
@@ -388,9 +368,11 @@ HRESULT SpriteRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMan
     };
 	blankSRVDesc.Texture2D.MipLevels = 1;
 
-	V_RETURN(pd3dDevice->CreateShaderResourceView(_blankTexture, &blankSRVDesc, &_blankSRV));
-	V_RETURN(SetDXDebugName(_blankTexture, "Sprite renderer blank SRV"));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(blankTexture, &blankSRVDesc, &_blankSRV));
+	V_RETURN(SetDXDebugName(_blankSRV, "Sprite renderer blank SRV"));
 	
+	SAFE_RELEASE(blankTexture);
+
 	// Store backbuffer size
 	_bbWidth = pBackBufferSurfaceDesc->Width;
 	_bbHeight = pBackBufferSurfaceDesc->Height;
@@ -398,19 +380,17 @@ HRESULT SpriteRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMan
 	return S_OK; 
 }
 
-void SpriteRenderer::OnD3D11DestroyDevice()
+void SpriteRenderer::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	_dsStates.OnD3D11DestroyDevice();
-	_samplerStates.OnD3D11DestroyDevice();
-	_blendStates.OnD3D11DestroyDevice();
-	_rasterStates.OnD3D11DestroyDevice();
+	_dsStates.OnD3D11DestroyDevice(pContentManager);
+	_samplerStates.OnD3D11DestroyDevice(pContentManager);
+	_blendStates.OnD3D11DestroyDevice(pContentManager);
+	_rasterStates.OnD3D11DestroyDevice(pContentManager);
 	
-	SAFE_RELEASE(_inputLayout);
 	SAFE_RELEASE(_indexBuffer);
 	SAFE_RELEASE(_vertexBuffer);
-	SAFE_RELEASE(_spriteVS);
-	SAFE_RELEASE(_spritePS);
-	SAFE_RELEASE(_blankTexture);
+	SAFE_CM_RELEASE(pContentManager, _spriteVS);
+	SAFE_CM_RELEASE(pContentManager, _spritePS);
 	SAFE_RELEASE(_blankSRV);
 }
 
@@ -431,10 +411,10 @@ HRESULT SpriteRenderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Conten
 	return S_OK;
 }
 
-void SpriteRenderer::OnD3D11ReleasingSwapChain()
+void SpriteRenderer::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
-	_dsStates.OnD3D11ReleasingSwapChain();
-	_samplerStates.OnD3D11ReleasingSwapChain();
-	_blendStates.OnD3D11ReleasingSwapChain();
-	_rasterStates.OnD3D11ReleasingSwapChain();
+	_dsStates.OnD3D11ReleasingSwapChain(pContentManager);
+	_samplerStates.OnD3D11ReleasingSwapChain(pContentManager);
+	_blendStates.OnD3D11ReleasingSwapChain(pContentManager);
+	_rasterStates.OnD3D11ReleasingSwapChain(pContentManager);
 }

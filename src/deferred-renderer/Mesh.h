@@ -78,11 +78,6 @@ public:
 	bool GetDrawBackFaces() const { return _drawBackFaces; }
 
 	const WCHAR* GetName() const { return _name; }
-	
-	HRESULT CreateFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d9Device, 
-		const WCHAR* modelPath, SDKMesh* model,	UINT meshIdx);
-
-	HRESULT CreateFromASSIMPMesh(ID3D11Device* device, const aiScene* scene, UINT meshIdx);
 
 	void Destroy();
 

@@ -1,8 +1,6 @@
 #include "PCH.h"
 #include "MLAAPostProcess.h"
 #include "Logger.h"
-#include "PixelShaderLoader.h"
-#include "TextureLoader.h"
 
 const UINT MLAAPostProcess::WEIGHT_TEXTURE_SIZES[NUM_WEIGHT_TEXTURES] = 
 { 
@@ -15,10 +13,9 @@ const UINT MLAAPostProcess::WEIGHT_TEXTURE_SIZES[NUM_WEIGHT_TEXTURES] =
 const WCHAR* MLAAPostProcess::WEIGHT_TEXTURE_PATH = L"MLAA\\AreaMap";
 
 MLAAPostProcess::MLAAPostProcess()
-	: _edgeDetectTexture(NULL), _edgeDetectRTV(NULL), _edgeDetectSRV(NULL),
-	  _blendWeightTexture(NULL), _blendWeightRTV(NULL), _blendWeightSRV(NULL),
-	  _copyBackgroundPS(NULL), _neighborhoodBlendPS(NULL),  _mlaaPropertiesBuffer(NULL),\
-	  _dsTexture(NULL), _dsv(NULL), _textureWidth(1), _textureHeight(1)
+	: _edgeDetectRTV(NULL), _edgeDetectSRV(NULL), _blendWeightRTV(NULL), _blendWeightSRV(NULL),
+	  _copyBackgroundPS(NULL), _neighborhoodBlendPS(NULL), _mlaaPropertiesBuffer(NULL),
+	  _dsv(NULL), _textureWidth(1), _textureHeight(1)
 {
 	SetIsAdditive(false);
 
@@ -109,7 +106,7 @@ HRESULT MLAAPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 
 	pd3dImmediateContext->PSSetConstantBuffers(0, 1, &_mlaaPropertiesBuffer);
 
-	ID3D11PixelShader* _curEdgePS = _edgeDetectPSs[_depthDetect ? 1 : 0][_normalDetect ? 1 : 0][_luminanceDetect ? 1 : 0];
+	ID3D11PixelShader* _curEdgePS = _edgeDetectPSs[_depthDetect ? 1 : 0][_normalDetect ? 1 : 0][_luminanceDetect ? 1 : 0]->PixelShader;
 	V_RETURN(fsQuad->Render(pd3dImmediateContext, _curEdgePS));
 	END_EVENT_D3D(L"");
 
@@ -135,12 +132,12 @@ HRESULT MLAAPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 	ID3D11ShaderResourceView* ppSRVBlendWeight[3] = 
 	{
 		_edgeDetectSRV,
-		_weightSRVs[weightTexIdx],
+		_weightSRVs[weightTexIdx]->ShaderResourceView,
 		NULL
 	};
 	pd3dImmediateContext->PSSetShaderResources(0, 3, ppSRVBlendWeight);
 
-	V_RETURN(fsQuad->Render(pd3dImmediateContext, _blendWeightPSs[weightTexIdx]));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _blendWeightPSs[weightTexIdx]->PixelShader));
 
 	END_EVENT_D3D(L"");
 
@@ -159,7 +156,7 @@ HRESULT MLAAPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 
 	pd3dImmediateContext->PSSetShaderResources(0, 2, ppSRVCopyAndNeighborhood);
 
-	V_RETURN(fsQuad->Render(pd3dImmediateContext, _copyBackgroundPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _copyBackgroundPS->PixelShader));
 	
 	END_EVENT_D3D(L"");
 
@@ -168,7 +165,7 @@ HRESULT MLAAPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 	
 	pd3dImmediateContext->OMSetDepthStencilState(GetDepthStencilStates()->GetStencilEqual(), 0xFFFFFFFF);
 
-	V_RETURN(fsQuad->Render(pd3dImmediateContext, _neighborhoodBlendPS));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _neighborhoodBlendPS->PixelShader));
 
 	END_EVENT_D3D(L"");
 	
@@ -187,9 +184,7 @@ HRESULT MLAAPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 
 	V_RETURN(PostProcess::OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
 
-	// Load the shaders
-	PixelShaderContent* psContent = NULL;
-	
+	// Load the shaders	
 	char debugName[512];
 	D3D_SHADER_MACRO edgeDetectMacros[] = 
 	{
@@ -219,12 +214,7 @@ HRESULT MLAAPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 
 				sprintf_s(debugName, "MLAA Edge Detect (depth = %u, normal = %u, luminance = %u)", i, j, k);
 
-				V_RETURN(pContentManager->LoadContent(pd3dDevice, L"MLAA.hlsl", &edgeDetectPSOpts, &psContent));
-
-				_edgeDetectPSs[i][j][k] = psContent->PixelShader;
-				_edgeDetectPSs[i][j][k]->AddRef();
-
-				SAFE_RELEASE(psContent);
+				V_RETURN(pContentManager->LoadContent(pd3dDevice, L"MLAA.hlsl", &edgeDetectPSOpts, &_edgeDetectPSs[i][j][k]));
 			}
 		}
 	}
@@ -243,7 +233,6 @@ HRESULT MLAAPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 		debugName // const char* DebugName;
 	};
 
-	TextureContent* texContent = NULL;
 	TextureOptions texOptions = 
 	{
 		false, // bool Generate3DFrom2D;
@@ -257,23 +246,13 @@ HRESULT MLAAPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 		sprintf_s(distanceStr, "%i", WEIGHT_TEXTURE_SIZES[i]);
 		sprintf_s(debugName, "MLAA Blend Weight (MAX_DISTANCE = %i)", WEIGHT_TEXTURE_SIZES[i]);
 
-		V_RETURN(pContentManager->LoadContent(pd3dDevice, L"MLAA.hlsl", &edgeWeightPSOpts, &psContent));
-
-		_blendWeightPSs[i] = psContent->PixelShader;
-		_blendWeightPSs[i]->AddRef();
-
-		SAFE_RELEASE(psContent);
-
+		V_RETURN(pContentManager->LoadContent(pd3dDevice, L"MLAA.hlsl", &edgeWeightPSOpts, &_blendWeightPSs[i]));
+		
 		// Edge weight texture
 		sprintf_s(debugName, "MLAA Blend Weight (Size = %i)", WEIGHT_TEXTURE_SIZES[i]);
 		swprintf_s(texturePath, L"%s%i.dds", WEIGHT_TEXTURE_PATH, WEIGHT_TEXTURE_SIZES[i]);
 
-		V_RETURN(pContentManager->LoadContent(pd3dDevice, texturePath, &texOptions, &texContent));
-
-		_weightSRVs[i] = texContent->ShaderResourceView;
-		_weightSRVs[i]->AddRef();
-
-		SAFE_RELEASE(texContent);
+		V_RETURN(pContentManager->LoadContent(pd3dDevice, texturePath, &texOptions, &_weightSRVs[i]));
 	}
 
 	PixelShaderOptions finalPassPSOpts = 
@@ -286,23 +265,13 @@ HRESULT MLAAPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 	// Copy shader
 	finalPassPSOpts.EntryPoint = "PS_CopyBackground";
 	sprintf_s(debugName, "MLAA Copy Background PS");
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"MLAA.hlsl", &finalPassPSOpts, &psContent));
-
-	_copyBackgroundPS = psContent->PixelShader;
-	_copyBackgroundPS->AddRef();
-
-	SAFE_RELEASE(psContent);
-
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"MLAA.hlsl", &finalPassPSOpts, &_copyBackgroundPS));
+	
 	// Neighborhood blend
 	finalPassPSOpts.EntryPoint = "PS_NeighborhoodBlend";
 	sprintf_s(debugName, "MLAA Neighborhood Blend PS");
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"MLAA.hlsl", &finalPassPSOpts, &psContent));
-
-	_neighborhoodBlendPS = psContent->PixelShader;
-	_neighborhoodBlendPS->AddRef();
-
-	SAFE_RELEASE(psContent);
-
+	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"MLAA.hlsl", &finalPassPSOpts, &_neighborhoodBlendPS));
+	
 	// create the buffer
 	D3D11_BUFFER_DESC bufferDesc =
 	{
@@ -320,9 +289,9 @@ HRESULT MLAAPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 	return S_OK;
 }
 
-void MLAAPostProcess::OnD3D11DestroyDevice()
+void MLAAPostProcess::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	PostProcess::OnD3D11DestroyDevice();
+	PostProcess::OnD3D11DestroyDevice(pContentManager);
 	
 	for (UINT i = 0; i < 2; i++)
 	{
@@ -330,19 +299,19 @@ void MLAAPostProcess::OnD3D11DestroyDevice()
 		{
 			for (UINT k = 0; k < 2; k++)
 			{
-				SAFE_RELEASE(_edgeDetectPSs[i][j][k]);
+				SAFE_CM_RELEASE(pContentManager, _edgeDetectPSs[i][j][k]);
 			}
 		}
 	}
 
 	for (UINT i = 0; i < NUM_WEIGHT_TEXTURES; i++)
 	{
-		SAFE_RELEASE(_weightSRVs[i]);
-		SAFE_RELEASE(_blendWeightPSs[i]);
+		SAFE_CM_RELEASE(pContentManager, _weightSRVs[i]);
+		SAFE_CM_RELEASE(pContentManager, _blendWeightPSs[i]);
 	}
 	
-	SAFE_RELEASE(_copyBackgroundPS);
-	SAFE_RELEASE(_neighborhoodBlendPS);
+	SAFE_CM_RELEASE(pContentManager, _copyBackgroundPS);
+	SAFE_CM_RELEASE(pContentManager, _neighborhoodBlendPS);
 
 	SAFE_RELEASE(_mlaaPropertiesBuffer);
 }
@@ -373,8 +342,8 @@ HRESULT MLAAPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Conte
         0//UINT MiscFlags;    
     };
 
-	V_RETURN(pd3dDevice->CreateTexture2D(&dsTextureDesc, NULL, &_dsTexture));
-	V_RETURN(SetDXDebugName(_dsTexture, "MLAA Depth Stencil Texture"));
+	ID3D11Texture2D* dsTexture;
+	V_RETURN(pd3dDevice->CreateTexture2D(&dsTextureDesc, NULL, &dsTexture));
 
 	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc =
 	{
@@ -384,8 +353,10 @@ HRESULT MLAAPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Conte
 	};
 	dsvDesc.Texture2D.MipSlice = 0;
 
-	V_RETURN(pd3dDevice->CreateDepthStencilView(_dsTexture, &dsvDesc, &_dsv));
+	V_RETURN(pd3dDevice->CreateDepthStencilView(dsTexture, &dsvDesc, &_dsv));
 	V_RETURN(SetDXDebugName(_dsv, "MLAA Depth Stencil View"));
+
+	SAFE_RELEASE(dsTexture);
 
 	// Create the edge detection objects
 	D3D11_TEXTURE2D_DESC edgeDetectTextureDesc = 
@@ -403,8 +374,8 @@ HRESULT MLAAPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Conte
         0//UINT MiscFlags;    
     };
 
-	V_RETURN(pd3dDevice->CreateTexture2D(&edgeDetectTextureDesc, NULL, &_edgeDetectTexture));
-	V_RETURN(SetDXDebugName(_edgeDetectTexture, "MLAA Edge Detect Texture"));
+	ID3D11Texture2D* edgeDetectTexture;
+	V_RETURN(pd3dDevice->CreateTexture2D(&edgeDetectTextureDesc, NULL, &edgeDetectTexture));
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC edgeDetectSRVDesc = 
     {
@@ -415,7 +386,7 @@ HRESULT MLAAPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Conte
     };
 	edgeDetectSRVDesc.Texture2D.MipLevels = 1;
 
-	V_RETURN(pd3dDevice->CreateShaderResourceView(_edgeDetectTexture, &edgeDetectSRVDesc, &_edgeDetectSRV));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(edgeDetectTexture, &edgeDetectSRVDesc, &_edgeDetectSRV));
 	V_RETURN(SetDXDebugName(_edgeDetectSRV, "MLAA Edge Detect SRV"));
 
 	D3D11_RENDER_TARGET_VIEW_DESC edgeDetectRTVDesc = 
@@ -426,8 +397,10 @@ HRESULT MLAAPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Conte
         0
     };
 
-	V_RETURN(pd3dDevice->CreateRenderTargetView(_edgeDetectTexture, &edgeDetectRTVDesc, &_edgeDetectRTV));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(edgeDetectTexture, &edgeDetectRTVDesc, &_edgeDetectRTV));
 	V_RETURN(SetDXDebugName(_edgeDetectRTV, "MLAA Edge Detect RTV"));
+
+	SAFE_RELEASE(edgeDetectTexture);
 
 	// Create the blend weight objects
 	D3D11_TEXTURE2D_DESC blendWeightTextureDesc = 
@@ -445,8 +418,8 @@ HRESULT MLAAPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Conte
         0//UINT MiscFlags;    
     };
 
-	V_RETURN(pd3dDevice->CreateTexture2D(&blendWeightTextureDesc, NULL, &_blendWeightTexture));
-	V_RETURN(SetDXDebugName(_blendWeightTexture, "MLAA Blend Weight Texture"));
+	ID3D11Texture2D* blendWeightTexture;
+	V_RETURN(pd3dDevice->CreateTexture2D(&blendWeightTextureDesc, NULL, &blendWeightTexture));
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC blendWeightSRVDesc = 
     {
@@ -457,7 +430,7 @@ HRESULT MLAAPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Conte
     };
 	blendWeightSRVDesc.Texture2D.MipLevels = 1;
 
-	V_RETURN(pd3dDevice->CreateShaderResourceView(_blendWeightTexture, &blendWeightSRVDesc, &_blendWeightSRV));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(blendWeightTexture, &blendWeightSRVDesc, &_blendWeightSRV));
 	V_RETURN(SetDXDebugName(_blendWeightSRV, "MLAA Blend Weight SRV"));
 
 	D3D11_RENDER_TARGET_VIEW_DESC blendWeightRTVDesc = 
@@ -468,24 +441,23 @@ HRESULT MLAAPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Conte
         0
     };
 
-	V_RETURN(pd3dDevice->CreateRenderTargetView(_blendWeightTexture, &blendWeightRTVDesc, &_blendWeightRTV));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(blendWeightTexture, &blendWeightRTVDesc, &_blendWeightRTV));
 	V_RETURN(SetDXDebugName(_blendWeightRTV, "MLAA Blend Weight RTV"));
+
+	SAFE_RELEASE(blendWeightTexture);
 
 	return S_OK;
 }
 
-void MLAAPostProcess::OnD3D11ReleasingSwapChain()
+void MLAAPostProcess::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
-	PostProcess::OnD3D11ReleasingSwapChain();
+	PostProcess::OnD3D11ReleasingSwapChain(pContentManager);
 		
-	SAFE_RELEASE(_dsTexture);
 	SAFE_RELEASE(_dsv);
 
-	SAFE_RELEASE(_edgeDetectTexture);
 	SAFE_RELEASE(_edgeDetectRTV);
 	SAFE_RELEASE(_edgeDetectSRV);
 
-	SAFE_RELEASE(_blendWeightTexture);
 	SAFE_RELEASE(_blendWeightRTV);
 	SAFE_RELEASE(_blendWeightSRV);
 }

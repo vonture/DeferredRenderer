@@ -7,7 +7,6 @@ Renderer::Renderer()
 {
 	for (UINT i = 0; i < 2; i++)
 	{
-		_ppTextures[i] = NULL;
 		_ppShaderResourceViews[i] = NULL;
 		_ppRenderTargetViews[i] = NULL;
 	}	
@@ -15,15 +14,12 @@ Renderer::Renderer()
 
 void Renderer::swapPPBuffers()
 {
-	ID3D11Texture2D* tmpTex = _ppTextures[0];
 	ID3D11ShaderResourceView* tmpSRV = _ppShaderResourceViews[0];
 	ID3D11RenderTargetView* tmpRTV = _ppRenderTargetViews[0];
 
-	_ppTextures[0] = _ppTextures[1];
 	_ppShaderResourceViews[0] = _ppShaderResourceViews[1];
 	_ppRenderTargetViews[0] = _ppRenderTargetViews[1];
 
-	_ppTextures[1] = tmpTex;
 	_ppShaderResourceViews[1] = tmpSRV;
 	_ppRenderTargetViews[1] = tmpRTV;
 }
@@ -271,14 +267,14 @@ HRESULT Renderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* 
 	return S_OK;
 }
 
-void Renderer::OnD3D11DestroyDevice()
+void Renderer::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	_gBuffer.OnD3D11DestroyDevice();
-	_lightBuffer.OnD3D11DestroyDevice();
-	_particleBuffer.OnD3D11DestroyDevice();
-	_modelRenderer.OnD3D11DestroyDevice();
-	_particleRenderer.OnD3D11DestroyDevice();
-	_combinePP.OnD3D11DestroyDevice();
+	_gBuffer.OnD3D11DestroyDevice(pContentManager);
+	_lightBuffer.OnD3D11DestroyDevice(pContentManager);
+	_particleBuffer.OnD3D11DestroyDevice(pContentManager);
+	_modelRenderer.OnD3D11DestroyDevice(pContentManager);
+	_particleRenderer.OnD3D11DestroyDevice(pContentManager);
+	_combinePP.OnD3D11DestroyDevice(pContentManager);
 }
 
 HRESULT Renderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
@@ -302,11 +298,10 @@ HRESULT Renderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManag
         0//UINT MiscFlags;    
     };
 
-	V_RETURN(pd3dDevice->CreateTexture2D(&ppTextureDesc, NULL, &_ppTextures[0]));
-	V_RETURN(SetDXDebugName(_ppTextures[0], "Renderer post process texture 0"));
+	ID3D11Texture2D* ppTextures[2];
 
-	V_RETURN(pd3dDevice->CreateTexture2D(&ppTextureDesc, NULL, &_ppTextures[1]));
-	V_RETURN(SetDXDebugName(_ppTextures[1], "Renderer post process texture 1"));
+	V_RETURN(pd3dDevice->CreateTexture2D(&ppTextureDesc, NULL, &ppTextures[0]));
+	V_RETURN(pd3dDevice->CreateTexture2D(&ppTextureDesc, NULL, &ppTextures[1]));
 
 	// Create the shader resource views
 	D3D11_SHADER_RESOURCE_VIEW_DESC ppSRVDesc = 
@@ -318,10 +313,10 @@ HRESULT Renderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManag
     };
 	ppSRVDesc.Texture2D.MipLevels = 1;
 
-	V_RETURN(pd3dDevice->CreateShaderResourceView(_ppTextures[0], &ppSRVDesc, &_ppShaderResourceViews[0]));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(ppTextures[0], &ppSRVDesc, &_ppShaderResourceViews[0]));
 	V_RETURN(SetDXDebugName(_ppShaderResourceViews[0], "Renderer post process SRV 0"));
 
-	V_RETURN(pd3dDevice->CreateShaderResourceView(_ppTextures[1], &ppSRVDesc, &_ppShaderResourceViews[1]));
+	V_RETURN(pd3dDevice->CreateShaderResourceView(ppTextures[1], &ppSRVDesc, &_ppShaderResourceViews[1]));
 	V_RETURN(SetDXDebugName(_ppShaderResourceViews[1], "Renderer post process SRV 1"));
 
 	// create the render target views
@@ -333,11 +328,14 @@ HRESULT Renderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManag
         0
     };
 
-	V_RETURN(pd3dDevice->CreateRenderTargetView(_ppTextures[0], &ppRTVDesc, &_ppRenderTargetViews[0]));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(ppTextures[0], &ppRTVDesc, &_ppRenderTargetViews[0]));
 	V_RETURN(SetDXDebugName(_ppRenderTargetViews[0], "Renderer post process RTV 0"));
 
-	V_RETURN(pd3dDevice->CreateRenderTargetView(_ppTextures[1], &ppRTVDesc, &_ppRenderTargetViews[1]));
+	V_RETURN(pd3dDevice->CreateRenderTargetView(ppTextures[1], &ppRTVDesc, &_ppRenderTargetViews[1]));
 	V_RETURN(SetDXDebugName(_ppRenderTargetViews[1], "Renderer post process RTV 1"));
+	
+	SAFE_RELEASE(ppTextures[0]);
+	SAFE_RELEASE(ppTextures[1]);
 
 	V_RETURN(_gBuffer.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
 	V_RETURN(_lightBuffer.OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
@@ -349,19 +347,17 @@ HRESULT Renderer::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManag
 	return S_OK;
 }
 
-void Renderer::OnD3D11ReleasingSwapChain()
+void Renderer::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {	
-	SAFE_RELEASE(_ppTextures[0]);
-	SAFE_RELEASE(_ppTextures[1]);
 	SAFE_RELEASE(_ppShaderResourceViews[0]);
 	SAFE_RELEASE(_ppShaderResourceViews[1]);
 	SAFE_RELEASE(_ppRenderTargetViews[0]);
 	SAFE_RELEASE(_ppRenderTargetViews[1]);
 
-	_gBuffer.OnD3D11ReleasingSwapChain();
-	_lightBuffer.OnD3D11ReleasingSwapChain();
-	_particleBuffer.OnD3D11ReleasingSwapChain();
-	_modelRenderer.OnD3D11ReleasingSwapChain();
-	_particleRenderer.OnD3D11ReleasingSwapChain();
-	_combinePP.OnD3D11ReleasingSwapChain();
+	_gBuffer.OnD3D11ReleasingSwapChain(pContentManager);
+	_lightBuffer.OnD3D11ReleasingSwapChain(pContentManager);
+	_particleBuffer.OnD3D11ReleasingSwapChain(pContentManager);
+	_modelRenderer.OnD3D11ReleasingSwapChain(pContentManager);
+	_particleRenderer.OnD3D11ReleasingSwapChain(pContentManager);
+	_combinePP.OnD3D11ReleasingSwapChain(pContentManager);
 }

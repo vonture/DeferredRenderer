@@ -2,6 +2,8 @@
 
 #include "PCH.h"
 #include "PostProcess.h"
+#include "PixelShaderLoader.h"
+#include "TextureLoader.h"
 
 class MLAAPostProcess : public PostProcess
 {
@@ -19,14 +21,11 @@ private:
 	UINT _textureWidth;
 	UINT _textureHeight;
 
-	ID3D11Texture2D* _dsTexture;
 	ID3D11DepthStencilView* _dsv;
 
-	ID3D11Texture2D* _edgeDetectTexture;
 	ID3D11RenderTargetView* _edgeDetectRTV;
 	ID3D11ShaderResourceView* _edgeDetectSRV;
 	
-	ID3D11Texture2D* _blendWeightTexture;
 	ID3D11RenderTargetView* _blendWeightRTV;
 	ID3D11ShaderResourceView* _blendWeightSRV;
 
@@ -38,12 +37,12 @@ private:
 	static const UINT WEIGHT_TEXTURE_SIZES[NUM_WEIGHT_TEXTURES];
 
 	static const WCHAR* WEIGHT_TEXTURE_PATH;
-	ID3D11ShaderResourceView* _weightSRVs[NUM_WEIGHT_TEXTURES];
+	TextureContent* _weightSRVs[NUM_WEIGHT_TEXTURES];
 		
-	ID3D11PixelShader* _edgeDetectPSs[2][2][2];
-	ID3D11PixelShader* _blendWeightPSs[NUM_WEIGHT_TEXTURES];
-	ID3D11PixelShader* _copyBackgroundPS;
-	ID3D11PixelShader* _neighborhoodBlendPS;
+	PixelShaderContent* _edgeDetectPSs[2][2][2];
+	PixelShaderContent* _blendWeightPSs[NUM_WEIGHT_TEXTURES];
+	PixelShaderContent* _copyBackgroundPS;
+	PixelShaderContent* _neighborhoodBlendPS;
 
 	ID3D11Buffer* _mlaaPropertiesBuffer;
 
@@ -89,9 +88,9 @@ public:
 		ID3D11RenderTargetView* dstRTV, Camera* camera, GBuffer* gBuffer, ParticleBuffer* pBuffer, LightBuffer* lightBuffer);
 
 	HRESULT OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-	void OnD3D11DestroyDevice();
+	void OnD3D11DestroyDevice(ContentManager* pContentManager);
 
 	HRESULT OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
 		const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-	void OnD3D11ReleasingSwapChain();
+	void OnD3D11ReleasingSwapChain(ContentManager* pContentManager);
 };

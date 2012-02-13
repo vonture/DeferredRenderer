@@ -148,6 +148,7 @@
     <ClCompile Include="ContentManager.cpp" />
     <ClCompile Include="ContentType.cpp" />
     <ClCompile Include="DeviceManagerConfigurationPane.cpp" />
+    <ClCompile Include="FilmGrainVignettePostProcess.cpp" />
     <ClCompile Include="FontLoader.cpp" />
     <ClCompile Include="FXAAConfigurationPane.cpp" />
     <ClCompile Include="FXAAPostProcess.cpp" />
@@ -240,6 +241,7 @@
     <ClInclude Include="ContentManager.h" />
     <ClInclude Include="ContentType.h" />
     <ClInclude Include="DeviceManagerConfigurationPane.h" />
+    <ClInclude Include="FilmGrainVignettePostProcess.h" />
     <ClInclude Include="FontLoader.h" />
     <ClInclude Include="FXAAConfigurationPane.h" />
     <ClInclude Include="FXAAPostProcess.h" />
@@ -386,6 +388,11 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
     </CustomBuild>
     <CustomBuild Include="PBufferCombine.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="FilmGrainVignette.hlsl">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DXSDK_DIR)Utilities\bin\x86\"fxc.exe  /T fx_4_0 /Fo "%(Filename).fxo" "%(FullPath)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(filename).fxo</Outputs>

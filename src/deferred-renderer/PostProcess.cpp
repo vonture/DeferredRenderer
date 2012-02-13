@@ -14,13 +14,13 @@ HRESULT PostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManage
 	return S_OK; 
 }
 
-void PostProcess::OnD3D11DestroyDevice() 
+void PostProcess::OnD3D11DestroyDevice(ContentManager* pContentManager) 
 {
-	_dsStates.OnD3D11DestroyDevice();
-	_samplerStates.OnD3D11DestroyDevice();
-	_blendStates.OnD3D11DestroyDevice();
-	_rasterStates.OnD3D11DestroyDevice();
-	_fsQuad.OnD3D11DestroyDevice();
+	_dsStates.OnD3D11DestroyDevice(pContentManager);
+	_samplerStates.OnD3D11DestroyDevice(pContentManager);
+	_blendStates.OnD3D11DestroyDevice(pContentManager);
+	_rasterStates.OnD3D11DestroyDevice(pContentManager);
+	_fsQuad.OnD3D11DestroyDevice(pContentManager);
 }
 
 HRESULT PostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
@@ -37,11 +37,11 @@ HRESULT PostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentMa
 	return S_OK;
 }
 
-void PostProcess::OnD3D11ReleasingSwapChain()
+void PostProcess::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
-	_dsStates.OnD3D11ReleasingSwapChain();
-	_samplerStates.OnD3D11ReleasingSwapChain();
-	_blendStates.OnD3D11ReleasingSwapChain();
-	_rasterStates.OnD3D11ReleasingSwapChain();
-	_fsQuad.OnD3D11ReleasingSwapChain();
+	_dsStates.OnD3D11ReleasingSwapChain(pContentManager);
+	_samplerStates.OnD3D11ReleasingSwapChain(pContentManager);
+	_blendStates.OnD3D11ReleasingSwapChain(pContentManager);
+	_rasterStates.OnD3D11ReleasingSwapChain(pContentManager);
+	_fsQuad.OnD3D11ReleasingSwapChain(pContentManager);
 }

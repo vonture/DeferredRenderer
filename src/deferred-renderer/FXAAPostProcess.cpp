@@ -76,7 +76,7 @@ HRESULT FXAAPostProcess::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D1
 	// Render the quad
 	Quad* fsQuad = GetFullScreenQuad();
 
-	V_RETURN(fsQuad->Render(pd3dImmediateContext, _fxaaPSs[_qualityIndex]));
+	V_RETURN(fsQuad->Render(pd3dImmediateContext, _fxaaPSs[_qualityIndex]->PixelShader));
 
 	// Unset the resources
 	ID3D11ShaderResourceView* ppSRVNULL[1] = { NULL };
@@ -107,19 +107,13 @@ HRESULT FXAAPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 		qualityMacros,	// D3D_SHADER_MACRO* Defines;
 		psDebugName,	// const char* DebugName;
 	};
-	PixelShaderContent* psContent = NULL;
 		
 	for (UINT i = 0; i < QUALITY_PRESET_COUNT; i++)
 	{
 		sprintf_s(qualPresetString, "%i", QUALITY_PRESETS[i]);
 		sprintf_s(psDebugName, "FXAA (quality preset = %s)", qualPresetString);
 
-		V_RETURN(pContentManager->LoadContent(pd3dDevice, L"FXAA.hlsl", &psOpts, &psContent));
-
-		_fxaaPSs[i] = psContent->PixelShader;
-		_fxaaPSs[i]->AddRef();
-
-		SAFE_RELEASE(psContent);		
+		V_RETURN(pContentManager->LoadContent(pd3dDevice, L"FXAA.hlsl", &psOpts, &_fxaaPSs[i]));
 	}
 
 	// Create the buffers
@@ -142,13 +136,13 @@ HRESULT FXAAPostProcess::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentMa
 	return S_OK;
 }
 
-void FXAAPostProcess::OnD3D11DestroyDevice()
+void FXAAPostProcess::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	PostProcess::OnD3D11DestroyDevice();	
+	PostProcess::OnD3D11DestroyDevice(pContentManager);	
 
 	for (UINT i = 0; i < QUALITY_PRESET_COUNT; i++)
 	{
-		SAFE_RELEASE(_fxaaPSs[i]);
+		SAFE_CM_RELEASE(pContentManager, _fxaaPSs[i]);
 	}
 
 	SAFE_RELEASE(_propertiesBuffer);
@@ -167,7 +161,7 @@ HRESULT FXAAPostProcess::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, Conte
 	return S_OK;
 }
 
-void FXAAPostProcess::OnD3D11ReleasingSwapChain()
+void FXAAPostProcess::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
-	PostProcess::OnD3D11ReleasingSwapChain();
+	PostProcess::OnD3D11ReleasingSwapChain(pContentManager);
 }
