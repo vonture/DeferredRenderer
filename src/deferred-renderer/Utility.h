@@ -21,6 +21,117 @@ inline float RandomBetween(float min, float max)
 	return min + ((max - min) * perc);
 }
 
+inline HRESULT WriteFileAndSizeToStream(const std::wstring& path, std::ostream& stream)
+{
+	std::ifstream file;
+	file.open(path, std::ios::in | std::ios::binary);
+	if (!file.is_open())
+	{
+		return E_FAIL;
+	}
+
+	file.seekg(0, ios::end);
+	UINT fileSize = (UINT)file.tellg();
+	file.seekg(0, ios::beg);
+
+	if (fileSize > 0)
+	{
+		BYTE* buf = new BYTE[fileSize];
+
+		if (!file.read((char*)buf, fileSize))
+		{
+			delete[] buf;
+			return E_FAIL;
+		}
+
+		if (!stream.write((const char*)&fileSize, sizeof(UINT)))
+		{
+			delete[] buf;
+			return E_FAIL;
+		}
+		if (!stream.write((const char*)buf, fileSize))
+		{
+			delete[] buf;
+			return E_FAIL;
+		}
+
+		delete[] buf;
+		return S_OK;
+	}
+	else
+	{
+		return E_FAIL;
+	}
+}
+
+inline HRESULT ReadFileFromStream(std::istream& stream, byte** buf, UINT& bufSize)
+{
+	if (!stream.read((char*)&bufSize, sizeof(UINT)))
+	{
+		return E_FAIL;
+	}
+
+	*buf = new BYTE[bufSize];
+	if (!stream.read((char*)*buf, bufSize))
+	{
+		delete[] (*buf);
+		return E_FAIL;
+	}
+
+	return S_OK;
+}
+
+inline std::wstring ReadWStringFromStream(std::istream& stream)
+{
+	UINT len;
+	if (!stream.read((char*)&len, sizeof(UINT)))
+	{
+		return L"";
+	}
+
+	WCHAR* buf = new WCHAR[len + 1];
+	buf[len] = L'\0';
+
+	if (!stream.read((char*)buf, len * sizeof(WCHAR)))
+	{
+		delete[] buf;
+		return L"";
+	}
+
+	std::wstring output = std::wstring(buf);
+	delete[] buf;
+
+	return output;
+}
+
+inline UINT WriteWStringToStream(const std::wstring& str, std::ostream& stream)
+{
+	UINT len = str.size();
+	if (!stream.write((const char*)&len, sizeof(UINT)))
+	{
+		return 0;
+	}
+	
+	if (!stream.write((const char*)str.c_str(), len * sizeof(WCHAR)))
+	{
+		return sizeof(UINT);
+	}
+
+	return sizeof(UINT) + len * sizeof(WCHAR);
+}
+
+template <typename T>
+inline bool ReadDataFromStream(T& data, std::istream& stream)
+{
+	 return stream.read((char*)&data, sizeof(T)).bad();
+}
+
+template <typename T>
+inline bool WriteDataTostream(const T& data, std::ostream& stream)
+{
+	return stream.write((const char*)&data, sizeof(T)).bad();
+}
+
 inline HRESULT FormatHRESULTErrorMessageW(HRESULT errorId, WCHAR* msgBuffer, UINT msgLen)
 {
 	return FormatMessageW(
@@ -60,6 +171,29 @@ inline int AnsiToWString(const char* ansiString, WCHAR* output, UINT outputLengt
 inline int WStringToAnsi(const WCHAR* wString, char* output, UINT outputLength)
 {
 	return WideCharToMultiByte(CP_ACP, 0, wString, -1, output, outputLength, NULL, NULL);
+}
+
+
+inline std::wstring AnsiToWString(const std::string& input)
+{
+	WCHAR* buf = new WCHAR[input.size() + 1];
+	AnsiToWString(input.c_str(), buf, input.size() + 1);
+
+	std::wstring output = std::wstring(buf);
+	delete[] buf;
+
+	return output;
+}
+
+inline std::string WStringToAnsi(const std::wstring& input)
+{
+	char* buf = new char[input.size() + 1];
+	WStringToAnsi(input.c_str(), buf, input.size() + 1);
+
+	std::string output = std::string(buf);
+	delete[] buf;
+
+	return output;
 }
 
 inline int GetExtensionFromFileNameW(const WCHAR* fileName, WCHAR* output, UINT outputLength)
@@ -142,35 +276,30 @@ inline int GetDirectoryFromFileNameS(const char* fileName, char* output, UINT ou
 	return 1;
 }
 
-inline int GetDirectoryFromFileNameW(const std::wstring& input, std::wstring& output)
+inline std::wstring GetDirectoryFromFileNameW(const std::wstring& input)
 {
 	size_t idx = input.rfind(L'\\');
 	if (idx != std::wstring::npos)
 	{
-		output = input.substr(0, idx + 1).c_str();
+		return input.substr(0, idx + 1).c_str();
 	}
 	else
 	{
-		output = std::wstring(L"");
+		return L"";
 	}
-
-	return 1;
 }
 
-inline int GetDirectoryFromFileNameS(const std::string& input, std::string& output)
+inline std::string GetDirectoryFromFileNameS(const std::string& input)
 {
 	size_t idx = input.rfind(L'\\');
 	if (idx != std::wstring::npos)
 	{
-		output = input.substr(0, idx + 1).c_str();
+		return input.substr(0, idx + 1).c_str();
 	}
 	else
 	{
-		output = std::string("");
+		return "";
 	}
-
-	return 1;
-	return 1;
 }
 
 inline HRESULT CompileShaderFromFile(const WCHAR* szFileName, const char* szEntryPoint, const char* szShaderModel,

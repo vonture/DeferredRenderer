@@ -66,9 +66,7 @@ HRESULT ContentManager::getCompiledPath(const ContentHash& hash, std::wstring& o
 
 HRESULT ContentManager::createCompiledContentFolder(const std::wstring& path)
 {
-	std::wstring folder;
-	GetDirectoryFromFileNameW(path, folder);
-
+	std::wstring folder = GetDirectoryFromFileNameW(path);
 	if (SHCreateDirectoryEx(NULL, folder.c_str(), NULL) == ERROR_SUCCESS)
 	{
 		return S_OK;
