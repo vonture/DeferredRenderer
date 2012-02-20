@@ -111,7 +111,7 @@ void GS_Particle(point VS_Out_Particle input[1], inout TriangleStream<PS_In_Part
 	for(uint i = 0; i < 4; i++)
     {
 		// Calculate current position
-		float fAngle = QuadPositions[i];// + input[0].fRotation;
+		float fAngle = QuadPositions[i] + input[0].fRotation;
 		float3 vCornerPosition = float3(cos(fAngle) * input[0].fRadius * 2.0f, sin(fAngle) * input[0].fRadius * 2.0f, 0.0f);
 
         vCornerPosition = mul(vCornerPosition, (float3x3)InverseView) + input[0].vPositionWS;
@@ -120,7 +120,7 @@ void GS_Particle(point VS_Out_Particle input[1], inout TriangleStream<PS_In_Part
 		output.vPositionCS2 = output.vPositionCS;
 
 		// Calculate previous position
-		float fPrevAngle = QuadPositions[i];// + input[0].fPrevRotation;
+		float fPrevAngle = QuadPositions[i] + input[0].fPrevRotation;
 		float3 vPrevCornerPosition = float3(cos(fPrevAngle) * input[0].fPrevRadius * 2.0f, sin(fPrevAngle) * input[0].fPrevRadius * 2.0f, 0.0f);
 		vPrevCornerPosition = mul(vPrevCornerPosition, (float3x3)PrevInverseView) + input[0].vPrevPositionWS;
        

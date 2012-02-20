@@ -8,7 +8,7 @@
 class ParticleSystem : public ContentType
 {
 private:
-	WCHAR* _name;
+	std::wstring _name;
 
 	ID3D11ShaderResourceView* _diffuse;
 	ID3D11ShaderResourceView* _normal;
@@ -43,12 +43,11 @@ public:
 	ParticleSystem();
 	~ParticleSystem();
 
-	const WCHAR* GetName() const { return _name; }
+	const std::wstring& GetName() const { return _name; }
 
 	static HRESULT Compile(ID3D11Device* device, const WCHAR* fileName, std::ostream* output);
 	static HRESULT Create(ID3D11Device* device, std::istream* input, ParticleSystem** output);
 
-	HRESULT CreateFromFile(ID3D11Device* device, const WCHAR* fileName);
 	void Destroy();
 
 	UINT GetMaxSimultaneousParticles() const { return (UINT)(_lifeSpan / _spawnRate);  }

@@ -1,8 +1,9 @@
 #include "PCH.h"
 #include "ParticleSystem.h"
+#include "tinyxml.h"
 
 ParticleSystem::ParticleSystem()
-	: _name(NULL), _diffuse(NULL), _normal(NULL), _spread(0), _positionVariance(0.0f, 0.0f, 0.0f), 
+	: _diffuse(NULL), _normal(NULL), _spread(0), _positionVariance(0.0f, 0.0f, 0.0f), 
 	  _spawnRate(0), _lifeSpan(0), _startSize(0),
 	  _endSize(0), _sizeExponent(0), _startSpeed(0), _endSpeed(0), _speedExponent(0), _speedVariance(0),
 	  _rollAmount(0), 
@@ -16,52 +17,10 @@ ParticleSystem::~ParticleSystem()
 {
 }
 
-HRESULT ParticleSystem::CreateFromFile(ID3D11Device* device, const WCHAR* fileName)
-{
-	HRESULT hr;
-
-	_name = L"Smoke";
-
-	const WCHAR* diffusePath = L"C:\\Programming\\deferred-renderer\\media\\Particles\\smoke_diffuse.dds";
-	V_RETURN(D3DX11CreateShaderResourceViewFromFile(device, diffusePath, NULL, NULL, &_diffuse, NULL));
-
-	const WCHAR* normalPath = L"C:\\Programming\\deferred-renderer\\media\\Particles\\smoke_normal.dds";
-	V_RETURN(D3DX11CreateShaderResourceViewFromFile(device, normalPath, NULL, NULL, &_normal, NULL));
-	
-	_spread = 1.0f;	
-	_positionVariance = XMFLOAT3(0.1f, 0.0f, 0.1f);
-
-	_spawnRate = 0.05f;
-	_lifeSpan = 8.0f;
-
-	_startSize = 0.6f;
-	_endSize = 1.5f;
-	_sizeExponent = 1.4f;
-
-	_startSpeed = 2.0f;
-	_endSpeed = 0.1f;
-	_speedExponent = 0.6f;
-	_speedVariance = 0.5f;
-
-	_rollAmount = Pi / 8.0f;
-	_windFalloff = 0.0f;
-
-	_direction = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	_directionVariance = XMFLOAT3(0.2f, 0.0f, 0.2f);
-
-	_initialColor = XMFLOAT4(1.0f, 0.3f, 0.25f, 1.0f);
-	_finalColor = XMFLOAT4(0.5f, 1.0f, 0.5f, 0.7f);
-	_fadeExponent = 0.9f;
-	_alphaPower = 2.0f;
-
-	return S_OK;
-}
-
 void ParticleSystem::Destroy()
 {
 	SAFE_RELEASE(_diffuse);
 	SAFE_RELEASE(_normal);
-	SAFE_DELETE(_name);
 }
 
 void ParticleSystem::SpawnParticle(const XMFLOAT3& emitterPos, const XMFLOAT4& emitterRot, float emitterScale,
@@ -93,7 +52,7 @@ void ParticleSystem::SpawnParticle(const XMFLOAT3& emitterPos, const XMFLOAT4& e
 
 	outParticle->Life = 0.0f;
 
-	outParticle->Rotation = RandomBetween(-1.0f, 1.0f) * Pi;
+	outParticle->Rotation = 0.0f;//RandomBetween(-1.0f, 1.0f) * Pi;
 	outParticle->PreviousRotation = outParticle->Rotation;
 	outParticle->RotationRate = RandomBetween(-1.0f, 1.0f) * _rollAmount;
 }
@@ -161,14 +120,297 @@ ID3D11ShaderResourceView* ParticleSystem::GetNormalSRV()
 	return _normal;
 }
 
-HRESULT ParticleSystem::Compile(ID3D11Device* device, const WCHAR* fileName, std::ostream* output)
+HRESULT readFloatFromXML(TiXmlElement* root, const std::string& name, float& out)
 {
+	TiXmlElement* element = root->FirstChildElement(name.c_str());
+	if (!element)
+	{
+		return E_FAIL;
+	}
+	
+	int result = sscanf_s(element->GetText(), "%f", &out);
+
+	return (result == 1) ? S_OK : E_FAIL;
+}
+
+HRESULT readFloat3FromXML(TiXmlElement* root, const std::string& name, XMFLOAT3& out)
+{
+	TiXmlElement* element = root->FirstChildElement(name.c_str());
+	if (!element)
+	{
+		return E_FAIL;
+	}
+	
+	int result = sscanf_s(element->GetText(), "%f %f %f", &out.x, &out.y, &out.z);
+
+	return (result == 3) ? S_OK : E_FAIL;
+}
+
+HRESULT readFloat4FromXML(TiXmlElement* root, const std::string& name, XMFLOAT4& out)
+{
+	TiXmlElement* element = root->FirstChildElement(name.c_str());
+	if (!element)
+	{
+		return E_FAIL;
+	}
+
+	int result = sscanf_s(element->GetText(), "%f %f %f %f", &out.x, &out.y, &out.z, &out.w);
+
+	return (result == 4) ? S_OK : E_FAIL;
+}
+
+HRESULT readWStringFromXML(TiXmlElement* root, const std::string& name, std::wstring& out)
+{
+	TiXmlElement* element = root->FirstChildElement(name.c_str());
+	if (!element)
+	{
+		return E_FAIL;
+	}
+	
+	out = AnsiToWString(element->GetText());
+
+	return S_OK;
+}
+
+
+HRESULT ParticleSystem::Compile(ID3D11Device* device, const WCHAR* path, std::ostream* output)
+{
+	char sPath[MAX_PATH];
+	if (!WStringToAnsi(path, sPath, MAX_PATH))
+	{
+		return E_FAIL;
+	}
+
+	TiXmlDocument doc = TiXmlDocument(sPath);
+	if (!doc.LoadFile())
+	{
+		return E_FAIL;
+	}
+
+	TiXmlElement* root = doc.FirstChildElement("particleSystem");
+	if (!root)
+	{
+		return E_FAIL;
+	}
+
+	std::wstring name = AnsiToWString(root->Attribute("name"));
+
+	std::wstring diffName;
+	if (FAILED(readWStringFromXML(root, "diffuse", diffName)))
+	{
+		return E_FAIL;
+	}
+	std::wstring diffPath = GetDirectoryFromFileNameW(path) + diffName;
+
+	std::wstring normName;
+	if (FAILED(readWStringFromXML(root, "normal", normName)))
+	{
+		return E_FAIL;
+	}
+	std::wstring normPath = GetDirectoryFromFileNameW(path) + normName;
+
+	float spread;
+	if (FAILED(readFloatFromXML(root, "spread", spread)))
+	{
+		return E_FAIL;
+	}
+
+	XMFLOAT3 positionVariance;
+	if (FAILED(readFloat3FromXML(root, "positionVariance", positionVariance)))
+	{
+		return E_FAIL;
+	}
+
+	float spawnRate;
+	if (FAILED(readFloatFromXML(root, "spawnRate", spawnRate)))
+	{
+		return E_FAIL;
+	}
+
+	float lifeSpan;
+	if (FAILED(readFloatFromXML(root, "lifeSpan", lifeSpan)))
+	{
+		return E_FAIL;
+	}
+
+	float startSize;
+	if (FAILED(readFloatFromXML(root, "startSize", startSize)))
+	{
+		return E_FAIL;
+	}
+
+	float endSize;
+	if (FAILED(readFloatFromXML(root, "endSize", endSize)))
+	{
+		return E_FAIL;
+	}
+
+	float sizeExponent;
+	if (FAILED(readFloatFromXML(root, "sizeExponent", sizeExponent)))
+	{
+		return E_FAIL;
+	}
+
+	float startSpeed;
+	if (FAILED(readFloatFromXML(root, "startSpeed", startSpeed)))
+	{
+		return E_FAIL;
+	}
+
+	float endSpeed;
+	if (FAILED(readFloatFromXML(root, "endSpeed", endSpeed)))
+	{
+		return E_FAIL;
+	}
+
+	float speedExponent;
+	if (FAILED(readFloatFromXML(root, "speedExponent", speedExponent)))
+	{
+		return E_FAIL;
+	}
+
+	float speedVariance;
+	if (FAILED(readFloatFromXML(root, "speedVariance", speedVariance)))
+	{
+		return E_FAIL;
+	}
+
+	float rollAmount;
+	if (FAILED(readFloatFromXML(root, "rollAmount", rollAmount)))
+	{
+		return E_FAIL;
+	}
+
+	float windFalloff;
+	if (FAILED(readFloatFromXML(root, "windFalloff", windFalloff)))
+	{
+		return E_FAIL;
+	}
+	
+	XMFLOAT3 direction;
+	if (FAILED(readFloat3FromXML(root, "direction", direction)))
+	{
+		return E_FAIL;
+	}
+
+	XMFLOAT3 directionVariance;
+	if (FAILED(readFloat3FromXML(root, "directionVariance", directionVariance)))
+	{
+		return E_FAIL;
+	}
+
+	XMFLOAT4 initialColor;
+	if (FAILED(readFloat4FromXML(root, "initialColor", initialColor)))
+	{
+		return E_FAIL;
+	}
+
+	XMFLOAT4 finalColor;
+	if (FAILED(readFloat4FromXML(root, "finalColor", finalColor)))
+	{
+		return E_FAIL;
+	}
+
+	float fadeExponent;
+	if (FAILED(readFloatFromXML(root, "fadeExponent", fadeExponent)))
+	{
+		return E_FAIL;
+	}
+
+	float alphaPower;
+	if (FAILED(readFloatFromXML(root, "alphaPower", alphaPower)))
+	{
+		return E_FAIL;
+	}
+	
+	WriteWStringToStream(name, *output);
+	if (FAILED(WriteFileAndSizeToStream(diffPath, *output)))
+	{
+		return E_FAIL;
+	}
+	if (FAILED(WriteFileAndSizeToStream(normPath, *output)))
+	{
+		return E_FAIL;
+	}
+	WriteDataTostream(spread, *output);
+	WriteDataTostream(positionVariance, *output);
+	WriteDataTostream(spawnRate, *output);
+	WriteDataTostream(lifeSpan, *output);
+	WriteDataTostream(startSize, *output);
+	WriteDataTostream(endSize, *output);
+	WriteDataTostream(sizeExponent, *output);
+	WriteDataTostream(startSpeed, *output);
+	WriteDataTostream(endSpeed, *output);
+	WriteDataTostream(speedExponent, *output);
+	WriteDataTostream(speedVariance, *output);
+	WriteDataTostream(rollAmount, *output);
+	WriteDataTostream(windFalloff, *output);
+	WriteDataTostream(direction, *output);
+	WriteDataTostream(directionVariance, *output);
+	WriteDataTostream(initialColor, *output);
+	WriteDataTostream(finalColor, *output);
+	WriteDataTostream(fadeExponent, *output);
+	WriteDataTostream(alphaPower, *output);
+	
 	return S_OK;
 }
 
 HRESULT ParticleSystem::Create(ID3D11Device* device, std::istream* input, ParticleSystem** output)
 {
-	*output = new ParticleSystem();
-	(*output)->CreateFromFile(device, L"");
+	ParticleSystem* system = new ParticleSystem();
+
+	system->_name = ReadWStringFromStream(*input);
+
+	UINT size;
+	BYTE* data;
+	if (FAILED(ReadFileFromStream(*input, &data, size)))
+	{
+		delete system;
+		return E_FAIL;
+	}
+	if (FAILED(D3DX11CreateShaderResourceViewFromMemory(device, data, size, NULL, NULL,
+			&system->_diffuse, NULL)))
+	{
+		delete system;
+		delete[] data;
+		return E_FAIL;
+	}
+	delete[] data;
+
+	if (FAILED(ReadFileFromStream(*input, &data, size)))
+	{
+		delete system;
+		return E_FAIL;
+	}
+	if (FAILED(D3DX11CreateShaderResourceViewFromMemory(device, data, size, NULL, NULL,
+		&system->_normal, NULL)))
+	{
+		delete system;
+		delete[] data;
+		return E_FAIL;
+	}
+	delete[] data;
+
+	ReadDataFromStream(system->_spread, *input);
+	ReadDataFromStream(system->_positionVariance, *input);
+	ReadDataFromStream(system->_spawnRate, *input);
+	ReadDataFromStream(system->_lifeSpan, *input);
+	ReadDataFromStream(system->_startSize, *input);
+	ReadDataFromStream(system->_endSize, *input);
+	ReadDataFromStream(system->_sizeExponent, *input);
+	ReadDataFromStream(system->_startSpeed, *input);
+	ReadDataFromStream(system->_endSpeed, *input);
+	ReadDataFromStream(system->_speedExponent, *input);
+	ReadDataFromStream(system->_speedVariance, *input);
+	ReadDataFromStream(system->_rollAmount, *input);
+	ReadDataFromStream(system->_windFalloff, *input);
+	ReadDataFromStream(system->_direction, *input);
+	ReadDataFromStream(system->_directionVariance, *input);
+	ReadDataFromStream(system->_initialColor, *input);
+	ReadDataFromStream(system->_finalColor, *input);
+	ReadDataFromStream(system->_fadeExponent, *input);
+	ReadDataFromStream(system->_alphaPower, *input);
+
+	*output = system;
 	return S_OK;
 }
