@@ -23,15 +23,11 @@ HRESULT TextureLoader::LoadFromCompiledContentFile(ID3D11Device* device, std::is
 	HRESULT hr;
 
 	UINT size;
-	if (!input->read((char*)&size, sizeof(UINT)))
+	BYTE* data;
+	hr = ReadFileFromStream(*input, &data, size);
+	if (FAILED(hr))
 	{
-		return E_FAIL;
-	}
-
-	BYTE* data = new BYTE[size];
-	if (!input->read((char*)data, size))
-	{
-		return E_FAIL;
+		return hr;
 	}
 
 	TextureContent* content = new TextureContent();
@@ -40,6 +36,7 @@ HRESULT TextureLoader::LoadFromCompiledContentFile(ID3D11Device* device, std::is
 	if (FAILED(hr))
 	{
 		FormatDXErrorMessageW(hr, errorMsg, errorLen);
+		delete[] data;
 		return hr;
 	}
 
@@ -52,6 +49,7 @@ HRESULT TextureLoader::LoadFromCompiledContentFile(ID3D11Device* device, std::is
 		hr = D3DX11CreateShaderResourceViewFromMemory(device, data, size, NULL, NULL,
 			&content->ShaderResourceView, NULL);
 	}
+	delete[] data;
 	if (FAILED(hr))
 	{
 		FormatDXErrorMessageW(hr, errorMsg, errorLen);
@@ -72,39 +70,5 @@ HRESULT TextureLoader::LoadFromCompiledContentFile(ID3D11Device* device, std::is
 HRESULT TextureLoader::CompileContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump, 
 	const WCHAR* path, TextureOptions* options, WCHAR* errorMsg, UINT errorLen, std::ostream* output)
 {
-	std::ifstream file;
-	file.open(path, std::ios::in | std::ios::binary);
-	if(!file.is_open())
-	{
-		E_FAIL;
-	}
-
-	file.seekg(0, ios::end);
-	UINT fileSize = file.tellg();
-	file.seekg(0, ios::beg);
-
-	if (fileSize > 0)
-	{
-		BYTE* data = new BYTE[fileSize];
-		file.read((char*)data, fileSize);
-
-		if (!output->write((const char*)&fileSize, sizeof(UINT)))
-		{
-			SAFE_DELETE_ARRAY(data);
-			return E_FAIL;
-		}
-
-		if (!output->write((const char*)data, fileSize))
-		{
-			SAFE_DELETE_ARRAY(data);
-			return E_FAIL;
-		}
-
-		SAFE_DELETE_ARRAY(data);
-		return S_OK;
-	}
-	else
-	{
-		return E_FAIL;
-	}
+	return WriteFileAndSizeToStream(path, *output);
 }
