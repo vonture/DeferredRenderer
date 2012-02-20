@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<particleSystem name="smoke">
+    <diffuse>sparks_diffuse.dds</diffuse>
+    <normal>sparks_normal.dds</normal>
+    <spread>1.0</spread>
+    <positionVariance>0.0 0.0 0.0</positionVariance>
+    <spawnRate>0.001</spawnRate>
+    <lifeSpan>0.5</lifeSpan>
+    <startSize>0.1</startSize>
+    <endSize>0.1</endSize>
+    <sizeExponent>1.0</sizeExponent>
+    <startSpeed>25.0</startSpeed>
+    <endSpeed>6.0</endSpeed>
+    <speedExponent>0.6</speedExponent>
+    <speedVariance>0.5</speedVariance>
+    <rollAmount>0.0</rollAmount>
+    <windFalloff>0.0</windFalloff>
+    <direction>0.0 1.0 0.0</direction>
+    <directionVariance>0.2 0.0 0.2</directionVariance>
+    <initialColor>1.0 0.8 0.0 1.0</initialColor>
+    <finalColor>1.0 1.0 0.0 0.7</finalColor>
+    <fadeExponent>0.9</fadeExponent>
+    <alphaPower>2.0</alphaPower>
+</particleSystem>
