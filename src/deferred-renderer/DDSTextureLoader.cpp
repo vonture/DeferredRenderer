@@ -416,7 +416,7 @@ static void GetSurfaceInfo( UINT width, UINT height, D3DFORMAT fmt, UINT* pNumBy
         *pNumRows = numRows;
 }
 */
-
+/*
 static void GetSurfaceInfo( UINT width, UINT height, DXGI_FORMAT fmt, UINT* pNumBytes, UINT* pRowBytes, UINT* pNumRows )
 {
     UINT numBytes = 0;
@@ -483,7 +483,7 @@ static void GetSurfaceInfo( UINT width, UINT height, DXGI_FORMAT fmt, UINT* pNum
     if( pNumRows != NULL )
         *pNumRows = numRows;
 }
-
+*/
 
 //--------------------------------------------------------------------------------------
 #define ISBITMASK( r,g,b,a ) ( ddpf.dwRBitMask == r && ddpf.dwGBitMask == g && ddpf.dwBBitMask == b && ddpf.dwABitMask == a )
@@ -837,6 +837,7 @@ static HRESULT CreateTextureFromDDS( LPDIRECT3DDEVICE9 pDev, DDS_HEADER* pHeader
 }
 */
 //--------------------------------------------------------------------------------------
+/*
 static HRESULT CreateTextureFromDDS( ID3D11Device* pDev, DDS_HEADER* pHeader, __inout_bcount(BitSize) BYTE* pBitData,
                                      UINT BitSize, __out ID3D11ShaderResourceView** ppSRV, bool bSRGB )
 {
@@ -976,6 +977,7 @@ static HRESULT CreateTextureFromDDS( ID3D11Device* pDev, DDS_HEADER* pHeader, __
 
     return hr;
 }
+*/
 /*
 //--------------------------------------------------------------------------------------
 HRESULT CreateDDSTextureFromFile( LPDIRECT3DDEVICE9 pDev, const WCHAR* szFileName, LPDIRECT3DTEXTURE9* ppTex )
