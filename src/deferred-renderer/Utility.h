@@ -23,16 +23,21 @@ inline float RandomBetween(float min, float max)
 
 inline HRESULT WriteFileAndSizeToStream(const std::wstring& path, std::ostream& stream)
 {
+	UINT fileSize = 0;
+
 	std::ifstream file;
 	file.open(path, std::ios::in | std::ios::binary);
-	if (!file.is_open())
+	if (file.is_open())
+	{
+		file.seekg(0, ios::end);
+		fileSize = (UINT)file.tellg();
+		file.seekg(0, ios::beg);
+	}
+
+	if (!stream.write((const char*)&fileSize, sizeof(UINT)))
 	{
 		return E_FAIL;
 	}
-
-	file.seekg(0, ios::end);
-	UINT fileSize = (UINT)file.tellg();
-	file.seekg(0, ios::beg);
 
 	if (fileSize > 0)
 	{
@@ -44,11 +49,6 @@ inline HRESULT WriteFileAndSizeToStream(const std::wstring& path, std::ostream& 
 			return E_FAIL;
 		}
 
-		if (!stream.write((const char*)&fileSize, sizeof(UINT)))
-		{
-			delete[] buf;
-			return E_FAIL;
-		}
 		if (!stream.write((const char*)buf, fileSize))
 		{
 			delete[] buf;
@@ -56,12 +56,9 @@ inline HRESULT WriteFileAndSizeToStream(const std::wstring& path, std::ostream& 
 		}
 
 		delete[] buf;
-		return S_OK;
 	}
-	else
-	{
-		return E_FAIL;
-	}
+
+	return S_OK;
 }
 
 inline HRESULT ReadFileFromStream(std::istream& stream, byte** buf, UINT& bufSize)
@@ -71,11 +68,15 @@ inline HRESULT ReadFileFromStream(std::istream& stream, byte** buf, UINT& bufSiz
 		return E_FAIL;
 	}
 
-	*buf = new BYTE[bufSize];
-	if (!stream.read((char*)*buf, bufSize))
+	if (bufSize > 0)
 	{
-		delete[] (*buf);
-		return E_FAIL;
+
+		*buf = new BYTE[bufSize];
+		if (!stream.read((char*)*buf, bufSize))
+		{
+			delete[] (*buf);
+			return E_FAIL;
+		}
 	}
 
 	return S_OK;
@@ -123,13 +124,25 @@ inline UINT WriteWStringToStream(const std::wstring& str, std::ostream& stream)
 template <typename T>
 inline bool ReadDataFromStream(T& data, std::istream& stream)
 {
-	 return stream.read((char*)&data, sizeof(T)).bad();
+	 return !stream.read((char*)&data, sizeof(T)).bad();
 }
 
 template <typename T>
-inline bool WriteDataTostream(const T& data, std::ostream& stream)
+inline bool ReadDataArrayFromStream(T dataArray[], UINT count, std::istream& stream)
 {
-	return stream.write((const char*)&data, sizeof(T)).bad();
+	return !stream.read((char*)dataArray, sizeof(T) * count).bad();
+}
+
+template <typename T>
+inline bool WriteDataTostream(const T data, std::ostream& stream)
+{
+	return !stream.write((const char*)&data, sizeof(T)).bad();
+}
+
+template <typename T>
+inline bool WriteDataArrayTostream(T dataArray[], UINT count, std::ostream& stream)
+{
+	return !stream.write((const char*)dataArray, sizeof(T) * count).bad();
 }
 
 inline HRESULT FormatHRESULTErrorMessageW(HRESULT errorId, WCHAR* msgBuffer, UINT msgLen)
@@ -214,7 +227,21 @@ inline int GetExtensionFromFileNameW(const WCHAR* fileName, WCHAR* output, UINT 
 	}
 }
 
-inline int GetFileNameWithoutExtension(const WCHAR* fileName, WCHAR* output, UINT outputLength)
+inline std::wstring GetExtensionFromFileNameW(const std::wstring& fileName)
+{
+	UINT dotIdx = fileName.find_last_of(L".");
+
+	if (dotIdx != fileName.npos)
+	{
+		return fileName.substr(dotIdx);
+	}
+	else
+	{
+		return L"";
+	}
+}
+
+inline int GetFileNameWithoutExtensionW(const WCHAR* fileName, WCHAR* output, UINT outputLength)
 {
 	_ASSERT(fileName);
 
@@ -238,6 +265,27 @@ inline int GetFileNameWithoutExtension(const WCHAR* fileName, WCHAR* output, UIN
 
 	wcsncpy_s(output, outputLength, str.substr(pathIdx, dotIdx - pathIdx).c_str(), outputLength);
 	return 1;
+}
+
+inline std::wstring GetFileNameWithoutExtensionW(const std::wstring& fileName)
+{
+	UINT dotIdx = fileName.find_last_of(L".");
+	if (dotIdx == std::wstring::npos)
+	{
+		dotIdx = fileName.size();
+	}
+
+	size_t pathIdx = fileName.find_last_of(L'\\');
+	if (pathIdx == std::wstring::npos)
+	{
+		pathIdx = 0;
+	}
+	else
+	{
+		pathIdx++;
+	}
+
+	return fileName.substr(pathIdx, dotIdx - pathIdx);
 }
 
 inline int GetDirectoryFromFileNameW(const WCHAR* fileName, WCHAR* output, UINT outputLength)
