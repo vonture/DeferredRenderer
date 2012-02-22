@@ -17,7 +17,7 @@ struct MeshPart
 class Mesh : public ContentType
 {
 private:
-	WCHAR* _name;
+	std::wstring _name;
 
 	ID3D11Buffer* _indexBuffer;
 	UINT _indexCount;
@@ -77,12 +77,13 @@ public:
 	bool GetAlphaCutoutEnabled() const { return _alphaCutoutEnabled; }
 	bool GetDrawBackFaces() const { return _drawBackFaces; }
 
-	const WCHAR* GetName() const { return _name; }
+	const std::wstring& GetName() const { return _name; }
 
 	void Destroy();
 
-	static HRESULT CompileFromASSIMPMesh(ID3D11Device* device, const aiScene* scene, UINT meshIdx, std::ostream* output);
-	static HRESULT CompileFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d9Device, 
-		const WCHAR* modelPath, SDKMesh* model,	UINT meshIdx, std::ostream* output);
-	static HRESULT Create(ID3D11Device* device, std::istream* input, Mesh** output);
+	static HRESULT CompileFromASSIMPMesh(ID3D11Device* device, const aiScene* scene, UINT meshIdx, 
+		std::ostream& output);
+	static HRESULT CompileFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d9Device,
+		const std::wstring& modelPath, SDKMesh* model, UINT meshIdx, std::ostream& output);
+	static HRESULT Create(ID3D11Device* device, std::istream& input, Mesh** output);
 };

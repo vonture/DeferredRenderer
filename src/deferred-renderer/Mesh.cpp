@@ -5,7 +5,7 @@
 Mesh::Mesh()
 	: _indexBuffer(NULL), _indexCount(0), _vertexBuffer(NULL), _vertexCount(0), _vertexStride(0), 
 	  _meshParts(NULL), _meshPartCount(0), _inputElements(NULL), _alphaCutoutEnabled(true),
-	  _drawBackFaces(false), _name(NULL)
+	  _drawBackFaces(false)
 {
 }
 
@@ -264,7 +264,7 @@ void Mesh::CreateInputElements(D3DVERTEXELEMENT9* declaration, D3D11_INPUT_ELEME
     }
 }
 
-HRESULT Mesh::CompileFromASSIMPMesh(ID3D11Device* device, const aiScene* scene, UINT meshIdx, std::ostream* output )
+HRESULT Mesh::CompileFromASSIMPMesh( ID3D11Device* device, const aiScene* scene, UINT meshIdx, std::ostream& output )
 {
 	aiMesh* mesh = scene->mMeshes[meshIdx];
 
@@ -273,57 +273,26 @@ HRESULT Mesh::CompileFromASSIMPMesh(ID3D11Device* device, const aiScene* scene, 
 	{
 		return E_FAIL;
 	}
-
-
+	
 	// Copy the name
+	WCHAR* name;
 	if (mesh->mName.length > 0)
 	{
-		WCHAR* name = new WCHAR[mesh->mName.length + 1];
+		name = new WCHAR[mesh->mName.length + 1];
 		AnsiToWString(mesh->mName.data, name, mesh->mName.length + 1);
-
-		if (!output->write((const char*)&(mesh->mName.length), sizeof(UINT)))
-		{
-			delete[] name;
-			return E_FAIL;
-		}
-
-		if (!output->write((const char*)name, sizeof(WCHAR) * mesh->mName.length))
-		{
-			delete[] name;
-			return E_FAIL;
-		}
-
-		delete[] name;
 	}
 	else
 	{
-		WCHAR* name = new WCHAR[MAX_PATH];
+		name = new WCHAR[MAX_PATH];
 		swprintf_s(name, MAX_PATH, L"Mesh %u", meshIdx);
-
-		UINT len = wcslen(name);
-
-		if (!output->write((const char*)&len, sizeof(UINT)))
-		{
-			delete[] name;
-			return E_FAIL;
-		}
-
-		if (!output->write((const char*)name, sizeof(WCHAR) * len))
-		{
-			delete[] name;
-			return E_FAIL;
-		}
-
-		delete[] name;
 	}
+	WriteWStringToStream(name, output);
+	delete[] name;
 
 	UINT uvChannel = 0;
 
 	UINT vertexCount = mesh->mNumVertices;
-	if (!output->write((const char*)&vertexCount, sizeof(UINT)))
-	{
-		return E_FAIL;
-	}
+	WriteDataTostream(vertexCount, output);
 
 	Vertex vert;
 	for (UINT i = 0; i < vertexCount; i++)
@@ -334,31 +303,19 @@ HRESULT Mesh::CompileFromASSIMPMesh(ID3D11Device* device, const aiScene* scene, 
 		vert.Tangent = XMFLOAT3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
 		vert.Bitangent = XMFLOAT3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
 
-		if (!output->write((const char*)&vert, sizeof(Vertex)))
-		{
-			return E_FAIL;
-		}
+		WriteDataTostream(vert, output);
 	}
 	
 	// Create the indices
 	DXGI_FORMAT format = DXGI_FORMAT_R32_UINT;
-	if (!output->write((const char*)&format, sizeof(DXGI_FORMAT)))
-	{
-		return E_FAIL;
-	}
+	WriteDataTostream(format, output);
 
 	UINT indexCount = mesh->mNumFaces * 3;
-	if (!output->write((const char*)&indexCount, sizeof(UINT)))
-	{
-		return E_FAIL;
-	}
+	WriteDataTostream(indexCount, output);
 
 	for (UINT i = 0; i < mesh->mNumFaces; i++)
 	{
-		if (!output->write((const char*)mesh->mFaces[i].mIndices, sizeof(UINT) * 3))
-		{
-			return E_FAIL;
-		}		
+		WriteDataArrayTostream(mesh->mFaces[i].mIndices, 3, output);
 	}
 
 	MeshPart part;
@@ -368,16 +325,8 @@ HRESULT Mesh::CompileFromASSIMPMesh(ID3D11Device* device, const aiScene* scene, 
 	part.VertexStart = 0;
 
 	UINT partCount = 1;
-
-	if (!output->write((const char*)&partCount, sizeof(UINT)))
-	{
-		return E_FAIL;
-	}
-
-	if (!output->write((const char*)&part, sizeof(MeshPart)))
-	{
-		return E_FAIL;
-	}
+	WriteDataTostream(partCount, output);
+	WriteDataTostream(part, output);
 
 	return S_OK;
 }
@@ -396,12 +345,9 @@ void Mesh::Destroy()
 
 	SAFE_DELETE_ARRAY(_inputElements);
 	_inputElementCount = 0;
-
-	SAFE_DELETE(_name);
 }
 
-HRESULT Mesh::CompileFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d9Device, 
-	const WCHAR* modelPath, SDKMesh* model,	UINT meshIdx, std::ostream* output)
+HRESULT Mesh::CompileFromSDKMeshMesh( ID3D11Device* device, IDirect3DDevice9* d3d9Device, const std::wstring& modelPath, SDKMesh* model, UINT meshIdx, std::ostream& output )
 {
 	HRESULT hr;
 
@@ -484,94 +430,46 @@ HRESULT Mesh::CompileFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d
 	vertexCount = d3dxMesh->GetNumVertices();
 	indexCount = d3dxMesh->GetNumFaces() * 3;
 
-
+	WCHAR* name;
 	UINT nameLen = strlen(model->GetMesh(meshIdx)->Name);
 	if (nameLen > 0)
 	{
-		WCHAR* name = new WCHAR[nameLen + 1];
+		name = new WCHAR[nameLen + 1];
 		AnsiToWString(model->GetMesh(meshIdx)->Name, name, nameLen + 1);
-
-		if (!output->write((const char*)&nameLen, sizeof(UINT)))
-		{
-			delete[] name;
-			return E_FAIL;
-		}
-
-		if (!output->write((const char*)name, sizeof(WCHAR) * nameLen))
-		{
-			delete[] name;
-			return E_FAIL;
-		}
-
-		delete[] name;
 	}
 	else
 	{
-		WCHAR* name = new WCHAR[MAX_PATH];
+		name = new WCHAR[MAX_PATH];
 		swprintf_s(name, MAX_PATH, L"Mesh %u", meshIdx);
-
-		UINT len = wcslen(name);
-
-		if (!output->write((const char*)&len, sizeof(UINT)))
-		{
-			delete[] name;
-			return E_FAIL;
-		}
-
-		if (!output->write((const char*)name, sizeof(WCHAR) * len))
-		{
-			delete[] name;
-			return E_FAIL;
-		}
-
-		delete[] name;
 	}
+	WriteWStringToStream(name, output);
+	delete[] name;
 
 	// Copy over the vertex data
 	Vertex* vertices = NULL;
 	V_RETURN(d3dxMesh->LockVertexBuffer(0, (LPVOID*)&vertices));
 
-	if (!output->write((const char*)&vertexCount, sizeof(UINT)))
-	{
-		return E_FAIL;
-	}
-
-	if (!output->write((const char*)vertices, sizeof(Vertex) * vertexCount))
-	{
-		return E_FAIL;
-	}
+	WriteDataTostream(vertexCount, output);
+	WriteDataArrayTostream(vertices, vertexCount, output);
 
 	V_RETURN(d3dxMesh->UnlockVertexBuffer());
 
-	void* finalIndices = NULL;
-	V_RETURN(d3dxMesh->LockIndexBuffer(0, &finalIndices));
+	BYTE* finalIndices = NULL;
+	V_RETURN(d3dxMesh->LockIndexBuffer(0, (void**)&finalIndices));
 
-	if (!output->write((const char*)&indexBufferFormat, sizeof(DXGI_FORMAT)))
-	{
-		return E_FAIL;
-	}
+	WriteDataTostream(indexBufferFormat, output);
+	WriteDataTostream(indexCount, output);
 
-	if (!output->write((const char*)&indexCount, sizeof(UINT)))
-	{
-		return E_FAIL;
-	}
-	
 	UINT finalIndexSize = (indexBufferFormat == DXGI_FORMAT_R32_UINT) ? 4 : 2;
-	if (!output->write((const char*)finalIndices, finalIndexSize * indexCount))
-	{
-		return E_FAIL;
-	}
-	
+	WriteDataArrayTostream(finalIndices, indexCount * finalIndexSize, output);
+		
 	// Copy in the subset info
 	DWORD subsetCount = 0;
 	V_RETURN(d3dxMesh->GetAttributeTable(NULL, &subsetCount));
 	D3DXATTRIBUTERANGE* attributeTable = new D3DXATTRIBUTERANGE[subsetCount];
 	V_RETURN(d3dxMesh->GetAttributeTable(attributeTable, &subsetCount));
 
-	if (!output->write((const char*)&subsetCount, sizeof(UINT)))
-	{
-		return E_FAIL;
-	}
+	WriteDataTostream(subsetCount, output);
 
 	MeshPart part;
 	for(UINT i = 0; i < subsetCount; ++i)
@@ -581,10 +479,7 @@ HRESULT Mesh::CompileFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d
 		part.IndexCount = attributeTable[i].FaceCount * 3;
 		part.MaterialIndex = attributeTable[i].AttribId;
 
-		if (!output->write((const char*)&part, sizeof(MeshPart)))
-		{
-			return E_FAIL;
-		}
+		WriteDataTostream(part, output);
 	}
 
 	delete[] attributes;
@@ -594,25 +489,20 @@ HRESULT Mesh::CompileFromSDKMeshMesh(ID3D11Device* device, IDirect3DDevice9* d3d
 	return S_OK;
 }
 
-HRESULT Mesh::Create(ID3D11Device* device, std::istream* input, Mesh** output)
+HRESULT Mesh::Create(ID3D11Device* device, std::istream& input, Mesh** output)
 {
 	HRESULT hr;
 
 	Mesh* result = new Mesh();
 
-	UINT nameLen;
-	input->read((char*)&nameLen, sizeof(UINT));
-
-	result->_name = new WCHAR[nameLen + 1];
-	result->_name[nameLen] = '\0';
-	input->read((char*)result->_name, nameLen * sizeof(WCHAR));
+	result->_name = ReadWStringFromStream(input);
 
 	// Read the vertices and create the vertex buffer
 	result->_vertexStride = sizeof(Vertex);
-	input->read((char*)&result->_vertexCount, sizeof(UINT));
+	ReadDataFromStream(result->_vertexCount, input);
 
 	Vertex* verts = new Vertex[result->_vertexCount];
-	input->read((char*)verts, sizeof(Vertex) * result->_vertexCount);
+	ReadDataArrayFromStream(verts, result->_vertexCount, input);
 
 	Collision::ComputeBoundingAxisAlignedBoxFromPoints(&result->_boundingBox, result->_vertexCount, 
 		(XMFLOAT3*)verts, sizeof(Vertex));
@@ -640,13 +530,13 @@ HRESULT Mesh::Create(ID3D11Device* device, std::istream* input, Mesh** output)
 	}
 
 	// Read the indices and create the index buffer
-	input->read((char*)&result->_indexBufferFormat, sizeof(DXGI_FORMAT));
-	input->read((char*)&result->_indexCount, sizeof(UINT));
+	ReadDataFromStream(result->_indexBufferFormat, input);
+	ReadDataFromStream(result->_indexCount, input);
 
 	UINT indexSize = (result->_indexBufferFormat == DXGI_FORMAT_R32_UINT) ? sizeof(uint32_t) : sizeof(uint16_t);
 
 	BYTE* indices = new BYTE[result->_indexCount * indexSize];
-	input->read((char*)indices, result->_indexCount * indexSize);
+	ReadDataArrayFromStream(indices, result->_indexCount * indexSize, input);
 
 	D3D11_BUFFER_DESC ibDesc =
 	{
@@ -671,10 +561,10 @@ HRESULT Mesh::Create(ID3D11Device* device, std::istream* input, Mesh** output)
 	}
 
 	// Read the meshparts
-	input->read((char*)&result->_meshPartCount, sizeof(UINT));
+	ReadDataFromStream(result->_meshPartCount, input);
 
 	result->_meshParts = new MeshPart[result->_meshPartCount];
-	input->read((char*)result->_meshParts, result->_meshPartCount* sizeof(MeshPart));
+	ReadDataArrayFromStream(result->_meshParts, result->_meshPartCount, input);
 	
 	// Prepare the input layout
 	const D3D11_INPUT_ELEMENT_DESC layout_mesh[] =

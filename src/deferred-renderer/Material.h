@@ -10,7 +10,7 @@ typedef std::wstring TexturePathHash;
 class Material : public ContentType
 {
 private:
-	WCHAR* _name;
+	std::wstring _name;
 
     XMFLOAT3 _ambientColor;
     XMFLOAT3 _diffuseColor;
@@ -42,7 +42,7 @@ public:
 	Material();
 	~Material();
 
-	const WCHAR* GetName() const { return _name; }
+	const std::wstring& GetName() const { return _name; }
 
 	const XMFLOAT3& GetAmbientColor() const { return _ambientColor; }
 	const XMFLOAT3& GetDiffuseColor() const { return _diffuseColor; }
@@ -59,9 +59,9 @@ public:
 
 	void Destroy();
 
-	static HRESULT CompileFromSDKMeshMaterial(ID3D11Device* device, const WCHAR* modelDir,
-		SDKMesh* model, UINT materialIdx, std::ostream* output);
-	static HRESULT CompileFromASSIMPMaterial(ID3D11Device* device, const WCHAR* modelDir, 
-		const aiScene* scene, UINT materialIdx, std::ostream* output);
-	static HRESULT Create(ID3D11Device* device, std::istream* input, Material** output);
+	static HRESULT CompileFromSDKMeshMaterial(ID3D11Device* device, const std::wstring& modelDir,
+		SDKMesh* model, UINT materialIdx, std::ostream& output);
+	static HRESULT CompileFromASSIMPMaterial(ID3D11Device* device, const std::wstring& modelDir, 
+		const aiScene* scene, UINT materialIdx, std::ostream& output);
+	static HRESULT Create(ID3D11Device* device, std::istream& input, Material** output);
 };

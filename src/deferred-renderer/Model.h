@@ -12,7 +12,7 @@
 class Model : public ContentType
 {
 private:
-	WCHAR* _name;
+	std::wstring _name;
 
 	Mesh** _meshes;
 	UINT _meshCount;
@@ -26,7 +26,7 @@ public:
 	Model();
 	~Model();
 
-	const WCHAR* GetName() const { return _name; }
+	const std::wstring& GetName() const { return _name; }
 	
 	const Mesh* GetMesh(UINT idx) const { return _meshes[idx]; }
 	UINT GetMeshCount() const { return _meshCount; }
@@ -39,8 +39,8 @@ public:
 
 	void Destroy();
 
-	static HRESULT Compile(ID3D11Device* device, const WCHAR* fileName, std::ostream* output);
-	static HRESULT Create(ID3D11Device* device, std::istream* input, Model** output);
+	static HRESULT Compile(ID3D11Device* device, const std::wstring& fileName, std::ostream& output);
+	static HRESULT Create(ID3D11Device* device, std::istream& input, Model** output);
 	
 	HRESULT Render(ID3D11DeviceContext* context, UINT materialBufferSlot = INVALID_BUFFER_SLOT,
 		UINT diffuseSlot = INVALID_SAMPLER_SLOT, UINT normalSlot = INVALID_SAMPLER_SLOT, 

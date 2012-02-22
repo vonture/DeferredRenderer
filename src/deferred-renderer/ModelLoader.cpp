@@ -19,11 +19,11 @@ HRESULT ModelLoader::GenerateContentHash(const WCHAR* path, ModelOptions* option
 HRESULT ModelLoader::LoadFromCompiledContentFile(ID3D11Device* device, std::istream* input,
 	ModelOptions* options, WCHAR* errorMsg, UINT errorLen, Model** contentOut)
 {
-	return Model::Create(device, input, contentOut);
+	return Model::Create(device, *input, contentOut);
 }
 
 HRESULT ModelLoader::CompileContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump,
 	const WCHAR* path, ModelOptions* options, WCHAR* errorMsg, UINT errorLen, std::ostream* output)
 {
-	return Model::Compile(device, path, output);
+	return Model::Compile(device, path, *output);
 }

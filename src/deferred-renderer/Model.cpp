@@ -8,7 +8,7 @@
 #include "AssimpLogger.h"
 
 Model::Model()
-	: _meshes(NULL), _meshCount(0), _materials(NULL), _materialCount(0), _name(NULL)
+	: _meshes(NULL), _meshCount(0), _materials(NULL), _materialCount(0)
 {
 }
 
@@ -49,8 +49,6 @@ IDirect3DDevice9* createD3D9Device()
 
 void Model::Destroy()
 {
-	SAFE_DELETE(_name);
-
 	for (UINT i = 0; i < _materialCount; i++)
 	{
 		SAFE_RELEASE(_materials[i]);
@@ -125,61 +123,21 @@ HRESULT Model::RenderMesh(ID3D11DeviceContext* context, UINT meshIdx, UINT mater
 	return S_OK;
 }
 
-HRESULT Model::Compile(ID3D11Device* device, const WCHAR* fileName, std::ostream* output)
+HRESULT Model::Compile(ID3D11Device* device, const std::wstring& fileName, std::ostream& output)
 {
 	HRESULT hr;
 
-	WCHAR directory[MAX_PATH];
-	if (!GetDirectoryFromFileNameW(fileName, directory, MAX_PATH))
-	{
-		return E_FAIL;
-	}
+	std::wstring directory = GetDirectoryFromFileNameW(fileName);
+	std::wstring extension = GetExtensionFromFileNameW(fileName);
+	std::wstring name = GetFileNameWithoutExtensionW(fileName);
 
-	WCHAR extensionW[MAX_PATH];
-	if (!GetExtensionFromFileNameW(fileName, extensionW, MAX_PATH))
-	{
-		return E_FAIL;
-	}
-
-	// Convert extension to ascii since that's all that assimp supports
-	char extensionA[MAX_PATH];
-	if (!WStringToAnsi(extensionW, extensionA, MAX_PATH))
-	{
-		return E_FAIL;
-	}
-	
-
-	// Get the name
-	WCHAR* name = new WCHAR[MAX_PATH];
-	GetFileNameWithoutExtension(fileName, name, MAX_PATH);
-
-	UINT finalNameLen = wcslen(name);
-	if (!output->write((const char*)&finalNameLen, sizeof(UINT)))
-	{
-		delete[] name;
-		return E_FAIL;
-	}
-	if (!output->write((const char*)name, sizeof(WCHAR) * finalNameLen))
-	{
-		delete[] name;
-		return E_FAIL;
-	}
-	delete[] name;
-
+	WriteWStringToStream(name, output);
 
 	Assimp::Importer importer;
-
 	// determine if assimp can import this model
-	if (importer.IsExtensionSupported(extensionA))
+	if (importer.IsExtensionSupported(WStringToAnsi(extension)))
 	{
 		AssimpLogger::Register();
-
-		// Get the ansi path
-		char pathA[MAX_PATH];
-		if (!WStringToAnsi(fileName, pathA, MAX_PATH))
-		{
-			return E_FAIL;
-		}
 
 		UINT importSteps = 	
 			aiProcess_PreTransformVertices			|
@@ -203,51 +161,38 @@ HRESULT Model::Compile(ID3D11Device* device, const WCHAR* fileName, std::ostream
 			aiPrimitiveType_POLYGON);
 
 		// Load with assimp
-		const aiScene* scene = importer.ReadFile(pathA, importSteps);
+		const aiScene* scene = importer.ReadFile(WStringToAnsi(fileName), importSteps);
 		if (!scene)
 		{
-			const char* error = importer.GetErrorString();
-			WCHAR errorW[512];
-			AnsiToWString(error, errorW, 512);
-			LOG_ERROR(L"Model Load", errorW);
+			std::wstring error = AnsiToWString(importer.GetErrorString());
+			LOG_ERROR(L"Model Load", error);
 
 			return E_FAIL;
 		}
 
 		UINT materialCount = scene->mNumMaterials;
-		if (!output->write((const char*)&materialCount, sizeof(UINT)))
-		{
-			return E_FAIL;
-		}
+		WriteDataTostream(materialCount, output);
 		for (UINT i = 0; i < materialCount; i++)
 		{
 			V_RETURN(Material::CompileFromASSIMPMaterial(device, directory, scene, i, output));
 		}
 		
 		UINT meshCount = scene->mNumMeshes;
-		if (!output->write((const char*)&meshCount, sizeof(UINT)))
-		{
-			return E_FAIL;
-		}
+		WriteDataTostream(meshCount, output);
 		for (UINT i = 0; i < meshCount; i++)
 		{
 			V_RETURN(Mesh::CompileFromASSIMPMesh(device, scene, i, output));
 		}
 	}
-	else if (strncmp(extensionA, ".x", MAX_PATH) == 0 ||
-		strncmp(extensionA, ".sdkmesh", MAX_PATH) == 0)
+	else if (extension == L".x" || extension == L".sdkmesh")
 	{
 		// load with sdkmesh
 		SDKMesh sdkMesh;
-		V_RETURN(sdkMesh.Create(fileName));
+		V_RETURN(sdkMesh.Create(fileName.c_str()));
 
 		// Make materials
 		UINT materialCount = sdkMesh.GetNumMaterials();
-		if (!output->write((const char*)&materialCount, sizeof(UINT)))
-		{
-			sdkMesh.Destroy();
-			return E_FAIL;
-		}
+		WriteDataTostream(materialCount, output);
 		for (UINT i = 0; i < materialCount; i++)
 		{
 			hr = Material::CompileFromSDKMeshMaterial(device, directory, &sdkMesh, i, output);
@@ -263,12 +208,7 @@ HRESULT Model::Compile(ID3D11Device* device, const WCHAR* fileName, std::ostream
 
 		// Copy the meshes
 		UINT meshCount = sdkMesh.GetNumMeshes();
-		if (!output->write((const char*)&meshCount, sizeof(UINT)))
-		{
-			SAFE_RELEASE(d3d9device);
-			sdkMesh.Destroy();
-			return E_FAIL;
-		}
+		WriteDataTostream(meshCount, output);
 		for (UINT i = 0; i < meshCount; i++)
 		{
 			hr = Mesh::CompileFromSDKMeshMesh(device, d3d9device, directory, &sdkMesh, i, output);
@@ -292,21 +232,15 @@ HRESULT Model::Compile(ID3D11Device* device, const WCHAR* fileName, std::ostream
 	return S_OK;
 }
 
-HRESULT Model::Create(ID3D11Device* device, std::istream* input, Model** output)
+HRESULT Model::Create(ID3D11Device* device, std::istream& input, Model** output)
 {
 	HRESULT hr;
 
 	Model* result = new Model();
-
-	UINT nameLen;
-	input->read((char*)&nameLen, sizeof(UINT));
-
-	result->_name = new WCHAR[nameLen + 1];
-	result->_name[nameLen] = '\0';
-	input->read((char*)result->_name, nameLen * sizeof(WCHAR));
 	
-	input->read((char*)&result->_materialCount, sizeof(UINT));
-	
+	result->_name = ReadWStringFromStream(input);
+
+	ReadDataFromStream(result->_materialCount, input);	
 	result->_materials = new Material*[result->_materialCount];
 	// NULL everything first so that if there is an error, the model destructor wont
 	// reference an uninitialized value
@@ -323,7 +257,7 @@ HRESULT Model::Create(ID3D11Device* device, std::istream* input, Model** output)
 		}
 	}
 
-	input->read((char*)&result->_meshCount, sizeof(UINT));
+	ReadDataFromStream(result->_meshCount, input);
 
 	result->_meshes = new Mesh*[result->_meshCount];
 	memset(result->_meshes, NULL, sizeof(Mesh*) * result->_meshCount);
