@@ -45,8 +45,8 @@ public:
 
 	const std::wstring& GetName() const { return _name; }
 
-	static HRESULT Compile(ID3D11Device* device, const WCHAR* fileName, std::ostream* output);
-	static HRESULT Create(ID3D11Device* device, std::istream* input, ParticleSystem** output);
+	static HRESULT Compile(ID3D11Device* device, const std::wstring& fileName, std::ostream& output);
+	static HRESULT Create(ID3D11Device* device, std::istream& input, ParticleSystem** output);
 
 	void Destroy();
 

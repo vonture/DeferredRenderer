@@ -173,13 +173,10 @@ HRESULT readWStringFromXML(TiXmlElement* root, const std::string& name, std::wst
 }
 
 
-HRESULT ParticleSystem::Compile(ID3D11Device* device, const WCHAR* path, std::ostream* output)
+HRESULT ParticleSystem::Compile(ID3D11Device* device, const std::wstring& path,
+	std::ostream& output)
 {
-	char sPath[MAX_PATH];
-	if (!WStringToAnsi(path, sPath, MAX_PATH))
-	{
-		return E_FAIL;
-	}
+	std::string sPath = WStringToAnsi(path);
 
 	TiXmlDocument doc = TiXmlDocument(sPath);
 	if (!doc.LoadFile())
@@ -323,47 +320,48 @@ HRESULT ParticleSystem::Compile(ID3D11Device* device, const WCHAR* path, std::os
 		return E_FAIL;
 	}
 	
-	WriteWStringToStream(name, *output);
-	if (FAILED(WriteFileAndSizeToStream(diffPath, *output)))
+	WriteWStringToStream(name, output);
+	if (FAILED(WriteFileAndSizeToStream(diffPath, output)))
 	{
 		return E_FAIL;
 	}
-	if (FAILED(WriteFileAndSizeToStream(normPath, *output)))
+	if (FAILED(WriteFileAndSizeToStream(normPath, output)))
 	{
 		return E_FAIL;
 	}
-	WriteDataTostream(spread, *output);
-	WriteDataTostream(positionVariance, *output);
-	WriteDataTostream(spawnRate, *output);
-	WriteDataTostream(lifeSpan, *output);
-	WriteDataTostream(startSize, *output);
-	WriteDataTostream(endSize, *output);
-	WriteDataTostream(sizeExponent, *output);
-	WriteDataTostream(startSpeed, *output);
-	WriteDataTostream(endSpeed, *output);
-	WriteDataTostream(speedExponent, *output);
-	WriteDataTostream(speedVariance, *output);
-	WriteDataTostream(rollAmount, *output);
-	WriteDataTostream(windFalloff, *output);
-	WriteDataTostream(direction, *output);
-	WriteDataTostream(directionVariance, *output);
-	WriteDataTostream(initialColor, *output);
-	WriteDataTostream(finalColor, *output);
-	WriteDataTostream(fadeExponent, *output);
-	WriteDataTostream(alphaPower, *output);
+	WriteDataTostream(spread, output);
+	WriteDataTostream(positionVariance, output);
+	WriteDataTostream(spawnRate, output);
+	WriteDataTostream(lifeSpan, output);
+	WriteDataTostream(startSize, output);
+	WriteDataTostream(endSize, output);
+	WriteDataTostream(sizeExponent, output);
+	WriteDataTostream(startSpeed, output);
+	WriteDataTostream(endSpeed, output);
+	WriteDataTostream(speedExponent, output);
+	WriteDataTostream(speedVariance, output);
+	WriteDataTostream(rollAmount, output);
+	WriteDataTostream(windFalloff, output);
+	WriteDataTostream(direction, output);
+	WriteDataTostream(directionVariance, output);
+	WriteDataTostream(initialColor, output);
+	WriteDataTostream(finalColor, output);
+	WriteDataTostream(fadeExponent, output);
+	WriteDataTostream(alphaPower, output);
 	
 	return S_OK;
 }
 
-HRESULT ParticleSystem::Create(ID3D11Device* device, std::istream* input, ParticleSystem** output)
+HRESULT ParticleSystem::Create(ID3D11Device* device, std::istream& input,
+	ParticleSystem** output)
 {
 	ParticleSystem* system = new ParticleSystem();
 
-	system->_name = ReadWStringFromStream(*input);
+	system->_name = ReadWStringFromStream(input);
 
 	UINT size;
 	BYTE* data;
-	if (FAILED(ReadFileFromStream(*input, &data, size)))
+	if (FAILED(ReadFileFromStream(input, &data, size)))
 	{
 		delete system;
 		return E_FAIL;
@@ -377,7 +375,7 @@ HRESULT ParticleSystem::Create(ID3D11Device* device, std::istream* input, Partic
 	}
 	delete[] data;
 
-	if (FAILED(ReadFileFromStream(*input, &data, size)))
+	if (FAILED(ReadFileFromStream(input, &data, size)))
 	{
 		delete system;
 		return E_FAIL;
@@ -391,25 +389,25 @@ HRESULT ParticleSystem::Create(ID3D11Device* device, std::istream* input, Partic
 	}
 	delete[] data;
 
-	ReadDataFromStream(system->_spread, *input);
-	ReadDataFromStream(system->_positionVariance, *input);
-	ReadDataFromStream(system->_spawnRate, *input);
-	ReadDataFromStream(system->_lifeSpan, *input);
-	ReadDataFromStream(system->_startSize, *input);
-	ReadDataFromStream(system->_endSize, *input);
-	ReadDataFromStream(system->_sizeExponent, *input);
-	ReadDataFromStream(system->_startSpeed, *input);
-	ReadDataFromStream(system->_endSpeed, *input);
-	ReadDataFromStream(system->_speedExponent, *input);
-	ReadDataFromStream(system->_speedVariance, *input);
-	ReadDataFromStream(system->_rollAmount, *input);
-	ReadDataFromStream(system->_windFalloff, *input);
-	ReadDataFromStream(system->_direction, *input);
-	ReadDataFromStream(system->_directionVariance, *input);
-	ReadDataFromStream(system->_initialColor, *input);
-	ReadDataFromStream(system->_finalColor, *input);
-	ReadDataFromStream(system->_fadeExponent, *input);
-	ReadDataFromStream(system->_alphaPower, *input);
+	ReadDataFromStream(system->_spread, input);
+	ReadDataFromStream(system->_positionVariance, input);
+	ReadDataFromStream(system->_spawnRate, input);
+	ReadDataFromStream(system->_lifeSpan, input);
+	ReadDataFromStream(system->_startSize, input);
+	ReadDataFromStream(system->_endSize, input);
+	ReadDataFromStream(system->_sizeExponent, input);
+	ReadDataFromStream(system->_startSpeed, input);
+	ReadDataFromStream(system->_endSpeed, input);
+	ReadDataFromStream(system->_speedExponent, input);
+	ReadDataFromStream(system->_speedVariance, input);
+	ReadDataFromStream(system->_rollAmount, input);
+	ReadDataFromStream(system->_windFalloff, input);
+	ReadDataFromStream(system->_direction, input);
+	ReadDataFromStream(system->_directionVariance, input);
+	ReadDataFromStream(system->_initialColor, input);
+	ReadDataFromStream(system->_finalColor, input);
+	ReadDataFromStream(system->_fadeExponent, input);
+	ReadDataFromStream(system->_alphaPower, input);
 
 	*output = system;
 	return S_OK;

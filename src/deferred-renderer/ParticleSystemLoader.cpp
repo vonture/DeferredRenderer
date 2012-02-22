@@ -19,11 +19,11 @@ HRESULT ParticleSystemLoader::GenerateContentHash(const WCHAR* path, ParticleSys
 HRESULT ParticleSystemLoader::LoadFromCompiledContentFile(ID3D11Device* device, std::istream* input,
 	ParticleSystemOptions* options, WCHAR* errorMsg, UINT errorLen, ParticleSystem** contentOut)
 {
-	return ParticleSystem::Create(device, input, contentOut);
+	return ParticleSystem::Create(device, *input, contentOut);
 }
 
 HRESULT ParticleSystemLoader::CompileContentFile(ID3D11Device* device, ID3DX11ThreadPump* threadPump,
 	const WCHAR* path, ParticleSystemOptions* options, WCHAR* errorMsg, UINT errorLen, std::ostream* output)
 {
-	return ParticleSystem::Compile(device, path, output);
+	return ParticleSystem::Compile(device, path, *output);
 }
