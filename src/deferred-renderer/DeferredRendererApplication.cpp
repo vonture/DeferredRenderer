@@ -14,10 +14,15 @@
 #include "ProfilePane.h"
 
 DeferredRendererApplication::DeferredRendererApplication()
-	: Application(L"Deferred Renderer", NULL), _camera(0.1f, 40.0f, 1.0f, 1.0f), _selectedItem(NULL),
+	: Application(L"Deferred Renderer", NULL), _camera(0.1f, 45.0f, 1.0f, 1.0f), _selectedItem(NULL),
 	  _configWindow(NULL), _logWindow(NULL), _ppConfigPane(NULL)
 {
-	
+	ModelInstance* tankScene = new ModelInstance(L"\\models\\tankscene\\TankScene.sdkmesh");
+	tankScene->SetScale(1.0f);
+	tankScene->SetPosition(XMFLOAT3(0, 0, 0));
+
+	_models.push_back(tankScene);
+	/*
 	for (int x = 0; x < 5; x++)
 	{
 		for (int y = 0; y < 5; y++)
@@ -29,59 +34,12 @@ DeferredRendererApplication::DeferredRendererApplication()
 			_models.push_back(tankScene);
 		}
 	}
-
-	
+	*/
 	ModelInstance* squid = new ModelInstance(L"\\models\\Squid\\Squid.sdkmesh");
 	squid->SetScale(0.05f);
 	squid->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	_models.push_back(squid);
-	
-	/*
-	ModelInstance* mbpd = new ModelInstance(L"D:\\Temp\\MBPD\\models\\model.dae");
-	mbpd->SetScale(0.3f);
-	mbpd->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
-	_models.push_back(mbpd);
 
-	ModelInstance* moi = new ModelInstance(L"D:\\Temp\\moi\\models\\model.dae");
-	moi->SetScale(0.3f);
-	moi->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
-	_models.push_back(moi);
-	
-	ModelInstance* gnm = new ModelInstance(L"D:\\Temp\\GNM\\untitled.dae");
-	gnm->SetScale(0.01f);
-	gnm->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
-	_models.push_back(gnm);
-    
-	
-	ModelInstance* scanner = new ModelInstance(L"\\models\\MicroscopeCity\\scanner.sdkmesh");
-	scanner->SetScale(1.0f);
-	scanner->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
-	_models.push_back(scanner);
-
-	ModelInstance* column = new ModelInstance(L"\\models\\MicroscopeCity\\column.sdkmesh");
-	column->SetScale(1.0f);
-	column->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
-	_models.push_back(column);
-
-	ModelInstance* occcity = new ModelInstance(L"\\models\\MicroscopeCity\\occcity.sdkmesh");
-	occcity->SetScale(1.0f);
-	occcity->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
-	_models.push_back(occcity);
-	
-	ModelInstance* soldier = new ModelInstance(L"\\models\\soldier\\soldier.sdkmesh");
-	soldier->SetScale(1.0f);
-	soldier->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
-	_models.push_back(soldier);
-	
-
-	
-	ModelInstance* sponza = new ModelInstance(L"D:\\Program Files (x86)\\NVIDIA Corporation\\NVIDIA Direct3D SDK 11\\Media\\sponza\\Sponza.obj");
-	sponza->SetScale(0.2f);
-	sponza->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
-	_models.push_back(sponza);
-	*/
-
-	
 	for (int x = -5; x < 5; x++)
 	{
 		for (int z = -5; z < 5; z++)
@@ -97,19 +55,7 @@ DeferredRendererApplication::DeferredRendererApplication()
 			_models.push_back(tree);
 		}
 	}
-	
-	
-	
-	/*
-	ModelInstance* troll = new ModelInstance(L"D:\\Temp\\cave_troll\\cave-troll-armor-obj.obj");
-	troll->SetScale(0.01f);	
-	troll->SetPosition(XMFLOAT3(10.0f, 0.2f, -10.0f));	
-	XMFLOAT4 orientation;
-	XMStoreFloat4(&orientation, XMQuaternionRotationRollPitchYaw(0.0f, Pi - PiOver4, 0.0f));
-	troll->SetOrientation(orientation);
-	_models.push_back(troll);
-	*/
-	
+
 	for (UINT i = 0; i < 1; i++)
 	{
 		ParticleSystemInstance* smoke = new ParticleSystemInstance(L"\\particles\\smoke.xml");
@@ -118,7 +64,22 @@ DeferredRendererApplication::DeferredRendererApplication()
 		_particles.push_back(smoke);
 	}
 
-	//_pointLightsShadowed.push_back(new PointLight(XMFLOAT3(3.0f, 4.0f, 0.0f), 10.0f, XMFLOAT3(1.0f, 1.0f, 1.0f), 2.0f));
+
+	/*
+	for (UINT i = 0; i < 1; i++)
+	{
+		ParticleSystemInstance* sparks = new ParticleSystemInstance(L"\\particles\\sparks.xml");
+		sparks->SetPosition(XMFLOAT3(i + 5.0f, 0.0f, i - 2.0f));
+		sparks->SetScale(1.0f);
+		_particles.push_back(sparks);
+	}
+	*/
+	
+	_pointLightsShadowed.push_back(new PointLight(XMFLOAT3(3.0f, 4.0f, 0.0f), 10.0f, XMFLOAT3(1.0f, 1.0f, 1.0f), 1.0f));
+	_pointLightsShadowed.push_back(new PointLight(XMFLOAT3(3.0f, 4.0f, 0.0f), 10.0f, XMFLOAT3(1.0f, 0.5f, 0.5f), 1.0f));
+	_pointLightsShadowed.push_back(new PointLight(XMFLOAT3(3.0f, 4.0f, 0.0f), 10.0f, XMFLOAT3(0.5f, 0.5f, 1.0f), 1.0f));
+
+
 
 	_camera.SetPosition(XMFLOAT3(1.0f, 4.0f, -6.0f));
 	_camera.SetRotation(XMFLOAT2(-0.1f, 0.35f), 0.0f);
@@ -256,8 +217,8 @@ void DeferredRendererApplication::OnPreparingDeviceSettings(DeviceManager* devic
 	Application::OnPreparingDeviceSettings(deviceManager);
 	
 	deviceManager->SetAutoDepthStencilEnabled(false);
-	deviceManager->SetBackBufferWidth(1280);
-	deviceManager->SetBackBufferHeight(720);
+	deviceManager->SetBackBufferWidth(1920);
+	deviceManager->SetBackBufferHeight(1080);
 	deviceManager->SetVSyncEnabled(false);
 }
 
@@ -385,31 +346,33 @@ void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 			}
 		}
 
-		if (mouse.IsButtonDown(MouseButton::LeftButton))
+		if (_selectedItem && mouse.IsButtonDown(MouseButton::LeftButton))
 		{
-			if (_selectedItem)
+			if (kb.IsKeyDown(Keys::LeftControl) || kb.IsKeyDown(Keys::RightControl))
 			{
-				float selectDistPerc = _selectedDepth / (_camera.GetFarClip() - _camera.GetNearClip());
-				XMFLOAT2 viewSize = XMFLOAT2(GetWidth(), GetHeight());
-
-				XMFLOAT3 oldSelectViewPos = XMFLOAT3(mouse.GetX() - mouse.GetDX(), 
-					mouse.GetY() - mouse.GetDY(), selectDistPerc);
-				XMFLOAT3 newSelectViewPos = XMFLOAT3(mouse.GetX(), mouse.GetY(), selectDistPerc);
-
-				XMFLOAT3 oldSelectWorldPos = _camera.UnprojectPosition(oldSelectViewPos, viewSize);
-				XMFLOAT3 newSelectWorldPos = _camera.UnprojectPosition(newSelectViewPos, viewSize);
-
-				
-				
+			}
+			else
+			{
 				XMFLOAT3 curModelPos = _selectedItem->GetPosition();
+
 				XMFLOAT3 camUp = _camera.GetUp();
-				XMFLOAT3 camRight = _camera.GetRight();				
+				XMFLOAT3 camRight = _camera.GetRight();
+				XMFLOAT3 camForward = _camera.GetForward();
 
 				XMVECTOR pos = XMLoadFloat3(&curModelPos);
 				XMVECTOR up = XMLoadFloat3(&camUp);
 				XMVECTOR right = XMLoadFloat3(&camRight);
-
-				pos += (((-mouse.GetDY() * up) + (mouse.GetDX() * right)) * 0.01f);
+				XMVECTOR forward = XMLoadFloat3(&camForward);
+								
+				pos += mouse.GetDX() * right * 0.01f;
+				if (kb.IsKeyDown(Keys::LeftAlt) || kb.IsKeyDown(Keys::RightAlt))
+				{
+					pos += mouse.GetDY() * up * -0.01f;
+				}
+				else
+				{
+					pos += mouse.GetDY() * forward * -0.01f;
+				}
 
 				XMStoreFloat3(&curModelPos, pos);
 				_selectedItem->SetPosition(curModelPos);
@@ -456,6 +419,11 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 	V_RETURN(_renderer.Begin());
 
 	BoundingObjectSet boSet;
+	if (_selectedItem)
+	{
+		_selectedItem->FillBoundingObjectSet(&boSet);
+	}
+
 	for (UINT i = 0; i < _modelConfigPane->GetModelInstanceCount(); i++)
 	{
 		ModelInstance* model = _modelConfigPane->GetModelInstance(i);
@@ -517,7 +485,7 @@ HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice
 		_renderer.AddLight(&sun, true);
 	}
 	
-	AmbientLight ambientLight = AmbientLight(XMFLOAT3(1.0f, 1.0f, 1.0f), 1.2f);
+	AmbientLight ambientLight = AmbientLight(XMFLOAT3(1.0f, 1.0f, 1.0f), 0.4f);
 	_renderer.AddLight(&ambientLight);
 
 	UINT ppCount = _ppConfigPane->GetSelectedPostProcessCount();
