@@ -76,6 +76,8 @@ HRESULT SpriteRenderer::End(ID3D11DeviceContext* pd3d11DeviceContext)
 	// Set the ds state
 	pd3d11DeviceContext->OMSetDepthStencilState(_dsStates.GetDepthDisabled(), 0);
 	
+	
+
 	// Set the shaders
 	pd3d11DeviceContext->GSSetShader(NULL, NULL, 0);
 	pd3d11DeviceContext->VSSetShader(_spriteVS->VertexShader, NULL, 0);
@@ -93,10 +95,32 @@ HRESULT SpriteRenderer::End(ID3D11DeviceContext* pd3d11DeviceContext)
     pd3d11DeviceContext->IASetInputLayout(_spriteVS->InputLayout);
     pd3d11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+	bool scissoring = false;
+	pd3d11DeviceContext->RSSetState(_rasterStates.GetNoCull());
+
 	for (int i = 0; i <= _curTexture; i++)
 	{
 		// Set the texture
 		pd3d11DeviceContext->PSSetShaderResources(0, 1, &_textures[i].Texture);
+
+		// Set the scissoring
+		if (_textures[i].Scissor != scissoring)
+		{
+			if (_textures[i].Scissor)
+			{
+				pd3d11DeviceContext->RSSetState(_rasterStates.GetNoCullScissor());				
+			}
+			else
+			{
+				pd3d11DeviceContext->RSSetState(_rasterStates.GetNoCull());
+			}
+			scissoring = _textures[i].Scissor;
+		}
+
+		if (_textures[i].Scissor)
+		{
+			pd3d11DeviceContext->RSSetScissorRects(1, &_textures[i].ScissorRect);
+		}
 
 		// Draw
 		pd3d11DeviceContext->DrawIndexed(_textures[i].SpriteCount * 6, _textures[i].StartSprite * 6, 0);
@@ -136,6 +160,16 @@ void SpriteRenderer::AddTextScreenSpace(SpriteFont* font, const WCHAR* text, SPR
 		_textures[_curTexture].StartSprite = _nextSprite;
 		_textures[_curTexture].SpriteCount = 0;
 		_textures[_curTexture].Texture = fontSRV;
+
+		if (_curTexture > 0)
+		{
+			_textures[_curTexture].Scissor = _textures[_curTexture - 1].Scissor;
+			_textures[_curTexture].ScissorRect = _textures[_curTexture - 1].ScissorRect;
+		}
+		else
+		{
+			_textures[_curTexture].Scissor = false;
+		}
 	}
 
 	UINT lineSpacing = font->GetLineSpacing();	
@@ -221,6 +255,16 @@ void SpriteRenderer::AddTexturedRectangles( ID3D11ShaderResourceView* texture, S
 		_textures[_curTexture].StartSprite = _nextSprite;
 		_textures[_curTexture].SpriteCount = 0;
 		_textures[_curTexture].Texture = texture;
+
+		if (_curTexture > 0)
+		{
+			_textures[_curTexture].Scissor = _textures[_curTexture - 1].Scissor;
+			_textures[_curTexture].ScissorRect = _textures[_curTexture - 1].ScissorRect;
+		}
+		else
+		{
+			_textures[_curTexture].Scissor = false;
+		}
 	}
 
 	for (WORD i = 0; i < numSprites && _nextSprite < MAX_SPRITES; i++)
@@ -269,6 +313,46 @@ void SpriteRenderer::AddTexturedRectangles( ID3D11ShaderResourceView* texture, S
 void SpriteRenderer::AddColoredRectangles(SPRITE_DRAW_DATA* spriteData, UINT numSprites)
 {
 	AddTexturedRectangles(_blankSRV, spriteData, numSprites);
+}
+
+void SpriteRenderer::SetScissorRectangle(const D3D11_RECT& rect)
+{
+	if (_curTexture >= 0 && _textures[_curTexture].Scissor)
+	{
+		const D3D11_RECT& curRect = _textures[_curTexture].ScissorRect;
+		if (curRect.left == rect.left && curRect.right == rect.right &&
+			curRect.top == rect.top && curRect.bottom == rect.bottom)
+		{
+			return;
+		}
+	}	
+
+	_curTexture++;
+	_textures[_curTexture].StartSprite = _nextSprite;
+	_textures[_curTexture].SpriteCount = 0;
+	_textures[_curTexture].Scissor = true;
+	_textures[_curTexture].ScissorRect = rect;
+
+	if (_curTexture > 0)
+	{
+		_textures[_curTexture].Texture = _textures[_curTexture - 1].Texture;
+	}
+	else
+	{
+		_textures[_curTexture].Texture = _blankSRV;
+	}
+}
+
+void SpriteRenderer::UnsetScissorRectangle()
+{
+	if (_curTexture >= 0 && _textures[_curTexture].Scissor)
+	{
+		_curTexture++;
+		_textures[_curTexture].StartSprite = _nextSprite;
+		_textures[_curTexture].SpriteCount = 0;
+		_textures[_curTexture].Texture = _textures[_curTexture - 1].Texture;
+		_textures[_curTexture].Scissor = false;
+	}
 }
 
 HRESULT SpriteRenderer::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)

@@ -100,10 +100,20 @@ Gwen::Point UIRenderer::MeasureText(Gwen::Font* pFont, const Gwen::UnicodeString
 
 void UIRenderer::StartClip()
 {
+	Gwen::Rect clip = ClipRegion();
+	
+	D3D11_RECT d3dClip;
+	d3dClip.left = clip.x;
+	d3dClip.right = clip.x + clip.w;
+	d3dClip.top = clip.y;
+	d3dClip.bottom = clip.y + clip.h;
+
+	_spriteRenderer.SetScissorRectangle(d3dClip);
 }
 
 void UIRenderer::EndClip()
 {
+	_spriteRenderer.UnsetScissorRectangle();
 }
 
 void UIRenderer::DrawTexturedRect(Gwen::Texture* pTexture, Gwen::Rect pTargetRect, float u1, float v1,

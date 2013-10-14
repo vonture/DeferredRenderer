@@ -47,6 +47,9 @@ private:
 		SpriteIndex StartSprite;
 		SpriteIndex SpriteCount;
 		ID3D11ShaderResourceView* Texture;
+
+		bool Scissor;
+		D3D11_RECT ScissorRect;
 	};
 	TEXTURE_INDEX* _textures;
 	int _curTexture;
@@ -69,6 +72,9 @@ public:
 	HRESULT End(ID3D11DeviceContext* pd3d11DeviceContext);
 
 	void AddTextScreenSpace(SpriteFont* font, const WCHAR* text, SPRITE_DRAW_DATA& drawData);
+
+	void SetScissorRectangle(const D3D11_RECT& rect);
+	void UnsetScissorRectangle();
 
 	void AddTexturedRectangles(ID3D11ShaderResourceView* texture, SPRITE_DRAW_DATA* spriteData,
 		UINT numSprites);
