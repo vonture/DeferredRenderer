@@ -91,6 +91,11 @@ HRESULT DeviceManager::Initialize(HWND outputWindow)
 	return S_OK;
 }
 
+DeviceManager::~DeviceManager()
+{
+	Destroy();
+}
+
 void DeviceManager::Destroy()
 {
 	SAFE_RELEASE(_autoDSTexture);
