@@ -17,14 +17,6 @@ HRESULT DeviceManager::Initialize(HWND outputWindow)
 {
     HRESULT hr = S_OK;
 
-    D3D_DRIVER_TYPE driverTypes[] =
-    {
-        D3D_DRIVER_TYPE_HARDWARE,
-        D3D_DRIVER_TYPE_WARP,
-        D3D_DRIVER_TYPE_REFERENCE,
-    };
-    UINT numDriverTypes = ARRAYSIZE(driverTypes);
-
     D3D_FEATURE_LEVEL featureLevels[] =
     {
         D3D_FEATURE_LEVEL_11_0,
@@ -55,16 +47,8 @@ HRESULT DeviceManager::Initialize(HWND outputWindow)
     createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
-    for(UINT i = 0; i < numDriverTypes; i++)
-    {
-        D3D_DRIVER_TYPE driverType = driverTypes[i];
-        hr = D3D11CreateDeviceAndSwapChain(NULL, driverType, NULL, createDeviceFlags, featureLevels,
-            numFeatureLevels, D3D11_SDK_VERSION, &desc, &_swapChain, &_device, &_featureLevel, &_immediateContext);
-        if(SUCCEEDED(hr))
-        {
-            break;
-        }
-    }
+    hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, createDeviceFlags, featureLevels,
+        numFeatureLevels, D3D11_SDK_VERSION, &desc, &_swapChain, &_device, &_featureLevel, &_immediateContext);
     if(FAILED(hr))
     {
         return hr;
@@ -77,10 +61,12 @@ HRESULT DeviceManager::Initialize(HWND outputWindow)
         return E_FAIL;
     }
 
+#if _DEBUG
     ID3D11Debug* debugInterface;
     V_RETURN(_device->QueryInterface<ID3D11Debug>(&debugInterface));
     debugInterface->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
     SAFE_RELEASE(debugInterface);
+#endif
 
     V_RETURN(SetDXDebugName(_device, "Graphics device"));
     V_RETURN(SetDXDebugName(_immediateContext, "Immediate context"));

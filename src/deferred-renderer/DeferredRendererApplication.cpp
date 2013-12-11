@@ -28,21 +28,15 @@ DeferredRendererApplication::DeferredRendererApplication()
     squid->SetPosition(XMFLOAT3(10.0f, 0.0f, 0.0f));
     _models.push_back(squid);
 
-    for (int x = -5; x < 5; x++)
-    {
-        for (int z = -5; z < 5; z++)
-        {
-            ModelInstance* tree = new ModelInstance(L"\\models\\tree\\tree.obj");
-            tree->SetScale(0.5f);
-            tree->SetPosition(XMFLOAT3((x * 25.0f) + 125.0f, 2.0f, (z * 25.0f) + 125.0f));
+    ModelInstance* tree = new ModelInstance(L"\\models\\tree\\tree.obj");
+    tree->SetScale(0.5f);
+    tree->SetPosition(XMFLOAT3(0.0f, 2.0f, 0.0f));
 
-            XMFLOAT4 orientation;
-            XMStoreFloat4(&orientation, XMQuaternionRotationRollPitchYaw(0.0f, RandomBetween(-Pi, Pi), 0.0f));
-            tree->SetOrientation(orientation);
+    XMFLOAT4 orientation;
+    XMStoreFloat4(&orientation, XMQuaternionRotationRollPitchYaw(0.0f, RandomBetween(-Pi, Pi), 0.0f));
+    tree->SetOrientation(orientation);
 
-            _models.push_back(tree);
-        }
-    }
+    _models.push_back(tree);
 
     ParticleSystemInstance* smoke = new ParticleSystemInstance(L"\\particles\\smoke.xml");
     smoke->SetPosition(XMFLOAT3(-20, 0.0f, -20));
