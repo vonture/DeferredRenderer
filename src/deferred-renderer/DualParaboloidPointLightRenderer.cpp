@@ -489,23 +489,23 @@ HRESULT DualParaboloidPointLightRenderer::OnD3D11CreateDevice(ID3D11Device* pd3d
 
 	bufferDesc.ByteWidth = sizeof(CB_POINTLIGHT_ALPHACUTOUT_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_alphaCutoutPropertiesBuffer));
-	V_RETURN(SetDXDebugName(_modelPropertiesBuffer, "DP Light alpha cutout CB"));
+	V_RETURN(SetDXDebugName(_alphaCutoutPropertiesBuffer, "DP Light alpha cutout CB"));
 
 	bufferDesc.ByteWidth = sizeof(CB_POINTLIGHT_LIGHT_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_lightPropertiesBuffer));
-	V_RETURN(SetDXDebugName(_modelPropertiesBuffer, "DP Light light CB"));
+	V_RETURN(SetDXDebugName(_lightPropertiesBuffer, "DP Light light CB"));
 
 	bufferDesc.ByteWidth = sizeof(CB_POINTLIGHT_CAMERA_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_cameraPropertiesBuffer));
-	V_RETURN(SetDXDebugName(_modelPropertiesBuffer, "DP Light camera CB"));
+	V_RETURN(SetDXDebugName(_cameraPropertiesBuffer, "DP Light camera CB"));
 
 	bufferDesc.ByteWidth = sizeof(CB_POINTLIGHT_SHADOW_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_shadowPropertiesBuffer));
-	V_RETURN(SetDXDebugName(_modelPropertiesBuffer, "DP Light shadow CB"));
+	V_RETURN(SetDXDebugName(_shadowPropertiesBuffer, "DP Light shadow CB"));
 
 	bufferDesc.ByteWidth = sizeof(CB_POINTLIGHT_DEPTH_PROPERTIES);
 	V_RETURN(pd3dDevice->CreateBuffer(&bufferDesc, NULL, &_depthPropertiesBuffer));
-	V_RETURN(SetDXDebugName(_modelPropertiesBuffer, "DP Light depth CB"));
+	V_RETURN(SetDXDebugName(_depthPropertiesBuffer, "DP Light depth CB"));
 
 	// Create the shaders and input layout
 	char entryPoint[256];
