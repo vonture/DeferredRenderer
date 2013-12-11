@@ -5,29 +5,29 @@ cbuffer cbBoundingObjectProperties : register(b0)
 
 cbuffer cbBoundingObjectColor : register(b0)
 {
-	float4 Color;
+    float4 Color;
 }
 
 struct VS_In_BoundingObject
 {
-	float4 vPositionOS	: POSITION;
+    float4 vPositionOS : POSITION;
 };
 
 struct VS_Out_BoundingObject
 {
-	float4 vPositionCS	: SV_POSITION;
+    float4 vPositionCS : SV_POSITION;
 };
 
 VS_Out_BoundingObject VS_BoundingObject(VS_In_BoundingObject input)
 {
-	VS_Out_BoundingObject output;
+    VS_Out_BoundingObject output;
 
-	output.vPositionCS = mul(input.vPositionOS, WorldViewProjection);
+    output.vPositionCS = mul(input.vPositionOS, WorldViewProjection);
 
-	return output;
+    return output;
 }
 
 float4 PS_BoundingObject(VS_Out_BoundingObject input) : SV_TARGET0
 {
-	return Color;
+    return Color;
 }
