@@ -11,30 +11,30 @@
 class SkyConfigurationPane : public ConfigurationPane<SkyPostProcess>
 {
 private:
-	SliderWithLabel* _skyTypeSlider;
+    SliderWithLabel* _skyTypeSlider;
 
-	Gwen::Controls::Label* _skyColorLabel;
-	Gwen::Controls::ColorPicker* _skyColorPicker;
-	SliderWithLabel* _skyBrightnessSlider;
+    Gwen::Controls::Label* _skyColorLabel;
+    Gwen::Controls::ColorPicker* _skyColorPicker;
+    SliderWithLabel* _skyBrightnessSlider;
 
-	Gwen::Controls::CheckBoxWithLabel* _sunEnabledCheckBox;
+    Gwen::Controls::CheckBoxWithLabel* _sunEnabledCheckBox;
 
-	Gwen::Controls::Label* _sunColorLabel;
-	Gwen::Controls::ColorPicker* _sunColorPicker;
+    Gwen::Controls::Label* _sunColorLabel;
+    Gwen::Controls::ColorPicker* _sunColorPicker;
 
-	SliderWithLabel* _sunBrightnessSlider;
+    SliderWithLabel* _sunBrightnessSlider;
 
-	Gwen::Controls::Label* _sunWidthLabel;
-	SliderWithLabel* _sunWidthSlider;
-	
-	Gwen::Controls::Label* _sunDirLabel;
-	DirectionSelector* _sunDirSelector;
+    Gwen::Controls::Label* _sunWidthLabel;
+    SliderWithLabel* _sunWidthSlider;
 
-	virtual void OnValueChanged(Gwen::Controls::Base *control);
+    Gwen::Controls::Label* _sunDirLabel;
+    DirectionSelector* _sunDirSelector;
+
+    virtual void OnValueChanged(Gwen::Controls::Base *control);
 
 public:
-	SkyConfigurationPane(Gwen::Controls::Base* parent, SkyPostProcess* pp);
-	~SkyConfigurationPane();
+    SkyConfigurationPane(Gwen::Controls::Base* parent, SkyPostProcess* pp);
+    ~SkyConfigurationPane();
 
-	void OnFrameMove(double totalTime, float dt);
+    void OnFrameMove(double totalTime, float dt);
 };

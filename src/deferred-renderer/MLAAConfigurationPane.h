@@ -9,21 +9,21 @@
 class MLAAConfigurationPane : public ConfigurationPane<MLAAPostProcess>
 {
 private:
-	Gwen::Controls::CheckBoxWithLabel* _depthDetectionCheckBox;
-	SliderWithLabel* _depthThresholdSlider;
+    Gwen::Controls::CheckBoxWithLabel* _depthDetectionCheckBox;
+    SliderWithLabel* _depthThresholdSlider;
 
-	Gwen::Controls::CheckBoxWithLabel* _normalDetectionCheckBox;
-	SliderWithLabel* _normalThresholdSlider;
-	
-	Gwen::Controls::CheckBoxWithLabel* _lumDetectionCheckBox;
-	SliderWithLabel* _lumThresholdSlider;
+    Gwen::Controls::CheckBoxWithLabel* _normalDetectionCheckBox;
+    SliderWithLabel* _normalThresholdSlider;
 
-	SliderWithLabel* _maxSearchStepsSlider;
+    Gwen::Controls::CheckBoxWithLabel* _lumDetectionCheckBox;
+    SliderWithLabel* _lumThresholdSlider;
 
-	virtual void OnValueChanged(Gwen::Controls::Base *control);
+    SliderWithLabel* _maxSearchStepsSlider;
+
+    virtual void OnValueChanged(Gwen::Controls::Base *control);
 
 public:
-	MLAAConfigurationPane(Gwen::Controls::Base* parent, MLAAPostProcess* pp);
+    MLAAConfigurationPane(Gwen::Controls::Base* parent, MLAAPostProcess* pp);
 
-	void OnFrameMove(double totalTime, float dt);
+    void OnFrameMove(double totalTime, float dt);
 };

@@ -6,20 +6,20 @@
 class PerspectiveCamera : public Camera
 {
 private:
-	float _fov;
-	float _aspect;
+    float _fov;
+    float _aspect;
 
 protected:
-	void BuildProjection(XMMATRIX* outProj, float nearClip, float farClip);
+    void BuildProjection(XMMATRIX* outProj, float nearClip, float farClip);
 
 public:
-	PerspectiveCamera();
-	PerspectiveCamera(float nearClip, float farClip, float fov, float aspect);
-	virtual ~PerspectiveCamera();
+    PerspectiveCamera();
+    PerspectiveCamera(float nearClip, float farClip, float fov, float aspect);
+    virtual ~PerspectiveCamera();
 
-	float GetFieldOfView();
-	void SetFieldOfView(float fov);
+    float GetFieldOfView();
+    void SetFieldOfView(float fov);
 
-	float GetAspectRatio();
-	void SetAspectRatio(float aspect);
+    float GetAspectRatio();
+    void SetAspectRatio(float aspect);
 };

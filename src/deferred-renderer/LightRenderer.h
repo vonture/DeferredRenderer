@@ -7,41 +7,41 @@ template <class T>
 class LightRenderer : public LightRendererBase
 {
 private:
-	std::vector<T*> _shadowed;
-	std::vector<T*> _unshadowed;
+    std::vector<T*> _shadowed;
+    std::vector<T*> _unshadowed;
 
 public:
-	LightRenderer() { }
-	virtual ~LightRenderer() { }
-	
-	void Add(T* light, bool shadowed) 
-	{
-		if (shadowed && _shadowed.size() < GetMaxShadowedLights())
-		{
-			_shadowed.push_back(light);
-		}
-		else
-		{
-			_unshadowed.push_back(light);
-		}
-	}
+    LightRenderer() { }
+    virtual ~LightRenderer() { }
 
-	UINT GetCount() { return _shadowed.size() + _unshadowed.size(); }
-	UINT GetCount(bool shadowed) { return shadowed ? _shadowed.size() : _unshadowed.size(); }
-
-	T* GetLight(UINT idx)
+    void Add(T* light, bool shadowed)
     {
-		return (idx >= _shadowed.size()) ? _unshadowed[idx - _shadowed.size()] :  _shadowed[idx];
+        if (shadowed && _shadowed.size() < GetMaxShadowedLights())
+        {
+            _shadowed.push_back(light);
+        }
+        else
+        {
+            _unshadowed.push_back(light);
+        }
     }
 
-	T* GetLight(UINT idx, bool shadowed)
+    UINT GetCount() { return _shadowed.size() + _unshadowed.size(); }
+    UINT GetCount(bool shadowed) { return shadowed ? _shadowed.size() : _unshadowed.size(); }
+
+    T* GetLight(UINT idx)
+    {
+        return (idx >= _shadowed.size()) ? _unshadowed[idx - _shadowed.size()] :  _shadowed[idx];
+    }
+
+    T* GetLight(UINT idx, bool shadowed)
     {
         return shadowed ? _shadowed[idx] : _unshadowed[idx];
     }
-	
-	void Clear()
-	{
-		_shadowed.clear();
-		_unshadowed.clear();
-	}
+
+    void Clear()
+    {
+        _shadowed.clear();
+        _unshadowed.clear();
+    }
 };

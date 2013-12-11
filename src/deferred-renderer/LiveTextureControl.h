@@ -7,13 +7,13 @@
 class LiveTextureControl : public Gwen::Controls::Base
 {
 private:
-	Gwen::Texture _tex;
+    Gwen::Texture _tex;
 
 protected:
-	virtual void Render(Gwen::Skin::Base* skin);
+    virtual void Render(Gwen::Skin::Base* skin);
 
 public:
-	LiveTextureControl(Gwen::Controls::Base* parent);
+    LiveTextureControl(Gwen::Controls::Base* parent);
 
-	void SetTexture(ID3D11ShaderResourceView* srv);
+    void SetTexture(ID3D11ShaderResourceView* srv);
 };

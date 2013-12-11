@@ -6,5 +6,5 @@
 class FullscreenQuad : public Quad
 {
 protected:
-	void fillVerticies(QUAD_VERTEX* verts);
+    void fillVerticies(QUAD_VERTEX* verts);
 };

@@ -9,19 +9,19 @@
 class CameraConfigurationPane : public ConfigurationPane<TestingCamera>
 {
 private:
-	Gwen::Controls::Label* _cameraPositionLabel;
-	Gwen::Controls::Label* _cameraRotationLabel;
+    Gwen::Controls::Label* _cameraPositionLabel;
+    Gwen::Controls::Label* _cameraRotationLabel;
 
-	SliderWithLabel* _cameraFovSlider;
-	SliderWithLabel* _cameraNearClipSlider;
-	SliderWithLabel* _cameraFarClipSlider;
-	SliderWithLabel* _cameraMoveSpeedSlider;
-	SliderWithLabel* _cameraRotSpeedSlider;
+    SliderWithLabel* _cameraFovSlider;
+    SliderWithLabel* _cameraNearClipSlider;
+    SliderWithLabel* _cameraFarClipSlider;
+    SliderWithLabel* _cameraMoveSpeedSlider;
+    SliderWithLabel* _cameraRotSpeedSlider;
 
-	virtual void onValueChanged(Gwen::Controls::Base* controls);
+    virtual void onValueChanged(Gwen::Controls::Base* controls);
 
 public:
-	CameraConfigurationPane(Gwen::Controls::Base* parent, TestingCamera* cam);
+    CameraConfigurationPane(Gwen::Controls::Base* parent, TestingCamera* cam);
 
-	void OnFrameMove(double totalTime, float dt);
+    void OnFrameMove(double totalTime, float dt);
 };

@@ -14,572 +14,542 @@
 #include "ProfilePane.h"
 
 DeferredRendererApplication::DeferredRendererApplication()
-	: Application(L"Deferred Renderer", NULL), _camera(0.1f, 45.0f, 1.0f, 1.0f), _selectedItem(NULL),
-	  _configWindow(NULL), _logWindow(NULL), _ppConfigPane(NULL)
+    : Application(L"Deferred Renderer", NULL), _camera(0.1f, 45.0f, 1.0f, 1.0f), _selectedItem(NULL),
+    _configWindow(NULL), _logWindow(NULL), _ppConfigPane(NULL)
 {
-	ModelInstance* tankScene = new ModelInstance(L"\\models\\tankscene\\TankScene.sdkmesh");
-	tankScene->SetScale(1.0f);
-	tankScene->SetPosition(XMFLOAT3(0, 0, 0));
+    ModelInstance* tankScene = new ModelInstance(L"\\models\\tankscene\\TankScene.sdkmesh");
+    tankScene->SetScale(1.0f);
+    tankScene->SetPosition(XMFLOAT3(0, 0, 0));
 
-	_models.push_back(tankScene);
-	/*
-	for (int x = 0; x < 5; x++)
-	{
-		for (int y = 0; y < 5; y++)
-		{
-			ModelInstance* tankScene = new ModelInstance(L"\\models\\tankscene\\TankScene.sdkmesh");
-			tankScene->SetScale(1.0f);
-			tankScene->SetPosition(XMFLOAT3(x * 47.0f, 0.0f, y * 47.0f));
-			
-			_models.push_back(tankScene);
-		}
-	}
-	*/
-	ModelInstance* squid = new ModelInstance(L"\\models\\Squid\\Squid.sdkmesh");
-	squid->SetScale(0.05f);
-	squid->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
-	_models.push_back(squid);
+    _models.push_back(tankScene);
 
-	for (int x = -5; x < 5; x++)
-	{
-		for (int z = -5; z < 5; z++)
-		{
-			ModelInstance* tree = new ModelInstance(L"\\models\\tree\\tree.obj");
-			tree->SetScale(0.5f);
-			tree->SetPosition(XMFLOAT3((x * 25.0f) + 125.0f, 2.0f, (z * 25.0f) + 125.0f));
+    ModelInstance* squid = new ModelInstance(L"\\models\\Squid\\Squid.sdkmesh");
+    squid->SetScale(0.05f);
+    squid->SetPosition(XMFLOAT3(10.0f, 0.0f, 0.0f));
+    _models.push_back(squid);
 
-			XMFLOAT4 orientation;
-			XMStoreFloat4(&orientation, XMQuaternionRotationRollPitchYaw(0.0f, RandomBetween(-Pi, Pi), 0.0f));
-			tree->SetOrientation(orientation);
+    for (int x = -5; x < 5; x++)
+    {
+        for (int z = -5; z < 5; z++)
+        {
+            ModelInstance* tree = new ModelInstance(L"\\models\\tree\\tree.obj");
+            tree->SetScale(0.5f);
+            tree->SetPosition(XMFLOAT3((x * 25.0f) + 125.0f, 2.0f, (z * 25.0f) + 125.0f));
 
-			_models.push_back(tree);
-		}
-	}
+            XMFLOAT4 orientation;
+            XMStoreFloat4(&orientation, XMQuaternionRotationRollPitchYaw(0.0f, RandomBetween(-Pi, Pi), 0.0f));
+            tree->SetOrientation(orientation);
 
-	for (UINT i = 0; i < 1; i++)
-	{
-		ParticleSystemInstance* smoke = new ParticleSystemInstance(L"\\particles\\smoke.xml");
-		smoke->SetPosition(XMFLOAT3(i, 0.0f, i));
-		smoke->SetScale(1.0f);
-		_particles.push_back(smoke);
-	}
+            _models.push_back(tree);
+        }
+    }
 
+    ParticleSystemInstance* smoke = new ParticleSystemInstance(L"\\particles\\smoke.xml");
+    smoke->SetPosition(XMFLOAT3(-20, 0.0f, -20));
+    smoke->SetScale(1.0f);
+    _particles.push_back(smoke);
 
-	/*
-	for (UINT i = 0; i < 1; i++)
-	{
-		ParticleSystemInstance* sparks = new ParticleSystemInstance(L"\\particles\\sparks.xml");
-		sparks->SetPosition(XMFLOAT3(i + 5.0f, 0.0f, i - 2.0f));
-		sparks->SetScale(1.0f);
-		_particles.push_back(sparks);
-	}
-	*/
-	
-	_pointLightsShadowed.push_back(new PointLight(XMFLOAT3(3.0f, 4.0f, 0.0f), 10.0f, XMFLOAT3(1.0f, 1.0f, 1.0f), 1.0f));
-	_pointLightsShadowed.push_back(new PointLight(XMFLOAT3(3.0f, 4.0f, 0.0f), 10.0f, XMFLOAT3(1.0f, 0.5f, 0.5f), 1.0f));
-	_pointLightsShadowed.push_back(new PointLight(XMFLOAT3(3.0f, 4.0f, 0.0f), 10.0f, XMFLOAT3(0.5f, 0.5f, 1.0f), 1.0f));
+    _pointLightsShadowed.push_back(new PointLight(XMFLOAT3(3.0f, 4.0f, 0.0f), 10.0f, XMFLOAT3(1.0f, 1.0f, 1.0f), 1.0f));
 
+    _camera.SetPosition(XMFLOAT3(1.0f, 4.0f, -6.0f));
+    _camera.SetRotation(XMFLOAT2(-0.1f, 0.35f), 0.0f);
 
+    _contentHolders.push_back(&_renderer);
+    _contentHolders.push_back(&_pBufferCombinePP);
+    _contentHolders.push_back(&_hdrPP);
+    _contentHolders.push_back(&_skyPP);
+    _contentHolders.push_back(&_mlaaPP);
+    _contentHolders.push_back(&_fxaaPP);
+    _contentHolders.push_back(&_ssaoPP);
+    _contentHolders.push_back(&_hbaoPP);
+    _contentHolders.push_back(&_discDoFPP);
+    _contentHolders.push_back(&_motionBlurPP);
+    _contentHolders.push_back(&_filmGrainPP);
+    _contentHolders.push_back(&_boPP);
+    _contentHolders.push_back(&_uiPP);
+    _contentHolders.push_back(&_paraboloidPointLR);
+    _contentHolders.push_back(&_cascadedDirectionalLR);
+    _contentHolders.push_back(&_spotLR);
 
-	_camera.SetPosition(XMFLOAT3(1.0f, 4.0f, -6.0f));
-	_camera.SetRotation(XMFLOAT2(-0.1f, 0.35f), 0.0f);
-		
-	_contentHolders.push_back(&_renderer);
-	_contentHolders.push_back(&_pBufferCombinePP);
-	_contentHolders.push_back(&_hdrPP);
-	_contentHolders.push_back(&_skyPP);
-	_contentHolders.push_back(&_mlaaPP);
-	_contentHolders.push_back(&_fxaaPP);
-	_contentHolders.push_back(&_ssaoPP);
-	_contentHolders.push_back(&_hbaoPP);
-	_contentHolders.push_back(&_discDoFPP);
-	_contentHolders.push_back(&_motionBlurPP);
-	_contentHolders.push_back(&_filmGrainPP);
-	_contentHolders.push_back(&_boPP);
-	_contentHolders.push_back(&_uiPP);
-	_contentHolders.push_back(&_paraboloidPointLR);
-	_contentHolders.push_back(&_cascadedDirectionalLR);
-	_contentHolders.push_back(&_spotLR);
-	
-	for (UINT i = 0; i < _models.size(); i++)
-	{
-		_contentHolders.push_back(_models[i]);
-		_dragables.push_back(_models[i]);
-	}
-	for (UINT i = 0; i < _particles.size(); i++)
-	{
-		_contentHolders.push_back(_particles[i]);
-		_dragables.push_back(_particles[i]);
-	}
+    for (UINT i = 0; i < _models.size(); i++)
+    {
+        _contentHolders.push_back(_models[i]);
+        _dragables.push_back(_models[i]);
+    }
+    for (UINT i = 0; i < _particles.size(); i++)
+    {
+        _contentHolders.push_back(_particles[i]);
+        _dragables.push_back(_particles[i]);
+    }
 
-	for (UINT i = 0; i < _pointLightsShadowed.size(); i++)
-	{
-		_dragables.push_back(_pointLightsShadowed[i]);
-	}
-	for (UINT i = 0; i < _pointLightsUnshadowed.size(); i++)
-	{
-		_dragables.push_back(_pointLightsUnshadowed[i]);
-	}
+    for (UINT i = 0; i < _pointLightsShadowed.size(); i++)
+    {
+        _dragables.push_back(_pointLightsShadowed[i]);
+    }
+    for (UINT i = 0; i < _pointLightsUnshadowed.size(); i++)
+    {
+        _dragables.push_back(_pointLightsUnshadowed[i]);
+    }
 }
 
 DeferredRendererApplication::~DeferredRendererApplication()
 {
-	for (UINT i = 0; i < _models.size(); i++)
-	{
-		delete _models[i];
-	}
-	for (UINT i = 0; i < _particles.size(); i++)
-	{
-		delete _particles[i];
-	}
-	for (UINT i = 0; i < _pointLightsShadowed.size(); i++)
-	{
-		delete _pointLightsShadowed[i];
-	}
-	for (UINT i = 0; i < _pointLightsUnshadowed.size(); i++)
-	{
-		delete _pointLightsUnshadowed[i];
-	}
-	for (UINT i = 0; i < _dirLightsShadowed.size(); i++)
-	{
-		delete _dirLightsShadowed[i];
-	}
-	for (UINT i = 0; i < _dirLightsUnshadowed.size(); i++)
-	{
-		delete _dirLightsUnshadowed[i];
-	}
+    for (UINT i = 0; i < _models.size(); i++)
+    {
+        delete _models[i];
+    }
+    for (UINT i = 0; i < _particles.size(); i++)
+    {
+        delete _particles[i];
+    }
+    for (UINT i = 0; i < _pointLightsShadowed.size(); i++)
+    {
+        delete _pointLightsShadowed[i];
+    }
+    for (UINT i = 0; i < _pointLightsUnshadowed.size(); i++)
+    {
+        delete _pointLightsUnshadowed[i];
+    }
+    for (UINT i = 0; i < _dirLightsShadowed.size(); i++)
+    {
+        delete _dirLightsShadowed[i];
+    }
+    for (UINT i = 0; i < _dirLightsUnshadowed.size(); i++)
+    {
+        delete _dirLightsUnshadowed[i];
+    }
 }
 
 void DeferredRendererApplication::OnInitialize()
 {
-	// Set some properties of the renderer
-	_renderer.AddLightRenderer(&_paraboloidPointLR);
-	_renderer.AddLightRenderer(&_cascadedDirectionalLR);
-	_renderer.AddLightRenderer(&_spotLR);
-	
-	// Create all the UI elements
-	Gwen::Controls::Canvas* canvas = _uiPP.GetCanvas();
-	
-	// Create the configuration window and its panes
-	_configWindow = new ConfigurationWindow(canvas);
+    // Set some properties of the renderer
+    _renderer.AddLightRenderer(&_paraboloidPointLR);
+    _renderer.AddLightRenderer(&_cascadedDirectionalLR);
+    _renderer.AddLightRenderer(&_spotLR);
 
-	_ppConfigPane = new PostProcessSelectionPane(_configWindow);
-	_ppConfigPane->AddPostProcess(&_ssaoPP, L"SSAO", true, true);
-	_ppConfigPane->AddPostProcess(&_hbaoPP, L"HBAO", false, false);
-	_ppConfigPane->AddPostProcess(&_skyPP, L"Sky", true, true);
-	_ppConfigPane->AddPostProcess(&_mlaaPP, L"MLAA", false, true);	
-	_ppConfigPane->AddPostProcess(&_pBufferCombinePP, L"Particle Combine", true, true);
-	_ppConfigPane->AddPostProcess(&_hdrPP, L"HDR", true, true);
-	_ppConfigPane->AddPostProcess(&_discDoFPP, L"Disc DoF", false, true);
-	_ppConfigPane->AddPostProcess(&_fxaaPP, L"FXAA", true, true);
-	_ppConfigPane->AddPostProcess(&_filmGrainPP, L"Film grain/vignette", true, true);
-	_ppConfigPane->AddPostProcess(&_boPP, L"Bounding objects", true, true);
-	_ppConfigPane->AddPostProcess(&_uiPP, L"UI", true, false);
-	_ppConfigPane->AddPostProcess(&_motionBlurPP, L"Motion blur", false, false);	
+    // Create all the UI elements
+    Gwen::Controls::Canvas* canvas = _uiPP.GetCanvas();
 
-	_modelConfigPane = new ModelConfigurationPane(_configWindow);
-	_particleConfigPane = new ParticleConfigurationPane(_configWindow);
-	_boConfigPane = new BoundingObjectConfigurationPane(_configWindow, &_boPP);
+    // Create the configuration window and its panes
+    _configWindow = new ConfigurationWindow(canvas);
 
-	new ProfilePane(_configWindow, Logger::GetInstance());
-	new DeviceManagerConfigurationPane(_configWindow, GetDeviceManager());		
-	new CameraConfigurationPane(_configWindow, &_camera);
-	new HDRConfigurationPane(_configWindow, &_hdrPP);
-	new MLAAConfigurationPane(_configWindow, &_mlaaPP);
-	new FXAAConfigurationPane(_configWindow, &_fxaaPP);
-	new SSAOConfigurationPane(_configWindow, &_ssaoPP);
-	new HBAOConfigurationPane(_configWindow, &_hbaoPP);
-	new SkyConfigurationPane(_configWindow, &_skyPP);
-	new DiscDoFMBConfigurationPane(_configWindow, &_discDoFPP);
-	new MotionBlurConfigurationPane(_configWindow, &_motionBlurPP);
+    _ppConfigPane = new PostProcessSelectionPane(_configWindow);
+    _ppConfigPane->AddPostProcess(&_ssaoPP, L"SSAO", true, true);
+    _ppConfigPane->AddPostProcess(&_hbaoPP, L"HBAO", false, false);
+    _ppConfigPane->AddPostProcess(&_skyPP, L"Sky", true, true);
+    _ppConfigPane->AddPostProcess(&_mlaaPP, L"MLAA", false, true);
+    _ppConfigPane->AddPostProcess(&_pBufferCombinePP, L"Particle Combine", true, true);
+    _ppConfigPane->AddPostProcess(&_hdrPP, L"HDR", true, true);
+    _ppConfigPane->AddPostProcess(&_discDoFPP, L"Disc DoF", false, true);
+    _ppConfigPane->AddPostProcess(&_fxaaPP, L"FXAA", true, true);
+    _ppConfigPane->AddPostProcess(&_filmGrainPP, L"Film grain/vignette", true, true);
+    _ppConfigPane->AddPostProcess(&_boPP, L"Bounding objects", true, true);
+    _ppConfigPane->AddPostProcess(&_uiPP, L"UI", true, false);
+    _ppConfigPane->AddPostProcess(&_motionBlurPP, L"Motion blur", false, false);
 
-	// Create the log window
-	_logWindow = new LogWindow(canvas, Logger::GetInstance());
+    _modelConfigPane = new ModelConfigurationPane(_configWindow);
+    _particleConfigPane = new ParticleConfigurationPane(_configWindow);
+    _boConfigPane = new BoundingObjectConfigurationPane(_configWindow, &_boPP);
+
+    new ProfilePane(_configWindow, Logger::GetInstance());
+    new DeviceManagerConfigurationPane(_configWindow, GetDeviceManager());
+    new CameraConfigurationPane(_configWindow, &_camera);
+    new HDRConfigurationPane(_configWindow, &_hdrPP);
+    new MLAAConfigurationPane(_configWindow, &_mlaaPP);
+    new FXAAConfigurationPane(_configWindow, &_fxaaPP);
+    new SSAOConfigurationPane(_configWindow, &_ssaoPP);
+    new HBAOConfigurationPane(_configWindow, &_hbaoPP);
+    new SkyConfigurationPane(_configWindow, &_skyPP);
+    new DiscDoFMBConfigurationPane(_configWindow, &_discDoFPP);
+    new MotionBlurConfigurationPane(_configWindow, &_motionBlurPP);
+
+    // Create the log window
+    _logWindow = new LogWindow(canvas, Logger::GetInstance());
 }
 
 void DeferredRendererApplication::OnPreparingContentManager(ContentManager* contentManager)
-{	
-	contentManager->AddContentSearchPath(L"\\..\\..\\media");
-	contentManager->AddContentSearchPath(L"\\..\\deferred-renderer");
-	contentManager->SetCompiledContentPath(L"\\..\\..\\compiledmedia");
-	
-	contentManager->AddContentLoader(&_textureLoader);
-	contentManager->AddContentLoader(&_psLoader);
-	contentManager->AddContentLoader(&_gsLoader);
-	contentManager->AddContentLoader(&_vsLoader);
-	contentManager->AddContentLoader(&_modelLoader);
-	contentManager->AddContentLoader(&_particleLoader);
-	contentManager->AddContentLoader(&_fontLoader);
+{
+    contentManager->AddContentSearchPath(L"\\..\\..\\media");
+    contentManager->AddContentSearchPath(L"\\..\\deferred-renderer");
+    contentManager->SetCompiledContentPath(L"\\..\\..\\compiledmedia");
+
+    contentManager->AddContentLoader(&_textureLoader);
+    contentManager->AddContentLoader(&_psLoader);
+    contentManager->AddContentLoader(&_gsLoader);
+    contentManager->AddContentLoader(&_vsLoader);
+    contentManager->AddContentLoader(&_modelLoader);
+    contentManager->AddContentLoader(&_particleLoader);
+    contentManager->AddContentLoader(&_fontLoader);
 }
 
 void DeferredRendererApplication::OnPreparingDeviceSettings(DeviceManager* deviceManager)
 {
-	Application::OnPreparingDeviceSettings(deviceManager);
-	
-	deviceManager->SetAutoDepthStencilEnabled(false);
-	deviceManager->SetBackBufferWidth(1920);
-	deviceManager->SetBackBufferHeight(1080);
-	deviceManager->SetVSyncEnabled(false);
+    Application::OnPreparingDeviceSettings(deviceManager);
+
+    deviceManager->SetAutoDepthStencilEnabled(false);
+    deviceManager->SetBackBufferWidth(1920);
+    deviceManager->SetBackBufferHeight(1080);
+    deviceManager->SetVSyncEnabled(false);
 }
 
 void DeferredRendererApplication::OnFrameMove(double totalTime, float dt)
 {
-	BEGIN_EVENT(L"Gather input");
-	HWND hwnd = GetHWND();
-	KeyboardState kb = KeyboardState::GetState();
-	MouseState mouse = MouseState::GetState(hwnd);
-	END_EVENT(L"");
-	
-	_camera.StoreMatrices();
+    BEGIN_EVENT(L"Gather input");
+    HWND hwnd = GetHWND();
+    KeyboardState kb = KeyboardState::GetState();
+    MouseState mouse = MouseState::GetState(hwnd);
+    END_EVENT(L"");
 
-	BEGIN_EVENT(L"Update Models");
-	for (UINT i = 0; i < _models.size(); i++)
-	{
-		_models[i]->StoreWorld();
-	}
-	END_EVENT(L"");
+    _camera.StoreMatrices();
 
-	BEGIN_EVENT(L"Update Particles");
-	XMFLOAT3 wind = _particleConfigPane->GetWindVector();
-	XMFLOAT3 grav = _particleConfigPane->GetGravityVector();
-	for (UINT i = 0; i < _particleConfigPane->GetParticleInstanceCount(); i++)
-	{
-		_particleConfigPane->GetParticleInstance(i)->AdvanceSystem(wind, grav, dt);
-	}
-	END_EVENT(L"");
+    BEGIN_EVENT(L"Update Models");
+    for (UINT i = 0; i < _models.size(); i++)
+    {
+        _models[i]->StoreWorld();
+    }
+    END_EVENT(L"");
 
-	if (IsActive() && mouse.IsOverWindow())
-	{
-		BEGIN_EVENT(L"Process input");
-		if (kb.IsKeyJustPressed(Keys::Esc))
-		{
-			Exit();
-		}
-		
-		if (kb.IsKeyJustPressed(Keys::F11))
-		{
-			SetFullScreen(!GetFullScreen());
-		}
+    BEGIN_EVENT(L"Update Particles");
+    XMFLOAT3 wind = _particleConfigPane->GetWindVector();
+    XMFLOAT3 grav = _particleConfigPane->GetGravityVector();
+    for (UINT i = 0; i < _particleConfigPane->GetParticleInstanceCount(); i++)
+    {
+        _particleConfigPane->GetParticleInstance(i)->AdvanceSystem(wind, grav, dt);
+    }
+    END_EVENT(L"");
 
-		if (kb.IsKeyJustPressed(Keys::M))
-		{
-			SetMaximized(!GetMaximized());
-		}
-	
-		if (kb.IsKeyJustPressed(Keys::U))
-		{
-			bool uiEnabled = _ppConfigPane->IsPostProcessEnabled(&_uiPP);
-			_ppConfigPane->SetPostProcessEnabled(&_uiPP, !uiEnabled);
-		}
+    if (IsActive() && mouse.IsOverWindow())
+    {
+        BEGIN_EVENT(L"Process input");
+        if (kb.IsKeyJustPressed(Keys::Esc))
+        {
+            Exit();
+        }
 
-		if (mouse.IsButtonDown(MouseButton::RightButton))
-		{
-			const float mouseRotateSpeed = _camera.GetRotationSpeed();		
-			XMFLOAT2 rotation = _camera.GetRotation();
-			rotation.x += mouse.GetDX() * mouseRotateSpeed;
-			rotation.y += mouse.GetDY() * mouseRotateSpeed;
+        if (kb.IsKeyJustPressed(Keys::F11))
+        {
+            SetFullScreen(!GetFullScreen());
+        }
 
-			float rollSpeed = _camera.GetRollSpeed();
-			float roll = _camera.GetRoll();
-			if (kb.IsKeyDown(Keys::Q))
-			{
-				roll += rollSpeed * dt;
-			}
-			if (kb.IsKeyDown(Keys::E))
-			{
-				roll -= rollSpeed * dt;
-			}
+        if (kb.IsKeyJustPressed(Keys::M))
+        {
+            SetMaximized(!GetMaximized());
+        }
 
-			_camera.SetRotation(rotation, roll);
-			
-			XMFLOAT2 moveDir = XMFLOAT2(0.0f, 0.0f);
-			if (kb.IsKeyDown(Keys::W) || kb.IsKeyDown(Keys::Up))
-			{
-				moveDir.y++;
-			}
-			if (kb.IsKeyDown(Keys::S) || kb.IsKeyDown(Keys::Down))
-			{
-				moveDir.y--;
-			}
-			if (kb.IsKeyDown(Keys::A) || kb.IsKeyDown(Keys::Left))
-			{
-				moveDir.x--;
-			}
-			if (kb.IsKeyDown(Keys::D) || kb.IsKeyDown(Keys::Right))
-			{
-				moveDir.x++;
-			}
-				
-			const float cameraMoveSpeed = _camera.GetMovementSpeed();
-			XMFLOAT3 camPos = _camera.GetPosition();
-			XMFLOAT3 camForward = _camera.GetForward();
-			XMFLOAT3 camRight = _camera.GetRight();
+        if (kb.IsKeyJustPressed(Keys::U))
+        {
+            bool uiEnabled = _ppConfigPane->IsPostProcessEnabled(&_uiPP);
+            _ppConfigPane->SetPostProcessEnabled(&_uiPP, !uiEnabled);
+        }
 
-			XMVECTOR position = XMLoadFloat3(&camPos);
-			XMVECTOR forward = XMLoadFloat3(&camForward);
-			XMVECTOR right = XMLoadFloat3(&camRight);
+        if (mouse.IsButtonDown(MouseButton::RightButton))
+        {
+            const float mouseRotateSpeed = _camera.GetRotationSpeed();
+            XMFLOAT2 rotation = _camera.GetRotation();
+            rotation.x += mouse.GetDX() * mouseRotateSpeed;
+            rotation.y += mouse.GetDY() * mouseRotateSpeed;
 
-			position += ((moveDir.y * forward) + (moveDir.x * right)) * (cameraMoveSpeed * dt);
+            float rollSpeed = _camera.GetRollSpeed();
+            float roll = _camera.GetRoll();
+            if (kb.IsKeyDown(Keys::Q))
+            {
+                roll += rollSpeed * dt;
+            }
+            if (kb.IsKeyDown(Keys::E))
+            {
+                roll -= rollSpeed * dt;
+            }
 
-			XMStoreFloat3(&camPos, position);
-			_camera.SetPosition(camPos);
-		}
+            _camera.SetRotation(rotation, roll);
 
-		if (mouse.IsButtonJustPressed(MouseButton::LeftButton))
-		{
-			XMFLOAT2 mousePos = XMFLOAT2(mouse.GetX(), mouse.GetY());
-			XMFLOAT2 viewSize = XMFLOAT2(GetWidth(), GetHeight());
+            XMFLOAT2 moveDir = XMFLOAT2(0.0f, 0.0f);
+            if (kb.IsKeyDown(Keys::W) || kb.IsKeyDown(Keys::Up))
+            {
+                moveDir.y++;
+            }
+            if (kb.IsKeyDown(Keys::S) || kb.IsKeyDown(Keys::Down))
+            {
+                moveDir.y--;
+            }
+            if (kb.IsKeyDown(Keys::A) || kb.IsKeyDown(Keys::Left))
+            {
+                moveDir.x--;
+            }
+            if (kb.IsKeyDown(Keys::D) || kb.IsKeyDown(Keys::Right))
+            {
+                moveDir.x++;
+            }
 
-			Ray mouseRay = _camera.UnprojectRay(mousePos, viewSize);
+            const float cameraMoveSpeed = _camera.GetMovementSpeed();
+            XMFLOAT3 camPos = _camera.GetPosition();
+            XMFLOAT3 camForward = _camera.GetForward();
+            XMFLOAT3 camRight = _camera.GetRight();
 
-			_selectedDepth = FLT_MAX;
-			_selectedItem = NULL;
+            XMVECTOR position = XMLoadFloat3(&camPos);
+            XMVECTOR forward = XMLoadFloat3(&camForward);
+            XMVECTOR right = XMLoadFloat3(&camRight);
 
-			for (UINT i = 0; i < _dragables.size(); i++)
-			{
-				float dist;
-				if (_dragables[i]->RayIntersect(mouseRay, &dist) && dist < _selectedDepth)
-				{
-					_selectedDepth = dist;
-					_selectedItem = _dragables[i];
-				}
-			}
-		}
+            position += ((moveDir.y * forward) + (moveDir.x * right)) * (cameraMoveSpeed * dt);
 
-		if (_selectedItem && mouse.IsButtonDown(MouseButton::LeftButton))
-		{
-			if (kb.IsKeyDown(Keys::LeftControl) || kb.IsKeyDown(Keys::RightControl))
-			{
-			}
-			else
-			{
-				XMFLOAT3 curModelPos = _selectedItem->GetPosition();
+            XMStoreFloat3(&camPos, position);
+            _camera.SetPosition(camPos);
+        }
 
-				XMFLOAT3 camUp = _camera.GetUp();
-				XMFLOAT3 camRight = _camera.GetRight();
-				XMFLOAT3 camForward = _camera.GetForward();
+        if (mouse.IsButtonJustPressed(MouseButton::LeftButton))
+        {
+            XMFLOAT2 mousePos = XMFLOAT2(mouse.GetX(), mouse.GetY());
+            XMFLOAT2 viewSize = XMFLOAT2(GetWidth(), GetHeight());
 
-				XMVECTOR pos = XMLoadFloat3(&curModelPos);
-				XMVECTOR up = XMLoadFloat3(&camUp);
-				XMVECTOR right = XMLoadFloat3(&camRight);
-				XMVECTOR forward = XMLoadFloat3(&camForward);
-								
-				pos += mouse.GetDX() * right * 0.01f;
-				if (kb.IsKeyDown(Keys::LeftAlt) || kb.IsKeyDown(Keys::RightAlt))
-				{
-					pos += mouse.GetDY() * up * -0.01f;
-				}
-				else
-				{
-					pos += mouse.GetDY() * forward * -0.01f;
-				}
+            Ray mouseRay = _camera.UnprojectRay(mousePos, viewSize);
 
-				XMStoreFloat3(&curModelPos, pos);
-				_selectedItem->SetPosition(curModelPos);
-			}
-		}
+            _selectedDepth = FLT_MAX;
+            _selectedItem = NULL;
 
-		END_EVENT(L"");
-	}
+            for (UINT i = 0; i < _dragables.size(); i++)
+            {
+                float dist;
+                if (_dragables[i]->RayIntersect(mouseRay, &dist) && dist < _selectedDepth)
+                {
+                    _selectedDepth = dist;
+                    _selectedItem = _dragables[i];
+                }
+            }
+        }
 
-	if (_ppConfigPane->IsPostProcessEnabled(&_filmGrainPP))
-	{
-		_filmGrainPP.SetTime(totalTime);
-	}
-	
-	if (_ppConfigPane->IsPostProcessEnabled(&_uiPP))
-	{
-		BEGIN_EVENT(L"Update UI");
+        if (_selectedItem && mouse.IsButtonDown(MouseButton::LeftButton))
+        {
+            if (kb.IsKeyDown(Keys::LeftControl) || kb.IsKeyDown(Keys::RightControl))
+            {
+            }
+            else
+            {
+                XMFLOAT3 curModelPos = _selectedItem->GetPosition();
 
-		_uiPP.OnFrameMove(totalTime, dt);
-		_configWindow->OnFrameMove(totalTime, dt);
+                XMFLOAT3 camUp = _camera.GetUp();
+                XMFLOAT3 camRight = _camera.GetRight();
+                XMFLOAT3 camForward = _camera.GetForward();
 
-		END_EVENT(L"");
-	}
+                XMVECTOR pos = XMLoadFloat3(&curModelPos);
+                XMVECTOR up = XMLoadFloat3(&camUp);
+                XMVECTOR right = XMLoadFloat3(&camRight);
+                XMVECTOR forward = XMLoadFloat3(&camForward);
+
+                pos += mouse.GetDX() * right * 0.01f;
+                if (kb.IsKeyDown(Keys::LeftAlt) || kb.IsKeyDown(Keys::RightAlt))
+                {
+                    pos += mouse.GetDY() * up * -0.01f;
+                }
+                else
+                {
+                    pos += mouse.GetDY() * forward * -0.01f;
+                }
+
+                XMStoreFloat3(&curModelPos, pos);
+                _selectedItem->SetPosition(curModelPos);
+            }
+        }
+
+        END_EVENT(L"");
+    }
+
+    if (_ppConfigPane->IsPostProcessEnabled(&_filmGrainPP))
+    {
+        _filmGrainPP.SetTime(totalTime);
+    }
+
+    if (_ppConfigPane->IsPostProcessEnabled(&_uiPP))
+    {
+        BEGIN_EVENT(L"Update UI");
+
+        _uiPP.OnFrameMove(totalTime, dt);
+        _configWindow->OnFrameMove(totalTime, dt);
+
+        END_EVENT(L"");
+    }
 }
 
 LRESULT DeferredRendererApplication::OnMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	HRESULT hr;
-	
-	if (_ppConfigPane->IsPostProcessEnabled(&_uiPP))
-	{
-		V_RETURN(_uiPP.OnMessage(hWnd, msg, wParam, lParam));
-	}
+    HRESULT hr;
 
-	return Application::OnMessage(hWnd, msg, wParam, lParam);
+    if (_ppConfigPane->IsPostProcessEnabled(&_uiPP))
+    {
+        V_RETURN(_uiPP.OnMessage(hWnd, msg, wParam, lParam));
+    }
+
+    return Application::OnMessage(hWnd, msg, wParam, lParam);
 }
 
 HRESULT DeferredRendererApplication::OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext)
 {
-	HRESULT hr;
+    HRESULT hr;
 
-	BEGIN_EVENT(L"Prepare scene");
+    BEGIN_EVENT(L"Prepare scene");
 
-	V_RETURN(_renderer.Begin());
+    V_RETURN(_renderer.Begin());
 
-	BoundingObjectSet boSet;
-	if (_selectedItem)
-	{
-		_selectedItem->FillBoundingObjectSet(&boSet);
-	}
+    BoundingObjectSet boSet;
+    if (_selectedItem)
+    {
+        _selectedItem->FillBoundingObjectSet(&boSet);
+    }
 
-	for (UINT i = 0; i < _modelConfigPane->GetModelInstanceCount(); i++)
-	{
-		ModelInstance* model = _modelConfigPane->GetModelInstance(i);
+    for (UINT i = 0; i < _modelConfigPane->GetModelInstanceCount(); i++)
+    {
+        ModelInstance* model = _modelConfigPane->GetModelInstance(i);
 
-		_renderer.AddModel(model);		
-		if (_boConfigPane->GetModelsEnabled())
-		{
-			model->FillBoundingObjectSet(&boSet);
-		}
-	}
-		
-	for (UINT i = 0; i < _particleConfigPane->GetParticleInstanceCount(); i++)
-	{
-		ParticleSystemInstance* particle = _particleConfigPane->GetParticleInstance(i);
+        _renderer.AddModel(model);
+        if (_boConfigPane->GetModelsEnabled())
+        {
+            model->FillBoundingObjectSet(&boSet);
+        }
+    }
 
-		_renderer.AddParticleSystem(particle);
-		if (_boConfigPane->GetParticlesEnabled())
-		{
-			particle->FillBoundingObjectSet(&boSet);
-		}
-	}
+    for (UINT i = 0; i < _particleConfigPane->GetParticleInstanceCount(); i++)
+    {
+        ParticleSystemInstance* particle = _particleConfigPane->GetParticleInstance(i);
 
-	for (UINT i = 0; i < _pointLightsShadowed.size(); i++)
-	{
-		_renderer.AddLight(_pointLightsShadowed[i], true);
+        _renderer.AddParticleSystem(particle);
+        if (_boConfigPane->GetParticlesEnabled())
+        {
+            particle->FillBoundingObjectSet(&boSet);
+        }
+    }
 
-		if (_boConfigPane->GetLightsEnabled())
-		{
-			_pointLightsShadowed[i]->FillBoundingObjectSet(&boSet);
-		}
-	}
-	for (UINT i = 0; i < _pointLightsUnshadowed.size(); i++)
-	{
-		_renderer.AddLight(_pointLightsUnshadowed[i], false);
+    for (UINT i = 0; i < _pointLightsShadowed.size(); i++)
+    {
+        _renderer.AddLight(_pointLightsShadowed[i], true);
 
-		if (_boConfigPane->GetLightsEnabled())
-		{
-			_pointLightsUnshadowed[i]->FillBoundingObjectSet(&boSet);
-		}
-	}
+        if (_boConfigPane->GetLightsEnabled())
+        {
+            _pointLightsShadowed[i]->FillBoundingObjectSet(&boSet);
+        }
+    }
+    for (UINT i = 0; i < _pointLightsUnshadowed.size(); i++)
+    {
+        _renderer.AddLight(_pointLightsUnshadowed[i], false);
 
-	for (UINT i = 0; i < _dirLightsShadowed.size(); i++)
-	{
-		_renderer.AddLight(_dirLightsShadowed[i], true);
-	}
-	for (UINT i = 0; i < _dirLightsUnshadowed.size(); i++)
-	{
-		_renderer.AddLight(_dirLightsUnshadowed[i], false);
-	}
+        if (_boConfigPane->GetLightsEnabled())
+        {
+            _pointLightsUnshadowed[i]->FillBoundingObjectSet(&boSet);
+        }
+    }
 
-	_boPP.Clear();
-	_boPP.Add(&boSet);
+    for (UINT i = 0; i < _dirLightsShadowed.size(); i++)
+    {
+        _renderer.AddLight(_dirLightsShadowed[i], true);
+    }
+    for (UINT i = 0; i < _dirLightsUnshadowed.size(); i++)
+    {
+        _renderer.AddLight(_dirLightsUnshadowed[i], false);
+    }
 
-	if (_ppConfigPane->IsPostProcessEnabled(&_skyPP) && _skyPP.GetSunEnabled())
-	{
-		DirectionalLight sun = DirectionalLight(_skyPP.GetSunDirection(), _skyPP.GetSunColor(),
-			_skyPP.GetSunBrightness());
-		
-		_renderer.AddLight(&sun, true);
-	}
-	
-	AmbientLight ambientLight = AmbientLight(XMFLOAT3(1.0f, 1.0f, 1.0f), 0.4f);
-	_renderer.AddLight(&ambientLight);
+    _boPP.Clear();
+    _boPP.Add(&boSet);
 
-	UINT ppCount = _ppConfigPane->GetSelectedPostProcessCount();
-	for (UINT i = 0; i < ppCount; i++)
-	{
-		_renderer.AddPostProcess(_ppConfigPane->GetSelectedPostProcesses(i));
-	}
+    if (_ppConfigPane->IsPostProcessEnabled(&_skyPP) && _skyPP.GetSunEnabled())
+    {
+        DirectionalLight sun = DirectionalLight(_skyPP.GetSunDirection(), _skyPP.GetSunColor(),
+            _skyPP.GetSunBrightness());
 
-	END_EVENT(L"");
+        _renderer.AddLight(&sun, true);
+    }
 
-	BEGIN_EVENT(L"Render scene");
-	V_RETURN(_renderer.End(pd3dImmediateContext, &_camera));
-	END_EVENT(L"");
+    AmbientLight ambientLight = AmbientLight(XMFLOAT3(1.0f, 1.0f, 1.0f), 0.4f);
+    _renderer.AddLight(&ambientLight);
 
-	return S_OK;
+    UINT ppCount = _ppConfigPane->GetSelectedPostProcessCount();
+    for (UINT i = 0; i < ppCount; i++)
+    {
+        _renderer.AddPostProcess(_ppConfigPane->GetSelectedPostProcesses(i));
+    }
+
+    END_EVENT(L"");
+
+    BEGIN_EVENT(L"Render scene");
+    V_RETURN(_renderer.End(pd3dImmediateContext, &_camera));
+    END_EVENT(L"");
+
+    return S_OK;
 }
 
-HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, 
-	ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+HRESULT DeferredRendererApplication::OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
+                                                         ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
-	HRESULT hr;
-	
-	V_RETURN(Application::OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
-	for (UINT i = 0; i < _contentHolders.size(); i++)
-	{
-		V_RETURN(_contentHolders[i]->OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
-	}
+    HRESULT hr;
 
-	const int configWidth = 260;
-	const int logHeight = 125;
-	const int padding = 10;
+    V_RETURN(Application::OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
+    for (UINT i = 0; i < _contentHolders.size(); i++)
+    {
+        V_RETURN(_contentHolders[i]->OnD3D11CreateDevice(pd3dDevice, pContentManager, pBackBufferSurfaceDesc));
+    }
 
-	_configWindow->SetBounds(padding, padding, configWidth, pBackBufferSurfaceDesc->Height - (padding * 2));
-	_logWindow->SetBounds(_configWindow->Right() + padding, pBackBufferSurfaceDesc->Height - logHeight - padding, 
-		pBackBufferSurfaceDesc->Width - _configWindow->Right() - (padding * 2), logHeight);
+    const int configWidth = 260;
+    const int logHeight = 125;
+    const int padding = 10;
 
-	for (UINT i = 0; i < _models.size(); i++)
-	{
-		_modelConfigPane->AddModelInstance(_models[i]);
-	}
-	for (UINT i = 0; i < _particles.size(); i++)
-	{
-		_particleConfigPane->AddParticleInstance(_particles[i]);
-	}
+    _configWindow->SetBounds(padding, padding, configWidth, pBackBufferSurfaceDesc->Height - (padding * 2));
+    _logWindow->SetBounds(_configWindow->Right() + padding, pBackBufferSurfaceDesc->Height - logHeight - padding,
+        pBackBufferSurfaceDesc->Width - _configWindow->Right() - (padding * 2), logHeight);
 
-	return S_OK;
+    for (UINT i = 0; i < _models.size(); i++)
+    {
+        _modelConfigPane->AddModelInstance(_models[i]);
+    }
+    for (UINT i = 0; i < _particles.size(); i++)
+    {
+        _particleConfigPane->AddParticleInstance(_particles[i]);
+    }
+
+    return S_OK;
 }
 
 void DeferredRendererApplication::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	Application::OnD3D11DestroyDevice(pContentManager);
-	for (UINT i = 0; i < _contentHolders.size(); i++)
-	{
-		_contentHolders[i]->OnD3D11DestroyDevice(pContentManager);
-	}
+    Application::OnD3D11DestroyDevice(pContentManager);
+    for (UINT i = 0; i < _contentHolders.size(); i++)
+    {
+        _contentHolders[i]->OnD3D11DestroyDevice(pContentManager);
+    }
 }
 
 HRESULT DeferredRendererApplication::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager,
-	IDXGISwapChain* pSwapChain, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+                                                             IDXGISwapChain* pSwapChain, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
-	HRESULT hr;
+    HRESULT hr;
 
-	float fAspectRatio = pBackBufferSurfaceDesc->Width / (float)pBackBufferSurfaceDesc->Height;
-	_camera.SetAspectRatio(fAspectRatio);
+    float fAspectRatio = pBackBufferSurfaceDesc->Width / (float)pBackBufferSurfaceDesc->Height;
+    _camera.SetAspectRatio(fAspectRatio);
 
-	Gwen::Controls::Canvas* canvas = _uiPP.GetCanvas();
-	XMFLOAT2 sizePerc = XMFLOAT2((float)pBackBufferSurfaceDesc->Width / canvas->Width(),
-		(float)pBackBufferSurfaceDesc->Height / canvas->Height());
-	
-	V_RETURN(Application::OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
-	for (UINT i = 0; i < _contentHolders.size(); i++)
-	{
-		V_RETURN(_contentHolders[i]->OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
-	}
+    Gwen::Controls::Canvas* canvas = _uiPP.GetCanvas();
+    XMFLOAT2 sizePerc = XMFLOAT2((float)pBackBufferSurfaceDesc->Width / canvas->Width(),
+        (float)pBackBufferSurfaceDesc->Height / canvas->Height());
 
-	// Resize the UI by scaling with the resolution change
-	_configWindow->SetBounds(_configWindow->X() * sizePerc.x, _configWindow->Y() * sizePerc.y,
-		_configWindow->Width() * sizePerc.x, _configWindow->Height() * sizePerc.y);
-	_logWindow->SetBounds(_logWindow->X() * sizePerc.x, _logWindow->Y() * sizePerc.y,
-		_logWindow->Width() * sizePerc.x, _logWindow->Height() * sizePerc.y);
+    V_RETURN(Application::OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
+    for (UINT i = 0; i < _contentHolders.size(); i++)
+    {
+        V_RETURN(_contentHolders[i]->OnD3D11ResizedSwapChain(pd3dDevice, pContentManager, pSwapChain, pBackBufferSurfaceDesc));
+    }
 
-	return S_OK;
+    // Resize the UI by scaling with the resolution change
+    _configWindow->SetBounds(_configWindow->X() * sizePerc.x, _configWindow->Y() * sizePerc.y,
+        _configWindow->Width() * sizePerc.x, _configWindow->Height() * sizePerc.y);
+    _logWindow->SetBounds(_logWindow->X() * sizePerc.x, _logWindow->Y() * sizePerc.y,
+        _logWindow->Width() * sizePerc.x, _logWindow->Height() * sizePerc.y);
+
+    return S_OK;
 }
 void DeferredRendererApplication::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)
 {
-	Application::OnD3D11ReleasingSwapChain(pContentManager);
-	for (UINT i = 0; i < _contentHolders.size(); i++)
-	{
-		_contentHolders[i]->OnD3D11ReleasingSwapChain(pContentManager);
-	}
+    Application::OnD3D11ReleasingSwapChain(pContentManager);
+    for (UINT i = 0; i < _contentHolders.size(); i++)
+    {
+        _contentHolders[i]->OnD3D11ReleasingSwapChain(pContentManager);
+    }
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
-	DeferredRendererApplication app;
-	app.Start();
+    DeferredRendererApplication app;
+    app.Start();
 }

@@ -7,36 +7,36 @@
 class SpriteFont : public ContentType
 {
 private:
-	struct CharInfo
-	{		
-		float X, Y, Width, Height;
-		UINT PixelWidth;
-	};
+    struct CharInfo
+    {
+        float X, Y, Width, Height;
+        UINT PixelWidth;
+    };
 
-	UINT _lineSpacing;
+    UINT _lineSpacing;
 
-	std::map<UINT, CharInfo> _charMap;
+    std::map<UINT, CharInfo> _charMap;
 
-	int _textureWidth;
-	int _textureHeight;
+    int _textureWidth;
+    int _textureHeight;
 
-	ID3D11ShaderResourceView* _fontSRV;
+    ID3D11ShaderResourceView* _fontSRV;
 
 public:
-	SpriteFont();
-	~SpriteFont();
+    SpriteFont();
+    ~SpriteFont();
 
-	bool ContainsCharacter(WCHAR character);
-	
-	XMFLOAT2 MeasureString(const WCHAR* text);
+    bool ContainsCharacter(WCHAR character);
 
-	bool GetCharacterInfo(WCHAR character, XMFLOAT2* outTexCoord, XMFLOAT2* outTexCoordSize, UINT* outWidth);
-	UINT GetLineSpacing();
+    XMFLOAT2 MeasureString(const WCHAR* text);
 
-	ID3D11ShaderResourceView* GetFontShaderResourceView();
+    bool GetCharacterInfo(WCHAR character, XMFLOAT2* outTexCoord, XMFLOAT2* outTexCoordSize, UINT* outWidth);
+    UINT GetLineSpacing();
 
-	static HRESULT Create(ID3D11Device* device, std::istream* input, SpriteFont** output);
-	static HRESULT Compile(ID3D11Device* device, const WCHAR* fileName, std::ostream* output);
+    ID3D11ShaderResourceView* GetFontShaderResourceView();
 
-	void Destroy();
+    static HRESULT Create(ID3D11Device* device, std::istream* input, SpriteFont** output);
+    static HRESULT Compile(ID3D11Device* device, const WCHAR* fileName, std::ostream* output);
+
+    void Destroy();
 };

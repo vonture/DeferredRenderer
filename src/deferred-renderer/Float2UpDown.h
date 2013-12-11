@@ -7,26 +7,26 @@
 class Float2UpDown : public Gwen::Controls::Base
 {
 private:
-	Gwen::Controls::Label* _xLabel;
-	FloatUpDown* _xUpDown;
+    Gwen::Controls::Label* _xLabel;
+    FloatUpDown* _xUpDown;
 
-	Gwen::Controls::Label* _yLabel;
-	FloatUpDown* _yUpDown;
-	
-	virtual void OnUpDownChanged(Gwen::Controls::Base* control );
+    Gwen::Controls::Label* _yLabel;
+    FloatUpDown* _yUpDown;
 
-public:	
-	Float2UpDown(Gwen::Controls::Base *parent);
-	~Float2UpDown();
+    virtual void OnUpDownChanged(Gwen::Controls::Base* control );
 
-	XMFLOAT2 GetMin();
-	void SetMin(const XMFLOAT2& min);
+public:
+    Float2UpDown(Gwen::Controls::Base *parent);
+    ~Float2UpDown();
 
-	XMFLOAT2 GetMax();
-	void SetMax(const XMFLOAT2& max);
+    XMFLOAT2 GetMin();
+    void SetMin(const XMFLOAT2& min);
 
-	XMFLOAT2 GetValue();
-	void SetValue(const XMFLOAT2& val);
+    XMFLOAT2 GetMax();
+    void SetMax(const XMFLOAT2& max);
 
-	Gwen::Event::Caller onChanged;
+    XMFLOAT2 GetValue();
+    void SetValue(const XMFLOAT2& val);
+
+    Gwen::Event::Caller onChanged;
 };

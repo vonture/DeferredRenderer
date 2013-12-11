@@ -12,7 +12,7 @@
 #endif
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
-#define STRICT							// Use strict declarations for Windows types
+#define STRICT                            // Use strict declarations for Windows types
 
 // Warning disables
 #pragma warning(disable: 4100) // disable unreferenced formal parameter warnings for /W4 builds

@@ -8,49 +8,49 @@
 class PostProcessSelectionPane : public ConfigurationPaneBase
 {
 private:
-	struct PP_INFO
-	{
-		PostProcess* PP;
-		Gwen::UnicodeString Name;
-		bool CanMove;
-	};
+    struct PP_INFO
+    {
+        PostProcess* PP;
+        Gwen::UnicodeString Name;
+        bool CanMove;
+    };
 
-	std::vector<PP_INFO> _enabledPPs;
-	std::vector<PP_INFO> _disabledPPs;
+    std::vector<PP_INFO> _enabledPPs;
+    std::vector<PP_INFO> _disabledPPs;
 
-	Gwen::Controls::Label* _enabledLabel;
-	Gwen::Controls::ListBox* _enabledPPListBox;
+    Gwen::Controls::Label* _enabledLabel;
+    Gwen::Controls::ListBox* _enabledPPListBox;
 
-	Gwen::Controls::Label* _disabledLabel;
-	Gwen::Controls::ListBox* _disabledPPListBox;
+    Gwen::Controls::Label* _disabledLabel;
+    Gwen::Controls::ListBox* _disabledPPListBox;
 
-	Gwen::Controls::Button* _upButton;
-	Gwen::Controls::Button* _downButton;
+    Gwen::Controls::Button* _upButton;
+    Gwen::Controls::Button* _downButton;
 
-	Gwen::Controls::Button* _enableDisableButton;
+    Gwen::Controls::Button* _enableDisableButton;
 
-	Gwen::Controls::ListBox* _lastSelectedListBox;
+    Gwen::Controls::ListBox* _lastSelectedListBox;
 
-	int findIndexOfSelectedRow(Gwen::Controls::ListBox* box, std::vector<PP_INFO>* list);
+    int findIndexOfSelectedRow(Gwen::Controls::ListBox* box, std::vector<PP_INFO>* list);
 
-	void syncListBoxes(int selectedIdx);
-	
-	virtual void onEnabledSelectionChanged(Gwen::Controls::Base* control);
-	virtual void onDisabledSelectionChanged(Gwen::Controls::Base* control);
+    void syncListBoxes(int selectedIdx);
 
-	virtual void onEnableDisableButtonPressed(Gwen::Controls::Base* control);
+    virtual void onEnabledSelectionChanged(Gwen::Controls::Base* control);
+    virtual void onDisabledSelectionChanged(Gwen::Controls::Base* control);
 
-	virtual void onUpButtonPressed(Gwen::Controls::Base* control);
-	virtual void onDownButtonPressed(Gwen::Controls::Base* control);
+    virtual void onEnableDisableButtonPressed(Gwen::Controls::Base* control);
+
+    virtual void onUpButtonPressed(Gwen::Controls::Base* control);
+    virtual void onDownButtonPressed(Gwen::Controls::Base* control);
 
 public:
-	PostProcessSelectionPane(Gwen::Controls::Base* parent);
+    PostProcessSelectionPane(Gwen::Controls::Base* parent);
 
-	void AddPostProcess(PostProcess* pp, const WCHAR* name, bool enabled = true, bool canMove = true);
+    void AddPostProcess(PostProcess* pp, const WCHAR* name, bool enabled = true, bool canMove = true);
 
-	UINT GetSelectedPostProcessCount() const;
-	PostProcess* GetSelectedPostProcesses(UINT idx) const; 
+    UINT GetSelectedPostProcessCount() const;
+    PostProcess* GetSelectedPostProcesses(UINT idx) const;
 
-	bool IsPostProcessEnabled(PostProcess* pp) const;
-	void SetPostProcessEnabled(PostProcess* pp, bool enabled);
+    bool IsPostProcessEnabled(PostProcess* pp) const;
+    void SetPostProcessEnabled(PostProcess* pp, bool enabled);
 };

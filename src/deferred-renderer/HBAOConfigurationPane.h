@@ -8,10 +8,10 @@
 class HBAOConfigurationPane : public ConfigurationPane<HBAOPostProcess>
 {
 private:
-	virtual void OnValueChanged(Gwen::Controls::Base *control);
+    virtual void OnValueChanged(Gwen::Controls::Base *control);
 
 public:
-	HBAOConfigurationPane(Gwen::Controls::Base* parent, HBAOPostProcess* pp);
+    HBAOConfigurationPane(Gwen::Controls::Base* parent, HBAOPostProcess* pp);
 
-	void OnFrameMove(double totalTime, float dt);
+    void OnFrameMove(double totalTime, float dt);
 };

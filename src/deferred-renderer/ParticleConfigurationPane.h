@@ -12,33 +12,33 @@
 class ParticleConfigurationPane : public ConfigurationPaneBase
 {
 private:
-	std::vector<ParticleSystemInstance*> _particles;
+    std::vector<ParticleSystemInstance*> _particles;
 
-	XMFLOAT3 _grav;
-	XMFLOAT3 _wind;
+    XMFLOAT3 _grav;
+    XMFLOAT3 _wind;
 
-	Gwen::Controls::Label* _gravityDirLabel;
-	DirectionSelector* _gravityDirSelect;
-	SliderWithLabel* _gravityStrengthSlider;
+    Gwen::Controls::Label* _gravityDirLabel;
+    DirectionSelector* _gravityDirSelect;
+    SliderWithLabel* _gravityStrengthSlider;
 
-	Gwen::Controls::Label* _windDirLabel;
-	DirectionSelector* _windDirSelect;
-	SliderWithLabel* _windStrengthSlider;
+    Gwen::Controls::Label* _windDirLabel;
+    DirectionSelector* _windDirSelect;
+    SliderWithLabel* _windStrengthSlider;
 
-	void OnValueChanged(Gwen::Controls::Base *control);
+    void OnValueChanged(Gwen::Controls::Base *control);
 
 public:
-	ParticleConfigurationPane(Gwen::Controls::Base* parent);
+    ParticleConfigurationPane(Gwen::Controls::Base* parent);
 
-	const XMFLOAT3& GetGravityVector() const;
-	const XMFLOAT3& GetWindVector() const;
+    const XMFLOAT3& GetGravityVector() const;
+    const XMFLOAT3& GetWindVector() const;
 
-	void AddParticleInstance(ParticleSystemInstance* inst);
+    void AddParticleInstance(ParticleSystemInstance* inst);
 
-	void SelectParticleInstance(ParticleSystemInstance* inst);
+    void SelectParticleInstance(ParticleSystemInstance* inst);
 
-	ParticleSystemInstance* GetParticleInstance(UINT idx);
-	UINT GetParticleInstanceCount() const;
+    ParticleSystemInstance* GetParticleInstance(UINT idx);
+    UINT GetParticleInstanceCount() const;
 
-	void OnFrameMove(double totalTime, float dt);
+    void OnFrameMove(double totalTime, float dt);
 };

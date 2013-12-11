@@ -8,10 +8,10 @@
 class MotionBlurConfigurationPane : public ConfigurationPane<MotionBlurPostProcess>
 {
 private:
-	virtual void OnValueChanged(Gwen::Controls::Base *control);
+    virtual void OnValueChanged(Gwen::Controls::Base *control);
 
 public:
-	MotionBlurConfigurationPane(Gwen::Controls::Base* parent, MotionBlurPostProcess* pp);
+    MotionBlurConfigurationPane(Gwen::Controls::Base* parent, MotionBlurPostProcess* pp);
 
-	void OnFrameMove(double totalTime, float dt);
+    void OnFrameMove(double totalTime, float dt);
 };

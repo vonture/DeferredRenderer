@@ -8,18 +8,18 @@
 #include "AssimpLogger.h"
 
 Model::Model()
-	: _meshes(NULL), _meshCount(0), _materials(NULL), _materialCount(0)
+    : _meshes(NULL), _meshCount(0), _materials(NULL), _materialCount(0)
 {
 }
 
 Model::~Model()
 {
-	Destroy();
+    Destroy();
 }
 
 IDirect3DDevice9* createD3D9Device()
 {
-	HRESULT hr;
+    HRESULT hr;
 
     // Create a D3D9 device (would make it NULL, but PIX doesn't seem to like that)
     IDirect3D9* d3d9;
@@ -49,243 +49,243 @@ IDirect3DDevice9* createD3D9Device()
 
 void Model::Destroy()
 {
-	for (UINT i = 0; i < _materialCount; i++)
-	{
-		SAFE_RELEASE(_materials[i]);
-	}
-	SAFE_DELETE_ARRAY(_materials);
-	_materialCount = 0;
-
-	for (UINT i = 0; i < _meshCount; i++)
+    for (UINT i = 0; i < _materialCount; i++)
     {
-		SAFE_RELEASE(_meshes[i]);
-	}
-	SAFE_DELETE_ARRAY(_meshes);
-	_meshCount = 0;
+        SAFE_RELEASE(_materials[i]);
+    }
+    SAFE_DELETE_ARRAY(_materials);
+    _materialCount = 0;
+
+    for (UINT i = 0; i < _meshCount; i++)
+    {
+        SAFE_RELEASE(_meshes[i]);
+    }
+    SAFE_DELETE_ARRAY(_meshes);
+    _meshCount = 0;
 }
 
 HRESULT Model::Render(ID3D11DeviceContext* context, UINT materialBufferSlot, UINT diffuseSlot,
-	UINT normalSlot, UINT specularSlot)
+                      UINT normalSlot, UINT specularSlot)
 {
-	HRESULT hr;
+    HRESULT hr;
 
-	for (UINT i = 0; i < _meshCount; i++)
-	{
-		V_RETURN(RenderMesh(context, i, materialBufferSlot, diffuseSlot, normalSlot, specularSlot));
-	}
+    for (UINT i = 0; i < _meshCount; i++)
+    {
+        V_RETURN(RenderMesh(context, i, materialBufferSlot, diffuseSlot, normalSlot, specularSlot));
+    }
 
-	return S_OK;
+    return S_OK;
 }
 
 HRESULT Model::RenderMesh(ID3D11DeviceContext* context, UINT meshIdx, UINT materialBufferSlot,
-	UINT diffuseSlot, UINT normalSlot, UINT specularSlot)
+                          UINT diffuseSlot, UINT normalSlot, UINT specularSlot)
 {
-	const Mesh* mesh = _meshes[meshIdx];
-	UINT partCount = mesh->GetMeshPartCount();
+    const Mesh* mesh = _meshes[meshIdx];
+    UINT partCount = mesh->GetMeshPartCount();
 
-	ID3D11Buffer* vertexBuffers[1] = { mesh->GetVertexBuffer() };
-	UINT strides[1] = { mesh->GetVertexStride() };
-	UINT offsets[1] = { 0 };
+    ID3D11Buffer* vertexBuffers[1] = { mesh->GetVertexBuffer() };
+    UINT strides[1] = { mesh->GetVertexStride() };
+    UINT offsets[1] = { 0 };
 
-	context->IASetVertexBuffers(0, 1, vertexBuffers, strides, offsets);
-	context->IASetIndexBuffer(mesh->GetIndexBuffer(), mesh->GetIndexBufferFormat(), 0);
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	
-	for (UINT i = 0; i < partCount; i++)
-	{
-		const MeshPart* part = mesh->GetMeshPart(i);
-		const Material* mat = _materials[part->MaterialIndex];
+    context->IASetVertexBuffers(0, 1, vertexBuffers, strides, offsets);
+    context->IASetIndexBuffer(mesh->GetIndexBuffer(), mesh->GetIndexBufferFormat(), 0);
+    context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		if (materialBufferSlot != INVALID_BUFFER_SLOT)
-		{
-			ID3D11Buffer* buf = mat->GetPropertiesBuffer();
-			context->PSSetConstantBuffers(materialBufferSlot, 1, &buf);
-		}
-		if (diffuseSlot != INVALID_SAMPLER_SLOT)
-		{
-			ID3D11ShaderResourceView* srv = mat->GetDiffuseSRV();
-			context->PSSetShaderResources(diffuseSlot, 1, &srv);
-		}
-		if (normalSlot != INVALID_SAMPLER_SLOT)
-		{
-			ID3D11ShaderResourceView* srv = mat->GetNormalSRV();
-			context->PSSetShaderResources(normalSlot, 1, &srv);
-		}
-		if (specularSlot != INVALID_SAMPLER_SLOT)
-		{
-			ID3D11ShaderResourceView* srv = mat->GetSpecularSRV();
-			context->PSSetShaderResources(specularSlot, 1, &srv);
-		}
+    for (UINT i = 0; i < partCount; i++)
+    {
+        const MeshPart* part = mesh->GetMeshPart(i);
+        const Material* mat = _materials[part->MaterialIndex];
+
+        if (materialBufferSlot != INVALID_BUFFER_SLOT)
+        {
+            ID3D11Buffer* buf = mat->GetPropertiesBuffer();
+            context->PSSetConstantBuffers(materialBufferSlot, 1, &buf);
+        }
+        if (diffuseSlot != INVALID_SAMPLER_SLOT)
+        {
+            ID3D11ShaderResourceView* srv = mat->GetDiffuseSRV();
+            context->PSSetShaderResources(diffuseSlot, 1, &srv);
+        }
+        if (normalSlot != INVALID_SAMPLER_SLOT)
+        {
+            ID3D11ShaderResourceView* srv = mat->GetNormalSRV();
+            context->PSSetShaderResources(normalSlot, 1, &srv);
+        }
+        if (specularSlot != INVALID_SAMPLER_SLOT)
+        {
+            ID3D11ShaderResourceView* srv = mat->GetSpecularSRV();
+            context->PSSetShaderResources(specularSlot, 1, &srv);
+        }
 
         context->DrawIndexed(part->IndexCount, part->IndexStart, part->VertexStart);
-	}
+    }
 
-	return S_OK;
+    return S_OK;
 }
 
 HRESULT Model::Compile(ID3D11Device* device, const std::wstring& fileName, std::ostream& output)
 {
-	HRESULT hr;
+    HRESULT hr;
 
-	std::wstring directory = GetDirectoryFromFileNameW(fileName);
-	std::wstring extension = GetExtensionFromFileNameW(fileName);
-	std::wstring name = GetFileNameWithoutExtensionW(fileName);
+    std::wstring directory = GetDirectoryFromFileNameW(fileName);
+    std::wstring extension = GetExtensionFromFileNameW(fileName);
+    std::wstring name = GetFileNameWithoutExtensionW(fileName);
 
-	WriteWStringToStream(name, output);
+    WriteWStringToStream(name, output);
 
-	Assimp::Importer importer;
-	// determine if assimp can import this model
-	if (importer.IsExtensionSupported(WStringToAnsi(extension)))
-	{
-		AssimpLogger::Register();
+    Assimp::Importer importer;
+    // determine if assimp can import this model
+    if (importer.IsExtensionSupported(WStringToAnsi(extension)))
+    {
+        AssimpLogger::Register();
 
-		UINT importSteps = 	
-			aiProcess_PreTransformVertices			|
-			aiProcess_ConvertToLeftHanded			|
-			aiProcess_CalcTangentSpace				| 
-			aiProcess_GenSmoothNormals				|
-			aiProcess_JoinIdenticalVertices			|
-			aiProcess_ImproveCacheLocality			|
-			aiProcess_LimitBoneWeights				|
-			aiProcess_RemoveRedundantMaterials      |
-			aiProcess_SplitLargeMeshes				|
-			aiProcess_Triangulate					|
-			aiProcess_GenUVCoords                   |
-			aiProcess_SortByPType                   |
-			aiProcess_FindDegenerates               |
-			aiProcess_FindInstances                 |
-			aiProcess_ValidateDataStructure         |
-			aiProcess_OptimizeMeshes;
+        UINT importSteps =
+            aiProcess_PreTransformVertices            |
+            aiProcess_ConvertToLeftHanded            |
+            aiProcess_CalcTangentSpace                |
+            aiProcess_GenSmoothNormals                |
+            aiProcess_JoinIdenticalVertices            |
+            aiProcess_ImproveCacheLocality            |
+            aiProcess_LimitBoneWeights                |
+            aiProcess_RemoveRedundantMaterials      |
+            aiProcess_SplitLargeMeshes                |
+            aiProcess_Triangulate                    |
+            aiProcess_GenUVCoords                   |
+            aiProcess_SortByPType                   |
+            aiProcess_FindDegenerates               |
+            aiProcess_FindInstances                 |
+            aiProcess_ValidateDataStructure         |
+            aiProcess_OptimizeMeshes;
 
-		importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE | 
-			aiPrimitiveType_POLYGON);
+        importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE |
+            aiPrimitiveType_POLYGON);
 
-		// Load with assimp
-		const aiScene* scene = importer.ReadFile(WStringToAnsi(fileName), importSteps);
-		if (!scene)
-		{
-			std::wstring error = AnsiToWString(importer.GetErrorString());
-			LOG_ERROR(L"Model Load", error);
+        // Load with assimp
+        const aiScene* scene = importer.ReadFile(WStringToAnsi(fileName), importSteps);
+        if (!scene)
+        {
+            std::wstring error = AnsiToWString(importer.GetErrorString());
+            LOG_ERROR(L"Model Load", error);
 
-			return E_FAIL;
-		}
+            return E_FAIL;
+        }
 
-		UINT materialCount = scene->mNumMaterials;
-		WriteDataTostream(materialCount, output);
-		for (UINT i = 0; i < materialCount; i++)
-		{
-			V_RETURN(Material::CompileFromASSIMPMaterial(device, directory, scene, i, output));
-		}
-		
-		UINT meshCount = scene->mNumMeshes;
-		WriteDataTostream(meshCount, output);
-		for (UINT i = 0; i < meshCount; i++)
-		{
-			V_RETURN(Mesh::CompileFromASSIMPMesh(device, scene, i, output));
-		}
-	}
-	else if (extension == L".x" || extension == L".sdkmesh")
-	{
-		// load with sdkmesh
-		SDKMesh sdkMesh;
-		V_RETURN(sdkMesh.Create(fileName.c_str()));
+        UINT materialCount = scene->mNumMaterials;
+        WriteDataTostream(materialCount, output);
+        for (UINT i = 0; i < materialCount; i++)
+        {
+            V_RETURN(Material::CompileFromASSIMPMaterial(device, directory, scene, i, output));
+        }
 
-		// Make materials
-		UINT materialCount = sdkMesh.GetNumMaterials();
-		WriteDataTostream(materialCount, output);
-		for (UINT i = 0; i < materialCount; i++)
-		{
-			hr = Material::CompileFromSDKMeshMaterial(device, directory, &sdkMesh, i, output);
-			if (FAILED(hr))
-			{
-				sdkMesh.Destroy();
-				return hr;
-			}
-		}
+        UINT meshCount = scene->mNumMeshes;
+        WriteDataTostream(meshCount, output);
+        for (UINT i = 0; i < meshCount; i++)
+        {
+            V_RETURN(Mesh::CompileFromASSIMPMesh(device, scene, i, output));
+        }
+    }
+    else if (extension == L".x" || extension == L".sdkmesh")
+    {
+        // load with sdkmesh
+        SDKMesh sdkMesh;
+        V_RETURN(sdkMesh.Create(fileName.c_str()));
 
-		// Create a d3d9 device for loading the meshes
-		IDirect3DDevice9* d3d9device = createD3D9Device();
+        // Make materials
+        UINT materialCount = sdkMesh.GetNumMaterials();
+        WriteDataTostream(materialCount, output);
+        for (UINT i = 0; i < materialCount; i++)
+        {
+            hr = Material::CompileFromSDKMeshMaterial(device, directory, &sdkMesh, i, output);
+            if (FAILED(hr))
+            {
+                sdkMesh.Destroy();
+                return hr;
+            }
+        }
 
-		// Copy the meshes
-		UINT meshCount = sdkMesh.GetNumMeshes();
-		WriteDataTostream(meshCount, output);
-		for (UINT i = 0; i < meshCount; i++)
-		{
-			hr = Mesh::CompileFromSDKMeshMesh(device, d3d9device, directory, &sdkMesh, i, output);
-			if (FAILED(hr))
-			{
-				SAFE_RELEASE(d3d9device);
-				sdkMesh.Destroy();
-				return hr;
-			}
-		}
+        // Create a d3d9 device for loading the meshes
+        IDirect3DDevice9* d3d9device = createD3D9Device();
 
-		SAFE_RELEASE(d3d9device);
-		sdkMesh.Destroy();
-	}
-	else
-	{
-		// Don't know how to load this model
-		return E_FAIL;
-	}
-	
-	return S_OK;
+        // Copy the meshes
+        UINT meshCount = sdkMesh.GetNumMeshes();
+        WriteDataTostream(meshCount, output);
+        for (UINT i = 0; i < meshCount; i++)
+        {
+            hr = Mesh::CompileFromSDKMeshMesh(device, d3d9device, directory, &sdkMesh, i, output);
+            if (FAILED(hr))
+            {
+                SAFE_RELEASE(d3d9device);
+                sdkMesh.Destroy();
+                return hr;
+            }
+        }
+
+        SAFE_RELEASE(d3d9device);
+        sdkMesh.Destroy();
+    }
+    else
+    {
+        // Don't know how to load this model
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
 HRESULT Model::Create(ID3D11Device* device, std::istream& input, Model** output)
 {
-	HRESULT hr;
+    HRESULT hr;
 
-	Model* result = new Model();
-	
-	result->_name = ReadWStringFromStream(input);
+    Model* result = new Model();
 
-	ReadDataFromStream(result->_materialCount, input);	
-	result->_materials = new Material*[result->_materialCount];
-	// NULL everything first so that if there is an error, the model destructor wont
-	// reference an uninitialized value
-	memset(result->_materials, NULL, sizeof(Material*) * result->_materialCount);
-	for (UINT i = 0; i < result->_materialCount; i++)
-	{
-		result->_materials[i] = new Material();
-		
-		hr = Material::Create(device, input, &result->_materials[i]);
-		if (FAILED(hr))
-		{
-			SAFE_RELEASE(result);
-			return hr;
-		}
-	}
+    result->_name = ReadWStringFromStream(input);
 
-	ReadDataFromStream(result->_meshCount, input);
+    ReadDataFromStream(result->_materialCount, input);
+    result->_materials = new Material*[result->_materialCount];
+    // NULL everything first so that if there is an error, the model destructor wont
+    // reference an uninitialized value
+    memset(result->_materials, NULL, sizeof(Material*) * result->_materialCount);
+    for (UINT i = 0; i < result->_materialCount; i++)
+    {
+        result->_materials[i] = new Material();
 
-	result->_meshes = new Mesh*[result->_meshCount];
-	memset(result->_meshes, NULL, sizeof(Mesh*) * result->_meshCount);
-	for (UINT i = 0; i < result->_meshCount; i++)
-	{
-		result->_meshes[i] = new Mesh();
+        hr = Material::Create(device, input, &result->_materials[i]);
+        if (FAILED(hr))
+        {
+            SAFE_RELEASE(result);
+            return hr;
+        }
+    }
 
-		hr = Mesh::Create(device, input, &result->_meshes[i]);
-		if (FAILED(hr))
-		{
-			SAFE_RELEASE(result);
-			return hr;
-		}
-	}
+    ReadDataFromStream(result->_meshCount, input);
 
-	// Compute the overall bounding box
-	if (result->_meshCount > 0)
-	{
-		result->_boundingBox = result->_meshes[0]->GetAxisAlignedBox();
+    result->_meshes = new Mesh*[result->_meshCount];
+    memset(result->_meshes, NULL, sizeof(Mesh*) * result->_meshCount);
+    for (UINT i = 0; i < result->_meshCount; i++)
+    {
+        result->_meshes[i] = new Mesh();
 
-		for (UINT i = 1; i < result->_meshCount; i++)
-		{
-			AxisAlignedBox aaBox = result->_meshes[i]->GetAxisAlignedBox();
+        hr = Mesh::Create(device, input, &result->_meshes[i]);
+        if (FAILED(hr))
+        {
+            SAFE_RELEASE(result);
+            return hr;
+        }
+    }
 
-			Collision::MergeAxisAlignedBoxes(&result->_boundingBox, &result->_boundingBox, &aaBox);
-		}
-	}
+    // Compute the overall bounding box
+    if (result->_meshCount > 0)
+    {
+        result->_boundingBox = result->_meshes[0]->GetAxisAlignedBox();
 
-	*output = result;
-	return S_OK;
+        for (UINT i = 1; i < result->_meshCount; i++)
+        {
+            AxisAlignedBox aaBox = result->_meshes[i]->GetAxisAlignedBox();
+
+            Collision::MergeAxisAlignedBoxes(&result->_boundingBox, &result->_boundingBox, &aaBox);
+        }
+    }
+
+    *output = result;
+    return S_OK;
 }

@@ -1,9 +1,9 @@
 #include "PCH.h"
 #include "DeviceManagerConfigurationPane.h"
 
-DeviceManagerConfigurationPane::DeviceManagerConfigurationPane(Gwen::Controls::Base* parent, 
-	DeviceManager* manager)
-	: ConfigurationPane(parent, L"Graphics Device", manager)
+DeviceManagerConfigurationPane::DeviceManagerConfigurationPane(Gwen::Controls::Base* parent,
+                                                               DeviceManager* manager)
+                                                               : ConfigurationPane(parent, L"Graphics Device", manager)
 {
 }
 

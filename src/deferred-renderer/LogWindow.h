@@ -8,14 +8,14 @@
 class LogWindow : public Gwen::Controls::WindowControl
 {
 private:
-	Logger* _logger;
+    Logger* _logger;
 
-	Gwen::Controls::ListBox* _textList;
+    Gwen::Controls::ListBox* _textList;
 
 protected:
-	void OnLogMessage(UINT type, const std::wstring& sender, const std::wstring& message);
+    void OnLogMessage(UINT type, const std::wstring& sender, const std::wstring& message);
 
 public:
-	LogWindow(Gwen::Controls::Base* parent, Logger* logger);
-	~LogWindow();
+    LogWindow(Gwen::Controls::Base* parent, Logger* logger);
+    ~LogWindow();
 };

@@ -2,7 +2,7 @@
 #include "MotionBlurConfigurationPane.h"
 
 MotionBlurConfigurationPane::MotionBlurConfigurationPane(Gwen::Controls::Base* parent, MotionBlurPostProcess* pp)
-	: ConfigurationPane(parent, L"Motion Blur", pp)
+    : ConfigurationPane(parent, L"Motion Blur", pp)
 {
 }
 

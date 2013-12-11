@@ -68,7 +68,7 @@ enum SDKMESH_INDEX_TYPE
 enum FRAME_TRANSFORM_TYPE
 {
     FTT_RELATIVE = 0,
-    FTT_ABSOLUTE,		//This is not currently used but is here to support absolute transformations in the future
+    FTT_ABSOLUTE,        //This is not currently used but is here to support absolute transformations in the future
 };
 
 //--------------------------------------------------------------------------------------
@@ -108,7 +108,7 @@ struct SDKMESH_VERTEX_BUFFER_HEADER
     D3DVERTEXELEMENT9 Decl[MAX_VERTEX_ELEMENTS];
     union
     {
-        UINT64 DataOffset;				//(This also forces the union to 64bits)
+        UINT64 DataOffset;                //(This also forces the union to 64bits)
         ID3D11Buffer* pVB11;
     };
 };
@@ -120,7 +120,7 @@ struct SDKMESH_INDEX_BUFFER_HEADER
     UINT IndexType;
     union
     {
-        UINT64 DataOffset;				//(This also forces the union to 64bits)
+        UINT64 DataOffset;                //(This also forces the union to 64bits)
         ID3D11Buffer* pIB11;
     };
 };
@@ -139,8 +139,8 @@ struct SDKMESH_MESH
 
     union
     {
-        UINT64 SubsetOffset;	//Offset to list of subsets (This also forces the union to 64bits)
-        UINT* pSubsets;	    //Pointer to list of subsets
+        UINT64 SubsetOffset;    //Offset to list of subsets (This also forces the union to 64bits)
+        UINT* pSubsets;        //Pointer to list of subsets
     };
     union
     {
@@ -168,7 +168,7 @@ struct SDKMESH_FRAME
     UINT ChildFrame;
     UINT SiblingFrame;
     D3DXMATRIX Matrix;
-    UINT AnimationDataIndex;		//Used to index which set of keyframes transforms this frame
+    UINT AnimationDataIndex;        //Used to index which set of keyframes transforms this frame
 };
 
 struct SDKMESH_MATERIAL
@@ -191,39 +191,38 @@ struct SDKMESH_MATERIAL
 
     union
     {
-        UINT64 Force64_1;			//Force the union to 64bits
+        UINT64 Force64_1;            //Force the union to 64bits
         IDirect3DTexture9* pDiffuseTexture9;
         ID3D11Texture2D* pDiffuseTexture11;
     };
     union
     {
-        UINT64 Force64_2;			//Force the union to 64bits
+        UINT64 Force64_2;            //Force the union to 64bits
         IDirect3DTexture9* pNormalTexture9;
         ID3D11Texture2D* pNormalTexture11;
     };
     union
     {
-        UINT64 Force64_3;			//Force the union to 64bits
+        UINT64 Force64_3;            //Force the union to 64bits
         IDirect3DTexture9* pSpecularTexture9;
         ID3D11Texture2D* pSpecularTexture11;
     };
 
     union
     {
-        UINT64 Force64_4;			//Force the union to 64bits
+        UINT64 Force64_4;            //Force the union to 64bits
         ID3D11ShaderResourceView* pDiffuseRV11;
     };
     union
     {
-        UINT64 Force64_5;		    //Force the union to 64bits
+        UINT64 Force64_5;            //Force the union to 64bits
         ID3D11ShaderResourceView* pNormalRV11;
     };
     union
     {
-        UINT64 Force64_6;			//Force the union to 64bits
+        UINT64 Force64_6;            //Force the union to 64bits
         ID3D11ShaderResourceView* pSpecularRV11;
     };
-
 };
 
 struct SDKANIMATION_FILE_HEADER
@@ -299,21 +298,20 @@ protected:
 
 protected:
     virtual HRESULT                 CreateFromFile( LPCWSTR szFileName,
-                                                    bool bCreateAdjacencyIndices);
+        bool bCreateAdjacencyIndices);
 
     virtual HRESULT                 CreateFromMemory( BYTE* pData,
-                                                      UINT DataBytes,
-                                                      bool bCreateAdjacencyIndices,
-                                                      bool bCopyStatic );
+        UINT DataBytes,
+        bool bCreateAdjacencyIndices,
+        bool bCopyStatic );
 public:
-                                    SDKMesh();
+    SDKMesh();
     virtual                         ~SDKMesh();
 
     virtual HRESULT                 Create( LPCWSTR szFileName, bool bCreateAdjacencyIndices = false );
     virtual HRESULT                 Create( BYTE* pData, UINT DataBytes,
-                                            bool bCreateAdjacencyIndices = false, bool bCopyStatic = false );
+        bool bCreateAdjacencyIndices = false, bool bCopyStatic = false );
     virtual void                    Destroy();
-
 
     //Helpers (D3D11 specific)
     static D3D11_PRIMITIVE_TOPOLOGY GetPrimitiveType11( SDKMESH_PRIMITIVE_TYPE PrimType );
@@ -342,8 +340,6 @@ public:
     const D3DVERTEXELEMENT9*        VBElements( UINT iVB ) { return m_pVertexBufferArray[0].Decl; }
 };
 
-
 #endif
 
 #endif
-

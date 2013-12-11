@@ -7,14 +7,14 @@ template <class T>
 class ConfigurationPane : public ConfigurationPaneBase
 {
 private:
-	T* _obj;
+    T* _obj;
 
 protected:
-	T* GetConfiguredObject() { return _obj; }
+    T* GetConfiguredObject() { return _obj; }
 
 public:
-	ConfigurationPane(Gwen::Controls::Base* parent, const WCHAR* name, T* obj)
-		: ConfigurationPaneBase(parent, name), _obj(obj)
-	{
-	}
+    ConfigurationPane(Gwen::Controls::Base* parent, const WCHAR* name, T* obj)
+        : ConfigurationPaneBase(parent, name), _obj(obj)
+    {
+    }
 };

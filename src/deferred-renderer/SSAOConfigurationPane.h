@@ -9,16 +9,16 @@
 class SSAOConfigurationPane : public ConfigurationPane<SSAOPostProcess>
 {
 private:
-	Gwen::Controls::CheckBoxWithLabel* _halfResCheckBox;
-	SliderWithLabel* _sampleRadiusSlider;
-	SliderWithLabel* _blurSigmaSlider;
-	SliderWithLabel* _depthThresholdSlider;
-	SliderWithLabel* _sampleCountSlider;
+    Gwen::Controls::CheckBoxWithLabel* _halfResCheckBox;
+    SliderWithLabel* _sampleRadiusSlider;
+    SliderWithLabel* _blurSigmaSlider;
+    SliderWithLabel* _depthThresholdSlider;
+    SliderWithLabel* _sampleCountSlider;
 
-	virtual void OnValueChanged(Gwen::Controls::Base *control);
+    virtual void OnValueChanged(Gwen::Controls::Base *control);
 
 public:
-	SSAOConfigurationPane(Gwen::Controls::Base* parent, SSAOPostProcess* pp);
+    SSAOConfigurationPane(Gwen::Controls::Base* parent, SSAOPostProcess* pp);
 
-	void OnFrameMove(double totalTime, float dt);
+    void OnFrameMove(double totalTime, float dt);
 };

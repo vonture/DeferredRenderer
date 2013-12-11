@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 #include "PCH.h"
 #include "IUpdateable.h"
@@ -10,22 +10,22 @@
 class ConfigurationWindow :  public Gwen::Controls::WindowControl, public IUpdateable
 {
 private:
-	Gwen::Controls::ComboBox* _configSelectComboBox;
+    Gwen::Controls::ComboBox* _configSelectComboBox;
 
-	ConfigurationPaneBase* _selectedPane;
-	std::map<Gwen::Controls::MenuItem*, ConfigurationPaneBase*> _paneMap;
+    ConfigurationPaneBase* _selectedPane;
+    std::map<Gwen::Controls::MenuItem*, ConfigurationPaneBase*> _paneMap;
 
-	std::vector<Gwen::Controls::Base*> _newChildren;
+    std::vector<Gwen::Controls::Base*> _newChildren;
 
-	void addConfigPane(ConfigurationPaneBase* newPane);
+    void addConfigPane(ConfigurationPaneBase* newPane);
 
-	virtual void onComboBoxSelect(Gwen::Controls::Base* control);
-	
+    virtual void onComboBoxSelect(Gwen::Controls::Base* control);
+
 protected:
-	virtual void AddChild(Gwen::Controls::Base* pChild);
+    virtual void AddChild(Gwen::Controls::Base* pChild);
 
 public:
-	ConfigurationWindow(Gwen::Controls::Base* parent);
+    ConfigurationWindow(Gwen::Controls::Base* parent);
 
-	void OnFrameMove(double totalTime, float dt);
+    void OnFrameMove(double totalTime, float dt);
 };

@@ -1,12 +1,12 @@
 #include "PCH.h"
 #include "Quad.h"
 
-Quad::Quad() 
-	: _vertexShader(NULL), _vertexBuffer(NULL)
+Quad::Quad()
+    : _vertexShader(NULL), _vertexBuffer(NULL)
 {
 }
 
-Quad::~Quad() 
+Quad::~Quad()
 {
 }
 
@@ -24,18 +24,18 @@ HRESULT Quad::Render(ID3D11DeviceContext* pd3dImmediateContext, ID3D11PixelShade
     pd3dImmediateContext->PSSetShader(pixelShader, NULL, 0);
     pd3dImmediateContext->Draw(4, 0);
 
-	return S_OK;
+    return S_OK;
 }
 
 HRESULT Quad::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pContentManager, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
-	HRESULT hr;
+    HRESULT hr;
 
-	// Build the vertex buffer with initial data created by the fillVerticies method
-	QUAD_VERTEX verts[4];
-	fillVerticies(&verts[0]);
+    // Build the vertex buffer with initial data created by the fillVerticies method
+    QUAD_VERTEX verts[4];
+    fillVerticies(&verts[0]);
 
-	D3D11_BUFFER_DESC vbDesc =
+    D3D11_BUFFER_DESC vbDesc =
     {
         4 * sizeof(QUAD_VERTEX),
         D3D11_USAGE_DEFAULT,
@@ -51,35 +51,35 @@ HRESULT Quad::OnD3D11CreateDevice(ID3D11Device* pd3dDevice, ContentManager* pCon
 
     V_RETURN(pd3dDevice->CreateBuffer(&vbDesc, &initData, &_vertexBuffer));
 
-	// Create the vertex shader
-	D3D11_INPUT_ELEMENT_DESC quadlayout[] =
+    // Create the vertex shader
+    D3D11_INPUT_ELEMENT_DESC quadlayout[] =
     {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         { "TEXCOORD", 0,       DXGI_FORMAT_R32G32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
 
-	VertexShaderOptions vsOpts;
-	vsOpts.EntryPoint = "VS_Quad";
-	vsOpts.Defines = NULL;
-	vsOpts.InputElements = quadlayout;
-	vsOpts.InputElementCount = ARRAYSIZE(quadlayout);
-	vsOpts.DebugName = "Quad";
+    VertexShaderOptions vsOpts;
+    vsOpts.EntryPoint = "VS_Quad";
+    vsOpts.Defines = NULL;
+    vsOpts.InputElements = quadlayout;
+    vsOpts.InputElementCount = ARRAYSIZE(quadlayout);
+    vsOpts.DebugName = "Quad";
 
-	V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Quad.hlsl", &vsOpts, &_vertexShader));
+    V_RETURN(pContentManager->LoadContent(pd3dDevice, L"Quad.hlsl", &vsOpts, &_vertexShader));
 
-	return S_OK;
+    return S_OK;
 }
 
 void Quad::OnD3D11DestroyDevice(ContentManager* pContentManager)
 {
-	SAFE_CM_RELEASE(pContentManager, _vertexShader);
-	SAFE_RELEASE(_vertexBuffer);
+    SAFE_CM_RELEASE(pContentManager, _vertexShader);
+    SAFE_RELEASE(_vertexBuffer);
 }
 
 HRESULT Quad::OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, ContentManager* pContentManager, IDXGISwapChain* pSwapChain,
-                        const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
+                                      const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc)
 {
-	return S_OK;
+    return S_OK;
 }
 
 void Quad::OnD3D11ReleasingSwapChain(ContentManager* pContentManager)

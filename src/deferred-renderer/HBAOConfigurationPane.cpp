@@ -2,7 +2,7 @@
 #include "HBAOConfigurationPane.h"
 
 HBAOConfigurationPane::HBAOConfigurationPane(Gwen::Controls::Base* parent, HBAOPostProcess* pp)
-	: ConfigurationPane(parent, L"HBAO", pp)
+    : ConfigurationPane(parent, L"HBAO", pp)
 {
 }
 

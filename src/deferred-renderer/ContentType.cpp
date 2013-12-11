@@ -2,7 +2,7 @@
 #include "ContentType.h"
 
 ContentType::ContentType()
-	: _refCount(1)
+    : _refCount(1)
 {
 }
 
@@ -12,7 +12,7 @@ ContentType::~ContentType()
 
 UINT ContentType::GetRefCount() const
 {
-	return _refCount;
+    return _refCount;
 }
 
 STDMETHODIMP ContentType::QueryInterface(REFIID riid, void** ppvObject)
@@ -20,14 +20,14 @@ STDMETHODIMP ContentType::QueryInterface(REFIID riid, void** ppvObject)
     IUnknown *punk = nullptr;
 
     if (riid == IID_IUnknown)
-	{
-		punk = static_cast<IUnknown*>(this);
-	}
+    {
+        punk = static_cast<IUnknown*>(this);
+    }
 
     if (!punk)
-	{
+    {
         return E_NOINTERFACE;
-	}
+    }
 
     punk->AddRef();
     return S_OK;
@@ -43,9 +43,9 @@ STDMETHODIMP_(ULONG) ContentType::Release()
     ULONG cRef = --_refCount;
 
     if (cRef == 0)
-	{
+    {
         delete this;
-	}
+    }
 
     return cRef;
 }

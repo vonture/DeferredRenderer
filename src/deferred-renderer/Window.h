@@ -5,62 +5,62 @@
 class Window
 {
 public:
-	typedef std::tr1::function<LRESULT (HWND, UINT, WPARAM, LPARAM)> MessageFunction;
-	typedef std::tr1::function<INT_PTR (HWND, UINT, WPARAM, LPARAM)> DialogFunction;
+    typedef std::tr1::function<LRESULT (HWND, UINT, WPARAM, LPARAM)> MessageFunction;
+    typedef std::tr1::function<INT_PTR (HWND, UINT, WPARAM, LPARAM)> DialogFunction;
 
 private:
-	const WCHAR* _name;
-	HWND _hwnd;
-	HINSTANCE _hinstance;
-	DWORD _style;
-	DWORD _extendedStyle;
-	HACCEL _acceleratorTable;
+    const WCHAR* _name;
+    HWND _hwnd;
+    HINSTANCE _hinstance;
+    DWORD _style;
+    DWORD _extendedStyle;
+    HACCEL _acceleratorTable;
 
-	RECT _unmaxedRect;
-	bool _maximized;
+    RECT _unmaxedRect;
+    bool _maximized;
 
-	std::map<UINT, MessageFunction> _messageFunctions;
-	MessageFunction _allMessagesFunction;
+    std::map<UINT, MessageFunction> _messageFunctions;
+    MessageFunction _allMessagesFunction;
 
-	void makeWindow(const WCHAR* name, const WCHAR* sIconResource, const WCHAR* sMenuResource);
-	static LRESULT WINAPI wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	LRESULT MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    void makeWindow(const WCHAR* name, const WCHAR* sIconResource, const WCHAR* sMenuResource);
+    static LRESULT WINAPI wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    LRESULT MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 public:
-	Window(HINSTANCE hinstance, const WCHAR* name, const WCHAR* iconResource = NULL, 
-		DWORD width = 1280, DWORD height = 720, DWORD style = WS_CAPTION|WS_OVERLAPPED|WS_SYSMENU,
-		DWORD extendedStyle = WS_EX_APPWINDOW, const WCHAR* menuResource = NULL, 
-		const WCHAR* accelResource = NULL);
-	~Window();
+    Window(HINSTANCE hinstance, const WCHAR* name, const WCHAR* iconResource = NULL,
+        DWORD width = 1280, DWORD height = 720, DWORD style = WS_CAPTION|WS_OVERLAPPED|WS_SYSMENU,
+        DWORD extendedStyle = WS_EX_APPWINDOW, const WCHAR* menuResource = NULL,
+        const WCHAR* accelResource = NULL);
+    ~Window();
 
-	HWND GetHWND() const { return _hwnd; }
-	HMENU GetMenu() const { return ::GetMenu(_hwnd); }
-	HINSTANCE GetHinstance () const { return _hinstance; }
-		
-	bool IsAlive() const;
-	bool IsMinimized() const;
+    HWND GetHWND() const { return _hwnd; }
+    HMENU GetMenu() const { return ::GetMenu(_hwnd); }
+    HINSTANCE GetHinstance () const { return _hinstance; }
 
-	bool IsActive() const;
+    bool IsAlive() const;
+    bool IsMinimized() const;
 
-	void SetMaximized(bool maximized);
-	bool GetMaximized() const;
+    bool IsActive() const;
 
-	UINT GetClientWidth() const;
-	UINT GetClientHeight() const;
-	void SetClientSize(UINT width, UINT height);
+    void SetMaximized(bool maximized);
+    bool GetMaximized() const;
 
-	UINT GetPositionX() const;
-	UINT GetPositionY() const;
-	void SetPosition(UINT x, UINT y);
-	
-	void SetTitle(const WCHAR* title);
+    UINT GetClientWidth() const;
+    UINT GetClientHeight() const;
+    void SetClientSize(UINT width, UINT height);
 
-	void Show();
-	void Hide();
-	void Destroy();
+    UINT GetPositionX() const;
+    UINT GetPositionY() const;
+    void SetPosition(UINT x, UINT y);
 
-	void MessageLoop();
+    void SetTitle(const WCHAR* title);
 
-	void RegisterMessageFunction(UINT message, MessageFunction function);
-	void RegisterMessageFunction(MessageFunction function);
+    void Show();
+    void Hide();
+    void Destroy();
+
+    void MessageLoop();
+
+    void RegisterMessageFunction(UINT message, MessageFunction function);
+    void RegisterMessageFunction(MessageFunction function);
 };
